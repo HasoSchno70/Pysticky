@@ -34,7 +34,7 @@ class ColorsTab(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
 
         # === Standard-Palette ===
-        group_palette, form = make_section_form("Standard-Palette", "🧵")
+        group_palette, form = make_section_form(t("Standard-Palette"), "🧵")
 
         self.combo_default_palette = QComboBox()
         palettes = [
@@ -63,7 +63,7 @@ class ColorsTab(QWidget):
         layout.addWidget(group_palette)
 
         # === Symbole ===
-        group_symbols, form = make_section_form("Symbole", "🔣")
+        group_symbols, form = make_section_form(t("Symbole"), "🔣")
 
         self.combo_symbol_font = QFontComboBox()
         self.combo_symbol_font.setToolTip(t("Schriftart für Symbole"))
@@ -98,7 +98,7 @@ class ColorsTab(QWidget):
         layout.addWidget(group_symbols)
 
         # === Farbanzeige ===
-        group_display, form = make_section_form("Farbanzeige", "🎨")
+        group_display, form = make_section_form(t("Farbanzeige"), "🎨")
 
         self.combo_color_display = QComboBox()
         self.combo_color_display.addItems(

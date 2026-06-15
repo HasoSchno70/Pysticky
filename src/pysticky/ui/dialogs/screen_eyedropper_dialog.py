@@ -19,6 +19,7 @@ from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPainter, QPixmap
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QVBoxLayout
 
 from ...core.color_math import nearest_index_by_lab
+from ...core.i18n import t
 from ...core.palette import get_palette_manager
 from ...core.thread import Thread
 
@@ -117,7 +118,7 @@ class ScreenEyedropperDialog(QDialog):
 
         # Hint oben: "Klicke zum Picken, Esc zum Abbrechen"
         hint = QLabel(
-            "Klicke irgendwo auf den Bildschirm, um eine Farbe zu picken. Esc = abbrechen."
+            t("Klicke irgendwo auf den Bildschirm, um eine Farbe zu picken. Esc = abbrechen.")
         )
         hint.setStyleSheet(
             "background: rgba(0,0,0,180); color: white; "

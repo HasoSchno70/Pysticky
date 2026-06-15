@@ -13,6 +13,7 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPen, QPolygon
 from PySide6.QtWidgets import QWidget
 
+from ...core.i18n import t
 from ..styles import THEME
 
 
@@ -273,7 +274,7 @@ class RulerCorner(QWidget):
 
         self.setMouseTracking(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Klicken zum Zentrieren")
+        self.setToolTip(t("Klicken zum Zentrieren"))
 
     def set_canvas_position(self, x: int, y: int) -> None:
         """Setzt die aktuelle Canvas-Position für die Anzeige."""

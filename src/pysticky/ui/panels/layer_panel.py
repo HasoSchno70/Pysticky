@@ -150,7 +150,7 @@ class LayerListItem(QWidget):
         self.btn_visible.setCheckable(True)
         self.btn_visible.setChecked(self._layer.visible)
         self.btn_visible.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_visible.setToolTip("Ebene anzeigen / verstecken")
+        self.btn_visible.setToolTip(t("Ebene anzeigen / verstecken"))
         self.btn_visible.toggled.connect(self._on_visibility_toggled)
         layout.addWidget(self.btn_visible)
 
@@ -161,7 +161,9 @@ class LayerListItem(QWidget):
         self.btn_locked.setCheckable(True)
         self.btn_locked.setChecked(self._layer.locked)
         self.btn_locked.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_locked.setToolTip("Ebene sperren (gegen versehentliches Bearbeiten) / entsperren")
+        self.btn_locked.setToolTip(
+            t("Ebene sperren (gegen versehentliches Bearbeiten) / entsperren")
+        )
         self.btn_locked.toggled.connect(self._on_lock_toggled)
         layout.addWidget(self.btn_locked)
 
@@ -485,7 +487,7 @@ class DraggableLayerList(QListWidget):
                 painter.drawRoundedRect(rect.adjusted(2, 2, -2, -2), 6, 6)
 
                 painter.setPen(QColor(THEME.accent_secondary))
-                painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, "⊕ Zusammenführen")
+                painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, "⊕ " + t("Zusammenführen"))
 
 
 class LayerPanel(QWidget):
@@ -563,8 +565,10 @@ class LayerPanel(QWidget):
         self.edit_note = QPlainTextEdit()
         self.edit_note.setPlaceholderText(t("z.B. Vordergrund, Schatten, Backstitch-Linien …"))
         self.edit_note.setToolTip(
-            "Freie Notiz zur aktuell ausgewaehlten Ebene — wird beim "
-            "Speichern in der .pxs-Datei abgelegt."
+            t(
+                "Freie Notiz zur aktuell ausgewaehlten Ebene — wird beim "
+                "Speichern in der .pxs-Datei abgelegt."
+            )
         )
         self.edit_note.setFixedHeight(60)
         self.edit_note.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -719,14 +723,16 @@ class LayerPanel(QWidget):
         if source_layer.locked or target_layer.locked:
             QMessageBox.warning(
                 self,
-                "Ebenen vereinen",
-                "Gesperrte Ebenen können nicht vereint werden.\n\nBitte entsperre zuerst die betroffene(n) Ebene(n).",
+                t("Ebenen vereinen"),
+                t(
+                    "Gesperrte Ebenen können nicht vereint werden.\n\nBitte entsperre zuerst die betroffene(n) Ebene(n)."
+                ),
             )
             return
 
         reply = QMessageBox.question(
             self,
-            "Ebenen vereinen",
+            t("Ebenen vereinen"),
             f"'{source_layer.name}' mit '{target_layer.name}' vereinen?\n\n"
             f"Die Stiche von '{source_layer.name}' werden auf '{target_layer.name}' übertragen.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -823,7 +829,7 @@ class LayerPanel(QWidget):
     def _on_remove_layer(self) -> None:
         """Entfernt die ausgewählte Ebene."""
         if not self._layer_stack or len(self._layer_stack) <= 1:
-            QMessageBox.warning(self, "Hinweis", "Mindestens eine Ebene erforderlich.")
+            QMessageBox.warning(self, t("Hinweis"), t("Mindestens eine Ebene erforderlich."))
             return
 
         display_idx = self.list_widget.currentRow()
@@ -832,7 +838,7 @@ class LayerPanel(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Ebene löschen",
+            t("Ebene löschen"),
             f"'{layer.name}' löschen?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -860,10 +866,10 @@ class LayerPanel(QWidget):
         menu = QMenu(self)
         menu.addAction(t("Umbenennen"), self._on_rename_layer)
         menu.addSeparator()
-        menu.addAction("Duplizieren", self._on_duplicate_layer)
+        menu.addAction(t("Duplizieren"), self._on_duplicate_layer)
         menu.addAction(t("Löschen"), self._on_remove_layer)
         menu.addSeparator()
-        menu.addAction("Leeren", self._on_clear_layer)
+        menu.addAction(t("Leeren"), self._on_clear_layer)
         menu.exec(self.list_widget.mapToGlobal(pos))
 
     def _on_rename_layer(self) -> None:
@@ -887,7 +893,7 @@ class LayerPanel(QWidget):
         layer = self._layer_stack[actual_idx]
         reply = QMessageBox.question(
             self,
-            "Ebene leeren",
+            t("Ebene leeren"),
             f"Alle Stiche aus '{layer.name}' entfernen?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )

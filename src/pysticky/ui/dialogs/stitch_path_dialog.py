@@ -33,6 +33,7 @@ from ...core import (
     Pattern,
 )
 from ...core.constants import DEFAULT_FABRIC_COUNT, MAX_FABRIC_COUNT, MIN_FABRIC_COUNT
+from ...core.i18n import t
 from ...core.stitch_path_optimizer import StitchPathOptimizer
 from ..styles import THEME
 from ..widgets.path_preview import PathPreviewWidget
@@ -58,7 +59,7 @@ class StitchPathDialog(QDialog):
         self._setup_ui()
         self._apply_style()
 
-        self.setWindowTitle("Stickpfad-Optimierung")
+        self.setWindowTitle(t("Stickpfad-Optimierung"))
         self.setMinimumSize(*UI_CONFIG.dialog_min_xlarge)
         self.resize(1200, 850)
 
@@ -88,23 +89,23 @@ class StitchPathDialog(QDialog):
         layout = QVBoxLayout(self)
 
         # Einstellungen
-        settings_group = QGroupBox("Einstellungen")
+        settings_group = QGroupBox(t("Einstellungen"))
         settings_layout = QHBoxLayout(settings_group)
 
-        settings_layout.addWidget(QLabel("Strategie:"))
+        settings_layout.addWidget(QLabel(t("Strategie:")))
         self._strategy_combo = QComboBox()
         self._strategy_combo.addItem(
-            "Zeilenweise (Schlangenlinie)", OptimizationStrategy.ROW_BY_ROW
+            t("Zeilenweise (Schlangenlinie)"), OptimizationStrategy.ROW_BY_ROW
         )
-        self._strategy_combo.addItem("Nächster Nachbar", OptimizationStrategy.NEAREST_NEIGHBOR)
-        self._strategy_combo.addItem("Danish Method", OptimizationStrategy.DANISH_METHOD)
-        self._strategy_combo.addItem("Spaltenweise", OptimizationStrategy.COLUMN_BY_COLUMN)
-        self._strategy_combo.addItem("Diagonal", OptimizationStrategy.DIAGONAL)
+        self._strategy_combo.addItem(t("Nächster Nachbar"), OptimizationStrategy.NEAREST_NEIGHBOR)
+        self._strategy_combo.addItem(t("Danish Method"), OptimizationStrategy.DANISH_METHOD)
+        self._strategy_combo.addItem(t("Spaltenweise"), OptimizationStrategy.COLUMN_BY_COLUMN)
+        self._strategy_combo.addItem(t("Diagonal"), OptimizationStrategy.DIAGONAL)
         self._strategy_combo.currentIndexChanged.connect(self._on_strategy_changed)
         settings_layout.addWidget(self._strategy_combo)
 
         settings_layout.addSpacing(20)
-        settings_layout.addWidget(QLabel("Stoffzählung:"))
+        settings_layout.addWidget(QLabel(t("Stoffzählung:")))
         self._fabric_spin = QSpinBox()
         self._fabric_spin.setRange(MIN_FABRIC_COUNT, MAX_FABRIC_COUNT)
         self._fabric_spin.setValue(DEFAULT_FABRIC_COUNT)
@@ -114,15 +115,15 @@ class StitchPathDialog(QDialog):
 
         settings_layout.addStretch()
 
-        self._optimize_btn = QPushButton("Optimieren")
+        self._optimize_btn = QPushButton(t("Optimieren"))
         self._optimize_btn.clicked.connect(self._run_optimization)
         settings_layout.addWidget(self._optimize_btn)
 
-        self._compare_btn = QPushButton("Alle vergleichen")
+        self._compare_btn = QPushButton(t("Alle vergleichen"))
         self._compare_btn.clicked.connect(self._run_comparison)
         settings_layout.addWidget(self._compare_btn)
 
-        self._cancel_btn = QPushButton("Abbrechen")
+        self._cancel_btn = QPushButton(t("Abbrechen"))
         self._cancel_btn.clicked.connect(self._cancel_operation)
         self._cancel_btn.hide()
         settings_layout.addWidget(self._cancel_btn)
@@ -148,19 +149,19 @@ class StitchPathDialog(QDialog):
 
         # Vorschau-Header mit Optionen und Zoom
         preview_header = QHBoxLayout()
-        preview_header.addWidget(QLabel("Pfad-Vorschau:"))
+        preview_header.addWidget(QLabel(t("Pfad-Vorschau:")))
         preview_header.addStretch()
 
-        self._show_numbers_cb = QCheckBox("Nummern")
+        self._show_numbers_cb = QCheckBox(t("Nummern"))
         self._show_numbers_cb.toggled.connect(self._on_preview_options_changed)
         preview_header.addWidget(self._show_numbers_cb)
 
-        self._show_jumps_cb = QCheckBox("Sprünge")
+        self._show_jumps_cb = QCheckBox(t("Sprünge"))
         self._show_jumps_cb.setChecked(True)
         self._show_jumps_cb.toggled.connect(self._on_preview_options_changed)
         preview_header.addWidget(self._show_jumps_cb)
 
-        self._show_context_cb = QCheckBox("Kontext")
+        self._show_context_cb = QCheckBox(t("Kontext"))
         self._show_context_cb.setChecked(True)
         self._show_context_cb.toggled.connect(self._on_preview_options_changed)
         preview_header.addWidget(self._show_context_cb)
@@ -203,12 +204,12 @@ class StitchPathDialog(QDialog):
         table_widget = QWidget()
         table_layout = QVBoxLayout(table_widget)
         table_layout.setContentsMargins(0, 4, 0, 0)
-        table_layout.addWidget(QLabel("Farben und Pfade:"))
+        table_layout.addWidget(QLabel(t("Farben und Pfade:")))
 
         self._color_table = QTableWidget()
         self._color_table.setColumnCount(5)
         self._color_table.setHorizontalHeaderLabels(
-            ["Farbe", "Stiche", "Distanz", "Sprünge", "Garn (cm)"]
+            [t("Farbe"), t("Stiche"), t("Distanz"), t("Sprünge"), t("Garn (cm)")]
         )
         self._color_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._color_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -224,16 +225,16 @@ class StitchPathDialog(QDialog):
         layout.addWidget(splitter)
 
         # Statistiken
-        stats_group = QGroupBox("Zusammenfassung")
+        stats_group = QGroupBox(t("Zusammenfassung"))
         stats_layout = QHBoxLayout(stats_group)
 
         self._stats_labels = {}
         for key, label in [
-            ("stitches", "Stiche:"),
-            ("colors", "Farben:"),
-            ("distance", "Rückseiten-Distanz:"),
-            ("jumps", "Sprünge:"),
-            ("thread", "Geschätzter Garnverbrauch:"),
+            ("stitches", t("Stiche:")),
+            ("colors", t("Farben:")),
+            ("distance", t("Rückseiten-Distanz:")),
+            ("jumps", t("Sprünge:")),
+            ("thread", t("Geschätzter Garnverbrauch:")),
         ]:
             stats_layout.addWidget(QLabel(label))
             value_label = QLabel("-")
@@ -245,12 +246,12 @@ class StitchPathDialog(QDialog):
         layout.addWidget(stats_group)
 
         # Vergleich
-        self._comparison_group = QGroupBox("Strategievergleich")
+        self._comparison_group = QGroupBox(t("Strategievergleich"))
         comparison_layout = QVBoxLayout(self._comparison_group)
         self._comparison_table = QTableWidget()
         self._comparison_table.setColumnCount(5)
         self._comparison_table.setHorizontalHeaderLabels(
-            ["Strategie", "Distanz", "Sprünge", "Garn (cm)", "Bewertung"]
+            [t("Strategie"), t("Distanz"), t("Sprünge"), t("Garn (cm)"), t("Bewertung")]
         )
         self._comparison_table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
@@ -265,18 +266,18 @@ class StitchPathDialog(QDialog):
         button_layout.addStretch()
 
         # Export-Button mit Menü
-        self._export_btn = QPushButton("Exportieren ▼")
+        self._export_btn = QPushButton(t("Exportieren ▼"))
         self._export_btn.setEnabled(False)
 
         export_menu = QMenu(self)
-        export_menu.addAction("Als Text exportieren (.txt)", self._export_text)
-        export_menu.addAction("Aktuellen Pfad als Bild (.png)", self._export_current_image)
-        export_menu.addAction("Alle Pfade als Bilder...", self._export_all_images)
+        export_menu.addAction(t("Als Text exportieren (.txt)"), self._export_text)
+        export_menu.addAction(t("Aktuellen Pfad als Bild (.png)"), self._export_current_image)
+        export_menu.addAction(t("Alle Pfade als Bilder..."), self._export_all_images)
         self._export_btn.setMenu(export_menu)
 
         button_layout.addWidget(self._export_btn)
 
-        close_btn = QPushButton("Schließen")
+        close_btn = QPushButton(t("Schließen"))
         close_btn.clicked.connect(self.accept)
         button_layout.addWidget(close_btn)
         layout.addLayout(button_layout)
@@ -293,7 +294,7 @@ class StitchPathDialog(QDialog):
 
         if running:
             self._progress_bar.setValue(0)
-            self._progress_label.setText("Starte...")
+            self._progress_label.setText(t("Starte..."))
 
     def _start_worker(self) -> None:
         """Erstellt und startet Worker-Thread."""
@@ -354,7 +355,7 @@ class StitchPathDialog(QDialog):
         """Bricht laufende Operation ab."""
         if self._worker:
             self._worker.cancel()
-        self._progress_label.setText("Abbrechen...")
+        self._progress_label.setText(t("Abbrechen..."))
 
     def _on_progress(self, current: int, total: int, message: str) -> None:
         """Update Fortschrittsanzeige."""
@@ -466,11 +467,11 @@ class StitchPathDialog(QDialog):
         best_distance = sorted_results[0][1].total_distance
 
         names = {
-            "row_by_row": "Zeilenweise",
-            "nearest": "Nächster Nachbar",
-            "danish": "Danish Method",
-            "column": "Spaltenweise",
-            "diagonal": "Diagonal",
+            "row_by_row": t("Zeilenweise"),
+            "nearest": t("Nächster Nachbar"),
+            "danish": t("Danish Method"),
+            "column": t("Spaltenweise"),
+            "diagonal": t("Diagonal"),
         }
 
         for row, (key, result) in enumerate(sorted_results):
@@ -526,7 +527,7 @@ class StitchPathDialog(QDialog):
         from PySide6.QtWidgets import QFileDialog, QMessageBox
 
         filename, _ = QFileDialog.getSaveFileName(
-            self, "Stickplan als Text exportieren", "", "Textdatei (*.txt);;Alle Dateien (*)"
+            self, t("Stickplan als Text exportieren"), "", t("Textdatei (*.txt);;Alle Dateien (*)")
         )
         if not filename:
             return
@@ -562,17 +563,17 @@ class StitchPathDialog(QDialog):
                 f.write("=" * 60 + "\nEnde des Stickplans\n")
 
             QMessageBox.information(
-                self, "Export erfolgreich", f"Stickplan wurde exportiert:\n{filename}"
+                self, t("Export erfolgreich"), f"Stickplan wurde exportiert:\n{filename}"
             )
         except (OSError, ValueError) as e:
-            QMessageBox.critical(self, "Fehler beim Export", f"Fehler: {e}")
+            QMessageBox.critical(self, t("Fehler beim Export"), f"Fehler: {e}")
 
     def _export_current_image(self) -> None:
         """Exportiert den aktuell ausgewählten Pfad als PNG-Bild."""
         if not self._result or not self._preview._color_path:
             from PySide6.QtWidgets import QMessageBox
 
-            QMessageBox.warning(self, "Kein Pfad", "Bitte wählen Sie zuerst eine Farbe aus.")
+            QMessageBox.warning(self, t("Kein Pfad"), t("Bitte wählen Sie zuerst eine Farbe aus."))
             return
 
         from PySide6.QtWidgets import QFileDialog, QMessageBox
@@ -586,9 +587,9 @@ class StitchPathDialog(QDialog):
 
         filename, _ = QFileDialog.getSaveFileName(
             self,
-            "Pfad als Bild exportieren",
+            t("Pfad als Bild exportieren"),
             f"stickpfad_{default_name}.png",
-            "PNG Bild (*.png);;Alle Dateien (*)",
+            t("PNG Bild (*.png);;Alle Dateien (*)"),
         )
         if not filename:
             return
@@ -598,10 +599,10 @@ class StitchPathDialog(QDialog):
         if image:
             if image.save(filename):
                 QMessageBox.information(
-                    self, "Export erfolgreich", f"Pfad-Bild wurde exportiert:\n{filename}"
+                    self, t("Export erfolgreich"), f"Pfad-Bild wurde exportiert:\n{filename}"
                 )
             else:
-                QMessageBox.critical(self, "Fehler", "Bild konnte nicht gespeichert werden.")
+                QMessageBox.critical(self, t("Fehler"), t("Bild konnte nicht gespeichert werden."))
 
     def _export_all_images(self) -> None:
         """Exportiert alle Pfade als PNG-Bilder in einen Ordner."""
@@ -613,7 +614,7 @@ class StitchPathDialog(QDialog):
         from PySide6.QtWidgets import QFileDialog, QMessageBox
 
         # Ordner auswählen
-        folder = QFileDialog.getExistingDirectory(self, "Ordner für Pfad-Bilder auswählen")
+        folder = QFileDialog.getExistingDirectory(self, t("Ordner für Pfad-Bilder auswählen"))
         if not folder:
             return
 
@@ -646,14 +647,14 @@ class StitchPathDialog(QDialog):
         if errors:
             QMessageBox.warning(
                 self,
-                "Export teilweise erfolgreich",
+                t("Export teilweise erfolgreich"),
                 f"{exported} von {len(self._result.color_paths)} Bildern exportiert.\n"
                 f"Fehler bei: {', '.join(errors)}",
             )
         else:
             QMessageBox.information(
                 self,
-                "Export erfolgreich",
+                t("Export erfolgreich"),
                 f"Alle {exported} Pfad-Bilder wurden exportiert nach:\n{folder}",
             )
 

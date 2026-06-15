@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.color_math import delta_e
+from ...core.i18n import t
 from ...core.palette import ThreadPalette, get_palette_manager
 from ...core.thread import Thread
 from ..styles import THEME
@@ -272,7 +273,7 @@ class ColorSwatch(QFrame):
         painter.drawText(
             target_rect.adjusted(4, 2, -4, -2),
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft,
-            "Wunsch",
+            t("Wunsch"),
         )
 
         # Garn-Farbe (rechts, breit — ca 2/3)
@@ -289,7 +290,7 @@ class ColorSwatch(QFrame):
         painter.drawText(
             thread_rect.adjusted(4, 2, -4, -2),
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft,
-            "Garn",
+            t("Garn"),
         )
 
         # === Garn-Info ===
@@ -340,7 +341,9 @@ class ColorSwatch(QFrame):
             painter.setPen(QColor(THEME.text_disabled))
             painter.setFont(QFont("Segoe UI", 8, QFont.Weight.Normal))
             painter.drawText(
-                rect.adjusted(10, info_y, -10, 0), Qt.AlignmentFlag.AlignTop, "Kein passendes Garn"
+                rect.adjusted(10, info_y, -10, 0),
+                Qt.AlignmentFlag.AlignTop,
+                t("Kein passendes Garn"),
             )
 
         # === Auswahl-Indikator: groß und klar ===
@@ -370,7 +373,7 @@ class ColorSwatch(QFrame):
             painter.drawText(
                 rect.adjusted(0, 6, -8, -rect.height() + 22),
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop,
-                "+ wählen",
+                t("+ wählen"),
             )
 
 
@@ -429,7 +432,7 @@ class ColorHarmonyDialog(QDialog):
         self._harmony_swatches: list[ColorSwatch] = []
         self._selected_threads: list[Thread] = []
 
-        self.setWindowTitle("Farb-Harmonien")
+        self.setWindowTitle(t("Farb-Harmonien"))
         self.setMinimumSize(780, 620)
         self.resize(820, 660)
 
@@ -447,9 +450,11 @@ class ColorHarmonyDialog(QDialog):
 
         # === Einführungs-Text: erklärt was der Dialog tut ===
         intro = QLabel(
-            "Diese Funktion schlägt Garne vor, die mit der gewählten Ausgangsfarbe "
-            "nach <b>Farbtheorie</b> harmonieren. Wähle den Harmonie-Typ und klicke "
-            "auf die Karten, die du in deine Palette übernehmen willst."
+            t(
+                "Diese Funktion schlägt Garne vor, die mit der gewählten Ausgangsfarbe "
+                "nach <b>Farbtheorie</b> harmonieren. Wähle den Harmonie-Typ und klicke "
+                "auf die Karten, die du in deine Palette übernehmen willst."
+            )
         )
         intro.setWordWrap(True)
         intro.setStyleSheet(
@@ -464,7 +469,7 @@ class ColorHarmonyDialog(QDialog):
         header.setSpacing(16)
 
         # Ausgangsfarbe
-        source_group = QGroupBox("Ausgangsfarbe")
+        source_group = QGroupBox(t("Ausgangsfarbe"))
         source_layout = QVBoxLayout(source_group)
         source_layout.setContentsMargins(14, 18, 14, 12)
         source_layout.setSpacing(8)
@@ -484,14 +489,14 @@ class ColorHarmonyDialog(QDialog):
         header.addWidget(source_group)
 
         # Einstellungen
-        settings_group = QGroupBox("Einstellungen")
+        settings_group = QGroupBox(t("Einstellungen"))
         settings_layout = QGridLayout(settings_group)
         settings_layout.setContentsMargins(14, 18, 14, 12)
         settings_layout.setHorizontalSpacing(12)
         settings_layout.setVerticalSpacing(10)
 
         # Harmonie-Typ
-        settings_layout.addWidget(QLabel("Harmonie-Typ:"), 0, 0)
+        settings_layout.addWidget(QLabel(t("Harmonie-Typ:")), 0, 0)
         self._harmony_combo = QComboBox()
         self._harmony_combo.addItems(
             [
@@ -515,7 +520,7 @@ class ColorHarmonyDialog(QDialog):
         settings_layout.addWidget(self._harmony_desc, 1, 0, 1, 2)
 
         # Palette
-        settings_layout.addWidget(QLabel("Garn-Palette:"), 2, 0)
+        settings_layout.addWidget(QLabel(t("Garn-Palette:")), 2, 0)
         self._palette_combo = QComboBox()
         self._palette_combo.addItems(self._palette_manager.available_palettes)
         self._palette_combo.currentTextChanged.connect(self._on_palette_changed)
@@ -533,7 +538,7 @@ class ColorHarmonyDialog(QDialog):
         layout.addLayout(header)
 
         # === Harmonische Farben ===
-        harmonies_group = QGroupBox("Vorschläge — Karte anklicken zum Auswählen")
+        harmonies_group = QGroupBox(t("Vorschläge — Karte anklicken zum Auswählen"))
         harmonies_layout = QVBoxLayout(harmonies_group)
         harmonies_layout.setContentsMargins(12, 18, 12, 12)
 
@@ -559,17 +564,17 @@ class ColorHarmonyDialog(QDialog):
         # Buttons
         btn_layout = QHBoxLayout()
 
-        self._select_all_btn = QPushButton("Alle auswählen")
+        self._select_all_btn = QPushButton(t("Alle auswählen"))
         self._select_all_btn.clicked.connect(self._select_all)
         btn_layout.addWidget(self._select_all_btn)
 
-        self._select_none_btn = QPushButton("Keine auswählen")
+        self._select_none_btn = QPushButton(t("Keine auswählen"))
         self._select_none_btn.clicked.connect(self._select_none)
         btn_layout.addWidget(self._select_none_btn)
 
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.setFixedSize(100, 34)
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)

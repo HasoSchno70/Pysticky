@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core import Pattern
+from ...core.i18n import t
 from ..styles import THEME
 from .replace_color_dialog import ColorBox
 
@@ -43,7 +44,7 @@ class SwapColorsDialog(QDialog):
         if len(pattern.color_entries) >= 2 and self._second_index == self._first_index:
             self._second_index = 1 if self._first_index == 0 else 0
 
-        self.setWindowTitle("Farben tauschen")
+        self.setWindowTitle(t("Farben tauschen"))
         self.setMinimumWidth(420)
 
         self._setup_ui()
@@ -54,15 +55,17 @@ class SwapColorsDialog(QDialog):
         layout.setSpacing(15)
 
         desc = QLabel(
-            "Tauscht alle Stiche zweier Farben gegenseitig.\n"
-            "Symbole und Listenreihenfolge bleiben erhalten."
+            t(
+                "Tauscht alle Stiche zweier Farben gegenseitig.\n"
+                "Symbole und Listenreihenfolge bleiben erhalten."
+            )
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {THEME.text_muted};")
         layout.addWidget(desc)
 
         first_row = QHBoxLayout()
-        first_row.addWidget(QLabel("Farbe A:"))
+        first_row.addWidget(QLabel(t("Farbe A:")))
         self.first_combo = QComboBox()
         self._populate_combo(self.first_combo)
         self.first_combo.setCurrentIndex(self._first_index)
@@ -80,7 +83,7 @@ class SwapColorsDialog(QDialog):
         layout.addWidget(arrow_label)
 
         second_row = QHBoxLayout()
-        second_row.addWidget(QLabel("Farbe B:"))
+        second_row.addWidget(QLabel(t("Farbe B:")))
         self.second_combo = QComboBox()
         self._populate_combo(self.second_combo)
         self.second_combo.setCurrentIndex(self._second_index)
@@ -134,13 +137,13 @@ class SwapColorsDialog(QDialog):
             second_count = entry.stitch_count
 
         if first_count == 0 and second_count == 0:
-            self.info_label.setText("Keine Stiche in beiden Farben")
+            self.info_label.setText(t("Keine Stiche in beiden Farben"))
         else:
             self.info_label.setText(f"{first_count} ↔ {second_count} Stiche werden getauscht")
 
     def _on_accept(self) -> None:
         if self._first_index == self._second_index:
-            QMessageBox.warning(self, "Hinweis", "Bitte zwei unterschiedliche Farben wählen.")
+            QMessageBox.warning(self, t("Hinweis"), t("Bitte zwei unterschiedliche Farben wählen."))
             return
         self.accept()
 

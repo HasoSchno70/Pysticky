@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...core.i18n import t
 from ...core.palette import get_palette_manager
 from ...core.thread import Thread
 
@@ -35,7 +36,7 @@ class BlendThreadsDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Tweed-Blend erzeugen")
+        self.setWindowTitle(t("Tweed-Blend erzeugen"))
         self.setMinimumWidth(440)
         self._result_thread: Optional[Thread] = None
 
@@ -48,9 +49,11 @@ class BlendThreadsDialog(QDialog):
         layout.setSpacing(12)
 
         info = QLabel(
-            "Kombiniere zwei Garne zu einem Tweed-Effekt. Beispiel: 1 Strang DMC 310 "
-            "(schwarz) + 1 Strang DMC 745 (creme) ergibt einen warmen "
-            "Salt&Pepper-Ton. Die Mischfarbe wird perzeptuell berechnet (CIE-Lab)."
+            t(
+                "Kombiniere zwei Garne zu einem Tweed-Effekt. Beispiel: 1 Strang DMC 310 "
+                "(schwarz) + 1 Strang DMC 745 (creme) ergibt einen warmen "
+                "Salt&Pepper-Ton. Die Mischfarbe wird perzeptuell berechnet (CIE-Lab)."
+            )
         )
         info.setWordWrap(True)
         layout.addWidget(info)
@@ -65,9 +68,9 @@ class BlendThreadsDialog(QDialog):
         self.spin_strands_a.setRange(1, 6)
         self.spin_strands_a.setValue(1)
 
-        form.addRow("Palette A:", self.combo_palette_a)
-        form.addRow("Garn A:", self.combo_thread_a)
-        form.addRow("Straenge A:", self.spin_strands_a)
+        form.addRow(t("Palette A:"), self.combo_palette_a)
+        form.addRow(t("Garn A:"), self.combo_thread_a)
+        form.addRow(t("Straenge A:"), self.spin_strands_a)
 
         # Komponente 2
         self.combo_palette_b = QComboBox()
@@ -77,15 +80,15 @@ class BlendThreadsDialog(QDialog):
         self.spin_strands_b.setRange(1, 6)
         self.spin_strands_b.setValue(1)
 
-        form.addRow("Palette B:", self.combo_palette_b)
-        form.addRow("Garn B:", self.combo_thread_b)
-        form.addRow("Straenge B:", self.spin_strands_b)
+        form.addRow(t("Palette B:"), self.combo_palette_b)
+        form.addRow(t("Garn B:"), self.combo_thread_b)
+        form.addRow(t("Straenge B:"), self.spin_strands_b)
 
         layout.addLayout(form)
 
         # Vorschau
         preview_row = QHBoxLayout()
-        preview_label = QLabel("Vorschau:")
+        preview_label = QLabel(t("Vorschau:"))
         self.preview_swatch = QFrame()
         self.preview_swatch.setFrameShape(QFrame.Shape.Box)
         self.preview_swatch.setFixedSize(64, 64)
@@ -101,7 +104,7 @@ class BlendThreadsDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Zum Pattern hinzufuegen")
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("Zum Pattern hinzufuegen"))
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -161,7 +164,7 @@ class BlendThreadsDialog(QDialog):
         ta = self._selected_thread(self.combo_thread_a)
         tb = self._selected_thread(self.combo_thread_b)
         if ta is None or tb is None:
-            self.preview_text.setText("(Beide Garne waehlen)")
+            self.preview_text.setText(t("(Beide Garne waehlen)"))
             return
 
         try:

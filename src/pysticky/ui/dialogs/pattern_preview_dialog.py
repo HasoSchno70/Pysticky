@@ -42,6 +42,7 @@ from ...core.constants import (
     MAX_ZOOM_PERCENT,
     MIN_ZOOM_PERCENT,
 )
+from ...core.i18n import t
 from ..rendering import PreviewRenderEngine, RenderMode
 from ..styles import THEME
 
@@ -163,7 +164,7 @@ class PreviewCanvas(QWidget):
 
         if self._pattern.width <= 0 or self._pattern.height <= 0:
             painter.setPen(QColor(THEME.text_muted))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Kein Muster geladen")
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, t("Kein Muster geladen"))
             return
 
         cs = self.cell_size
@@ -312,7 +313,7 @@ class PatternPreviewDialog(QDialog):
 
         self._engine = PreviewRenderEngine(pattern)
 
-        title_suffix = "Vorlagen-Vorschau" if self._is_dp else "Muster-Vorschau"
+        title_suffix = t("Vorlagen-Vorschau") if self._is_dp else t("Muster-Vorschau")
         self.setWindowTitle(f"{title_suffix} — {pattern.name}")
         self.setMinimumSize(*UI_CONFIG.dialog_min_large)
         self.resize(1100, 800)
@@ -340,14 +341,14 @@ class PatternPreviewDialog(QDialog):
 
         # --- Erklärungs-Banner (modus-spezifisch) ---
         if self._is_dp:
-            intro_text = (
+            intro_text = t(
                 "So sieht deine Vorlage fertig geklebt aus. Die Drills haben "
                 "die typische Glanz-Optik mit hellerer Oberseite und "
                 "dunklerem Schatten. Mit dem Mausrad zoomst du, mit Drag "
                 "verschiebst du die Ansicht."
             )
         else:
-            intro_text = (
+            intro_text = t(
                 "So sieht dein Muster gestickt aus. Wechsle den <b>Modus</b> für "
                 "verschiedene Darstellungen, probiere unterschiedliche <b>Stoffe</b> "
                 "und <b>Stoff-Farben</b>. Mit dem Mausrad zoomst du, mit Drag "
@@ -399,24 +400,28 @@ class PatternPreviewDialog(QDialog):
 
         # === Gruppe: Modus (Darstellung) ===
         self._mode_label_widget = self._make_group_label(
-            "Drill-Darstellung" if self._is_dp else "Darstellung"
+            t("Drill-Darstellung") if self._is_dp else t("Darstellung")
         )
         row.addWidget(self._mode_label_widget)
         self._mode_combo = QComboBox()
         if self._is_dp:
             # Im DP-Modus gibt's keinen "Stoff" und keinen "Symbol-Plan"
             # — wir bieten zwei realistische DP-Renderings an.
-            self._mode_combo.addItems(["Drill-Vorschau", "Pixel-Vorschau"])
+            self._mode_combo.addItems([t("Drill-Vorschau"), t("Pixel-Vorschau")])
             self._mode_combo.setToolTip(
-                "Drill-Vorschau: facettierte Drills auf Klebegrund.\n"
-                "Pixel-Vorschau: flache Farbflaechen — wie im Editor."
+                t(
+                    "Drill-Vorschau: facettierte Drills auf Klebegrund.\n"
+                    "Pixel-Vorschau: flache Farbflaechen — wie im Editor."
+                )
             )
         else:
-            self._mode_combo.addItems(["Stoff-Vorschau", "Pixel-Vorschau", "Symbol-Plan"])
+            self._mode_combo.addItems([t("Stoff-Vorschau"), t("Pixel-Vorschau"), t("Symbol-Plan")])
             self._mode_combo.setToolTip(
-                "Stoff-Vorschau: realistisch mit Aida-Textur und Kreuzstich-Muster.\n"
-                "Pixel-Vorschau: flache Farbflächen — wie das Pattern im Editor.\n"
-                "Symbol-Plan: schwarz-weiße Symbole — zum Drucken."
+                t(
+                    "Stoff-Vorschau: realistisch mit Aida-Textur und Kreuzstich-Muster.\n"
+                    "Pixel-Vorschau: flache Farbflächen — wie das Pattern im Editor.\n"
+                    "Symbol-Plan: schwarz-weiße Symbole — zum Drucken."
+                )
             )
         self._mode_combo.setMinimumWidth(160)
         self._mode_combo.currentIndexChanged.connect(self._on_mode_changed)
@@ -427,7 +432,7 @@ class PatternPreviewDialog(QDialog):
         row.addWidget(self._sep_after_mode)
 
         # === Gruppe: Stoff (nur im Stick-Modus relevant) ===
-        self._fabric_group_label = self._make_group_label("Stoff")
+        self._fabric_group_label = self._make_group_label(t("Stoff"))
         row.addWidget(self._fabric_group_label)
         self._fabric_combo = QComboBox()
         self._fabric_combo.addItems(
@@ -436,7 +441,7 @@ class PatternPreviewDialog(QDialog):
         self._fabric_combo.setCurrentIndex(1)  # Aida 14
         self._fabric_combo.setMinimumWidth(110)
         self._fabric_combo.setToolTip(
-            "Stoffart — höhere Zahl = feiner gewebt = kleineres fertiges Muster"
+            t("Stoffart — höhere Zahl = feiner gewebt = kleineres fertiges Muster")
         )
         self._fabric_combo.currentIndexChanged.connect(self._on_fabric_changed)
         row.addWidget(self._fabric_combo)
@@ -444,7 +449,7 @@ class PatternPreviewDialog(QDialog):
         self._color_combo = QComboBox()
         self._color_combo.addItems(list(PreviewRenderEngine.FABRIC_COLORS.keys()))
         self._color_combo.setMinimumWidth(110)
-        self._color_combo.setToolTip("Farbe des Stoff-Hintergrunds")
+        self._color_combo.setToolTip(t("Farbe des Stoff-Hintergrunds"))
         self._color_combo.currentTextChanged.connect(self._on_color_changed)
         row.addWidget(self._color_combo)
 
@@ -452,15 +457,15 @@ class PatternPreviewDialog(QDialog):
         row.addWidget(self._sep_after_fabric)
 
         # === Gruppe: Optionen (Rueckstiche / Fortschritt — beide weg im DP) ===
-        self._cb_backstitches = QCheckBox("Rückstiche")
+        self._cb_backstitches = QCheckBox(t("Rückstiche"))
         self._cb_backstitches.setChecked(True)
-        self._cb_backstitches.setToolTip("Rückstich-Linien in der Vorschau zeigen")
+        self._cb_backstitches.setToolTip(t("Rückstich-Linien in der Vorschau zeigen"))
         self._cb_backstitches.toggled.connect(self._on_toggle_backstitches)
         row.addWidget(self._cb_backstitches)
 
-        self._cb_completion = QCheckBox("Fortschritt")
+        self._cb_completion = QCheckBox(t("Fortschritt"))
         self._cb_completion.setChecked(False)
-        self._cb_completion.setToolTip("Bereits erledigte Stiche markieren")
+        self._cb_completion.setToolTip(t("Bereits erledigte Stiche markieren"))
         self._cb_completion.toggled.connect(self._on_toggle_completion)
         row.addWidget(self._cb_completion)
 
@@ -479,12 +484,12 @@ class PatternPreviewDialog(QDialog):
         row.addStretch()
 
         # === Gruppe: Zoom ===
-        row.addWidget(self._make_group_label("Zoom"))
+        row.addWidget(self._make_group_label(t("Zoom")))
         self._zoom_slider = QSlider(Qt.Orientation.Horizontal)
         self._zoom_slider.setRange(PreviewCanvas.MIN_ZOOM, PreviewCanvas.MAX_ZOOM)
         self._zoom_slider.setValue(DEFAULT_ZOOM_PERCENT)
         self._zoom_slider.setFixedWidth(140)
-        self._zoom_slider.setToolTip("Zoom — auch per Mausrad im Vorschau-Bereich möglich")
+        self._zoom_slider.setToolTip(t("Zoom — auch per Mausrad im Vorschau-Bereich möglich"))
         self._zoom_slider.valueChanged.connect(self._on_slider_zoom_changed)
         row.addWidget(self._zoom_slider)
 
@@ -496,15 +501,15 @@ class PatternPreviewDialog(QDialog):
         )
         row.addWidget(self._zoom_label)
 
-        btn_fit = QPushButton("Einpassen")
+        btn_fit = QPushButton(t("Einpassen"))
         btn_fit.setMinimumWidth(96)
-        btn_fit.setToolTip("Zoom so anpassen, dass das ganze Muster sichtbar ist")
+        btn_fit.setToolTip(t("Zoom so anpassen, dass das ganze Muster sichtbar ist"))
         btn_fit.clicked.connect(lambda: self._canvas.zoom_fit())
         row.addWidget(btn_fit)
 
         btn_100 = QPushButton("1:1")
         btn_100.setMinimumWidth(46)
-        btn_100.setToolTip("Auf 100% Zoom setzen")
+        btn_100.setToolTip(t("Auf 100% Zoom setzen"))
         btn_100.clicked.connect(lambda: self._canvas.zoom_100())
         row.addWidget(btn_100)
 
@@ -575,13 +580,13 @@ class PatternPreviewDialog(QDialog):
         """Erstellt den Footer mit Export- und Schließen-Buttons."""
         footer = QHBoxLayout()
 
-        export_btn = QPushButton("📷 Als Bild speichern...")
+        export_btn = QPushButton(t("📷 Als Bild speichern..."))
         export_btn.clicked.connect(self._on_export_image)
         footer.addWidget(export_btn)
 
         footer.addStretch()
 
-        close_btn = QPushButton("Schließen")
+        close_btn = QPushButton(t("Schließen"))
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
         close_btn.setStyleSheet(f"""
@@ -692,14 +697,18 @@ class PatternPreviewDialog(QDialog):
     # =========================================================================
 
     MODE_DESCRIPTIONS = [
-        "Realistische Vorschau mit Aida-Stoff-Textur und Kreuzstich-Symbolen — so sieht es im Stickrahmen aus.",
-        "Pixel-Vorschau mit flachen Farben — schnell und klar wie im Editor.",
-        "Schwarz-weißer Symbol-Plan — ideal zum Drucken und unterwegs benutzen.",
+        t(
+            "Realistische Vorschau mit Aida-Stoff-Textur und Kreuzstich-Symbolen — so sieht es im Stickrahmen aus."
+        ),
+        t("Pixel-Vorschau mit flachen Farben — schnell und klar wie im Editor."),
+        t("Schwarz-weißer Symbol-Plan — ideal zum Drucken und unterwegs benutzen."),
     ]
 
     DP_MODE_DESCRIPTIONS = [
-        "Drill-Vorschau: facettierte Quadrate mit Glanzlicht und Schatten — so sieht die fertige DP-Vorlage geklebt aus.",
-        "Pixel-Vorschau: flache Farbflaechen — schnell zur Kontroll-Ansicht ohne Drill-Detail.",
+        t(
+            "Drill-Vorschau: facettierte Quadrate mit Glanzlicht und Schatten — so sieht die fertige DP-Vorlage geklebt aus."
+        ),
+        t("Pixel-Vorschau: flache Farbflaechen — schnell zur Kontroll-Ansicht ohne Drill-Detail."),
     ]
 
     def _on_mode_changed(self, index: int) -> None:
@@ -789,8 +798,8 @@ class PatternPreviewDialog(QDialog):
         # Auflösung wählen
         cell_size, ok = QInputDialog.getInt(
             self,
-            "Auflösung",
-            "Pixel pro Stich:",
+            t("Auflösung"),
+            t("Pixel pro Stich:"),
             value=12,
             min=4,
             max=50,
@@ -803,7 +812,7 @@ class PatternPreviewDialog(QDialog):
         if total_px > 64_000_000:  # > 8000x8000 ~ 64 Megapixel
             reply = QMessageBox.question(
                 self,
-                "Großes Bild",
+                t("Großes Bild"),
                 f"Das Bild wird {self._pattern.width * cell_size} × "
                 f"{self._pattern.height * cell_size} Pixel groß.\n"
                 f"Fortfahren?",
@@ -815,7 +824,7 @@ class PatternPreviewDialog(QDialog):
         # Datei-Dialog
         default_name = f"{self._pattern.name}_vorschau.png"
         path, _ = QFileDialog.getSaveFileName(
-            self, "Als Bild speichern", default_name, "PNG (*.png);;JPEG (*.jpg);;BMP (*.bmp)"
+            self, t("Als Bild speichern"), default_name, "PNG (*.png);;JPEG (*.jpg);;BMP (*.bmp)"
         )
         if not path:
             return
@@ -826,8 +835,8 @@ class PatternPreviewDialog(QDialog):
         if image.save(path):
             QMessageBox.information(
                 self,
-                "Export erfolgreich",
+                t("Export erfolgreich"),
                 f"Bild gespeichert:\n{path}\n\nGröße: {image.width()} × {image.height()} Pixel",
             )
         else:
-            QMessageBox.critical(self, "Fehler", "Bild konnte nicht gespeichert werden.")
+            QMessageBox.critical(self, t("Fehler"), t("Bild konnte nicht gespeichert werden."))

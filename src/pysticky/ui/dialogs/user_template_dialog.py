@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...core.i18n import t
 from ..styles import THEME
 
 
@@ -135,7 +136,7 @@ class SaveTemplateDialog(QDialog):
         super().__init__(parent)
         self._template: Optional[UserTemplate] = None
 
-        self.setWindowTitle("Template speichern")
+        self.setWindowTitle(t("Template speichern"))
         self.setMinimumWidth(400)
 
         self._setup_ui(width, height, fabric_count)
@@ -160,30 +161,30 @@ class SaveTemplateDialog(QDialog):
 
         # Name
         name_layout = QHBoxLayout()
-        name_layout.addWidget(QLabel("Name:"))
+        name_layout.addWidget(QLabel(t("Name:")))
 
         self._name_input = QLineEdit()
-        self._name_input.setPlaceholderText("Mein Template")
+        self._name_input.setPlaceholderText(t("Mein Template"))
         name_layout.addWidget(self._name_input, 1)
 
         layout.addLayout(name_layout)
 
         # Kategorie
         cat_layout = QHBoxLayout()
-        cat_layout.addWidget(QLabel("Kategorie:"))
+        cat_layout.addWidget(QLabel(t("Kategorie:")))
 
         self._category_combo = QComboBox()
         self._category_combo.setEditable(True)
         self._category_combo.addItems(
             [
-                "Eigene",
-                "Lesezeichen",
-                "Deckchen",
-                "Bordüren",
-                "Bilder",
-                "Kissen",
-                "Accessoires",
-                "Saisonal",
+                t("Eigene"),
+                t("Lesezeichen"),
+                t("Deckchen"),
+                t("Bordüren"),
+                t("Bilder"),
+                t("Kissen"),
+                t("Accessoires"),
+                t("Saisonal"),
             ]
         )
         cat_layout.addWidget(self._category_combo, 1)
@@ -191,11 +192,11 @@ class SaveTemplateDialog(QDialog):
         layout.addLayout(cat_layout)
 
         # Beschreibung
-        layout.addWidget(QLabel("Beschreibung (optional):"))
+        layout.addWidget(QLabel(t("Beschreibung (optional):")))
 
         self._description_input = QTextEdit()
         self._description_input.setMaximumHeight(60)
-        self._description_input.setPlaceholderText("Kurze Beschreibung des Templates...")
+        self._description_input.setPlaceholderText(t("Kurze Beschreibung des Templates..."))
         layout.addWidget(self._description_input)
 
         # Gespeicherte Werte
@@ -207,11 +208,11 @@ class SaveTemplateDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-        save_btn = QPushButton("Speichern")
+        save_btn = QPushButton(t("Speichern"))
         save_btn.setDefault(True)
         save_btn.clicked.connect(self._on_save)
         save_btn.setStyleSheet(f"""
@@ -256,7 +257,7 @@ class SaveTemplateDialog(QDialog):
     def _on_save(self) -> None:
         name = self._name_input.text().strip()
         if not name:
-            QMessageBox.warning(self, "Fehler", "Bitte gib einen Namen ein.")
+            QMessageBox.warning(self, t("Fehler"), t("Bitte gib einen Namen ein."))
             return
 
         self._template = UserTemplate(
@@ -284,7 +285,7 @@ class ManageTemplatesDialog(QDialog):
         super().__init__(parent)
         self._templates = load_user_templates()
 
-        self.setWindowTitle("Templates verwalten")
+        self.setWindowTitle(t("Templates verwalten"))
         self.setMinimumSize(500, 400)
 
         self._setup_ui()
@@ -298,7 +299,7 @@ class ManageTemplatesDialog(QDialog):
         # Liste
         list_layout = QVBoxLayout()
 
-        list_layout.addWidget(QLabel("Eigene Templates:"))
+        list_layout.addWidget(QLabel(t("Eigene Templates:")))
 
         self._list = QListWidget()
         self._list.currentRowChanged.connect(self._on_selection_changed)
@@ -314,7 +315,7 @@ class ManageTemplatesDialog(QDialog):
         details_layout.addWidget(self._preview)
 
         # Info
-        self._info_label = QLabel("Kein Template ausgewählt")
+        self._info_label = QLabel(t("Kein Template ausgewählt"))
         self._info_label.setWordWrap(True)
         self._info_label.setStyleSheet(f"color: {THEME.text_muted};")
         details_layout.addWidget(self._info_label)
@@ -322,19 +323,19 @@ class ManageTemplatesDialog(QDialog):
         details_layout.addStretch()
 
         # Buttons
-        self._delete_btn = QPushButton("Löschen")
+        self._delete_btn = QPushButton(t("Löschen"))
         self._delete_btn.setEnabled(False)
         self._delete_btn.clicked.connect(self._on_delete)
         details_layout.addWidget(self._delete_btn)
 
-        self._rename_btn = QPushButton("Umbenennen")
+        self._rename_btn = QPushButton(t("Umbenennen"))
         self._rename_btn.setEnabled(False)
         self._rename_btn.clicked.connect(self._on_rename)
         details_layout.addWidget(self._rename_btn)
 
         details_layout.addSpacing(20)
 
-        close_btn = QPushButton("Schließen")
+        close_btn = QPushButton(t("Schließen"))
         close_btn.clicked.connect(self.accept)
         details_layout.addWidget(close_btn)
 
@@ -397,7 +398,7 @@ class ManageTemplatesDialog(QDialog):
                 info += f"<br>{template.description}"
             self._info_label.setText(info)
         else:
-            self._info_label.setText("Kein Template ausgewählt")
+            self._info_label.setText(t("Kein Template ausgewählt"))
 
     def _on_delete(self) -> None:
         row = self._list.currentRow()
@@ -407,7 +408,7 @@ class ManageTemplatesDialog(QDialog):
         template = self._templates[row]
         reply = QMessageBox.question(
             self,
-            "Löschen",
+            t("Löschen"),
             f"Template '{template.name}' wirklich löschen?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -427,7 +428,9 @@ class ManageTemplatesDialog(QDialog):
 
         from PySide6.QtWidgets import QInputDialog
 
-        new_name, ok = QInputDialog.getText(self, "Umbenennen", "Neuer Name:", text=template.name)
+        new_name, ok = QInputDialog.getText(
+            self, t("Umbenennen"), t("Neuer Name:"), text=template.name
+        )
 
         if ok and new_name.strip():
             template.name = new_name.strip()

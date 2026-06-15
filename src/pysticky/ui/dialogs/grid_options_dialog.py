@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...core.i18n import t
+
 
 class ColorButton(QPushButton):
     """Button zur Farbauswahl."""
@@ -40,7 +42,7 @@ class ColorButton(QPushButton):
         """)
 
     def _on_click(self) -> None:
-        color = QColorDialog.getColor(self._color, self, "Farbe wählen")
+        color = QColorDialog.getColor(self._color, self, t("Farbe wählen"))
         if color.isValid():
             self._color = color
             self._update_style()
@@ -62,7 +64,7 @@ class GridOptionsDialog(QDialog):
         super().__init__(parent)
         self.canvas = canvas
 
-        self.setWindowTitle("Raster-Optionen")
+        self.setWindowTitle(t("Raster-Optionen"))
         self.setMinimumWidth(350)
 
         self._setup_ui()
@@ -73,63 +75,63 @@ class GridOptionsDialog(QDialog):
         layout.setSpacing(15)
 
         # === Intervalle ===
-        interval_group = QGroupBox("Linien-Intervalle")
+        interval_group = QGroupBox(t("Linien-Intervalle"))
         interval_layout = QFormLayout(interval_group)
 
         # Haupt-Raster (10er)
         self.spin_major = QSpinBox()
         self.spin_major.setRange(5, 50)
-        self.spin_major.setSuffix(" Stiche")
-        interval_layout.addRow("Haupt-Raster:", self.spin_major)
+        self.spin_major.setSuffix(t(" Stiche"))
+        interval_layout.addRow(t("Haupt-Raster:"), self.spin_major)
 
         # Neben-Raster (5er)
-        self.chk_minor = QCheckBox("Neben-Raster anzeigen")
+        self.chk_minor = QCheckBox(t("Neben-Raster anzeigen"))
         interval_layout.addRow(self.chk_minor)
 
         self.spin_minor = QSpinBox()
         self.spin_minor.setRange(1, 20)
-        self.spin_minor.setSuffix(" Stiche")
-        interval_layout.addRow("Neben-Raster:", self.spin_minor)
+        self.spin_minor.setSuffix(t(" Stiche"))
+        interval_layout.addRow(t("Neben-Raster:"), self.spin_minor)
 
         self.chk_minor.toggled.connect(self.spin_minor.setEnabled)
 
         layout.addWidget(interval_group)
 
         # === Farben ===
-        color_group = QGroupBox("Raster-Farben")
+        color_group = QGroupBox(t("Raster-Farben"))
         color_layout = QFormLayout(color_group)
 
         # Normal
         self.btn_color_normal = ColorButton(QColor(80, 80, 80))
-        color_layout.addRow("Normal:", self.btn_color_normal)
+        color_layout.addRow(t("Normal:"), self.btn_color_normal)
 
         # Neben-Linien
         self.btn_color_minor = ColorButton(QColor(120, 120, 120))
-        color_layout.addRow("Neben-Linien:", self.btn_color_minor)
+        color_layout.addRow(t("Neben-Linien:"), self.btn_color_minor)
 
         # Haupt-Linien
         self.btn_color_major = ColorButton(QColor(100, 100, 100))
-        color_layout.addRow("Haupt-Linien:", self.btn_color_major)
+        color_layout.addRow(t("Haupt-Linien:"), self.btn_color_major)
 
         layout.addWidget(color_group)
 
         # === Voreinstellungen ===
-        presets_group = QGroupBox("Voreinstellungen")
+        presets_group = QGroupBox(t("Voreinstellungen"))
         presets_layout = QHBoxLayout(presets_group)
 
-        btn_default = QPushButton("Standard")
+        btn_default = QPushButton(t("Standard"))
         btn_default.clicked.connect(self._preset_default)
         presets_layout.addWidget(btn_default)
 
-        btn_light = QPushButton("Hell")
+        btn_light = QPushButton(t("Hell"))
         btn_light.clicked.connect(self._preset_light)
         presets_layout.addWidget(btn_light)
 
-        btn_blue = QPushButton("Blau")
+        btn_blue = QPushButton(t("Blau"))
         btn_blue.clicked.connect(self._preset_blue)
         presets_layout.addWidget(btn_blue)
 
-        btn_red = QPushButton("Rot")
+        btn_red = QPushButton(t("Rot"))
         btn_red.clicked.connect(self._preset_red)
         presets_layout.addWidget(btn_red)
 

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...config import UI_CONFIG
+from ...core.i18n import t
 from ...core.pattern import Pattern
 from ..styles import THEME, Styles
 
@@ -75,7 +76,7 @@ class PatternImportDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Muster importieren (XSD/PAT/OXS)")
+        self.setWindowTitle(t("Muster importieren (XSD/PAT/OXS)"))
         self.setMinimumSize(*UI_CONFIG.dialog_min_medium)
         self.setStyleSheet(f"background: {THEME.bg_dark}; color: {THEME.text_primary};")
 
@@ -91,7 +92,7 @@ class PatternImportDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
 
         # Titel
-        title = QLabel("Muster Import (XSD/PAT/OXS)")
+        title = QLabel(t("Muster Import (XSD/PAT/OXS)"))
         title.setStyleSheet(f"""
             font-size: 18px;
             font-weight: bold;
@@ -101,15 +102,17 @@ class PatternImportDialog(QDialog):
 
         # Beschreibung
         desc = QLabel(
-            "Importiere Kreuzstich-Muster aus Pattern Maker (.xsd), "
-            "PCStitch (.pat) oder Open Cross Stitch (.oxs) Dateien."
+            t(
+                "Importiere Kreuzstich-Muster aus Pattern Maker (.xsd), "
+                "PCStitch (.pat) oder Open Cross Stitch (.oxs) Dateien."
+            )
         )
         desc.setStyleSheet(f"color: {THEME.text_secondary};")
         desc.setWordWrap(True)
         layout.addWidget(desc)
 
         # Dateiauswahl
-        file_group = QGroupBox("Datei")
+        file_group = QGroupBox(t("Datei"))
         file_group.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: bold;
@@ -128,7 +131,7 @@ class PatternImportDialog(QDialog):
 
         file_layout = QHBoxLayout(file_group)
 
-        self._file_label = QLabel("Keine Datei ausgewählt")
+        self._file_label = QLabel(t("Keine Datei ausgewählt"))
         self._file_label.setStyleSheet(f"""
             background: {THEME.bg_medium};
             border: 1px solid {THEME.border_dark};
@@ -138,7 +141,7 @@ class PatternImportDialog(QDialog):
         """)
         file_layout.addWidget(self._file_label, 1)
 
-        browse_btn = QPushButton("Durchsuchen...")
+        browse_btn = QPushButton(t("Durchsuchen..."))
         browse_btn.setStyleSheet(Styles.button_primary())
         browse_btn.clicked.connect(self._browse_file)
         file_layout.addWidget(browse_btn)
@@ -146,7 +149,7 @@ class PatternImportDialog(QDialog):
         layout.addWidget(file_group)
 
         # Vorschau
-        preview_group = QGroupBox("Vorschau")
+        preview_group = QGroupBox(t("Vorschau"))
         preview_group.setStyleSheet(file_group.styleSheet())
 
         preview_layout = QVBoxLayout(preview_group)
@@ -162,7 +165,7 @@ class PatternImportDialog(QDialog):
 
         preview_inner = QVBoxLayout(preview_frame)
 
-        self._preview_label = QLabel("Keine Vorschau verfügbar")
+        self._preview_label = QLabel(t("Keine Vorschau verfügbar"))
         self._preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._preview_label.setStyleSheet(f"color: {THEME.text_muted};")
         preview_inner.addWidget(self._preview_label)
@@ -172,7 +175,7 @@ class PatternImportDialog(QDialog):
         layout.addWidget(preview_group)
 
         # Info
-        info_group = QGroupBox("Informationen")
+        info_group = QGroupBox(t("Informationen"))
         info_group.setStyleSheet(file_group.styleSheet())
 
         info_layout = QFormLayout(info_group)
@@ -180,11 +183,11 @@ class PatternImportDialog(QDialog):
 
         self._info_labels = {}
         for key, label in [
-            ("name", "Name:"),
-            ("size", "Größe:"),
-            ("colors", "Farben:"),
-            ("stitches", "Stiche:"),
-            ("format", "Format:"),
+            ("name", t("Name:")),
+            ("size", t("Größe:")),
+            ("colors", t("Farben:")),
+            ("stitches", t("Stiche:")),
+            ("format", t("Format:")),
         ]:
             value_label = QLabel("-")
             value_label.setStyleSheet(f"color: {THEME.text_secondary};")
@@ -211,12 +214,12 @@ class PatternImportDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.setStyleSheet(Styles.button_secondary())
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-        self._import_btn = QPushButton("Importieren")
+        self._import_btn = QPushButton(t("Importieren"))
         self._import_btn.setStyleSheet(Styles.button_primary())
         self._import_btn.setEnabled(False)
         self._import_btn.clicked.connect(self.accept)
@@ -228,9 +231,11 @@ class PatternImportDialog(QDialog):
         """Öffnet den Datei-Dialog."""
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Muster-Datei öffnen",
+            t("Muster-Datei öffnen"),
             "",
-            "Kreuzstich-Muster (*.xsd *.pat *.oxs);;Pattern Maker (*.xsd);;PCStitch (*.pat);;Open Cross Stitch (*.oxs);;Alle (*.*)",
+            t(
+                "Kreuzstich-Muster (*.xsd *.pat *.oxs);;Pattern Maker (*.xsd);;PCStitch (*.pat);;Open Cross Stitch (*.oxs);;Alle (*.*)"
+            ),
         )
 
         if path:
@@ -249,8 +254,8 @@ class PatternImportDialog(QDialog):
         """)
 
         # Progress-Dialog anzeigen
-        self._load_progress = QProgressDialog("Muster wird importiert...", None, 0, 0, self)
-        self._load_progress.setWindowTitle("Muster importieren")
+        self._load_progress = QProgressDialog(t("Muster wird importiert..."), None, 0, 0, self)
+        self._load_progress.setWindowTitle(t("Muster importieren"))
         self._load_progress.setWindowModality(Qt.WindowModality.WindowModal)
         self._load_progress.setMinimumDuration(0)
         self._load_progress.setCancelButton(None)
@@ -314,7 +319,7 @@ class PatternImportDialog(QDialog):
             label.setText("-")
 
         self._preview_label.setPixmap(QPixmap())
-        self._preview_label.setText("Keine Vorschau verfügbar")
+        self._preview_label.setText(t("Keine Vorschau verfügbar"))
 
     def _update_preview(self):
         """Erstellt eine Vorschau des Musters."""

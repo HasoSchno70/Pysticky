@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...core.i18n import t
 from ...core.pattern import Pattern
 from ...core.pattern_diff import (
     DIFF_ADDED,
@@ -57,7 +58,7 @@ class PatternDiffDialog(QDialog):
         self._new = new_pattern
         self._diff = diff
 
-        title = "Pattern-Vergleich"
+        title = t("Pattern-Vergleich")
         if snapshot_name:
             title += f" — {snapshot_name}"
         self.setWindowTitle(title)
@@ -90,15 +91,15 @@ class PatternDiffDialog(QDialog):
 
         # Drei Spalten
         cols = QHBoxLayout()
-        cols.addWidget(self._make_column("Alt", self._render_pattern(self._old)))
-        cols.addWidget(self._make_column("Neu", self._render_pattern(self._new)))
-        cols.addWidget(self._make_column("Diff", self._render_diff()))
+        cols.addWidget(self._make_column(t("Alt"), self._render_pattern(self._old)))
+        cols.addWidget(self._make_column(t("Neu"), self._render_pattern(self._new)))
+        cols.addWidget(self._make_column(t("Diff"), self._render_diff()))
         layout.addLayout(cols, 1)
 
         # Buttons
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn_close = QPushButton("Schließen")
+        btn_close = QPushButton(t("Schließen"))
         btn_close.clicked.connect(self.accept)
         btn_row.addWidget(btn_close)
         layout.addLayout(btn_row)

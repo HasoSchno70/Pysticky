@@ -54,12 +54,12 @@ class ThreadPanel(QWidget):
         # Tab 1: Aktuelle Musterfarben
         pattern_tab = QWidget()
         self._setup_pattern_tab(pattern_tab)
-        self.tab_widget.addTab(pattern_tab, "Muster")
+        self.tab_widget.addTab(pattern_tab, t("Muster"))
 
         # Tab 2: Paletten-Browser
         palette_tab = QWidget()
         self._setup_palette_tab(palette_tab)
-        self.tab_widget.addTab(palette_tab, "Paletten")
+        self.tab_widget.addTab(palette_tab, t("Paletten"))
 
         self.setMinimumWidth(250)
 
@@ -247,7 +247,7 @@ class ThreadPanel(QWidget):
             self._edit_color(index)
 
     def _on_add_color(self) -> None:
-        color = QColorDialog.getColor(QColor(128, 128, 128), self, "Neue Garnfarbe wählen")
+        color = QColorDialog.getColor(QColor(128, 128, 128), self, t("Neue Garnfarbe wählen"))
         if color.isValid():
             thread = Thread(
                 name=f"Farbe {len(self._threads) + 1}",

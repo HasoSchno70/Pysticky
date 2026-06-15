@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...core.i18n import t
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -125,7 +126,7 @@ class ColorManagementDialog(QDialog):
         self._original_entries = list(pattern.color_entries)  # Backup
         self._changes_made = False
 
-        self.setWindowTitle("Farbpalette verwalten")
+        self.setWindowTitle(t("Farbpalette verwalten"))
         self.setMinimumSize(700, 550)
 
         self._setup_ui()
@@ -140,7 +141,7 @@ class ColorManagementDialog(QDialog):
         # Header
         header = QHBoxLayout()
 
-        title = QLabel("🎨 Farbpalette verwalten")
+        title = QLabel(t("🎨 Farbpalette verwalten"))
         title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {THEME.text_primary};")
         header.addWidget(title)
 
@@ -163,18 +164,18 @@ class ColorManagementDialog(QDialog):
         toolbar.setSpacing(5)
 
         # Sortier-Dropdown
-        toolbar.addWidget(QLabel("Sortieren:"))
+        toolbar.addWidget(QLabel(t("Sortieren:")))
         self._sort_combo = QComboBox()
         self._sort_combo.addItems(
             [
-                "Original",
-                "Nach Name (A-Z)",
-                "Nach Name (Z-A)",
-                "Nach Hersteller",
-                "Nach Helligkeit (hell → dunkel)",
-                "Nach Helligkeit (dunkel → hell)",
-                "Nach Verwendung (meiste zuerst)",
-                "Nach Verwendung (wenigste zuerst)",
+                t("Original"),
+                t("Nach Name (A-Z)"),
+                t("Nach Name (Z-A)"),
+                t("Nach Hersteller"),
+                t("Nach Helligkeit (hell → dunkel)"),
+                t("Nach Helligkeit (dunkel → hell)"),
+                t("Nach Verwendung (meiste zuerst)"),
+                t("Nach Verwendung (wenigste zuerst)"),
             ]
         )
         self._sort_combo.currentIndexChanged.connect(self._on_sort_changed)
@@ -183,7 +184,7 @@ class ColorManagementDialog(QDialog):
         toolbar.addStretch()
 
         # Aktions-Buttons
-        self._remove_unused_btn = QPushButton("🗑️ Ungenutzte entfernen")
+        self._remove_unused_btn = QPushButton(t("🗑️ Ungenutzte entfernen"))
         self._remove_unused_btn.clicked.connect(self._on_remove_unused)
         toolbar.addWidget(self._remove_unused_btn)
 
@@ -191,7 +192,7 @@ class ColorManagementDialog(QDialog):
 
         # Suchfeld
         self._search_input = QLineEdit()
-        self._search_input.setPlaceholderText("🔍 Name, Hersteller oder Nummer...")
+        self._search_input.setPlaceholderText(t("🔍 Name, Hersteller oder Nummer..."))
         self._search_input.setClearButtonEnabled(True)
         self._search_input.textChanged.connect(self._on_search_changed)
         self._search_input.setStyleSheet(f"""
@@ -218,7 +219,7 @@ class ColorManagementDialog(QDialog):
         left_panel.addWidget(self._color_list, 1)
 
         # Info unter der Liste
-        self._info_label = QLabel("💡 Tipp: Farben per Drag & Drop verschieben")
+        self._info_label = QLabel(t("💡 Tipp: Farben per Drag & Drop verschieben"))
         self._info_label.setStyleSheet(
             f"color: {THEME.text_muted}; font-size: 10px; font-style: italic;"
         )
@@ -231,13 +232,13 @@ class ColorManagementDialog(QDialog):
         right_panel.setSpacing(10)
 
         # Ausgewählte Farbe
-        selection_group = QGroupBox("Ausgewählte Farbe")
+        selection_group = QGroupBox(t("Ausgewählte Farbe"))
         selection_layout = QVBoxLayout(selection_group)
 
         self._preview_widget = ColorPreviewWidget(QColor(128, 128, 128), 60)
         selection_layout.addWidget(self._preview_widget, 0, Qt.AlignmentFlag.AlignCenter)
 
-        self._selected_info = QLabel("Keine Farbe ausgewählt")
+        self._selected_info = QLabel(t("Keine Farbe ausgewählt"))
         self._selected_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._selected_info.setWordWrap(True)
         self._selected_info.setStyleSheet(f"color: {THEME.text_muted};")
@@ -245,12 +246,12 @@ class ColorManagementDialog(QDialog):
 
         # Fadenstärke
         strands_row = QHBoxLayout()
-        strands_row.addWidget(QLabel("Fäden:"))
+        strands_row.addWidget(QLabel(t("Fäden:")))
         self._strands_spin = QSpinBox()
         self._strands_spin.setRange(1, 6)
         self._strands_spin.setValue(2)
         self._strands_spin.setEnabled(False)
-        self._strands_spin.setToolTip("Anzahl Fäden (1-6)")
+        self._strands_spin.setToolTip(t("Anzahl Fäden (1-6)"))
         self._strands_spin.valueChanged.connect(self._on_strands_changed)
         strands_row.addWidget(self._strands_spin)
         selection_layout.addLayout(strands_row)
@@ -258,32 +259,32 @@ class ColorManagementDialog(QDialog):
         right_panel.addWidget(selection_group)
 
         # Aktionen für ausgewählte Farbe
-        actions_group = QGroupBox("Aktionen")
+        actions_group = QGroupBox(t("Aktionen"))
         actions_layout = QVBoxLayout(actions_group)
 
-        self._move_up_btn = QPushButton("⬆️ Nach oben")
+        self._move_up_btn = QPushButton(t("⬆️ Nach oben"))
         self._move_up_btn.clicked.connect(self._on_move_up)
         self._move_up_btn.setEnabled(False)
         actions_layout.addWidget(self._move_up_btn)
 
-        self._move_down_btn = QPushButton("⬇️ Nach unten")
+        self._move_down_btn = QPushButton(t("⬇️ Nach unten"))
         self._move_down_btn.clicked.connect(self._on_move_down)
         self._move_down_btn.setEnabled(False)
         actions_layout.addWidget(self._move_down_btn)
 
-        self._move_top_btn = QPushButton("⏫ An den Anfang")
+        self._move_top_btn = QPushButton(t("⏫ An den Anfang"))
         self._move_top_btn.clicked.connect(self._on_move_top)
         self._move_top_btn.setEnabled(False)
         actions_layout.addWidget(self._move_top_btn)
 
-        self._move_bottom_btn = QPushButton("⏬ An das Ende")
+        self._move_bottom_btn = QPushButton(t("⏬ An das Ende"))
         self._move_bottom_btn.clicked.connect(self._on_move_bottom)
         self._move_bottom_btn.setEnabled(False)
         actions_layout.addWidget(self._move_bottom_btn)
 
         actions_layout.addSpacing(10)
 
-        self._delete_btn = QPushButton("🗑️ Farbe löschen")
+        self._delete_btn = QPushButton(t("🗑️ Farbe löschen"))
         self._delete_btn.clicked.connect(self._on_delete_color)
         self._delete_btn.setEnabled(False)
         # Roter Lösch-Button — bewusst abweichend vom Default-Stil, damit
@@ -309,15 +310,15 @@ class ColorManagementDialog(QDialog):
         right_panel.addWidget(actions_group)
 
         # Zusammenführen
-        merge_group = QGroupBox("Farben zusammenführen")
+        merge_group = QGroupBox(t("Farben zusammenführen"))
         merge_layout = QVBoxLayout(merge_group)
 
-        merge_info = QLabel("Wählen Sie zwei Farben aus und führen Sie sie zusammen.")
+        merge_info = QLabel(t("Wählen Sie zwei Farben aus und führen Sie sie zusammen."))
         merge_info.setWordWrap(True)
         merge_info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
         merge_layout.addWidget(merge_info)
 
-        self._merge_btn = QPushButton("🔗 Ausgewählte zusammenführen")
+        self._merge_btn = QPushButton(t("🔗 Ausgewählte zusammenführen"))
         self._merge_btn.clicked.connect(self._on_merge_colors)
         self._merge_btn.setEnabled(False)
         merge_layout.addWidget(self._merge_btn)
@@ -332,17 +333,17 @@ class ColorManagementDialog(QDialog):
         # Footer mit Buttons
         footer = QHBoxLayout()
 
-        self._reset_btn = QPushButton("↩️ Zurücksetzen")
+        self._reset_btn = QPushButton(t("↩️ Zurücksetzen"))
         self._reset_btn.clicked.connect(self._on_reset)
         footer.addWidget(self._reset_btn)
 
         footer.addStretch()
 
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.clicked.connect(self.reject)
         footer.addWidget(cancel_btn)
 
-        self._apply_btn = QPushButton("Übernehmen")
+        self._apply_btn = QPushButton(t("Übernehmen"))
         self._apply_btn.setDefault(True)
         self._apply_btn.clicked.connect(self.accept)
         self._apply_btn.setStyleSheet(f"""
@@ -646,10 +647,9 @@ class ColorManagementDialog(QDialog):
 
             reply = QMessageBox.warning(
                 self,
-                "Farben in Verwendung",
+                t("Farben in Verwendung"),
                 f"Folgende Farben werden noch verwendet:\n{names}\n\n"
-                "Beim Löschen werden alle Stiche mit diesen Farben entfernt.\n"
-                "Fortfahren?",
+                + t("Beim Löschen werden alle Stiche mit diesen Farben entfernt.\nFortfahren?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:
@@ -674,13 +674,13 @@ class ColorManagementDialog(QDialog):
 
         if not unused_indices:
             QMessageBox.information(
-                self, "Keine ungenutzten Farben", "Alle Farben werden verwendet."
+                self, t("Keine ungenutzten Farben"), t("Alle Farben werden verwendet.")
             )
             return
 
         reply = QMessageBox.question(
             self,
-            "Ungenutzte Farben entfernen",
+            t("Ungenutzte Farben entfernen"),
             f"{len(unused_indices)} ungenutzte Farbe(n) gefunden.\nDiese jetzt entfernen?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -692,7 +692,7 @@ class ColorManagementDialog(QDialog):
             self._populate_list()
             self._changes_made = True
 
-            QMessageBox.information(self, "Fertig", f"{len(unused_indices)} Farbe(n) entfernt.")
+            QMessageBox.information(self, t("Fertig"), f"{len(unused_indices)} Farbe(n) entfernt.")
 
     def _remove_color_at_index(self, idx: int) -> None:
         """Entfernt eine Farbe und aktualisiert alle Referenzen."""
@@ -736,7 +736,7 @@ class ColorManagementDialog(QDialog):
 
         reply = QMessageBox.question(
             self,
-            "Farben zusammenführen",
+            t("Farben zusammenführen"),
             f"Alle Stiche von:\n{source_names}\n\n"
             f"werden zu '{target.entry.thread.name}' konvertiert.\n"
             "Die Quellfarben werden danach gelöscht.\n\n"
@@ -774,8 +774,8 @@ class ColorManagementDialog(QDialog):
         """Setzt alle Änderungen zurück."""
         reply = QMessageBox.question(
             self,
-            "Zurücksetzen",
-            "Alle Änderungen verwerfen und zur ursprünglichen Reihenfolge zurückkehren?",
+            t("Zurücksetzen"),
+            t("Alle Änderungen verwerfen und zur ursprünglichen Reihenfolge zurückkehren?"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -793,13 +793,13 @@ class ColorManagementDialog(QDialog):
 
         menu = QMenu(self)
 
-        move_up = menu.addAction("⬆️ Nach oben")
-        move_down = menu.addAction("⬇️ Nach unten")
+        move_up = menu.addAction(t("⬆️ Nach oben"))
+        move_down = menu.addAction(t("⬇️ Nach unten"))
         menu.addSeparator()
-        move_top = menu.addAction("⏫ An den Anfang")
-        move_bottom = menu.addAction("⏬ An das Ende")
+        move_top = menu.addAction(t("⏫ An den Anfang"))
+        move_bottom = menu.addAction(t("⏬ An das Ende"))
         menu.addSeparator()
-        delete = menu.addAction("🗑️ Löschen")
+        delete = menu.addAction(t("🗑️ Löschen"))
 
         action = menu.exec(self._color_list.mapToGlobal(pos))
 

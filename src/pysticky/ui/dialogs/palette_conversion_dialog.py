@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.color_math import delta_e
+from ...core.i18n import t
 from ...core.palette import ThreadPalette, get_palette_manager
 from ...core.thread import Thread, ThreadColor
 from ..styles import THEME
@@ -65,7 +66,7 @@ class _TargetThreadSelector(QDialog):
         self._palette = target_palette
         self._selected_thread: Optional[Thread] = None
 
-        self.setWindowTitle("Ziel-Garn wählen")
+        self.setWindowTitle(t("Ziel-Garn wählen"))
         self.setMinimumSize(550, 500)
         self._setup_ui()
         self._apply_styles()
@@ -88,7 +89,7 @@ class _TargetThreadSelector(QDialog):
 
         # Suchfeld
         self._search = QLineEdit()
-        self._search.setPlaceholderText("🔍 Nach Name oder Nummer suchen...")
+        self._search.setPlaceholderText(t("🔍 Nach Name oder Nummer suchen..."))
         self._search.setClearButtonEnabled(True)
         self._search.textChanged.connect(self._on_search)
         layout.addWidget(self._search)
@@ -96,7 +97,9 @@ class _TargetThreadSelector(QDialog):
         # Tabelle
         self._table = QTableWidget()
         self._table.setColumnCount(5)
-        self._table.setHorizontalHeaderLabels(["", "Name", "Hersteller", "Nr.", "Abstand"])
+        self._table.setHorizontalHeaderLabels(
+            ["", t("Name"), t("Hersteller"), t("Nr."), t("Abstand")]
+        )
         self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -110,10 +113,10 @@ class _TargetThreadSelector(QDialog):
         # Buttons
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
-        self._select_btn = QPushButton("Auswählen")
+        self._select_btn = QPushButton(t("Auswählen"))
         self._select_btn.setEnabled(False)
         self._select_btn.clicked.connect(self._on_select)
         self._select_btn.setStyleSheet(f"""
@@ -164,9 +167,9 @@ class _TargetThreadSelector(QDialog):
         src_color = self._source.color
         # Alle Garne mit Distanz berechnen
         self._thread_data: list[tuple[Thread, float]] = []
-        for t in self._palette.threads:
-            dist = _color_distance(src_color, t.color)
-            self._thread_data.append((t, dist))
+        for thread in self._palette.threads:
+            dist = _color_distance(src_color, thread.color)
+            self._thread_data.append((thread, dist))
         self._thread_data.sort(key=lambda x: x[1])
 
         self._fill_table(self._thread_data)
@@ -237,7 +240,7 @@ class PaletteConversionDialog(QDialog):
         self._pm = get_palette_manager()
         self._mapping: list[dict] = []  # [{source_entry, target_thread, distance}, ...]
 
-        self.setWindowTitle("Palette konvertieren")
+        self.setWindowTitle(t("Palette konvertieren"))
         self.setMinimumSize(800, 550)
         self._setup_ui()
         self._apply_styles()
@@ -255,7 +258,7 @@ class PaletteConversionDialog(QDialog):
 
         # Header
         header = QHBoxLayout()
-        title = QLabel("🔄 Palette konvertieren")
+        title = QLabel(t("🔄 Palette konvertieren"))
         title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {THEME.text_primary};")
         header.addWidget(title)
         header.addStretch()
@@ -263,7 +266,7 @@ class PaletteConversionDialog(QDialog):
 
         # Ziel-Palette auswählen
         palette_row = QHBoxLayout()
-        palette_row.addWidget(QLabel("Ziel-Palette:"))
+        palette_row.addWidget(QLabel(t("Ziel-Palette:")))
         self._palette_combo = QComboBox()
         palette_names = sorted(self._pm.available_palettes)
         self._palette_combo.addItems(palette_names)
@@ -282,12 +285,12 @@ class PaletteConversionDialog(QDialog):
         self._table.setHorizontalHeaderLabels(
             [
                 "",
-                "Quellfarbe",
-                "Hersteller/Nr.",
+                t("Quellfarbe"),
+                t("Hersteller/Nr."),
                 "",
-                "Zielfarbe",
-                "Hersteller/Nr.",
-                "Abstand",
+                t("Zielfarbe"),
+                t("Hersteller/Nr."),
+                t("Abstand"),
                 "",
             ]
         )
@@ -311,11 +314,11 @@ class PaletteConversionDialog(QDialog):
 
         # Footer
         footer = QHBoxLayout()
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.clicked.connect(self.reject)
         footer.addWidget(cancel_btn)
         footer.addStretch()
-        self._apply_btn = QPushButton("Alle konvertieren")
+        self._apply_btn = QPushButton(t("Alle konvertieren"))
         self._apply_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {THEME.accent_primary}; color: white;
@@ -439,7 +442,7 @@ class PaletteConversionDialog(QDialog):
                 poor += 1
 
             # Ändern-Button
-            change_btn = QPushButton("Ändern")
+            change_btn = QPushButton(t("Ändern"))
             change_btn.setFixedSize(70, 26)
             change_btn.clicked.connect(lambda checked, r=row: self._on_change_target(r))
             self._table.setCellWidget(row, 7, change_btn)
@@ -478,7 +481,7 @@ class PaletteConversionDialog(QDialog):
         if missing:
             QMessageBox.warning(
                 self,
-                "Fehlende Zuordnungen",
+                t("Fehlende Zuordnungen"),
                 f"{missing} Farbe(n) haben keine Zuordnung.\n"
                 "Bitte weisen Sie allen Farben ein Ziel-Garn zu.",
             )
@@ -489,7 +492,7 @@ class PaletteConversionDialog(QDialog):
         if poor:
             reply = QMessageBox.question(
                 self,
-                "Schlechte Zuordnungen",
+                t("Schlechte Zuordnungen"),
                 f"{poor} Farbe(n) haben einen hohen Farbabstand (>60).\nTrotzdem konvertieren?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )

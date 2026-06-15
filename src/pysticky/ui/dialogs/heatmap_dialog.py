@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...core.i18n import t
 from ...core.layer import NO_STITCH
 from ..styles import THEME
 
@@ -156,7 +157,7 @@ class HeatmapDialog(QDialog):
         self._block_size = 8
         self._axis = self.AXIS_DENSITY
 
-        self.setWindowTitle("Pattern-Heatmap")
+        self.setWindowTitle(t("Pattern-Heatmap"))
         self.setMinimumSize(700, 600)
 
         self._setup_ui()
@@ -171,10 +172,12 @@ class HeatmapDialog(QDialog):
         controls.setSpacing(8)
 
         self._axis_combo = QComboBox()
-        self._axis_combo.addItem("Stichdichte (Anzahl Stiche pro Block)", self.AXIS_DENSITY)
-        self._axis_combo.addItem("Farbenvielfalt (verschiedene Farben pro Block)", self.AXIS_COLORS)
+        self._axis_combo.addItem(t("Stichdichte (Anzahl Stiche pro Block)"), self.AXIS_DENSITY)
+        self._axis_combo.addItem(
+            t("Farbenvielfalt (verschiedene Farben pro Block)"), self.AXIS_COLORS
+        )
         self._axis_combo.currentIndexChanged.connect(self._on_axis_changed)
-        controls.addRow("Achse:", self._axis_combo)
+        controls.addRow(t("Achse:"), self._axis_combo)
 
         slider_row = QHBoxLayout()
         self._block_slider = QSlider(Qt.Orientation.Horizontal)
@@ -188,7 +191,7 @@ class HeatmapDialog(QDialog):
         self._block_label = QLabel(f"{self._block_size} px")
         self._block_label.setMinimumWidth(48)
         slider_row.addWidget(self._block_label)
-        controls.addRow("Block-Groesse:", slider_row)
+        controls.addRow(t("Block-Groesse:"), slider_row)
 
         layout.addLayout(controls)
 
@@ -243,10 +246,10 @@ class HeatmapDialog(QDialog):
     def _refresh_heatmap(self) -> None:
         if self._axis == self.AXIS_COLORS:
             values = _color_variety_heatmap(self._composite, self._block_size)
-            label = "Farbenvielfalt"
+            label = t("Farbenvielfalt")
         else:
             values = _density_heatmap(self._composite, self._block_size)
-            label = "Stichdichte"
+            label = t("Stichdichte")
 
         # Cell-Pixel berechnen: heatmap soll im Scroll-Bereich nicht winzig sein.
         # Kein harter Cap — bei wenigen, grossen Bloecken darf die Heatmap auch
@@ -281,4 +284,6 @@ class HeatmapDialog(QDialog):
         pixmap = QPixmap.fromImage(img)
         self._legend_label.setPixmap(pixmap)
         self._legend_label.setScaledContents(True)
-        self._legend_label.setToolTip("Links: niedrig — Rechts: hoch (maximaler Wert im Pattern)")
+        self._legend_label.setToolTip(
+            t("Links: niedrig — Rechts: hoch (maximaler Wert im Pattern)")
+        )

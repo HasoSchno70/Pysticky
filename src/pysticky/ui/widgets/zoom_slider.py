@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.constants import DEFAULT_ZOOM_PERCENT, MAX_ZOOM_PERCENT, MIN_ZOOM_PERCENT
+from ...core.i18n import t
 from ..styles import THEME
 
 
@@ -39,14 +40,14 @@ class ZoomSlider(QWidget):
         # Einpassen-Button
         self._fit_btn = QPushButton("⊡")
         self._fit_btn.setFixedSize(20, 18)
-        self._fit_btn.setToolTip("Einpassen (Ctrl+0)")
+        self._fit_btn.setToolTip(t("Einpassen (Ctrl+0)"))
         self._fit_btn.clicked.connect(self.zoom_fit_requested.emit)
         layout.addWidget(self._fit_btn)
 
         # Minus-Button
         self._minus_btn = QPushButton("−")
         self._minus_btn.setFixedSize(20, 18)
-        self._minus_btn.setToolTip("Verkleinern (Ctrl+-)")
+        self._minus_btn.setToolTip(t("Verkleinern (Ctrl+-)"))
         self._minus_btn.clicked.connect(self._on_zoom_out)
         self._minus_btn.setAutoRepeat(True)
         self._minus_btn.setAutoRepeatInterval(100)
@@ -58,14 +59,14 @@ class ZoomSlider(QWidget):
         self._slider.setValue(self.DEFAULT_ZOOM)
         self._slider.setFixedWidth(80)
         self._slider.setFixedHeight(18)
-        self._slider.setToolTip("Zoom-Level")
+        self._slider.setToolTip(t("Zoom-Level"))
         self._slider.valueChanged.connect(self._on_slider_changed)
         layout.addWidget(self._slider)
 
         # Plus-Button
         self._plus_btn = QPushButton("+")
         self._plus_btn.setFixedSize(20, 18)
-        self._plus_btn.setToolTip("Vergrößern (Ctrl++)")
+        self._plus_btn.setToolTip(t("Vergrößern (Ctrl++)"))
         self._plus_btn.clicked.connect(self._on_zoom_in)
         self._plus_btn.setAutoRepeat(True)
         self._plus_btn.setAutoRepeatInterval(100)
@@ -75,7 +76,7 @@ class ZoomSlider(QWidget):
         self._label = QLabel("100%")
         self._label.setFixedWidth(50)
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._label.setToolTip("Klicken für 100%")
+        self._label.setToolTip(t("Klicken für 100%"))
         self._label.mousePressEvent = lambda e: self.zoom_100_requested.emit()
         layout.addWidget(self._label)
 

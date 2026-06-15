@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from ...config import UI_CONFIG
 from ...core.constants import COMMON_FABRIC_COUNTS, MAX_PATTERN_SIZE
+from ...core.i18n import t
 from ..styles import THEME
 from .user_template_dialog import load_user_templates
 
@@ -417,7 +418,7 @@ class NewProjectDialog(QDialog):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Neues Projekt")
+        self.setWindowTitle(t("Neues Projekt"))
         self.setMinimumSize(*UI_CONFIG.dialog_min_large)
 
         self._selected_template: dict | None = None
@@ -439,19 +440,19 @@ class NewProjectDialog(QDialog):
         left_panel.setSpacing(10)
 
         # Kategorie-Tabs als Radio-Buttons
-        category_group = QGroupBox("Kategorie")
+        category_group = QGroupBox(t("Kategorie"))
         category_layout = QVBoxLayout(category_group)
 
         self._category_buttons = QButtonGroup(self)
 
         # "Benutzerdefiniert" zuerst
-        custom_btn = QRadioButton("✏️ Benutzerdefiniert")
+        custom_btn = QRadioButton(t("✏️ Benutzerdefiniert"))
         custom_btn.setChecked(True)
         self._category_buttons.addButton(custom_btn, 0)
         category_layout.addWidget(custom_btn)
 
         # Eigene Templates (ID = 1)
-        user_btn = QRadioButton("⭐ Eigene Templates")
+        user_btn = QRadioButton(t("⭐ Eigene Templates"))
         self._category_buttons.addButton(user_btn, 1)
         category_layout.addWidget(user_btn)
 
@@ -463,7 +464,7 @@ class NewProjectDialog(QDialog):
 
         # Kategorien (IDs ab 2)
         for i, category in enumerate(TEMPLATES.keys(), 2):
-            btn = QRadioButton(category)
+            btn = QRadioButton(t(category))
             self._category_buttons.addButton(btn, i)
             category_layout.addWidget(btn)
 
@@ -492,17 +493,19 @@ class NewProjectDialog(QDialog):
         right_panel.setSpacing(15)
 
         # Größen-Einstellung
-        size_group = QGroupBox("Größe")
+        size_group = QGroupBox(t("Größe"))
         size_layout = QGridLayout(size_group)
 
         # Diamond-Painting-Preset: liefert direkt eine sinnvolle Drill-Zahl
         # fuer ein bestimmtes DIN-Format bei 2.5mm Pitch. Wer den Eintrag
         # waehlt, bekommt automatisch DP-Modus + die passende Drill-Anzahl.
-        size_layout.addWidget(QLabel("DP-Preset:"), 0, 0)
+        size_layout.addWidget(QLabel(t("DP-Preset:")), 0, 0)
         self._dp_preset_combo = QComboBox()
         self._dp_preset_combo.setToolTip(
-            "Vorgefertigte Diamond-Painting-Groessen, die 1:1 auf das "
-            "jeweilige DIN-Format passen (bei 2.5mm Drill-Pitch)."
+            t(
+                "Vorgefertigte Diamond-Painting-Groessen, die 1:1 auf das "
+                "jeweilige DIN-Format passen (bei 2.5mm Drill-Pitch)."
+            )
         )
         # (Label, width, height, ist_dp)
         # None-Eintrag fuer "Stick-Modus / freie Wahl" — Default.
@@ -525,38 +528,38 @@ class NewProjectDialog(QDialog):
         self._dp_preset_combo.currentIndexChanged.connect(self._on_dp_preset_changed)
         size_layout.addWidget(self._dp_preset_combo, 0, 1)
 
-        size_layout.addWidget(QLabel("Breite:"), 1, 0)
+        size_layout.addWidget(QLabel(t("Breite:")), 1, 0)
         self._width_spin = QSpinBox()
         self._width_spin.setRange(10, MAX_PATTERN_SIZE)
         self._width_spin.setValue(50)
-        self._width_spin.setSuffix(" Stiche")
+        self._width_spin.setSuffix(t(" Stiche"))
         self._width_spin.valueChanged.connect(self._update_preview)
         size_layout.addWidget(self._width_spin, 1, 1)
 
-        size_layout.addWidget(QLabel("Höhe:"), 2, 0)
+        size_layout.addWidget(QLabel(t("Höhe:")), 2, 0)
         self._height_spin = QSpinBox()
         self._height_spin.setRange(10, MAX_PATTERN_SIZE)
         self._height_spin.setValue(50)
-        self._height_spin.setSuffix(" Stiche")
+        self._height_spin.setSuffix(t(" Stiche"))
         self._height_spin.valueChanged.connect(self._update_preview)
         size_layout.addWidget(self._height_spin, 2, 1)
 
         right_panel.addWidget(size_group)
 
         # Stoff-Auswahl
-        fabric_group = QGroupBox("Stoff")
+        fabric_group = QGroupBox(t("Stoff"))
         fabric_layout = QHBoxLayout(fabric_group)
 
-        fabric_layout.addWidget(QLabel("Stoffart:"))
+        fabric_layout.addWidget(QLabel(t("Stoffart:")))
         self._fabric_combo = QComboBox()
         self._fabric_combo.addItems(
             [
-                "Aida 11 (4,3 St/cm)",
-                "Aida 14 (5,5 St/cm)",
-                "Aida 16 (6,3 St/cm)",
-                "Aida 18 (7,1 St/cm)",
-                "Evenweave 28 (11 St/cm)",
-                "Leinen 32 (12,6 St/cm)",
+                t("Aida 11 (4,3 St/cm)"),
+                t("Aida 14 (5,5 St/cm)"),
+                t("Aida 16 (6,3 St/cm)"),
+                t("Aida 18 (7,1 St/cm)"),
+                t("Evenweave 28 (11 St/cm)"),
+                t("Leinen 32 (12,6 St/cm)"),
             ]
         )
         self._fabric_combo.setCurrentIndex(1)  # Aida 14 als Standard
@@ -572,7 +575,7 @@ class NewProjectDialog(QDialog):
         right_panel.addWidget(self._size_info)
 
         # Vorschau
-        preview_group = QGroupBox("Vorschau")
+        preview_group = QGroupBox(t("Vorschau"))
         preview_layout = QVBoxLayout(preview_group)
 
         self._preview = TemplatePreview()
@@ -584,11 +587,11 @@ class NewProjectDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
 
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
 
-        self._create_btn = QPushButton("Erstellen")
+        self._create_btn = QPushButton(t("Erstellen"))
         self._create_btn.setDefault(True)
         self._create_btn.clicked.connect(self.accept)
         self._create_btn.setStyleSheet(f"""
@@ -711,9 +714,11 @@ class NewProjectDialog(QDialog):
         if not user_templates:
             # Keine eigenen Templates vorhanden
             info = QLabel(
-                "Noch keine eigenen Templates vorhanden.\n\n"
-                "Erstellen Sie ein Projekt und speichern Sie es\n"
-                "über Datei → Als Template speichern..."
+                t(
+                    "Noch keine eigenen Templates vorhanden.\n\n"
+                    "Erstellen Sie ein Projekt und speichern Sie es\n"
+                    "über Datei → Als Template speichern..."
+                )
             )
             info.setWordWrap(True)
             info.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -770,7 +775,9 @@ class NewProjectDialog(QDialog):
 
         # Info-Label
         info = QLabel(
-            "Geben Sie die gewünschte Größe ein oder wählen Sie eine Kategorie für vorgefertigte Templates."
+            t(
+                "Geben Sie die gewünschte Größe ein oder wählen Sie eine Kategorie für vorgefertigte Templates."
+            )
         )
         info.setWordWrap(True)
         info.setStyleSheet(f"color: {THEME.text_muted}; padding: 20px;")

@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.hoop_planner import HoopPlan, plan_hoops
+from ...core.i18n import t
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -124,7 +125,7 @@ class _HoopPreviewWidget(QFrame):
             painter.drawText(
                 self.rect().adjusted(0, 6, 0, 0),
                 Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-                "✓ Passt in einen Rahmen",
+                t("✓ Passt in einen Rahmen"),
             )
             return
 
@@ -184,7 +185,7 @@ class HoopPlannerDialog(QDialog):
         super().__init__(parent)
         self._pattern = pattern
 
-        self.setWindowTitle("Multi-Hoop-Planer")
+        self.setWindowTitle(t("Multi-Hoop-Planer"))
         self.setMinimumSize(820, 600)
         self._setup_ui()
         self._recalculate()
@@ -216,9 +217,9 @@ class HoopPlannerDialog(QDialog):
         # Preset-Buttons
         preset_row = QHBoxLayout()
         preset_row.setSpacing(4)
-        preset_row.addWidget(QLabel("Schnellwahl:"))
+        preset_row.addWidget(QLabel(t("Schnellwahl:")))
         for label, w, h in self.COMMON_HOOPS[:4]:
-            btn = QPushButton(label)
+            btn = QPushButton(t(label))
             btn.setProperty("hoop_w", w)
             btn.setProperty("hoop_h", h)
             btn.clicked.connect(self._apply_preset)
@@ -230,7 +231,7 @@ class HoopPlannerDialog(QDialog):
         preset_row2.setSpacing(4)
         preset_row2.addWidget(QLabel(""))
         for label, w, h in self.COMMON_HOOPS[4:]:
-            btn = QPushButton(label)
+            btn = QPushButton(t(label))
             btn.setProperty("hoop_w", w)
             btn.setProperty("hoop_h", h)
             btn.clicked.connect(self._apply_preset)
@@ -241,27 +242,29 @@ class HoopPlannerDialog(QDialog):
         self.spin_w = QSpinBox()
         self.spin_w.setRange(10, 500)
         self.spin_w.setValue(82)
-        self.spin_w.setSuffix(" Stiche")
+        self.spin_w.setSuffix(t(" Stiche"))
         self.spin_w.valueChanged.connect(self._recalculate)
-        form.addRow("Rahmen-Breite:", self.spin_w)
+        form.addRow(t("Rahmen-Breite:"), self.spin_w)
 
         self.spin_h = QSpinBox()
         self.spin_h.setRange(10, 500)
         self.spin_h.setValue(82)
-        self.spin_h.setSuffix(" Stiche")
+        self.spin_h.setSuffix(t(" Stiche"))
         self.spin_h.valueChanged.connect(self._recalculate)
-        form.addRow("Rahmen-Höhe:", self.spin_h)
+        form.addRow(t("Rahmen-Höhe:"), self.spin_h)
 
         self.spin_overlap = QSpinBox()
         self.spin_overlap.setRange(0, 50)
         self.spin_overlap.setValue(3)
-        self.spin_overlap.setSuffix(" Stiche")
+        self.spin_overlap.setSuffix(t(" Stiche"))
         self.spin_overlap.setToolTip(
-            "Anzahl Stiche die zwei benachbarte Sektoren teilen — "
-            "verhindert sichtbare Nähte. Empfehlung: 2-5."
+            t(
+                "Anzahl Stiche die zwei benachbarte Sektoren teilen — "
+                "verhindert sichtbare Nähte. Empfehlung: 2-5."
+            )
         )
         self.spin_overlap.valueChanged.connect(self._recalculate)
-        form.addRow("Überlappung:", self.spin_overlap)
+        form.addRow(t("Überlappung:"), self.spin_overlap)
 
         left.addLayout(form)
 
@@ -275,7 +278,9 @@ class HoopPlannerDialog(QDialog):
         # Sektoren-Tabelle
         self.table = QTableWidget()
         self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["#", "Position", "X-Bereich", "Y-Bereich", "Stiche"])
+        self.table.setHorizontalHeaderLabels(
+            ["#", t("Position"), t("X-Bereich"), t("Y-Bereich"), t("Stiche")]
+        )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         hdr = self.table.horizontalHeader()
@@ -290,7 +295,7 @@ class HoopPlannerDialog(QDialog):
 
         # === Rechte Spalte: Vorschau ===
         right = QVBoxLayout()
-        right.addWidget(QLabel("Vorschau:"))
+        right.addWidget(QLabel(t("Vorschau:")))
         self.preview = _HoopPreviewWidget()
         right.addWidget(self.preview, 1)
         body.addLayout(right, 1)

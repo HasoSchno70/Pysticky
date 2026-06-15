@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.color_math import delta_e
+from ...core.i18n import t
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -98,7 +99,7 @@ class SimilarColorsDialog(QDialog):
         self._pattern = pattern
         self._pair_rows: list[_ColorPairRow] = []
 
-        self.setWindowTitle("Ähnliche Farben zusammenführen")
+        self.setWindowTitle(t("Ähnliche Farben zusammenführen"))
         self.setMinimumSize(600, 450)
         self._setup_ui()
         self._update_pairs()
@@ -107,13 +108,13 @@ class SimilarColorsDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
 
-        title = QLabel("Ähnliche Farben finden und zusammenführen")
+        title = QLabel(t("Ähnliche Farben finden und zusammenführen"))
         title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {THEME.text_primary};")
         layout.addWidget(title)
 
         # Schwellwert-Slider
         threshold_row = QHBoxLayout()
-        threshold_row.addWidget(QLabel("Schwellwert:"))
+        threshold_row.addWidget(QLabel(t("Schwellwert:")))
         self._slider = QSlider(Qt.Orientation.Horizontal)
         # Schwellwert als CIE76 Delta-E: ~5 sehr aehnlich, ~10 Default,
         # ~25 noch zusammenfuehrbar. (Frueher RGB-Euklid 5-150.)
@@ -126,7 +127,7 @@ class SimilarColorsDialog(QDialog):
         threshold_row.addWidget(self._threshold_label)
         layout.addLayout(threshold_row)
 
-        info = QLabel("Niedrigerer Wert = nur sehr ähnliche Farben. Höherer Wert = mehr Paare.")
+        info = QLabel(t("Niedrigerer Wert = nur sehr ähnliche Farben. Höherer Wert = mehr Paare."))
         info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
         layout.addWidget(info)
 
@@ -145,10 +146,10 @@ class SimilarColorsDialog(QDialog):
 
         # Alle auswählen
         select_row = QHBoxLayout()
-        select_all = QPushButton("Alle auswählen")
+        select_all = QPushButton(t("Alle auswählen"))
         select_all.clicked.connect(self._select_all)
         select_row.addWidget(select_all)
-        select_none = QPushButton("Keine auswählen")
+        select_none = QPushButton(t("Keine auswählen"))
         select_none.clicked.connect(self._select_none)
         select_row.addWidget(select_none)
         select_row.addStretch()
@@ -157,7 +158,7 @@ class SimilarColorsDialog(QDialog):
         # Buttons
         buttons = QDialogButtonBox()
         self._merge_btn = buttons.addButton(
-            "Zusammenführen", QDialogButtonBox.ButtonRole.AcceptRole
+            t("Zusammenführen"), QDialogButtonBox.ButtonRole.AcceptRole
         )
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._on_merge)
@@ -224,16 +225,19 @@ class SimilarColorsDialog(QDialog):
     def _on_merge(self) -> None:
         selected = [r for r in self._pair_rows if r.checkbox.isChecked()]
         if not selected:
-            QMessageBox.information(self, "Hinweis", "Keine Paare zum Zusammenführen ausgewählt.")
+            QMessageBox.information(
+                self, t("Hinweis"), t("Keine Paare zum Zusammenführen ausgewählt.")
+            )
             return
 
         count = len(selected)
         reply = QMessageBox.question(
             self,
-            "Farben zusammenführen",
+            t("Farben zusammenführen"),
             f"{count} Farbpaar(e) zusammenführen?\n\n"
-            "Die zweite Farbe jedes Paares wird durch die erste ersetzt.\n"
-            "Diese Aktion kann nicht rückgängig gemacht werden.",
+            + t("Die zweite Farbe jedes Paares wird durch die erste ersetzt.")
+            + "\n"
+            + t("Diese Aktion kann nicht rückgängig gemacht werden."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:

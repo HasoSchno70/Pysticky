@@ -632,12 +632,13 @@ class MainWindow(
         Bundled-Datei zu beruehren.
         """
         from ..core import load_pattern
+        from ..core.i18n import t
 
         bundled = Path(__file__).parent.parent / "resources" / "examples" / "demo_kreuzstich.pxs"
         if not bundled.exists():
             QMessageBox.warning(
                 self,
-                "Demo nicht verfuegbar",
+                t("Demo nicht verfuegbar"),
                 f"Demo-Datei nicht gefunden:\n{bundled}",
             )
             return
@@ -647,7 +648,7 @@ class MainWindow(
         except (OSError, ValueError) as e:
             QMessageBox.warning(
                 self,
-                "Demo konnte nicht geladen werden",
+                t("Demo konnte nicht geladen werden"),
                 str(e),
             )
             return
@@ -660,8 +661,10 @@ class MainWindow(
         self._unsaved_changes = False
         self._update_title()
         self.status_bar.showMessage(
-            "Demo-Muster geladen. Speichern unter… legt eine eigene Kopie an. "
-            "Probier den Sticken-Modus (Strg+M) oder Strg+H!",
+            t(
+                "Demo-Muster geladen. Speichern unter… legt eine eigene Kopie an. "
+                "Probier den Sticken-Modus (Strg+M) oder Strg+H!"
+            ),
             7000,
         )
 
@@ -777,6 +780,8 @@ class MainWindow(
 
     def _perform_start_action(self) -> None:
         """Führt die konfigurierte Start-Aktion aus."""
+        from ..core.i18n import t
+
         # Zuerst auf Autosave-Recovery prüfen — falls Recovery passiert ist,
         # wurde set_pattern() bereits aufgerufen (Welcome dadurch ausgeblendet).
         self._check_autosave_recovery()
@@ -796,9 +801,9 @@ class MainWindow(
             # Default: Welcome-Screen zeigen
             if not _already_loaded():
                 self.canvas_container.show_welcome(True, recent_files=self._recent_files)
-                self.status_bar.showMessage("Willkommen bei PySticky", 3000)
+                self.status_bar.showMessage(t("Willkommen bei PySticky"), 3000)
             else:
-                self.status_bar.showMessage("Bereit", 3000)
+                self.status_bar.showMessage(t("Bereit"), 3000)
         elif start_action == 1:
             # Neues Projekt Dialog öffnen
             self._unsaved_changes = False
@@ -813,7 +818,7 @@ class MainWindow(
                     self._open_recent_file(last_file)
                     opened = True
                 else:
-                    self.status_bar.showMessage("Letzte Datei nicht gefunden", 3000)
+                    self.status_bar.showMessage(t("Letzte Datei nicht gefunden"), 3000)
             if not opened and not _already_loaded():
                 self.canvas_container.show_welcome(True, recent_files=self._recent_files)
         elif start_action == 3:

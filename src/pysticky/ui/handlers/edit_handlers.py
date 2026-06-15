@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from ..main_window import MainWindow
 
 from ...core.constants import MAX_PATTERN_SIZE
+from ...core.i18n import t
 from ..notify_scope import NotifyScope
 
 
@@ -22,7 +23,7 @@ class EditHandlersMixin:
             self._notify_panels(NotifyScope.STITCH_VISUAL)
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage("Rückgängig", 2000)
+            self.status_bar.showMessage(t("Rückgängig"), 2000)
 
     def _on_redo(self: "MainWindow") -> None:
         """Redo ausführen."""
@@ -30,7 +31,7 @@ class EditHandlersMixin:
             self._notify_panels(NotifyScope.STITCH_VISUAL)
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage("Wiederholt", 2000)
+            self.status_bar.showMessage(t("Wiederholt"), 2000)
 
     def _on_replace_color(self: "MainWindow") -> None:
         """Zeigt den Dialog zum Farbe ersetzen."""
@@ -51,7 +52,7 @@ class EditHandlersMixin:
             ]
 
             if changes:
-                self.canvas.batch_started.emit("Farbe ersetzen")
+                self.canvas.batch_started.emit(t("Farbe ersetzen"))
                 for x, y, color_idx in changes:
                     self.canvas.stitch_placed.emit(x, y, color_idx)
                 self.canvas.batch_ended.emit()
@@ -60,12 +61,12 @@ class EditHandlersMixin:
                 self.info_panel.update_info(self.current_pattern)
                 self.status_bar.showMessage(f"{len(changes)} Stiche ersetzt", 3000)
             else:
-                self.status_bar.showMessage("Keine Stiche zum Ersetzen gefunden", 3000)
+                self.status_bar.showMessage(t("Keine Stiche zum Ersetzen gefunden"), 3000)
 
     def _on_swap_colors(self: "MainWindow") -> None:
         """Zeigt den Dialog zum Tauschen zweier Farben."""
         if len(self.current_pattern.color_entries) < 2:
-            self.status_bar.showMessage("Mindestens 2 Farben benötigt", 3000)
+            self.status_bar.showMessage(t("Mindestens 2 Farben benötigt"), 3000)
             return
 
         from ..dialogs import SwapColorsDialog
@@ -95,10 +96,10 @@ class EditHandlersMixin:
 
         total = len(a_positions) + len(b_positions)
         if total == 0:
-            self.status_bar.showMessage("Keine Stiche zum Tauschen", 3000)
+            self.status_bar.showMessage(t("Keine Stiche zum Tauschen"), 3000)
             return
 
-        self.canvas.batch_started.emit("Farben tauschen")
+        self.canvas.batch_started.emit(t("Farben tauschen"))
         for x, y in a_positions:
             self.canvas.stitch_placed.emit(x, y, b)
         for x, y in b_positions:
@@ -117,7 +118,7 @@ class EditHandlersMixin:
         from ..dialogs import SimilarColorsDialog
 
         if len(self.current_pattern.color_entries) < 2:
-            self.status_bar.showMessage("Mindestens 2 Farben benötigt", 3000)
+            self.status_bar.showMessage(t("Mindestens 2 Farben benötigt"), 3000)
             return
 
         dialog = SimilarColorsDialog(self.current_pattern, self)
@@ -128,7 +129,7 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage("Ähnliche Farben zusammengeführt", 3000)
+            self.status_bar.showMessage(t("Ähnliche Farben zusammengeführt"), 3000)
 
     def _on_manage_colors(self: "MainWindow") -> None:
         """Zeigt den Dialog zur Farbpaletten-Verwaltung."""
@@ -142,7 +143,7 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage("Farbpalette aktualisiert", 3000)
+            self.status_bar.showMessage(t("Farbpalette aktualisiert"), 3000)
 
     def _on_screen_eyedropper(self: "MainWindow") -> None:
         """Oeffnet den Vollbild-Screen-Eyedropper."""
@@ -186,7 +187,7 @@ class EditHandlersMixin:
             self.canvas.update()
             self._update_status()
             self._mark_unsaved()
-            self.status_bar.showMessage("Plugin ausgefuehrt", 3000)
+            self.status_bar.showMessage(t("Plugin ausgefuehrt"), 3000)
 
     def _on_blend_threads(self: "MainWindow") -> None:
         """Zeigt den Dialog zur Erzeugung eines Tweed-Blends."""
@@ -237,7 +238,7 @@ class EditHandlersMixin:
         result = self.current_pattern.auto_crop()
 
         if result is None:
-            self.status_bar.showMessage("Keine leeren Ränder zum Entfernen", 3000)
+            self.status_bar.showMessage(t("Keine leeren Ränder zum Entfernen"), 3000)
             return
 
         left, top, right, bottom = result
@@ -266,7 +267,7 @@ class EditHandlersMixin:
         )
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Mustergröße ändern")
+        dialog.setWindowTitle(t("Mustergröße ändern"))
         dialog.setMinimumWidth(340)
 
         layout = QFormLayout(dialog)
@@ -277,20 +278,22 @@ class EditHandlersMixin:
         spin_width = QSpinBox()
         spin_width.setRange(10, MAX_PATTERN_SIZE)
         spin_width.setValue(current_width)
-        spin_width.setSuffix(" Stiche")
-        layout.addRow("Breite:", spin_width)
+        spin_width.setSuffix(t(" Stiche"))
+        layout.addRow(t("Breite:"), spin_width)
 
         spin_height = QSpinBox()
         spin_height.setRange(10, MAX_PATTERN_SIZE)
         spin_height.setValue(current_height)
-        spin_height.setSuffix(" Stiche")
-        layout.addRow("Höhe:", spin_height)
+        spin_height.setSuffix(t(" Stiche"))
+        layout.addRow(t("Höhe:"), spin_height)
 
-        chk_smart = QCheckBox("Stiche neu verteilen (Smart-Resize)")
+        chk_smart = QCheckBox(t("Stiche neu verteilen (Smart-Resize)"))
         chk_smart.setToolTip(
-            "Aktiv: Pattern wird wie ein Pixelbild bilinear skaliert,\n"
-            "Stiche neu auf die Zellgroesse verteilt. Ideal beim Hochskalieren.\n\n"
-            "Aus: klassisches Croppen/Padding mit leeren Zellen am Rand."
+            t(
+                "Aktiv: Pattern wird wie ein Pixelbild bilinear skaliert,\n"
+                "Stiche neu auf die Zellgroesse verteilt. Ideal beim Hochskalieren.\n\n"
+                "Aus: klassisches Croppen/Padding mit leeren Zellen am Rand."
+            )
         )
         layout.addRow(chk_smart)
 
@@ -310,8 +313,10 @@ class EditHandlersMixin:
                 if not smart and (new_width < current_width or new_height < current_height):
                     reply = QMessageBox.warning(
                         self,
-                        "Größe ändern",
-                        "Das Muster wird verkleinert. Stiche außerhalb des neuen Bereichs gehen verloren.\n\nFortfahren?",
+                        t("Größe ändern"),
+                        t(
+                            "Das Muster wird verkleinert. Stiche außerhalb des neuen Bereichs gehen verloren.\n\nFortfahren?"
+                        ),
                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                     )
                     if reply != QMessageBox.StandardButton.Yes:
@@ -337,27 +342,27 @@ class EditHandlersMixin:
     def _on_rotate_cw(self: "MainWindow") -> None:
         """Dreht das Muster 90° im Uhrzeigersinn."""
         self.current_pattern.rotate_90_cw()
-        self._after_transform("90° rechts gedreht")
+        self._after_transform(t("90° rechts gedreht"))
 
     def _on_rotate_ccw(self: "MainWindow") -> None:
         """Dreht das Muster 90° gegen den Uhrzeigersinn."""
         self.current_pattern.rotate_90_ccw()
-        self._after_transform("90° links gedreht")
+        self._after_transform(t("90° links gedreht"))
 
     def _on_rotate_180(self: "MainWindow") -> None:
         """Dreht das Muster um 180°."""
         self.current_pattern.rotate_180()
-        self._after_transform("180° gedreht")
+        self._after_transform(t("180° gedreht"))
 
     def _on_flip_horizontal(self: "MainWindow") -> None:
         """Spiegelt das Muster horizontal."""
         self.current_pattern.flip_horizontal()
-        self._after_transform("Horizontal gespiegelt")
+        self._after_transform(t("Horizontal gespiegelt"))
 
     def _on_flip_vertical(self: "MainWindow") -> None:
         """Spiegelt das Muster vertikal."""
         self.current_pattern.flip_vertical()
-        self._after_transform("Vertikal gespiegelt")
+        self._after_transform(t("Vertikal gespiegelt"))
 
     def _after_transform(self: "MainWindow", message: str) -> None:
         """Aktualisiert die UI nach einer Transformation."""
@@ -380,28 +385,28 @@ class EditHandlersMixin:
 
         if not self.current_pattern.color_entries:
             QMessageBox.information(
-                self, "Keine Farben", "Das Muster enthält keine Farben zum Exportieren."
+                self, t("Keine Farben"), t("Das Muster enthält keine Farben zum Exportieren.")
             )
             return
 
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "Palette exportieren",
+            t("Palette exportieren"),
             f"{self.current_pattern.name}_palette.json",
-            "JSON-Dateien (*.json)",
+            t("JSON-Dateien (*.json)"),
         )
         if not path:
             return
 
         colors = []
         for entry in self.current_pattern.color_entries:
-            t = entry.thread
+            thread = entry.thread
             colors.append(
                 {
-                    "name": t.name,
-                    "color": {"r": t.color.r, "g": t.color.g, "b": t.color.b},
-                    "manufacturer": t.manufacturer or "",
-                    "catalog_number": t.catalog_number or "",
+                    "name": thread.name,
+                    "color": {"r": thread.color.r, "g": thread.color.g, "b": thread.color.b},
+                    "manufacturer": thread.manufacturer or "",
+                    "catalog_number": thread.catalog_number or "",
                     "symbol": entry.symbol,
                 }
             )
@@ -418,7 +423,7 @@ class EditHandlersMixin:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             self.status_bar.showMessage(f"Palette exportiert: {len(colors)} Farben → {path}", 5000)
         except OSError as e:
-            QMessageBox.critical(self, "Fehler", f"Palette konnte nicht exportiert werden:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Palette konnte nicht exportiert werden:\n{e}")
 
     def _on_import_palette(self: "MainWindow") -> None:
         """Importiert eine Farbpalette aus einer JSON-Datei."""
@@ -430,7 +435,7 @@ class EditHandlersMixin:
         from ...core.thread import ThreadColor
 
         path, _ = QFileDialog.getOpenFileName(
-            self, "Palette importieren", "", "JSON-Dateien (*.json)"
+            self, t("Palette importieren"), "", t("JSON-Dateien (*.json)")
         )
         if not path:
             return
@@ -439,18 +444,20 @@ class EditHandlersMixin:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
-            QMessageBox.critical(self, "Fehler", f"Datei konnte nicht gelesen werden:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht gelesen werden:\n{e}")
             return
 
         if data.get("format") != "pysticky_palette":
             QMessageBox.warning(
-                self, "Ungültiges Format", "Die Datei ist keine gültige PySticky-Palettendatei."
+                self,
+                t("Ungültiges Format"),
+                t("Die Datei ist keine gültige PySticky-Palettendatei."),
             )
             return
 
         colors = data.get("colors", [])
         if not colors:
-            QMessageBox.information(self, "Leer", "Die Palettendatei enthält keine Farben.")
+            QMessageBox.information(self, t("Leer"), t("Die Palettendatei enthält keine Farben."))
             return
 
         added = 0
@@ -485,7 +492,7 @@ class EditHandlersMixin:
 
         if not self.current_pattern.color_entries:
             QMessageBox.information(
-                self, "Keine Farben", "Das Muster enthält keine Farben zum Konvertieren."
+                self, t("Keine Farben"), t("Das Muster enthält keine Farben zum Konvertieren.")
             )
             return
 
@@ -496,7 +503,7 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage("Palette konvertiert", 3000)
+            self.status_bar.showMessage(t("Palette konvertiert"), 3000)
 
     # === Stickpfad-Optimierung ===
 
@@ -511,13 +518,15 @@ class EditHandlersMixin:
 
             QMessageBox.information(
                 self,
-                "Keine Stiche",
-                "Das Muster enthält keine Stiche.\n"
-                "Fügen Sie zuerst Stiche hinzu, um den Pfad zu optimieren.",
+                t("Keine Stiche"),
+                t(
+                    "Das Muster enthält keine Stiche.\n"
+                    "Fügen Sie zuerst Stiche hinzu, um den Pfad zu optimieren."
+                ),
             )
             return
 
         dialog = StitchPathDialog(self.current_pattern, self)
         dialog.exec()
 
-        self.status_bar.showMessage("Stickpfad-Optimierung abgeschlossen", 3000)
+        self.status_bar.showMessage(t("Stickpfad-Optimierung abgeschlossen"), 3000)

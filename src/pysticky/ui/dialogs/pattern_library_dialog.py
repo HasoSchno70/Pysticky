@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 logger = logging.getLogger(__name__)
 
 from ...core.file_io import load_pattern
+from ...core.i18n import t
 from ..styles import THEME, Styles
 from .pattern_library_data import LibraryData, LibraryEntry
 from .thumbnail_widget import ThumbnailWidget
@@ -59,7 +60,7 @@ class PatternLibraryDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Muster-Bibliothek")
+        self.setWindowTitle(t("Muster-Bibliothek"))
         self.setMinimumSize(900, 600)
         self.resize(1000, 700)
         self.setStyleSheet(f"background: {THEME.bg_dark}; color: {THEME.text_primary};")
@@ -104,7 +105,7 @@ class PatternLibraryDialog(QDialog):
         # Header
         header_layout = QHBoxLayout()
 
-        title = QLabel("📚 Muster-Bibliothek")
+        title = QLabel(t("📚 Muster-Bibliothek"))
         title.setStyleSheet(f"""
             font-size: 20px;
             font-weight: bold;
@@ -115,13 +116,13 @@ class PatternLibraryDialog(QDialog):
         header_layout.addStretch()
 
         # Import-Button
-        import_btn = QPushButton("➕ Hinzufügen...")
+        import_btn = QPushButton(t("➕ Hinzufügen..."))
         import_btn.setStyleSheet(Styles.button_primary())
         import_btn.clicked.connect(self._add_patterns)
         header_layout.addWidget(import_btn)
 
         # Verzeichnis scannen
-        scan_btn = QPushButton("📁 Verzeichnis scannen...")
+        scan_btn = QPushButton(t("📁 Verzeichnis scannen..."))
         scan_btn.setStyleSheet(Styles.button_secondary())
         scan_btn.clicked.connect(self._scan_directory)
         header_layout.addWidget(scan_btn)
@@ -146,7 +147,7 @@ class PatternLibraryDialog(QDialog):
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(8, 8, 8, 8)
 
-        cat_label = QLabel("Kategorien")
+        cat_label = QLabel(t("Kategorien"))
         cat_label.setStyleSheet(Styles.section_header())
         left_layout.addWidget(cat_label)
 
@@ -160,14 +161,14 @@ class PatternLibraryDialog(QDialog):
 
         add_cat_btn = QToolButton()
         add_cat_btn.setText("+")
-        add_cat_btn.setToolTip("Kategorie hinzufügen")
+        add_cat_btn.setToolTip(t("Kategorie hinzufügen"))
         add_cat_btn.setStyleSheet(Styles.tool_button())
         add_cat_btn.clicked.connect(self._add_category)
         cat_btn_layout.addWidget(add_cat_btn)
 
         del_cat_btn = QToolButton()
         del_cat_btn.setText("−")
-        del_cat_btn.setToolTip("Kategorie löschen")
+        del_cat_btn.setToolTip(t("Kategorie löschen"))
         del_cat_btn.setStyleSheet(Styles.tool_button())
         del_cat_btn.clicked.connect(self._delete_category)
         cat_btn_layout.addWidget(del_cat_btn)
@@ -194,7 +195,7 @@ class PatternLibraryDialog(QDialog):
         search_layout = QHBoxLayout()
 
         self._search_edit = QLineEdit()
-        self._search_edit.setPlaceholderText("🔍 Suchen...")
+        self._search_edit.setPlaceholderText(t("🔍 Suchen..."))
         self._search_edit.setStyleSheet(Styles.input_field())
         self._search_edit.textChanged.connect(self._filter_thumbnails)
         search_layout.addWidget(self._search_edit)
@@ -210,7 +211,7 @@ class PatternLibraryDialog(QDialog):
         right_layout.addLayout(search_layout)
 
         # Info-Leiste
-        self._info_label = QLabel("0 Muster")
+        self._info_label = QLabel(t("0 Muster"))
         self._info_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
         right_layout.addWidget(self._info_label)
 
@@ -256,11 +257,11 @@ class PatternLibraryDialog(QDialog):
 
         # Obere Zeile: Info + Öffnen-Button
         top_row = QHBoxLayout()
-        self._detail_label = QLabel("Wähle ein Muster aus")
+        self._detail_label = QLabel(t("Wähle ein Muster aus"))
         self._detail_label.setStyleSheet(f"color: {THEME.text_muted};")
         top_row.addWidget(self._detail_label)
         top_row.addStretch()
-        self._open_btn = QPushButton("Öffnen")
+        self._open_btn = QPushButton(t("Öffnen"))
         self._open_btn.setStyleSheet(Styles.button_primary())
         self._open_btn.setEnabled(False)
         self._open_btn.clicked.connect(self._open_selected)
@@ -273,11 +274,11 @@ class PatternLibraryDialog(QDialog):
 
         # Tags
         tags_layout = QVBoxLayout()
-        tags_label = QLabel("Tags:")
+        tags_label = QLabel(t("Tags:"))
         tags_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
         tags_layout.addWidget(tags_label)
         self._tags_edit = QLineEdit()
-        self._tags_edit.setPlaceholderText("Tags (kommagetrennt)...")
+        self._tags_edit.setPlaceholderText(t("Tags (kommagetrennt)..."))
         self._tags_edit.setStyleSheet(f"""
             QLineEdit {{
                 background: {THEME.bg_medium}; color: {THEME.text_primary};
@@ -293,11 +294,11 @@ class PatternLibraryDialog(QDialog):
 
         # Notizen
         notes_layout = QVBoxLayout()
-        notes_label = QLabel("Notizen:")
+        notes_label = QLabel(t("Notizen:"))
         notes_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
         notes_layout.addWidget(notes_label)
         self._notes_edit = QTextEdit()
-        self._notes_edit.setPlaceholderText("Notizen...")
+        self._notes_edit.setPlaceholderText(t("Notizen..."))
         self._notes_edit.setMaximumHeight(50)
         self._notes_edit.setStyleSheet(f"""
             QTextEdit {{
@@ -320,7 +321,7 @@ class PatternLibraryDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        close_btn = QPushButton("Schließen")
+        close_btn = QPushButton(t("Schließen"))
         close_btn.setStyleSheet(Styles.button_secondary())
         close_btn.clicked.connect(self.reject)
         btn_layout.addWidget(close_btn)
@@ -523,20 +524,20 @@ class PatternLibraryDialog(QDialog):
         """)
 
         # Öffnen
-        open_action = menu.addAction("Öffnen")
+        open_action = menu.addAction(t("Öffnen"))
         open_action.triggered.connect(lambda: self._open_entry(entry))
 
         menu.addSeparator()
 
         # Favorit
         if entry.favorite:
-            fav_action = menu.addAction("★ Aus Favoriten entfernen")
+            fav_action = menu.addAction(t("★ Aus Favoriten entfernen"))
         else:
-            fav_action = menu.addAction("☆ Zu Favoriten hinzufügen")
+            fav_action = menu.addAction(t("☆ Zu Favoriten hinzufügen"))
         fav_action.triggered.connect(lambda: self._toggle_favorite(entry))
 
         # Kategorie
-        cat_menu = menu.addMenu("Kategorie zuweisen")
+        cat_menu = menu.addMenu(t("Kategorie zuweisen"))
         for cat in self._library.categories[2:]:  # "Alle" und "Favoriten" überspringen
             action = cat_menu.addAction(cat)
             action.setCheckable(True)
@@ -544,19 +545,19 @@ class PatternLibraryDialog(QDialog):
             action.triggered.connect(lambda checked, c=cat: self._toggle_category(entry, c))
 
         # Tags bearbeiten
-        tags_action = menu.addAction("🏷️ Tags bearbeiten...")
+        tags_action = menu.addAction(t("🏷️ Tags bearbeiten..."))
         tags_action.triggered.connect(lambda: self._edit_tags_dialog(entry))
 
         menu.addSeparator()
 
         # Im Explorer öffnen
-        explorer_action = menu.addAction("Im Explorer anzeigen")
+        explorer_action = menu.addAction(t("Im Explorer anzeigen"))
         explorer_action.triggered.connect(lambda: self._show_in_explorer(entry))
 
         menu.addSeparator()
 
         # Entfernen
-        remove_action = menu.addAction("Aus Bibliothek entfernen")
+        remove_action = menu.addAction(t("Aus Bibliothek entfernen"))
         remove_action.triggered.connect(lambda: self._remove_entry(entry))
 
         menu.exec(pos)
@@ -599,7 +600,7 @@ class PatternLibraryDialog(QDialog):
         """Entfernt einen Eintrag aus der Bibliothek."""
         reply = QMessageBox.question(
             self,
-            "Eintrag entfernen",
+            t("Eintrag entfernen"),
             f"'{entry.name}' aus der Bibliothek entfernen?\n\n"
             "Die Datei selbst wird nicht gelöscht.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -615,7 +616,7 @@ class PatternLibraryDialog(QDialog):
         """Fügt neue Muster hinzu."""
         paths, _ = QFileDialog.getOpenFileNames(
             self,
-            "Muster hinzufügen",
+            t("Muster hinzufügen"),
             "",
             "PySticky Muster (*.pxs);;Alle Muster (*.pxs *.xsd *.pat *.oxs);;Alle (*.*)",
         )
@@ -629,7 +630,7 @@ class PatternLibraryDialog(QDialog):
 
     def _scan_directory(self):
         """Scannt ein Verzeichnis nach Mustern."""
-        directory = QFileDialog.getExistingDirectory(self, "Verzeichnis scannen", "")
+        directory = QFileDialog.getExistingDirectory(self, t("Verzeichnis scannen"), "")
 
         if directory:
             dir_path = Path(directory)
@@ -656,7 +657,7 @@ class PatternLibraryDialog(QDialog):
             self._update_thumbnails()
 
             QMessageBox.information(
-                self, "Scan abgeschlossen", f"{added} neue Muster zur Bibliothek hinzugefügt."
+                self, t("Scan abgeschlossen"), f"{added} neue Muster zur Bibliothek hinzugefügt."
             )
 
     # Auto-Kategorisierung Keywords
@@ -737,7 +738,7 @@ class PatternLibraryDialog(QDialog):
         current_tags = ", ".join(entry.tags) if entry.tags else ""
         text, ok = QInputDialog.getText(
             self,
-            "Tags bearbeiten",
+            t("Tags bearbeiten"),
             f"Tags für '{entry.name}' (kommagetrennt):",
             QLineEdit.EchoMode.Normal,
             current_tags,
@@ -771,7 +772,7 @@ class PatternLibraryDialog(QDialog):
     def _add_category(self):
         """Fügt eine neue Kategorie hinzu."""
         name, ok = QInputDialog.getText(
-            self, "Neue Kategorie", "Name der Kategorie:", QLineEdit.EchoMode.Normal
+            self, t("Neue Kategorie"), t("Name der Kategorie:"), QLineEdit.EchoMode.Normal
         )
 
         if ok and name:
@@ -785,7 +786,7 @@ class PatternLibraryDialog(QDialog):
         current_row = self._category_list.currentRow()
         if current_row < 2:  # "Alle" und "Favoriten" nicht löschen
             QMessageBox.warning(
-                self, "Nicht möglich", "Diese Kategorie kann nicht gelöscht werden."
+                self, t("Nicht möglich"), t("Diese Kategorie kann nicht gelöscht werden.")
             )
             return
 
@@ -793,7 +794,7 @@ class PatternLibraryDialog(QDialog):
 
         reply = QMessageBox.question(
             self,
-            "Kategorie löschen",
+            t("Kategorie löschen"),
             f"Kategorie '{category}' wirklich löschen?\n\n"
             "Die Muster werden nicht gelöscht, nur die Kategorie-Zuordnung.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,

@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...core.i18n import t
 from ...core.inventory import Inventory
 from ..styles import THEME
 from .swap_colors_dialog import _color_icon
@@ -48,7 +49,7 @@ class InventoryDialog(QDialog):
         self._inventory = Inventory()
         self._dirty = False
 
-        self.setWindowTitle("Garn-Vorratsliste")
+        self.setWindowTitle(t("Garn-Vorratsliste"))
         self.setMinimumSize(680, 520)
         self._setup_ui()
         self._populate_pattern_tab()
@@ -60,9 +61,11 @@ class InventoryDialog(QDialog):
         layout.setSpacing(10)
 
         intro = QLabel(
-            "Trage hier ein, wieviele Stränge du von jeder Farbe noch besitzt. "
-            "Im Statistik-Dialog wird daraus automatisch eine Einkaufsliste "
-            "für das aktuelle Muster berechnet."
+            t(
+                "Trage hier ein, wieviele Stränge du von jeder Farbe noch besitzt. "
+                "Im Statistik-Dialog wird daraus automatisch eine Einkaufsliste "
+                "für das aktuelle Muster berechnet."
+            )
         )
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {THEME.text_muted};")
@@ -79,7 +82,7 @@ class InventoryDialog(QDialog):
         self._pattern_table = QTableWidget()
         self._pattern_table.setColumnCount(5)
         self._pattern_table.setHorizontalHeaderLabels(
-            ["", "Farbe", "Hersteller", "Nr.", "Bestand (Stränge)"]
+            ["", t("Farbe"), t("Hersteller"), t("Nr."), t("Bestand (Stränge)")]
         )
         self._pattern_table.verticalHeader().setVisible(False)
         self._pattern_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -91,7 +94,7 @@ class InventoryDialog(QDialog):
         hdr.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self._pattern_table.setColumnWidth(0, 30)
         pl.addWidget(self._pattern_table)
-        self._tabs.addTab(pattern_tab, "Im Muster")
+        self._tabs.addTab(pattern_tab, t("Im Muster"))
 
         # === Tab 2: Alle Eintraege ===
         all_tab = QWidget()
@@ -100,14 +103,16 @@ class InventoryDialog(QDialog):
         al.setSpacing(8)
 
         self._search = QLineEdit()
-        self._search.setPlaceholderText("🔍 Hersteller oder Nr. suchen…")
+        self._search.setPlaceholderText(t("🔍 Hersteller oder Nr. suchen…"))
         self._search.setClearButtonEnabled(True)
         self._search.textChanged.connect(self._filter_all_table)
         al.addWidget(self._search)
 
         self._all_table = QTableWidget()
         self._all_table.setColumnCount(3)
-        self._all_table.setHorizontalHeaderLabels(["Hersteller", "Nr.", "Bestand (Stränge)"])
+        self._all_table.setHorizontalHeaderLabels(
+            [t("Hersteller"), t("Nr."), t("Bestand (Stränge)")]
+        )
         self._all_table.verticalHeader().setVisible(False)
         self._all_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         hdr2 = self._all_table.horizontalHeader()
@@ -117,14 +122,14 @@ class InventoryDialog(QDialog):
         al.addWidget(self._all_table, 1)
 
         bottom = QHBoxLayout()
-        btn_remove_zero = QPushButton("Leere Einträge entfernen")
-        btn_remove_zero.setToolTip("Eintraege mit 0 Straengen aus der Liste loeschen.")
+        btn_remove_zero = QPushButton(t("Leere Einträge entfernen"))
+        btn_remove_zero.setToolTip(t("Eintraege mit 0 Straengen aus der Liste loeschen."))
         btn_remove_zero.clicked.connect(self._remove_zero_entries)
         bottom.addWidget(btn_remove_zero)
         bottom.addStretch(1)
         al.addLayout(bottom)
 
-        self._tabs.addTab(all_tab, "Alle Einträge")
+        self._tabs.addTab(all_tab, t("Alle Einträge"))
 
         # === Dialog-Buttons ===
         button_box = QDialogButtonBox(
@@ -163,7 +168,7 @@ class InventoryDialog(QDialog):
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(self._inventory.get(thread.manufacturer, thread.catalog_number))
-            spin.setSuffix(" Strang")
+            spin.setSuffix(t(" Strang"))
             spin.valueChanged.connect(lambda val, t=thread: self._on_pattern_value_changed(t, val))
             self._pattern_table.setCellWidget(row, 4, spin)
 
@@ -191,7 +196,7 @@ class InventoryDialog(QDialog):
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(strands)
-            spin.setSuffix(" Strang")
+            spin.setSuffix(t(" Strang"))
             spin.valueChanged.connect(
                 lambda val, m=mfr, n=num: self._on_all_value_changed(m, n, val)
             )
@@ -239,7 +244,7 @@ class InventoryDialog(QDialog):
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(value)
-            spin.setSuffix(" Strang")
+            spin.setSuffix(t(" Strang"))
             spin.valueChanged.connect(
                 lambda val, m=target_mfr, n=target_num: self._on_all_value_changed(m, n, val)
             )
@@ -274,8 +279,8 @@ class InventoryDialog(QDialog):
         if self._dirty:
             reply = QMessageBox.question(
                 self,
-                "Änderungen verwerfen?",
-                "Es gibt ungespeicherte Änderungen. Wirklich verwerfen?",
+                t("Änderungen verwerfen?"),
+                t("Es gibt ungespeicherte Änderungen. Wirklich verwerfen?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:

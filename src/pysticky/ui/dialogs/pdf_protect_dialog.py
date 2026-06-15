@@ -33,8 +33,10 @@ class PdfProtectDialog(QDialog):
         layout = QVBoxLayout(self)
 
         info = QLabel(
-            "Schutz ist OPTIONAL — leere Felder = kein Schutz.\n"
-            "Wasserzeichen wird gross diagonal auf jede Seite gezeichnet."
+            t(
+                "Schutz ist OPTIONAL — leere Felder = kein Schutz.\n"
+                "Wasserzeichen wird gross diagonal auf jede Seite gezeichnet."
+            )
         )
         info.setStyleSheet("color: #888; font-size: 11px;")
         info.setWordWrap(True)
@@ -44,11 +46,11 @@ class PdfProtectDialog(QDialog):
 
         self.edit_password = QLineEdit()
         self.edit_password.setEchoMode(QLineEdit.EchoMode.Password)
-        self.edit_password.setPlaceholderText("(kein Passwort)")
+        self.edit_password.setPlaceholderText(t("(kein Passwort)"))
         form.addRow(t("Passwort:"), self.edit_password)
 
         self.edit_watermark = QLineEdit()
-        self.edit_watermark.setPlaceholderText("(kein Wasserzeichen)")
+        self.edit_watermark.setPlaceholderText(t("(kein Wasserzeichen)"))
         form.addRow(t("Wasserzeichen:"), self.edit_watermark)
 
         self.chk_print = QCheckBox(t("Drucken erlauben"))

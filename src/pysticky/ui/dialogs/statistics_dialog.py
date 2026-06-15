@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.constants import COMMON_FABRIC_COUNTS
+from ...core.i18n import t
 from ..styles import THEME
 from ..widgets.statistics_widgets import StatCard
 
@@ -68,7 +69,7 @@ class PatternStatisticsDialog(QDialog):
         super().__init__(parent)
         self._pattern = pattern
 
-        self.setWindowTitle("Muster-Statistiken & Garnverbrauch")
+        self.setWindowTitle(t("Muster-Statistiken & Garnverbrauch"))
         self.setMinimumSize(750, 650)
 
         self._setup_ui()
@@ -86,45 +87,45 @@ class PatternStatisticsDialog(QDialog):
         # Tab 1: Übersicht
         overview_tab = QWidget()
         self._setup_overview_tab(overview_tab)
-        tabs.addTab(overview_tab, "📊 Übersicht")
+        tabs.addTab(overview_tab, t("📊 Übersicht"))
 
         # Tab 2: Farben-Details
         colors_tab = QWidget()
         self._setup_colors_tab(colors_tab)
-        tabs.addTab(colors_tab, "🎨 Farben")
+        tabs.addTab(colors_tab, t("🎨 Farben"))
 
         # Tab 3: Garnverbrauch-Rechner
         thread_tab = QWidget()
         self._setup_thread_tab(thread_tab)
-        tabs.addTab(thread_tab, "🧵 Garnverbrauch")
+        tabs.addTab(thread_tab, t("🧵 Garnverbrauch"))
 
         # Tab 4: Zeitschätzung
         time_tab = QWidget()
         self._setup_time_tab(time_tab)
-        tabs.addTab(time_tab, "⏱️ Zeitschätzung")
+        tabs.addTab(time_tab, t("⏱️ Zeitschätzung"))
 
         # Tab 5: Fortschritt
         progress_tab = QWidget()
         self._setup_progress_tab(progress_tab)
-        tabs.addTab(progress_tab, "✅ Fortschritt")
+        tabs.addTab(progress_tab, t("✅ Fortschritt"))
 
         # Tab 6: Einkaufsliste (aus Garn-Vorrat)
         shopping_tab = QWidget()
         self._setup_shopping_tab(shopping_tab)
-        tabs.addTab(shopping_tab, "🛒 Einkaufsliste")
+        tabs.addTab(shopping_tab, t("🛒 Einkaufsliste"))
 
         layout.addWidget(tabs, 1)
 
         # Footer
         footer = QHBoxLayout()
 
-        export_btn = QPushButton("📄 Als CSV exportieren")
+        export_btn = QPushButton(t("📄 Als CSV exportieren"))
         export_btn.clicked.connect(self._on_export_csv)
         footer.addWidget(export_btn)
 
         footer.addStretch()
 
-        close_btn = QPushButton("Schließen")
+        close_btn = QPushButton(t("Schließen"))
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
         close_btn.setStyleSheet(f"""
@@ -147,32 +148,32 @@ class PatternStatisticsDialog(QDialog):
         cards_layout = QGridLayout()
         cards_layout.setSpacing(10)
 
-        self._card_size = StatCard("Größe", "- × -", "📐")
+        self._card_size = StatCard(t("Größe"), "- × -", "📐")
         cards_layout.addWidget(self._card_size, 0, 0)
 
-        self._card_stitches = StatCard("Gesamtstiche", "-", "🧵")
+        self._card_stitches = StatCard(t("Gesamtstiche"), "-", "🧵")
         cards_layout.addWidget(self._card_stitches, 0, 1)
 
-        self._card_colors = StatCard("Farben", "-", "🎨")
+        self._card_colors = StatCard(t("Farben"), "-", "🎨")
         cards_layout.addWidget(self._card_colors, 0, 2)
 
-        self._card_backstitches = StatCard("Rückstiche", "-", "↙️")
+        self._card_backstitches = StatCard(t("Rückstiche"), "-", "↙️")
         cards_layout.addWidget(self._card_backstitches, 1, 0)
 
-        self._card_coverage = StatCard("Abdeckung", "-", "📊")
+        self._card_coverage = StatCard(t("Abdeckung"), "-", "📊")
         cards_layout.addWidget(self._card_coverage, 1, 1)
 
-        self._card_layers = StatCard("Ebenen", "-", "🗂️")
+        self._card_layers = StatCard(t("Ebenen"), "-", "🗂️")
         cards_layout.addWidget(self._card_layers, 1, 2)
 
         # Schwierigkeits-Karte mit Tooltip-Detail (Faktor-Aufschluesselung)
-        self._card_difficulty = StatCard("Schwierigkeit", "-", "🎯")
+        self._card_difficulty = StatCard(t("Schwierigkeit"), "-", "🎯")
         cards_layout.addWidget(self._card_difficulty, 2, 0, 1, 3)
 
         layout.addLayout(cards_layout)
 
         # Farbverteilung (Top 5)
-        dist_group = QGroupBox("Top 5 Farben")
+        dist_group = QGroupBox(t("Top 5 Farben"))
         dist_layout = QVBoxLayout(dist_group)
 
         self._color_bars: list[tuple[QWidget, QLabel, QProgressBar]] = []
@@ -206,7 +207,15 @@ class PatternStatisticsDialog(QDialog):
         self._colors_table = QTableWidget()
         self._colors_table.setColumnCount(7)
         self._colors_table.setHorizontalHeaderLabels(
-            ["Farbe", "Symbol", "Name", "Hersteller", "Nr.", "Stiche", "%"]
+            [
+                t("Farbe"),
+                t("Symbol"),
+                t("Name"),
+                t("Hersteller"),
+                t("Nr."),
+                t("Stiche"),
+                "%",
+            ]
         )
         self._colors_table.horizontalHeader().setSectionResizeMode(
             2, QHeaderView.ResizeMode.Stretch
@@ -222,26 +231,26 @@ class PatternStatisticsDialog(QDialog):
         layout.setSpacing(15)
 
         # Einstellungen
-        settings_group = QGroupBox("Berechnungs-Einstellungen")
+        settings_group = QGroupBox(t("Berechnungs-Einstellungen"))
         settings_layout = QGridLayout(settings_group)
 
-        settings_layout.addWidget(QLabel("Stoffart:"), 0, 0)
+        settings_layout.addWidget(QLabel(t("Stoffart:")), 0, 0)
         self._fabric_combo = QComboBox()
         self._fabric_combo.addItems(
             [
-                "Aida 11 (4,3 St/cm)",
-                "Aida 14 (5,5 St/cm)",
-                "Aida 16 (6,3 St/cm)",
-                "Aida 18 (7,1 St/cm)",
-                "Evenweave 28 (11 St/cm)",
-                "Leinen 32 (12,6 St/cm)",
+                t("Aida 11 (4,3 St/cm)"),
+                t("Aida 14 (5,5 St/cm)"),
+                t("Aida 16 (6,3 St/cm)"),
+                t("Aida 18 (7,1 St/cm)"),
+                t("Evenweave 28 (11 St/cm)"),
+                t("Leinen 32 (12,6 St/cm)"),
             ]
         )
         self._fabric_combo.setCurrentIndex(1)  # Aida 14
         self._fabric_combo.currentIndexChanged.connect(self._recalculate_thread)
         settings_layout.addWidget(self._fabric_combo, 0, 1)
 
-        settings_layout.addWidget(QLabel("Sicherheitszuschlag:"), 1, 0)
+        settings_layout.addWidget(QLabel(t("Sicherheitszuschlag:")), 1, 0)
         self._waste_spin = QSpinBox()
         self._waste_spin.setRange(0, 50)
         self._waste_spin.setValue(20)
@@ -249,7 +258,7 @@ class PatternStatisticsDialog(QDialog):
         self._waste_spin.valueChanged.connect(self._recalculate_thread)
         settings_layout.addWidget(self._waste_spin, 1, 1)
 
-        settings_layout.addWidget(QLabel("Preis pro Strang:"), 2, 0)
+        settings_layout.addWidget(QLabel(t("Preis pro Strang:")), 2, 0)
         self._price_spin = QDoubleSpinBox()
         self._price_spin.setRange(0, 50)
         self._price_spin.setValue(1.50)
@@ -264,7 +273,14 @@ class PatternStatisticsDialog(QDialog):
         self._thread_table = QTableWidget()
         self._thread_table.setColumnCount(6)
         self._thread_table.setHorizontalHeaderLabels(
-            ["Farbe", "Name", "Stiche", "Stränge", "Stränge (+Zuschlag)", "Kosten"]
+            [
+                t("Farbe"),
+                t("Name"),
+                t("Stiche"),
+                t("Stränge"),
+                t("Stränge (+Zuschlag)"),
+                t("Kosten"),
+            ]
         )
         self._thread_table.horizontalHeader().setSectionResizeMode(
             1, QHeaderView.ResizeMode.Stretch
@@ -286,13 +302,13 @@ class PatternStatisticsDialog(QDialog):
         """)
         summary_layout = QHBoxLayout(summary_frame)
 
-        self._total_skeins_label = QLabel("Gesamt: - Stränge")
+        self._total_skeins_label = QLabel(t("Gesamt: - Stränge"))
         self._total_skeins_label.setStyleSheet(f"font-weight: bold; color: {THEME.text_primary};")
         summary_layout.addWidget(self._total_skeins_label)
 
         summary_layout.addStretch()
 
-        self._total_cost_label = QLabel("Geschätzte Kosten: - €")
+        self._total_cost_label = QLabel(t("Geschätzte Kosten: - €"))
         self._total_cost_label.setStyleSheet(
             f"font-weight: bold; color: {THEME.accent_primary}; font-size: 14px;"
         )
@@ -305,10 +321,10 @@ class PatternStatisticsDialog(QDialog):
         layout.setSpacing(15)
 
         # Einstellungen
-        settings_group = QGroupBox("Erfahrungslevel")
+        settings_group = QGroupBox(t("Erfahrungslevel"))
         settings_layout = QHBoxLayout(settings_group)
 
-        settings_layout.addWidget(QLabel("Stickerfahrung:"))
+        settings_layout.addWidget(QLabel(t("Stickerfahrung:")))
         self._skill_combo = QComboBox()
         self._skill_combo.addItems(list(self.SECONDS_PER_STITCH.keys()))
         self._skill_combo.setCurrentIndex(1)  # Fortgeschritten
@@ -317,7 +333,7 @@ class PatternStatisticsDialog(QDialog):
 
         settings_layout.addStretch()
 
-        settings_layout.addWidget(QLabel("Stunden pro Tag:"))
+        settings_layout.addWidget(QLabel(t("Stunden pro Tag:")))
         self._hours_spin = QDoubleSpinBox()
         self._hours_spin.setRange(0.5, 12)
         self._hours_spin.setValue(2)
@@ -331,27 +347,29 @@ class PatternStatisticsDialog(QDialog):
         # Zeitschätzung-Karten
         time_cards = QGridLayout()
 
-        self._card_total_time = StatCard("Geschätzte Gesamtzeit", "-", "⏱️")
+        self._card_total_time = StatCard(t("Geschätzte Gesamtzeit"), "-", "⏱️")
         time_cards.addWidget(self._card_total_time, 0, 0)
 
-        self._card_days = StatCard("Bei täglichem Sticken", "-", "📅")
+        self._card_days = StatCard(t("Bei täglichem Sticken"), "-", "📅")
         time_cards.addWidget(self._card_days, 0, 1)
 
-        self._card_speed = StatCard("Stiche pro Stunde", "-", "⚡")
+        self._card_speed = StatCard(t("Stiche pro Stunde"), "-", "⚡")
         time_cards.addWidget(self._card_speed, 1, 0)
 
-        self._card_per_color = StatCard("Durchschn. pro Farbe", "-", "🎨")
+        self._card_per_color = StatCard(t("Durchschn. pro Farbe"), "-", "🎨")
         time_cards.addWidget(self._card_per_color, 1, 1)
 
         layout.addLayout(time_cards)
 
         # Detaillierte Aufschlüsselung
-        detail_group = QGroupBox("Zeitaufwand pro Farbe (geschätzt)")
+        detail_group = QGroupBox(t("Zeitaufwand pro Farbe (geschätzt)"))
         detail_layout = QVBoxLayout(detail_group)
 
         self._time_table = QTableWidget()
         self._time_table.setColumnCount(4)
-        self._time_table.setHorizontalHeaderLabels(["Farbe", "Name", "Stiche", "Geschätzte Zeit"])
+        self._time_table.setHorizontalHeaderLabels(
+            [t("Farbe"), t("Name"), t("Stiche"), t("Geschätzte Zeit")]
+        )
         self._time_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self._time_table.setAlternatingRowColors(True)
         self._time_table.setSortingEnabled(True)
@@ -368,8 +386,10 @@ class PatternStatisticsDialog(QDialog):
         layout.setSpacing(12)
 
         intro = QLabel(
-            "Vergleich des Garnbedarfs für dieses Muster mit deinem hinterlegten "
-            "Vorrat. Pflege den Vorrat über Bearbeiten → Garn-Vorrat… (Ctrl+Shift+I)."
+            t(
+                "Vergleich des Garnbedarfs für dieses Muster mit deinem hinterlegten "
+                "Vorrat. Pflege den Vorrat über Bearbeiten → Garn-Vorrat… (Ctrl+Shift+I)."
+            )
         )
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {THEME.text_muted};")
@@ -383,7 +403,7 @@ class PatternStatisticsDialog(QDialog):
         )
 
         if not items:
-            empty = QLabel("Das Muster enthält keine gestickte Farbe — keine Einkaufsliste.")
+            empty = QLabel(t("Das Muster enthält keine gestickte Farbe — keine Einkaufsliste."))
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet(f"color: {THEME.text_muted}; font-style: italic; padding: 20px;")
             layout.addWidget(empty)
@@ -394,7 +414,9 @@ class PatternStatisticsDialog(QDialog):
 
         table = QTableWidget()
         table.setColumnCount(6)
-        table.setHorizontalHeaderLabels(["", "Farbe", "Nr.", "Benötigt", "Vorrat", "Zu kaufen"])
+        table.setHorizontalHeaderLabels(
+            ["", t("Farbe"), t("Nr."), t("Benötigt"), t("Vorrat"), t("Zu kaufen")]
+        )
         table.verticalHeader().setVisible(False)
         table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         hdr = table.horizontalHeader()
@@ -430,7 +452,7 @@ class PatternStatisticsDialog(QDialog):
         summary = QLabel(
             f"<b>{total_to_buy}</b> Stränge insgesamt zu kaufen"
             if total_to_buy > 0
-            else "✓ Du hast alles im Vorrat!"
+            else t("✓ Du hast alles im Vorrat!")
         )
         summary.setAlignment(Qt.AlignmentFlag.AlignCenter)
         summary.setStyleSheet(
@@ -445,7 +467,7 @@ class PatternStatisticsDialog(QDialog):
         layout.setSpacing(15)
 
         # Gesamt-Fortschritt
-        overall_group = QGroupBox("Gesamtfortschritt")
+        overall_group = QGroupBox(t("Gesamtfortschritt"))
         overall_layout = QVBoxLayout(overall_group)
 
         self._progress_bar = QProgressBar()
@@ -471,7 +493,7 @@ class PatternStatisticsDialog(QDialog):
         """)
         overall_layout.addWidget(self._progress_bar)
 
-        self._progress_label = QLabel("0 / 0 Stiche gestickt")
+        self._progress_label = QLabel(t("0 / 0 Stiche gestickt"))
         self._progress_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._progress_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 12px;")
         overall_layout.addWidget(self._progress_label)
@@ -482,25 +504,25 @@ class PatternStatisticsDialog(QDialog):
         cards_layout = QGridLayout()
         cards_layout.setSpacing(10)
 
-        self._card_progress_done = StatCard("Erledigt", "0", "✅")
+        self._card_progress_done = StatCard(t("Erledigt"), "0", "✅")
         cards_layout.addWidget(self._card_progress_done, 0, 0)
 
-        self._card_progress_remaining = StatCard("Verbleibend", "0", "📋")
+        self._card_progress_remaining = StatCard(t("Verbleibend"), "0", "📋")
         cards_layout.addWidget(self._card_progress_remaining, 0, 1)
 
-        self._card_progress_colors_done = StatCard("Farben fertig", "0", "🎨")
+        self._card_progress_colors_done = StatCard(t("Farben fertig"), "0", "🎨")
         cards_layout.addWidget(self._card_progress_colors_done, 0, 2)
 
         layout.addLayout(cards_layout)
 
         # Pro-Farbe-Tabelle
-        color_group = QGroupBox("Fortschritt pro Farbe")
+        color_group = QGroupBox(t("Fortschritt pro Farbe"))
         color_layout = QVBoxLayout(color_group)
 
         self._progress_table = QTableWidget()
         self._progress_table.setColumnCount(6)
         self._progress_table.setHorizontalHeaderLabels(
-            ["Farbe", "Name", "Erledigt", "Gesamt", "%", "Status"]
+            [t("Farbe"), t("Name"), t("Erledigt"), t("Gesamt"), "%", t("Status")]
         )
         self._progress_table.horizontalHeader().setSectionResizeMode(
             1, QHeaderView.ResizeMode.Stretch
@@ -759,15 +781,15 @@ class PatternStatisticsDialog(QDialog):
 
             # Status
             if color_info["completed"] == color_info["total"]:
-                status = "✅ Fertig"
+                status = t("✅ Fertig")
                 status_item = QTableWidgetItem(status)
                 status_item.setForeground(QBrush(QColor("#2ecc71")))
             elif color_info["completed"] > 0:
-                status = "🔄 In Arbeit"
+                status = t("🔄 In Arbeit")
                 status_item = QTableWidgetItem(status)
                 status_item.setForeground(QBrush(QColor("#f39c12")))
             else:
-                status = "⬜ Offen"
+                status = t("⬜ Offen")
                 status_item = QTableWidgetItem(status)
                 status_item.setForeground(QBrush(QColor(THEME.text_muted)))
             self._progress_table.setItem(row, 5, status_item)
@@ -971,9 +993,9 @@ class PatternStatisticsDialog(QDialog):
         """Exportiert die Statistiken als CSV."""
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "Statistiken exportieren",
+            t("Statistiken exportieren"),
             f"{self._pattern.name}_statistik.csv",
-            "CSV-Dateien (*.csv)",
+            t("CSV-Dateien (*.csv)"),
         )
 
         if not path:
@@ -1025,8 +1047,8 @@ class PatternStatisticsDialog(QDialog):
                     )
 
             QMessageBox.information(
-                self, "Export erfolgreich", f"Statistiken exportiert nach:\n{path}"
+                self, t("Export erfolgreich"), f"Statistiken exportiert nach:\n{path}"
             )
 
         except OSError as e:
-            QMessageBox.critical(self, "Fehler", f"Export fehlgeschlagen:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Export fehlgeschlagen:\n{e}")

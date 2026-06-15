@@ -40,6 +40,7 @@ from ...core.constants import (
     MAX_IMPORT_DIMENSION,
     MIN_COLORS,
 )
+from ...core.i18n import t
 from ..styles import THEME, Styles
 from ..widgets.crop_preview import CropPreviewWidget
 from .image_import_presets import (
@@ -92,17 +93,19 @@ class ImageImportDialog(QDialog):
         if not check_pillow_available():
             QMessageBox.warning(
                 self,
-                "Fehlende Abhängigkeiten",
-                "Für den Bildimport werden Pillow und numpy benötigt.\n\n"
-                "Installiere mit:\n"
-                "pip install Pillow numpy",
+                t("Fehlende Abhängigkeiten"),
+                t(
+                    "Für den Bildimport werden Pillow und numpy benötigt.\n\n"
+                    "Installiere mit:\n"
+                    "pip install Pillow numpy"
+                ),
             )
 
     def _populate_presets(self) -> None:
         """Füllt die Preset-ComboBox mit Built-in und User-Presets."""
         self.combo_preset.blockSignals(True)
         self.combo_preset.clear()
-        self.combo_preset.addItem("— Keine Voreinstellung —")
+        self.combo_preset.addItem(t("— Keine Voreinstellung —"))
 
         for p in BUILTIN_PRESETS:
             self.combo_preset.addItem(f"📦 {p['name']}")
@@ -169,8 +172,8 @@ class ImageImportDialog(QDialog):
         """Speichert die aktuellen Einstellungen als User-Preset."""
         name, ok = QInputDialog.getText(
             self,
-            "Preset speichern",
-            "Name für die Voreinstellung:",
+            t("Preset speichern"),
+            t("Name für die Voreinstellung:"),
         )
         if not ok or not name.strip():
             return
@@ -257,7 +260,7 @@ class ImageImportDialog(QDialog):
         """
 
     def _setup_ui(self) -> None:
-        self.setWindowTitle("Bild importieren")
+        self.setWindowTitle(t("Bild importieren"))
         self.setMinimumSize(850, 650)
 
         layout = QHBoxLayout(self)
@@ -276,7 +279,7 @@ class ImageImportDialog(QDialog):
         left.setSpacing(12)
 
         # Presets
-        preset_group = QGroupBox("Voreinstellung")
+        preset_group = QGroupBox(t("Voreinstellung"))
         preset_group.setStyleSheet(gbs)
         preset_layout = QHBoxLayout(preset_group)
 
@@ -286,7 +289,7 @@ class ImageImportDialog(QDialog):
         preset_layout.addWidget(self.combo_preset, 1)
 
         self.btn_save_preset = QPushButton("\U0001f4be")
-        self.btn_save_preset.setToolTip("Aktuelle Einstellungen als Preset speichern")
+        self.btn_save_preset.setToolTip(t("Aktuelle Einstellungen als Preset speichern"))
         self.btn_save_preset.setAutoDefault(False)
         self.btn_save_preset.setDefault(False)
         self.btn_save_preset.setFixedWidth(36)
@@ -296,11 +299,11 @@ class ImageImportDialog(QDialog):
         left.addWidget(preset_group)
 
         # Bild auswählen
-        file_group = QGroupBox("Bilddatei")
+        file_group = QGroupBox(t("Bilddatei"))
         file_group.setStyleSheet(gbs)
         file_layout = QVBoxLayout(file_group)
 
-        self.lbl_filename = QLabel("Keine Datei ausgewählt")
+        self.lbl_filename = QLabel(t("Keine Datei ausgewählt"))
         self.lbl_filename.setStyleSheet(f"color: {THEME.text_muted};")
         file_layout.addWidget(self.lbl_filename)
 
@@ -308,7 +311,7 @@ class ImageImportDialog(QDialog):
         self.lbl_image_info.setStyleSheet(f"color: {THEME.accent_primary}; font-size: 11px;")
         file_layout.addWidget(self.lbl_image_info)
 
-        self.btn_browse = QPushButton("\U0001f4c1 Bild auswählen...")
+        self.btn_browse = QPushButton(t("\U0001f4c1 Bild auswählen..."))
         self.btn_browse.setAutoDefault(False)
         self.btn_browse.setDefault(False)
         self.btn_browse.setStyleSheet(bts)
@@ -317,25 +320,25 @@ class ImageImportDialog(QDialog):
         left.addWidget(file_group)
 
         # Größe
-        size_group = QGroupBox("Mustergröße")
+        size_group = QGroupBox(t("Mustergröße"))
         size_group.setStyleSheet(gbs)
         size_layout = QGridLayout(size_group)
 
-        size_layout.addWidget(QLabel("Breite:"), 0, 0)
+        size_layout.addWidget(QLabel(t("Breite:")), 0, 0)
         self.spin_width = QSpinBox()
         self.spin_width.setRange(10, MAX_IMPORT_DIMENSION)
         self.spin_width.setValue(80)
-        self.spin_width.setSuffix(" Stiche")
+        self.spin_width.setSuffix(t(" Stiche"))
         size_layout.addWidget(self.spin_width, 0, 1)
 
-        size_layout.addWidget(QLabel("Höhe:"), 1, 0)
+        size_layout.addWidget(QLabel(t("Höhe:")), 1, 0)
         self.spin_height = QSpinBox()
         self.spin_height.setRange(10, MAX_IMPORT_DIMENSION)
         self.spin_height.setValue(80)
-        self.spin_height.setSuffix(" Stiche")
+        self.spin_height.setSuffix(t(" Stiche"))
         size_layout.addWidget(self.spin_height, 1, 1)
 
-        self.chk_aspect = QCheckBox("Seitenverhältnis beibehalten")
+        self.chk_aspect = QCheckBox(t("Seitenverhältnis beibehalten"))
         self.chk_aspect.setChecked(True)
         size_layout.addWidget(self.chk_aspect, 2, 0, 1, 2)
 
@@ -348,7 +351,7 @@ class ImageImportDialog(QDialog):
         # Farben — Grid mit fester Min-Spaltenbreite, damit Combo-Boxen
         # und Spinner einheitlich breit sind und der Wert nicht von den
         # Up/Down-Pfeilen abgeschnitten wird.
-        color_group = QGroupBox("Farben")
+        color_group = QGroupBox(t("Farben"))
         color_group.setStyleSheet(gbs)
         color_layout = QGridLayout(color_group)
         # Linke Label-Spalte: fest 100px (sonst springt sie je nach Text).
@@ -356,39 +359,39 @@ class ImageImportDialog(QDialog):
         # Rechte Werte-Spalte: gibt allen Widgets dieselbe Mindestbreite.
         color_layout.setColumnStretch(1, 1)
 
-        color_layout.addWidget(QLabel("Palette:"), 0, 0)
+        color_layout.addWidget(QLabel(t("Palette:")), 0, 0)
         self.combo_palette = QComboBox()
         self.combo_palette.setStyleSheet(cbs)
         self.combo_palette.setMinimumWidth(220)
         self._load_palettes()
         color_layout.addWidget(self.combo_palette, 0, 1)
 
-        color_layout.addWidget(QLabel("Max. Farben:"), 1, 0)
+        color_layout.addWidget(QLabel(t("Max. Farben:")), 1, 0)
         self.spin_colors = QSpinBox()
         self.spin_colors.setRange(max(2, MIN_COLORS), MAX_COLORS)
         self.spin_colors.setValue(DEFAULT_MAX_IMPORT_COLORS)
         self.spin_colors.setMinimumWidth(220)
         color_layout.addWidget(self.spin_colors, 1, 1)
 
-        color_layout.addWidget(QLabel("Farbauswahl:"), 2, 0)
+        color_layout.addWidget(QLabel(t("Farbauswahl:")), 2, 0)
         self.combo_quantization = QComboBox()
         self.combo_quantization.addItems(
             [
-                "Standard (Nächste Farbe)",
-                "Median-Cut (Bessere Verteilung)",
+                t("Standard (Nächste Farbe)"),
+                t("Median-Cut (Bessere Verteilung)"),
             ]
         )
         self.combo_quantization.setStyleSheet(cbs)
         self.combo_quantization.setMinimumWidth(220)
         color_layout.addWidget(self.combo_quantization, 2, 1)
 
-        color_layout.addWidget(QLabel("Dithering:"), 3, 0)
+        color_layout.addWidget(QLabel(t("Dithering:")), 3, 0)
         self.combo_dithering = QComboBox()
         self.combo_dithering.addItems(
             [
-                "Kein Dithering",
-                "Floyd-Steinberg",
-                "Ordered (Bayer)",
+                t("Kein Dithering"),
+                t("Floyd-Steinberg"),
+                t("Ordered (Bayer)"),
             ]
         )
         self.combo_dithering.setStyleSheet(cbs)
@@ -397,34 +400,38 @@ class ImageImportDialog(QDialog):
 
         # Confetti-Reduction: kleine Cluster der Nachbarfarbe zuordnen.
         # Wert = minimale Cluster-Groesse. 1 = aus, 2-5 = aktiv.
-        lbl_confetti = QLabel("Confetti reduzieren:")
+        lbl_confetti = QLabel(t("Confetti reduzieren:"))
         lbl_confetti.setToolTip(
-            "Filtert isolierte Einzelpixel und kleine Cluster heraus.\n"
-            "Sie werden der dominanten Nachbarfarbe zugeordnet, was die\n"
-            "Stickanleitung erheblich vereinfacht.\n\n"
-            "1 = aus, 2 = dezent (Einzelpixel), 3-5 = aggressiv."
+            t(
+                "Filtert isolierte Einzelpixel und kleine Cluster heraus.\n"
+                "Sie werden der dominanten Nachbarfarbe zugeordnet, was die\n"
+                "Stickanleitung erheblich vereinfacht.\n\n"
+                "1 = aus, 2 = dezent (Einzelpixel), 3-5 = aggressiv."
+            )
         )
         color_layout.addWidget(lbl_confetti, 4, 0)
         self.spin_confetti = QSpinBox()
         self.spin_confetti.setRange(1, 10)
         self.spin_confetti.setValue(1)
         self.spin_confetti.setToolTip(lbl_confetti.toolTip())
-        self.spin_confetti.setSpecialValueText("aus")
+        self.spin_confetti.setSpecialValueText(t("aus"))
         color_layout.addWidget(self.spin_confetti, 4, 1)
 
         left.addWidget(color_group)
 
         # Bild-Anpassung (vor Quantisierung)
-        adjust_group = QGroupBox("Bild-Anpassung")
+        adjust_group = QGroupBox(t("Bild-Anpassung"))
         adjust_group.setStyleSheet(gbs)
         adjust_group.setToolTip(
-            "Wird vor der Farbquantisierung angewendet. Hilft bei zu dunklen,\n"
-            "blassen oder zu farbstarken Bildern."
+            t(
+                "Wird vor der Farbquantisierung angewendet. Hilft bei zu dunklen,\n"
+                "blassen oder zu farbstarken Bildern."
+            )
         )
         adjust_layout = QGridLayout(adjust_group)
 
         # Helligkeit
-        adjust_layout.addWidget(QLabel("Helligkeit:"), 0, 0)
+        adjust_layout.addWidget(QLabel(t("Helligkeit:")), 0, 0)
         self.slider_brightness = QSlider(Qt.Orientation.Horizontal)
         self.slider_brightness.setRange(50, 200)  # 0.5 .. 2.0
         self.slider_brightness.setValue(100)  # 1.0
@@ -437,7 +444,7 @@ class ImageImportDialog(QDialog):
         adjust_layout.addWidget(self.lbl_brightness, 0, 2)
 
         # Kontrast
-        adjust_layout.addWidget(QLabel("Kontrast:"), 1, 0)
+        adjust_layout.addWidget(QLabel(t("Kontrast:")), 1, 0)
         self.slider_contrast = QSlider(Qt.Orientation.Horizontal)
         self.slider_contrast.setRange(50, 200)
         self.slider_contrast.setValue(100)
@@ -450,7 +457,7 @@ class ImageImportDialog(QDialog):
         adjust_layout.addWidget(self.lbl_contrast, 1, 2)
 
         # Saettigung
-        adjust_layout.addWidget(QLabel("Sättigung:"), 2, 0)
+        adjust_layout.addWidget(QLabel(t("Sättigung:")), 2, 0)
         self.slider_saturation = QSlider(Qt.Orientation.Horizontal)
         self.slider_saturation.setRange(0, 200)  # 0.0 = Graustufen
         self.slider_saturation.setValue(100)
@@ -463,7 +470,7 @@ class ImageImportDialog(QDialog):
         adjust_layout.addWidget(self.lbl_saturation, 2, 2)
 
         # Reset-Button
-        self.btn_reset_adjust = QPushButton("Zurücksetzen")
+        self.btn_reset_adjust = QPushButton(t("Zurücksetzen"))
         self.btn_reset_adjust.setAutoDefault(False)
         self.btn_reset_adjust.setDefault(False)
         self.btn_reset_adjust.setStyleSheet(bts)
@@ -472,14 +479,16 @@ class ImageImportDialog(QDialog):
         left.addWidget(adjust_group)
 
         # Konturen
-        contour_group = QGroupBox("Konturen")
+        contour_group = QGroupBox(t("Konturen"))
         contour_group.setStyleSheet(gbs)
         contour_layout = QVBoxLayout(contour_group)
 
-        self.chk_backstitches = QCheckBox("Konturen automatisch erkennen (Rückstiche)")
+        self.chk_backstitches = QCheckBox(t("Konturen automatisch erkennen (Rückstiche)"))
         self.chk_backstitches.setToolTip(
-            "Erkennt Kanten im Bild per Sobel-Operator\n"
-            "und generiert automatisch Rückstiche entlang der Konturen."
+            t(
+                "Erkennt Kanten im Bild per Sobel-Operator\n"
+                "und generiert automatisch Rückstiche entlang der Konturen."
+            )
         )
         contour_layout.addWidget(self.chk_backstitches)
 
@@ -488,17 +497,17 @@ class ImageImportDialog(QDialog):
         # Buttons
         btn_layout = QHBoxLayout()
 
-        self.btn_preview = QPushButton("\U0001f50d Vorschau (optional)")
+        self.btn_preview = QPushButton(t("\U0001f50d Vorschau (optional)"))
         self.btn_preview.setEnabled(False)
         self.btn_preview.setAutoDefault(False)
         self.btn_preview.setDefault(False)
         self.btn_preview.setToolTip(
-            "Zeigt eine Vorschau des Ergebnisses - nicht erforderlich für den Import"
+            t("Zeigt eine Vorschau des Ergebnisses - nicht erforderlich für den Import")
         )
         self.btn_preview.setStyleSheet(bts)
         btn_layout.addWidget(self.btn_preview)
 
-        self.btn_reset_crop = QPushButton("\u21ba Ausschnitt zurücksetzen")
+        self.btn_reset_crop = QPushButton(t("\u21ba Ausschnitt zurücksetzen"))
         self.btn_reset_crop.setEnabled(False)
         self.btn_reset_crop.setAutoDefault(False)
         self.btn_reset_crop.setDefault(False)
@@ -512,7 +521,7 @@ class ImageImportDialog(QDialog):
         # Import/Abbrechen Buttons
         action_layout = QHBoxLayout()
 
-        self.btn_cancel = QPushButton("Abbrechen")
+        self.btn_cancel = QPushButton(t("Abbrechen"))
         self.btn_cancel.setAutoDefault(False)
         self.btn_cancel.setDefault(False)
         self.btn_cancel.setStyleSheet(f"""
@@ -527,7 +536,7 @@ class ImageImportDialog(QDialog):
         """)
         action_layout.addWidget(self.btn_cancel)
 
-        self.btn_import = QPushButton("\u2713 Importieren")
+        self.btn_import = QPushButton(t("\u2713 Importieren"))
         self.btn_import.setEnabled(False)
         self.btn_import.setAutoDefault(False)
         self.btn_import.setDefault(False)
@@ -551,7 +560,7 @@ class ImageImportDialog(QDialog):
         preview_frame.setMinimumWidth(400)
         preview_layout = QVBoxLayout(preview_frame)
 
-        preview_header = QLabel("Vorschau - Ziehe einen Ausschnitt (Doppelklick = zurücksetzen)")
+        preview_header = QLabel(t("Vorschau - Ziehe einen Ausschnitt (Doppelklick = zurücksetzen)"))
         preview_header.setStyleSheet(
             f"font-weight: bold; color: {THEME.accent_primary}; font-size: 11px;"
         )
@@ -564,7 +573,7 @@ class ImageImportDialog(QDialog):
         self.crop_preview.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         preview_layout.addWidget(self.crop_preview)
 
-        self.lbl_crop_info = QLabel("Ausschnitt: Gesamtes Bild")
+        self.lbl_crop_info = QLabel(t("Ausschnitt: Gesamtes Bild"))
         self.lbl_crop_info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
         self.lbl_crop_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         preview_layout.addWidget(self.lbl_crop_info)
@@ -575,7 +584,7 @@ class ImageImportDialog(QDialog):
         sep.setStyleSheet(f"background: {THEME.border_medium}; max-height: 1px;")
         preview_layout.addWidget(sep)
 
-        lbl_pattern_header = QLabel("Muster-Vorschau:")
+        lbl_pattern_header = QLabel(t("Muster-Vorschau:"))
         lbl_pattern_header.setStyleSheet(
             f"font-weight: bold; color: {THEME.text_muted}; font-size: 10px;"
         )
@@ -678,7 +687,7 @@ class ImageImportDialog(QDialog):
                 self.lbl_crop_info.setText(f"Ausschnitt: {crop_w} × {crop_h} px")
                 self.btn_reset_crop.setEnabled(True)
             else:
-                self.lbl_crop_info.setText("Ausschnitt: Gesamtes Bild")
+                self.lbl_crop_info.setText(t("Ausschnitt: Gesamtes Bild"))
                 self.btn_reset_crop.setEnabled(False)
 
             # Größe neu berechnen basierend auf Ausschnitt
@@ -846,14 +855,14 @@ class ImageImportDialog(QDialog):
         if not check_pillow_available():
             QMessageBox.warning(
                 self,
-                "Fehlende Abhängigkeiten",
-                "Pillow und numpy sind nicht installiert.\n\npip install Pillow numpy",
+                t("Fehlende Abhängigkeiten"),
+                t("Pillow und numpy sind nicht installiert.\n\npip install Pillow numpy"),
             )
             return
 
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Bild auswählen",
+            t("Bild auswählen"),
             "",
             "Bilder (*.png *.jpg *.jpeg *.bmp *.gif *.webp *.tiff *.tif *.avif *.avifs);;Alle (*.*)",
         )
@@ -890,7 +899,7 @@ class ImageImportDialog(QDialog):
 
             self._update_size_info()
             self.lbl_crop_info.setText("Ausschnitt: Gesamtes Bild")
-            self.lbl_preview_info.setText("✅ Bereit zum Importieren")
+            self.lbl_preview_info.setText(t("✅ Bereit zum Importieren"))
             self.lbl_preview_info.setStyleSheet(f"color: {THEME.accent_primary}; font-size: 11px;")
 
             self.btn_preview.setEnabled(True)
@@ -898,7 +907,7 @@ class ImageImportDialog(QDialog):
             self.btn_reset_crop.setEnabled(False)
 
         except OSError as e:
-            QMessageBox.warning(self, "Fehler", f"Bild konnte nicht geladen werden:\n{e}")
+            QMessageBox.warning(self, t("Fehler"), f"Bild konnte nicht geladen werden:\n{e}")
             self._image_path = None
             self._image_width = 0
             self._image_height = 0
@@ -909,7 +918,7 @@ class ImageImportDialog(QDialog):
         self._preview_pattern = None
 
         if self._image_path:
-            self.lbl_preview_info.setText("⏳ Vorschau wird aktualisiert...")
+            self.lbl_preview_info.setText(t("⏳ Vorschau wird aktualisiert..."))
             self.lbl_preview_info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
             # Debounce: Timer (re-)starten
             self._preview_timer.start()
@@ -923,7 +932,7 @@ class ImageImportDialog(QDialog):
         if not self._image_path or not check_pillow_available():
             return
 
-        self.lbl_preview_info.setText("⏳ Generiere Vorschau...")
+        self.lbl_preview_info.setText(t("⏳ Generiere Vorschau..."))
         self.lbl_preview_info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
         self.repaint()
 
@@ -1029,22 +1038,22 @@ class ImageImportDialog(QDialog):
     def _on_import(self) -> None:
         """Muster importieren im Hintergrund-Thread."""
         if not self._image_path:
-            QMessageBox.warning(self, "Kein Bild", "Bitte wähle zuerst ein Bild aus.")
+            QMessageBox.warning(self, t("Kein Bild"), t("Bitte wähle zuerst ein Bild aus."))
             return
 
         if not check_pillow_available():
-            QMessageBox.warning(self, "Fehler", "Pillow ist nicht installiert.")
+            QMessageBox.warning(self, t("Fehler"), t("Pillow ist nicht installiert."))
             return
 
         # UI deaktivieren
         self.btn_import.setEnabled(False)
-        self.btn_import.setText("⏳ Importiere...")
+        self.btn_import.setText(t("⏳ Importiere..."))
 
         # Progress-Dialog anzeigen
         self._import_progress = QProgressDialog(
-            "Bild wird importiert und konvertiert...", None, 0, 0, self
+            t("Bild wird importiert und konvertiert..."), None, 0, 0, self
         )
-        self._import_progress.setWindowTitle("Bild importieren")
+        self._import_progress.setWindowTitle(t("Bild importieren"))
         self._import_progress.setWindowModality(Qt.WindowModality.WindowModal)
         self._import_progress.setMinimumDuration(0)
         self._import_progress.setCancelButton(None)
@@ -1075,9 +1084,9 @@ class ImageImportDialog(QDialog):
     def _on_import_error(self, error_msg: str) -> None:
         """Callback wenn Import fehlschlägt."""
         self._import_progress.close()
-        QMessageBox.critical(self, "Fehler", f"Import fehlgeschlagen:\n{error_msg}")
+        QMessageBox.critical(self, t("Fehler"), f"Import fehlgeschlagen:\n{error_msg}")
         self.btn_import.setEnabled(True)
-        self.btn_import.setText("✓ Importieren")
+        self.btn_import.setText(t("✓ Importieren"))
 
     def get_pattern(self) -> Pattern | None:
         """Gibt das importierte Pattern zurück."""

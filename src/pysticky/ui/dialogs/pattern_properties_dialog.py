@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...core.i18n import t
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -42,7 +43,7 @@ class PatternPropertiesDialog(QDialog):
     def __init__(self, pattern: "Pattern", parent=None) -> None:
         super().__init__(parent)
         self._pattern = pattern
-        self.setWindowTitle("Eigenschaften")
+        self.setWindowTitle(t("Eigenschaften"))
         self.setMinimumWidth(520)
         self._setup_ui()
         self._load_from_pattern()
@@ -69,7 +70,7 @@ class PatternPropertiesDialog(QDialog):
         muted = f"color: {THEME.text_muted}; font-weight: 600;"
         value = f"color: {THEME.text_primary};"
 
-        title_lbl = QLabel("MUSTER")
+        title_lbl = QLabel(t("MUSTER"))
         title_lbl.setStyleSheet(
             f"color: {THEME.accent_primary}; font-weight: 700; letter-spacing: 1px; font-size: 10px;"
         )
@@ -77,15 +78,15 @@ class PatternPropertiesDialog(QDialog):
 
         size_label = QLabel(f"{self._pattern.width} × {self._pattern.height} Stiche")
         size_label.setStyleSheet(value)
-        info_layout.addRow(self._mk_label("Größe:", muted), size_label)
+        info_layout.addRow(self._mk_label(t("Größe:"), muted), size_label)
 
         colors_label = QLabel(f"{len(self._pattern.color_entries)} Farben")
         colors_label.setStyleSheet(value)
-        info_layout.addRow(self._mk_label("Farben:", muted), colors_label)
+        info_layout.addRow(self._mk_label(t("Farben:"), muted), colors_label)
 
         fabric_label = QLabel(f"{self._pattern.fabric_count} ct Aida")
         fabric_label.setStyleSheet(value)
-        info_layout.addRow(self._mk_label("Stoff:", muted), fabric_label)
+        info_layout.addRow(self._mk_label(t("Stoff:"), muted), fabric_label)
 
         layout.addWidget(info_frame)
 
@@ -94,16 +95,16 @@ class PatternPropertiesDialog(QDialog):
         form.setSpacing(10)
 
         self._edit_author = QLineEdit()
-        self._edit_author.setPlaceholderText("z.B. Anna Schmidt")
-        form.addRow("Autor:", self._edit_author)
+        self._edit_author.setPlaceholderText(t("z.B. Anna Schmidt"))
+        form.addRow(t("Autor:"), self._edit_author)
 
         self._edit_copyright = QLineEdit()
-        self._edit_copyright.setPlaceholderText("z.B. © 2026 Anna Schmidt")
-        form.addRow("Copyright:", self._edit_copyright)
+        self._edit_copyright.setPlaceholderText(t("z.B. © 2026 Anna Schmidt"))
+        form.addRow(t("Copyright:"), self._edit_copyright)
 
         # Stickdatum: Checkbox + Date-Picker, damit "kein Datum" moeglich ist
         date_row = QHBoxLayout()
-        self._chk_started = QCheckBox("Begonnen am:")
+        self._chk_started = QCheckBox(t("Begonnen am:"))
         self._chk_started.toggled.connect(self._on_started_toggled)
         date_row.addWidget(self._chk_started)
         self._date_started = QDateEdit()
@@ -113,15 +114,17 @@ class PatternPropertiesDialog(QDialog):
         self._date_started.setEnabled(False)
         date_row.addWidget(self._date_started)
         date_row.addStretch(1)
-        form.addRow("Stickdatum:", date_row)
+        form.addRow(t("Stickdatum:"), date_row)
 
         self._txt_notes = QPlainTextEdit()
         self._txt_notes.setPlaceholderText(
-            "Freie Notizen — werden auch im HTML/PDF-Export auf dem Deckblatt angezeigt.\n"
-            "Z.B. 'Geschenk für Mama zum Geburtstag', 'Riesenherausforderung'."
+            t(
+                "Freie Notizen — werden auch im HTML/PDF-Export auf dem Deckblatt angezeigt.\n"
+                "Z.B. 'Geschenk für Mama zum Geburtstag', 'Riesenherausforderung'."
+            )
         )
         self._txt_notes.setMaximumHeight(140)
-        form.addRow("Notizen:", self._txt_notes)
+        form.addRow(t("Notizen:"), self._txt_notes)
 
         layout.addLayout(form)
 

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...core.i18n import t
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -220,7 +221,7 @@ class SymbolEditorDialog(QDialog):
         layout.addLayout(header)
 
         # Eigenes Symbol eingeben
-        custom_group = QGroupBox("Eigenes Symbol")
+        custom_group = QGroupBox(t("Eigenes Symbol"))
         custom_layout = QHBoxLayout(custom_group)
 
         self._custom_input = QLineEdit()
@@ -232,7 +233,7 @@ class SymbolEditorDialog(QDialog):
         self._custom_input.textChanged.connect(self._on_custom_symbol)
         custom_layout.addWidget(self._custom_input)
 
-        hint_label = QLabel("Beliebiges Zeichen eingeben")
+        hint_label = QLabel(t("Beliebiges Zeichen eingeben"))
         hint_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
         custom_layout.addWidget(hint_label)
 
@@ -240,17 +241,17 @@ class SymbolEditorDialog(QDialog):
         layout.addWidget(custom_group)
 
         # Symbol-Auswahl
-        symbols_group = QGroupBox("Symbol auswählen")
+        symbols_group = QGroupBox(t("Symbol auswählen"))
         symbols_layout = QVBoxLayout(symbols_group)
 
         # Suchfeld (Substring auf Zeichen, Unicode-Name oder Codepoint)
         self._search_input = QLineEdit()
-        self._search_input.setPlaceholderText("🔍 Suche: Zeichen, Name oder U+25CF / 25CF")
+        self._search_input.setPlaceholderText(t("🔍 Suche: Zeichen, Name oder U+25CF / 25CF"))
         self._search_input.setClearButtonEnabled(True)
         self._search_input.textChanged.connect(self._on_search_changed)
         symbols_layout.addWidget(self._search_input)
 
-        self._empty_label = QLabel("Keine Treffer.")
+        self._empty_label = QLabel(t("Keine Treffer."))
         self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_label.setStyleSheet(
             f"color: {THEME.text_muted}; font-style: italic; padding: 8px;"
@@ -292,12 +293,12 @@ class SymbolEditorDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn = QPushButton(t("Abbrechen"))
         cancel_btn.setFixedSize(100, 34)
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-        ok_btn = QPushButton("Übernehmen")
+        ok_btn = QPushButton(t("Übernehmen"))
         ok_btn.setFixedSize(100, 34)
         ok_btn.setDefault(True)
         ok_btn.clicked.connect(self._on_accept)

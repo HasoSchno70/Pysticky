@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
+from ...core.i18n import t
+
 if TYPE_CHECKING:
     from ..main_window import MainWindow
 
@@ -30,8 +32,8 @@ class MiscHandlersMixin:
         """Alle Ebenen vereinen."""
         reply = QMessageBox.question(
             self,
-            "Vereinen",
-            "Alle Ebenen vereinen?\nDies kann nicht rückgängig gemacht werden.",
+            t("Vereinen"),
+            t("Alle Ebenen vereinen?\nDies kann nicht rückgängig gemacht werden."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -76,7 +78,7 @@ class MiscHandlersMixin:
 
         self.recent_menu.clear()
         if not self._recent_files:
-            action = QAction("(keine)", self)
+            action = QAction(t("(keine)"), self)
             action.setEnabled(False)
             self.recent_menu.addAction(action)
             return
@@ -88,7 +90,7 @@ class MiscHandlersMixin:
             action.triggered.connect(lambda checked, p=path: self._open_recent_file(p))
             self.recent_menu.addAction(action)
         self.recent_menu.addSeparator()
-        clear_action = QAction("Liste &leeren", self)
+        clear_action = QAction(t("Liste &leeren"), self)
         clear_action.triggered.connect(self._clear_recent_files)
         self.recent_menu.addAction(clear_action)
 
@@ -98,7 +100,7 @@ class MiscHandlersMixin:
             return
         if not Path(path).exists():
             QMessageBox.warning(
-                self, "Datei nicht gefunden", f"Die Datei existiert nicht mehr:\n{path}"
+                self, t("Datei nicht gefunden"), f"Die Datei existiert nicht mehr:\n{path}"
             )
             self._recent_files.remove(path)
             self._save_recent_files()
@@ -114,7 +116,7 @@ class MiscHandlersMixin:
             self._add_recent_file(path)
             self.status_bar.showMessage(f"Geöffnet: {path}", 3000)
         except (OSError, ValueError) as e:
-            QMessageBox.critical(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
 
     def _clear_recent_files(self: "MainWindow") -> None:
         """Löscht die Liste der zuletzt geöffneten Dateien."""
@@ -145,7 +147,9 @@ class MiscHandlersMixin:
                 if save_user_templates(templates):
                     self.status_bar.showMessage(f"Template '{template.name}' gespeichert", 3000)
                 else:
-                    QMessageBox.warning(self, "Fehler", "Template konnte nicht gespeichert werden.")
+                    QMessageBox.warning(
+                        self, t("Fehler"), t("Template konnte nicht gespeichert werden.")
+                    )
 
     def _on_manage_templates(self: "MainWindow") -> None:
         """Öffnet den Template-Verwaltungsdialog."""
@@ -163,19 +167,19 @@ class MiscHandlersMixin:
         from PySide6.QtWidgets import QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QSpinBox
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Autosave-Einstellungen")
+        dialog.setWindowTitle(t("Autosave-Einstellungen"))
         dialog.setMinimumWidth(300)
         layout = QFormLayout(dialog)
 
-        chk_enabled = QCheckBox("Autosave aktivieren")
+        chk_enabled = QCheckBox(t("Autosave aktivieren"))
         chk_enabled.setChecked(self._autosave_enabled)
         layout.addRow(chk_enabled)
 
         spin_interval = QSpinBox()
         spin_interval.setRange(1, 60)
         spin_interval.setValue(self._autosave_interval)
-        spin_interval.setSuffix(" Minuten")
-        layout.addRow("Intervall:", spin_interval)
+        spin_interval.setSuffix(t(" Minuten"))
+        layout.addRow(t("Intervall:"), spin_interval)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -212,13 +216,13 @@ class MiscHandlersMixin:
         )
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Tastenkürzel")
+        dialog.setWindowTitle(t("Tastenkürzel"))
         dialog.setMinimumSize(500, 600)
         layout = QVBoxLayout(dialog)
 
         table = QTableWidget()
         table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Aktion", "Tastenkürzel"])
+        table.setHorizontalHeaderLabels([t("Aktion"), t("Tastenkürzel")])
         table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -226,34 +230,34 @@ class MiscHandlersMixin:
         table.setAlternatingRowColors(True)
 
         shortcuts = [
-            ("— Datei —", ""),
-            ("Neu", "Ctrl+N"),
-            ("Öffnen", "Ctrl+O"),
-            ("Speichern", "Ctrl+S"),
-            ("— Bearbeiten —", ""),
-            ("Rückgängig", "Ctrl+Z"),
-            ("Wiederholen", "Ctrl+Y"),
-            ("— Ansicht —", ""),
-            ("Vergrößern", "Ctrl++"),
-            ("Verkleinern", "Ctrl+-"),
-            ("Muster-Vorschau", "F5"),
-            ("— Werkzeuge —", ""),
-            ("Stift", "P"),
-            ("Radierer", "E"),
-            ("Füllen", "G"),
-            ("Pipette", "I"),
-            ("Linie", "L"),
-            ("Rechteck", "R"),
-            ("Ellipse", "O"),
-            ("Text", "T"),
-            ("Rückstich", "B"),
-            ("Auswahl", "S"),
-            ("Fortschritt", "K"),
-            ("— Auswahl —", ""),
-            ("Kopieren", "Ctrl+C"),
-            ("Ausschneiden", "Ctrl+X"),
-            ("Einfügen", "Ctrl+V"),
-            ("Löschen", "Entf"),
+            (t("— Datei —"), ""),
+            (t("Neu"), "Ctrl+N"),
+            (t("Öffnen"), "Ctrl+O"),
+            (t("Speichern"), "Ctrl+S"),
+            (t("— Bearbeiten —"), ""),
+            (t("Rückgängig"), "Ctrl+Z"),
+            (t("Wiederholen"), "Ctrl+Y"),
+            (t("— Ansicht —"), ""),
+            (t("Vergrößern"), "Ctrl++"),
+            (t("Verkleinern"), "Ctrl+-"),
+            (t("Muster-Vorschau"), "F5"),
+            (t("— Werkzeuge —"), ""),
+            (t("Stift"), "P"),
+            (t("Radierer"), "E"),
+            (t("Füllen"), "G"),
+            (t("Pipette"), "I"),
+            (t("Linie"), "L"),
+            (t("Rechteck"), "R"),
+            (t("Ellipse"), "O"),
+            (t("Text"), "T"),
+            (t("Rückstich"), "B"),
+            (t("Auswahl"), "S"),
+            (t("Fortschritt"), "K"),
+            (t("— Auswahl —"), ""),
+            (t("Kopieren"), "Ctrl+C"),
+            (t("Ausschneiden"), "Ctrl+X"),
+            (t("Einfügen"), "Ctrl+V"),
+            (t("Löschen"), "Entf"),
         ]
 
         table.setRowCount(len(shortcuts))
@@ -312,7 +316,7 @@ class MiscHandlersMixin:
         title.setStyleSheet(f"color: {THEME.accent_primary}; padding-bottom: 4px;")
         layout.addWidget(title)
 
-        sub = QLabel("Eine kompakte Übersicht der wichtigsten Änderungen")
+        sub = QLabel(t("Eine kompakte Übersicht der wichtigsten Änderungen"))
         sub.setStyleSheet(f"color: {THEME.text_muted}; font-size: 12px; font-style: italic;")
         layout.addWidget(sub)
 
@@ -326,57 +330,71 @@ class MiscHandlersMixin:
 
         sections = [
             (
-                "📝 Layer-Notizen",
+                t("📝 Layer-Notizen"),
                 [
-                    "Pro Ebene kannst du jetzt eine freie Notiz hinterlegen "
-                    "(z.B. 'Vordergrund-Schatten', 'Backstitch-Linien'). "
-                    "Wird im .pxs-Format gespeichert.",
+                    t(
+                        "Pro Ebene kannst du jetzt eine freie Notiz hinterlegen "
+                        "(z.B. 'Vordergrund-Schatten', 'Backstitch-Linien'). "
+                        "Wird im .pxs-Format gespeichert."
+                    ),
                 ],
             ),
             (
-                "⏱ Stick-Session-Timer",
+                t("⏱ Stick-Session-Timer"),
                 [
-                    "Beim Sticken-Modus läuft ein Timer im Hintergrund. Beim Beenden "
-                    "siehst du die Sitzungs- und Gesamtzeit. Toggle in Einstellungen → "
-                    "Allgemein → 'Sticken & Snapshots'.",
+                    t(
+                        "Beim Sticken-Modus läuft ein Timer im Hintergrund. Beim Beenden "
+                        "siehst du die Sitzungs- und Gesamtzeit. Toggle in Einstellungen → "
+                        "Allgemein → 'Sticken & Snapshots'."
+                    ),
                 ],
             ),
             (
-                "⚙ Snapshot-Intervall einstellbar",
+                t("⚙ Snapshot-Intervall einstellbar"),
                 [
-                    "Versionierte Snapshots werden jetzt im konfigurierbaren Intervall "
-                    "(5–240 min) angelegt. Default 30 min.",
+                    t(
+                        "Versionierte Snapshots werden jetzt im konfigurierbaren Intervall "
+                        "(5–240 min) angelegt. Default 30 min."
+                    ),
                 ],
             ),
             (
-                "🔍 Farb-Hervorhebung",
+                t("🔍 Farb-Hervorhebung"),
                 [
-                    "Eine Farbe isolieren — andere werden im Canvas stark gedimmt. "
-                    "Über Rechtsklick auf einen Farb-Swatch oder Strg+H auf die "
-                    "aktive Farbe.",
+                    t(
+                        "Eine Farbe isolieren — andere werden im Canvas stark gedimmt. "
+                        "Über Rechtsklick auf einen Farb-Swatch oder Strg+H auf die "
+                        "aktive Farbe."
+                    ),
                 ],
             ),
             (
-                "⌨ Pfeiltasten-Navigation im Sticken-Modus",
+                t("⌨ Pfeiltasten-Navigation im Sticken-Modus"),
                 [
-                    "Pfeiltasten springen zur nächsten/vorherigen ungehakten Zelle "
-                    "der aktiven Farbe. Enter/Space hakt ab und springt direkt weiter.",
+                    t(
+                        "Pfeiltasten springen zur nächsten/vorherigen ungehakten Zelle "
+                        "der aktiven Farbe. Enter/Space hakt ab und springt direkt weiter."
+                    ),
                 ],
             ),
             (
-                "🎯 Schwierigkeits-Anzeige",
+                t("🎯 Schwierigkeits-Anzeige"),
                 [
-                    "Heuristik aus Farbanzahl, Größe, Sonderstichen und Backstitches → "
-                    "Anfänger / Mittel / Fortgeschritten / Profi. Sichtbar im Info-"
-                    "Panel und im Statistik-Dialog.",
+                    t(
+                        "Heuristik aus Farbanzahl, Größe, Sonderstichen und Backstitches → "
+                        "Anfänger / Mittel / Fortgeschritten / Profi. Sichtbar im Info-"
+                        "Panel und im Statistik-Dialog."
+                    ),
                 ],
             ),
             (
-                "📦 Bundle-Export (ZIP)",
+                t("📦 Bundle-Export (ZIP)"),
                 [
-                    "Datei → 'Als Bundle (ZIP) exportieren…' packt .pxs, HTML, PNG, "
-                    "PDF (wenn reportlab installiert), Garnliste und Originalbild "
-                    "in eine ZIP — ideal zum Teilen.",
+                    t(
+                        "Datei → 'Als Bundle (ZIP) exportieren…' packt .pxs, HTML, PNG, "
+                        "PDF (wenn reportlab installiert), Garnliste und Originalbild "
+                        "in eine ZIP — ideal zum Teilen."
+                    ),
                 ],
             ),
         ]
@@ -403,12 +421,12 @@ class MiscHandlersMixin:
             sl.addWidget(head_lbl)
 
             for p in paragraphs:
-                t = QLabel(p)
-                t.setWordWrap(True)
-                t.setStyleSheet(
+                lbl = QLabel(p)
+                lbl.setWordWrap(True)
+                lbl.setStyleSheet(
                     f"color: {THEME.text_secondary}; font-size: 12px; line-height: 1.5; background: transparent;"
                 )
-                sl.addWidget(t)
+                sl.addWidget(lbl)
 
             content_layout.addWidget(sec)
 
@@ -419,7 +437,7 @@ class MiscHandlersMixin:
         # Footer
         footer = QHBoxLayout()
         footer.addStretch()
-        btn = QPushButton("Schließen")
+        btn = QPushButton(t("Schließen"))
         btn.setDefault(True)
         btn.clicked.connect(dialog.accept)
         btn.setStyleSheet(Styles.button_primary())
@@ -491,7 +509,7 @@ class MiscHandlersMixin:
         layout.addWidget(name_lbl)
 
         # Untertitel
-        sub_lbl = QLabel("Kreuzstich-Design-Software")
+        sub_lbl = QLabel(t("Kreuzstich-Design-Software"))
         sub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sub_lbl.setStyleSheet(f"color: {THEME.text_muted}; font-size: 13px; font-style: italic;")
         layout.addWidget(sub_lbl)
@@ -523,7 +541,7 @@ class MiscHandlersMixin:
         layout.addSpacing(8)
 
         # Autor
-        author_lbl = QLabel("Entwickelt von\nHans Schnorrenberger")
+        author_lbl = QLabel(t("Entwickelt von\nHans Schnorrenberger"))
         author_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         author_lbl.setStyleSheet(
             f"color: {THEME.text_secondary}; font-size: 13px; line-height: 1.5;"
@@ -542,7 +560,7 @@ class MiscHandlersMixin:
         layout.addSpacing(8)
 
         # Copyright
-        copy_lbl = QLabel("© 2026 Hans Schnorrenberger. Alle Rechte vorbehalten.")
+        copy_lbl = QLabel(t("© 2026 Hans Schnorrenberger. Alle Rechte vorbehalten."))
         copy_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         copy_lbl.setStyleSheet(f"color: {THEME.text_disabled}; font-size: 10px;")
         layout.addWidget(copy_lbl)
@@ -552,7 +570,7 @@ class MiscHandlersMixin:
         # Schließen-Button
         from PySide6.QtWidgets import QPushButton
 
-        btn = QPushButton("Schließen")
+        btn = QPushButton(t("Schließen"))
         btn.setAutoDefault(True)
         btn.setDefault(True)
         btn.clicked.connect(dialog.accept)
@@ -576,8 +594,8 @@ class MiscHandlersMixin:
 
         name, ok = QInputDialog.getText(
             self,
-            "Arbeitsbereich speichern",
-            "Name für den Arbeitsbereich:",
+            t("Arbeitsbereich speichern"),
+            t("Name für den Arbeitsbereich:"),
         )
         if not ok or not name.strip():
             return
@@ -586,7 +604,7 @@ class MiscHandlersMixin:
         if name in existing:
             reply = QMessageBox.question(
                 self,
-                "Überschreiben?",
+                t("Überschreiben?"),
                 f"Arbeitsbereich '{name}' existiert bereits. Überschreiben?",
             )
             if reply != QMessageBox.StandardButton.Yes:
@@ -605,13 +623,13 @@ class MiscHandlersMixin:
         profiles = mgr.list_profiles()
 
         if not profiles:
-            self.status_bar.showMessage("Keine gespeicherten Arbeitsbereiche", 3000)
+            self.status_bar.showMessage(t("Keine gespeicherten Arbeitsbereiche"), 3000)
             return
 
         name, ok = QInputDialog.getItem(
             self,
-            "Arbeitsbereich laden",
-            "Arbeitsbereich auswählen:",
+            t("Arbeitsbereich laden"),
+            t("Arbeitsbereich auswählen:"),
             profiles,
             0,
             False,
@@ -634,7 +652,7 @@ class MiscHandlersMixin:
             dock.setVisible(True)
             dock.setFloating(False)
 
-        self.status_bar.showMessage("Layout zurückgesetzt", 3000)
+        self.status_bar.showMessage(t("Layout zurückgesetzt"), 3000)
 
     # =========================================================================
     # Einstellungen
@@ -649,7 +667,7 @@ class MiscHandlersMixin:
 
         if dialog.exec():
             self._apply_settings_from_dialog()
-            self.status_bar.showMessage("Einstellungen gespeichert", 3000)
+            self.status_bar.showMessage(t("Einstellungen gespeichert"), 3000)
 
     def _apply_settings_from_dialog(self: "MainWindow") -> None:
         """Wendet die Einstellungen aus dem Dialog auf die UI an."""

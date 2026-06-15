@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
+from ...core.i18n import t
+
 if TYPE_CHECKING:
     from ..main_window import MainWindow
 
@@ -29,8 +31,8 @@ class FileHandlersMixin:
 
         reply = QMessageBox.question(
             self,
-            "Ungespeicherte Änderungen",
-            "Das aktuelle Muster wurde geändert.\nMöchten Sie die Änderungen speichern?",
+            t("Ungespeicherte Änderungen"),
+            t("Das aktuelle Muster wurde geändert.\nMöchten Sie die Änderungen speichern?"),
             QMessageBox.StandardButton.Save
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Cancel,
@@ -89,7 +91,7 @@ class FileHandlersMixin:
             return
 
         path, _ = QFileDialog.getOpenFileName(
-            self, "Muster öffnen", "", "PySticky (*.pxs);;Alle (*.*)"
+            self, t("Muster öffnen"), "", "PySticky (*.pxs);;Alle (*.*)"
         )
 
         if path:
@@ -120,14 +122,14 @@ class FileHandlersMixin:
             return True
         except FileNotFoundError:
             QMessageBox.critical(
-                self, "Datei nicht gefunden", f"Die Datei existiert nicht:\n{path}"
+                self, t("Datei nicht gefunden"), f"Die Datei existiert nicht:\n{path}"
             )
         except PermissionError:
-            QMessageBox.critical(self, "Zugriff verweigert", f"Keine Berechtigung:\n{path}")
+            QMessageBox.critical(self, t("Zugriff verweigert"), f"Keine Berechtigung:\n{path}")
         except json.JSONDecodeError as e:
-            QMessageBox.critical(self, "Ungültige Datei", f"Die Datei ist beschädigt:\n{e}")
+            QMessageBox.critical(self, t("Ungültige Datei"), f"Die Datei ist beschädigt:\n{e}")
         except Exception as e:  # catch-all for unexpected format errors
-            QMessageBox.critical(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
         return False
 
     def _load_external_pattern_file(self: "MainWindow", path: str | Path) -> bool:
@@ -156,7 +158,9 @@ class FileHandlersMixin:
                 pattern, errors, warnings = import_pat(path)
             else:
                 QMessageBox.warning(
-                    self, "Nicht unterstuetzt", f"Dateiformat '{suffix}' wird nicht unterstuetzt."
+                    self,
+                    t("Nicht unterstuetzt"),
+                    f"Dateiformat '{suffix}' wird nicht unterstuetzt.",
                 )
                 return False
 
@@ -164,7 +168,7 @@ class FileHandlersMixin:
                 err_text = "\n".join(errors) or "Unbekannter Fehler"
                 QMessageBox.critical(
                     self,
-                    "Import fehlgeschlagen",
+                    t("Import fehlgeschlagen"),
                     f"Die Datei konnte nicht importiert werden:\n{err_text}",
                 )
                 return False
@@ -172,7 +176,7 @@ class FileHandlersMixin:
             if errors:
                 QMessageBox.warning(
                     self,
-                    "Import-Warnungen",
+                    t("Import-Warnungen"),
                     f"Beim Import traten Fehler auf:\n{chr(10).join(errors)}",
                 )
 
@@ -182,7 +186,7 @@ class FileHandlersMixin:
             self.status_bar.showMessage(f"Importiert: {path.name}", 3000)
             return True
         except (OSError, ValueError) as e:
-            QMessageBox.critical(self, "Fehler", f"Datei konnte nicht geoeffnet werden:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geoeffnet werden:\n{e}")
             return False
 
     def _on_pattern_properties(self: "MainWindow") -> None:
@@ -194,7 +198,7 @@ class FileHandlersMixin:
             return
         if dialog.apply_to_pattern():
             self._mark_unsaved()
-            self.status_bar.showMessage("Eigenschaften aktualisiert", 3000)
+            self.status_bar.showMessage(t("Eigenschaften aktualisiert"), 3000)
 
     def _on_pattern_versions(self: "MainWindow") -> None:
         """Öffnet den Versionen-Dialog (Snapshot-History)."""
@@ -231,7 +235,9 @@ class FileHandlersMixin:
                 if hasattr(self, "_maybe_create_snapshot"):
                     self._maybe_create_snapshot()
             except OSError as e:
-                QMessageBox.critical(self, "Fehler", f"Datei konnte nicht gespeichert werden:\n{e}")
+                QMessageBox.critical(
+                    self, t("Fehler"), f"Datei konnte nicht gespeichert werden:\n{e}"
+                )
         else:
             self._on_save_as()
 
@@ -249,7 +255,7 @@ class FileHandlersMixin:
             default_name = f"{safe}.pxs"
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Muster speichern", default_name, "PySticky (*.pxs);;Alle (*.*)"
+            self, t("Muster speichern"), default_name, "PySticky (*.pxs);;Alle (*.*)"
         )
 
         if path:
@@ -265,7 +271,9 @@ class FileHandlersMixin:
                 self._add_recent_file(path)
                 self.status_bar.showMessage(f"Gespeichert: {path}", 3000)
             except OSError as e:
-                QMessageBox.critical(self, "Fehler", f"Datei konnte nicht gespeichert werden:\n{e}")
+                QMessageBox.critical(
+                    self, t("Fehler"), f"Datei konnte nicht gespeichert werden:\n{e}"
+                )
 
     def _on_import_image(self: "MainWindow", filepath: str | None = None) -> None:
         """Bild importieren."""
@@ -278,7 +286,7 @@ class FileHandlersMixin:
         if filepath:
             # Bild direkt laden (z.B. bei Drag & Drop)
             dialog._on_browse_with_path(filepath)
-        self._exec_import_dialog(dialog, "Bild importiert")
+        self._exec_import_dialog(dialog, t("Bild importiert"))
 
     def _on_import_xsd_pat(self: "MainWindow") -> None:
         """XSD/PAT-Datei importieren."""
@@ -288,7 +296,7 @@ class FileHandlersMixin:
         from ..dialogs import PatternImportDialog
 
         dialog = PatternImportDialog(self)
-        self._exec_import_dialog(dialog, "Muster importiert")
+        self._exec_import_dialog(dialog, t("Muster importiert"))
 
     def _on_pattern_library(self: "MainWindow") -> None:
         """Öffnet die Muster-Bibliothek."""
@@ -319,7 +327,7 @@ class FileHandlersMixin:
                     if errors:
                         joined = "\n".join(errors)
                         QMessageBox.warning(
-                            self, "Import-Warnungen", f"Beim Import traten Fehler auf:\n{joined}"
+                            self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
                         )
                 elif suffix == ".pat":
                     from ...io.formats import import_pat
@@ -328,7 +336,7 @@ class FileHandlersMixin:
                     if errors:
                         joined = "\n".join(errors)
                         QMessageBox.warning(
-                            self, "Import-Warnungen", f"Beim Import traten Fehler auf:\n{joined}"
+                            self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
                         )
                 elif suffix == ".oxs":
                     from ...io.formats import import_oxs
@@ -337,11 +345,13 @@ class FileHandlersMixin:
                     if errors:
                         joined = "\n".join(errors)
                         QMessageBox.warning(
-                            self, "Import-Warnungen", f"Beim Import traten Fehler auf:\n{joined}"
+                            self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
                         )
                 else:
                     QMessageBox.warning(
-                        self, "Nicht unterstützt", f"Dateiformat '{suffix}' wird nicht unterstützt."
+                        self,
+                        t("Nicht unterstützt"),
+                        f"Dateiformat '{suffix}' wird nicht unterstützt.",
                     )
                     return
 
@@ -358,7 +368,7 @@ class FileHandlersMixin:
                     )
 
             except (OSError, ValueError) as e:
-                QMessageBox.critical(self, "Fehler", f"Datei konnte nicht geöffnet werden:\n{e}")
+                QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
 
         dialog.pattern_selected.connect(open_from_library)
         dialog.exec()
@@ -383,13 +393,13 @@ class FileHandlersMixin:
         )
 
         dialog = QPrintDialog(printer, self)
-        dialog.setWindowTitle("Muster drucken")
+        dialog.setWindowTitle(t("Muster drucken"))
         if dialog.exec() != QPrintDialog.DialogCode.Accepted:
             return
 
         painter = QPainter()
         if not painter.begin(printer):
-            QMessageBox.critical(self, "Fehler", "Drucker konnte nicht geöffnet werden.")
+            QMessageBox.critical(self, t("Fehler"), t("Drucker konnte nicht geöffnet werden."))
             return
 
         try:
@@ -470,8 +480,8 @@ class FileHandlersMixin:
                     QRectF(offset_x, py, pattern.width * cell_size, 0).toRect().topRight(),
                 )
 
-            self.status_bar.showMessage("Muster wurde gedruckt.", 5000)
+            self.status_bar.showMessage(t("Muster wurde gedruckt."), 5000)
         except Exception as e:  # catch-all: printing may fail in many ways
-            QMessageBox.critical(self, "Druckfehler", f"Fehler beim Drucken:\n{e}")
+            QMessageBox.critical(self, t("Druckfehler"), f"Fehler beim Drucken:\n{e}")
         finally:
             painter.end()

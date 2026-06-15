@@ -147,12 +147,12 @@ class TextOptionsPanel(QWidget):
         # Stil
         style_layout = QHBoxLayout()
 
-        self._bold_check = QCheckBox("Fett")
+        self._bold_check = QCheckBox(t("Fett"))
         self._bold_check.setStyleSheet(self._checkbox_style())
         self._bold_check.toggled.connect(self.bold_changed.emit)
         style_layout.addWidget(self._bold_check)
 
-        self._italic_check = QCheckBox("Kursiv")
+        self._italic_check = QCheckBox(t("Kursiv"))
         self._italic_check.setStyleSheet(self._checkbox_style())
         self._italic_check.toggled.connect(self.italic_changed.emit)
         style_layout.addWidget(self._italic_check)

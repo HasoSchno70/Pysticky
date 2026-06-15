@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressDialog
 
+from ...core.i18n import t
+
 if TYPE_CHECKING:
     from ...core import Pattern
     from ..main_window import MainWindow
@@ -103,11 +105,11 @@ class ExportHandlersMixin:
             default_name = self.current_pattern.name + ".html"
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Als HTML exportieren", default_name, "HTML-Dateien (*.html);;Alle (*.*)"
+            self, t("Als HTML exportieren"), default_name, "HTML-Dateien (*.html);;Alle (*.*)"
         )
 
         if path:
-            self.status_bar.showMessage("Erstelle HTML...", 0)
+            self.status_bar.showMessage(t("Erstelle HTML..."), 0)
             self._start_export_worker("html", path, "")
 
     def _on_export_pdf(self: "MainWindow") -> None:
@@ -119,12 +121,14 @@ class ExportHandlersMixin:
         if not check_reportlab_available():
             QMessageBox.warning(
                 self,
-                "PDF-Export nicht verfuegbar",
-                "PDF-Export benoetigt die Bibliothek 'reportlab'.\n\n"
-                "Bitte installieren mit:\n"
-                "pip install reportlab\n\n"
-                "Alternativ koennen Sie den HTML-Export nutzen und\n"
-                "im Browser als PDF drucken.",
+                t("PDF-Export nicht verfuegbar"),
+                t(
+                    "PDF-Export benoetigt die Bibliothek 'reportlab'.\n\n"
+                    "Bitte installieren mit:\n"
+                    "pip install reportlab\n\n"
+                    "Alternativ koennen Sie den HTML-Export nutzen und\n"
+                    "im Browser als PDF drucken."
+                ),
             )
             return
 
@@ -175,11 +179,11 @@ class ExportHandlersMixin:
 
         chosen, ok = QInputDialog.getItem(
             self,
-            "Papierformat",
+            t("Papierformat"),
             (
-                "Papierformat fuer den DP-Export (1:1-Massstab):"
+                t("Papierformat fuer den DP-Export (1:1-Massstab):")
                 if dp_mode
-                else "Papierformat fuer den PDF-Export:"
+                else t("Papierformat fuer den PDF-Export:")
             ),
             format_labels,
             default_idx,
@@ -197,8 +201,8 @@ class ExportHandlersMixin:
         ) or self.current_pattern.metadata.get("pdf_notes", "")
         notes, ok_notes = QInputDialog.getMultiLineText(
             self,
-            "PDF-Notizen",
-            "Optionale Notizen fuer das PDF (leer lassen zum Ueberspringen):",
+            t("PDF-Notizen"),
+            t("Optionale Notizen fuer das PDF (leer lassen zum Ueberspringen):"),
             default_notes,
         )
         if not ok_notes:
@@ -219,7 +223,7 @@ class ExportHandlersMixin:
             default_name = self.current_pattern.name + ".pdf"
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Als PDF exportieren", default_name, "PDF-Dateien (*.pdf);;Alle (*.*)"
+            self, t("Als PDF exportieren"), default_name, "PDF-Dateien (*.pdf);;Alle (*.*)"
         )
 
         if path:
@@ -246,22 +250,22 @@ class ExportHandlersMixin:
 
         # Optionen-Dialog
         dlg = QDialog(self)
-        dlg.setWindowTitle("Bild-Export Optionen")
+        dlg.setWindowTitle(t("Bild-Export Optionen"))
         layout = QVBoxLayout(dlg)
 
         row1 = QHBoxLayout()
-        row1.addWidget(QLabel("Pixelgroesse pro Stich:"))
+        row1.addWidget(QLabel(t("Pixelgroesse pro Stich:")))
         spin_cell = QSpinBox()
         spin_cell.setRange(4, 100)
         spin_cell.setValue(10)
         row1.addWidget(spin_cell)
         layout.addLayout(row1)
 
-        chk_grid = QCheckBox("Rasterlinien anzeigen")
+        chk_grid = QCheckBox(t("Rasterlinien anzeigen"))
         chk_grid.setChecked(True)
         layout.addWidget(chk_grid)
 
-        chk_symbols = QCheckBox("Symbole anzeigen")
+        chk_symbols = QCheckBox(t("Symbole anzeigen"))
         layout.addWidget(chk_symbols)
 
         size_label = QLabel()
@@ -298,7 +302,7 @@ class ExportHandlersMixin:
 
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "Als Bild exportieren",
+            t("Als Bild exportieren"),
             default_name,
             "PNG (*.png);;JPEG (*.jpg *.jpeg);;BMP (*.bmp);;Alle (*.*)",
         )
@@ -314,7 +318,7 @@ class ExportHandlersMixin:
             )
             self.status_bar.showMessage(f"Bild exportiert: {path}", 5000)
         except Exception as e:  # noqa: BLE001 - Fehlerdetail dem User zeigen
-            QMessageBox.critical(self, "Fehler", f"Bild-Export fehlgeschlagen:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Bild-Export fehlgeschlagen:\n{e}")
 
     def _on_export_oxs(self: "MainWindow") -> None:
         """Exportiert das Muster als OXS (Open Cross Stitch XML)."""
@@ -327,7 +331,7 @@ class ExportHandlersMixin:
             default_name = self.current_pattern.name + ".oxs"
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Als OXS exportieren", default_name, "Open Cross Stitch (*.oxs);;Alle (*.*)"
+            self, t("Als OXS exportieren"), default_name, "Open Cross Stitch (*.oxs);;Alle (*.*)"
         )
         if not path:
             return
@@ -336,7 +340,7 @@ class ExportHandlersMixin:
             export_oxs(self.current_pattern, path)
             self.status_bar.showMessage(f"OXS exportiert: {path}", 5000)
         except OXSExportError as e:
-            QMessageBox.critical(self, "OXS-Export fehlgeschlagen", str(e))
+            QMessageBox.critical(self, t("OXS-Export fehlgeschlagen"), str(e))
 
     def _on_export_bundle(self: "MainWindow") -> None:
         """Exportiert ein komplettes Bundle (.pxs + html + png + pdf + Garnliste) als ZIP."""
@@ -347,12 +351,12 @@ class ExportHandlersMixin:
             default_name = self.current_pattern.name + "_bundle.zip"
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Als Bundle exportieren", default_name, "ZIP-Dateien (*.zip);;Alle (*.*)"
+            self, t("Als Bundle exportieren"), default_name, "ZIP-Dateien (*.zip);;Alle (*.*)"
         )
         if not path:
             return
 
-        self.status_bar.showMessage("Erstelle Bundle…", 0)
+        self.status_bar.showMessage(t("Erstelle Bundle…"), 0)
         # page_format = A4 als Default fuer das enthaltene PDF
         self._start_export_worker("bundle", path, "A4")
 
@@ -453,8 +457,8 @@ class ExportHandlersMixin:
             if export_type == "pdf":
                 reply = QMessageBox.question(
                     self,
-                    "Export erfolgreich",
-                    "Das Muster wurde als PDF exportiert.\n\nMoechten Sie die Datei oeffnen?",
+                    t("Export erfolgreich"),
+                    t("Das Muster wurde als PDF exportiert.\n\nMoechten Sie die Datei oeffnen?"),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:
@@ -467,9 +471,11 @@ class ExportHandlersMixin:
             elif export_type == "html":
                 reply = QMessageBox.question(
                     self,
-                    "Export erfolgreich",
-                    "Das Muster wurde als HTML exportiert.\n\n"
-                    "Moechten Sie die Datei im Browser oeffnen?",
+                    t("Export erfolgreich"),
+                    t(
+                        "Das Muster wurde als HTML exportiert.\n\n"
+                        "Moechten Sie die Datei im Browser oeffnen?"
+                    ),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:
@@ -480,8 +486,8 @@ class ExportHandlersMixin:
                 # Den Ordner anzeigen, wo das ZIP liegt — User will meist die Datei finden
                 reply = QMessageBox.question(
                     self,
-                    "Bundle erstellt",
-                    "Bundle gespeichert.\n\nMoechten Sie den Ordner oeffnen?",
+                    t("Bundle erstellt"),
+                    t("Bundle gespeichert.\n\nMoechten Sie den Ordner oeffnen?"),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:
@@ -494,5 +500,5 @@ class ExportHandlersMixin:
                     else:
                         os.system(f'xdg-open "{folder}"')
         else:
-            self.status_bar.showMessage("Export fehlgeschlagen.", 5000)
-            QMessageBox.critical(self, "Fehler", f"{label}-Export fehlgeschlagen:\n{message}")
+            self.status_bar.showMessage(t("Export fehlgeschlagen."), 5000)
+            QMessageBox.critical(self, t("Fehler"), f"{label}-Export fehlgeschlagen:\n{message}")

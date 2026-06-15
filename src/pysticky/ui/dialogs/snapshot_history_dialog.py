@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ...core.i18n import t
 from ...core.snapshots import (
     delete_snapshot,
     list_snapshots,
@@ -51,7 +52,7 @@ class SnapshotHistoryDialog(QDialog):
         self._pattern = pattern
         self._key = pattern_key_for(pattern, current_file)
 
-        self.setWindowTitle("Versionen")
+        self.setWindowTitle(t("Versionen"))
         self.setMinimumSize(560, 480)
         self._setup_ui()
         self._reload()
@@ -67,10 +68,12 @@ class SnapshotHistoryDialog(QDialog):
         layout.addWidget(header)
 
         intro = QLabel(
-            "Automatische Versionen werden alle 30 Minuten angelegt, sobald "
-            "ungespeicherte Änderungen vorhanden sind. Doppelklick zeigt "
-            "Details, der Button 'Wiederherstellen' laedt diese Version "
-            "wieder als aktives Muster."
+            t(
+                "Automatische Versionen werden alle 30 Minuten angelegt, sobald "
+                "ungespeicherte Änderungen vorhanden sind. Doppelklick zeigt "
+                "Details, der Button 'Wiederherstellen' laedt diese Version "
+                "wieder als aktives Muster."
+            )
         )
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
@@ -94,7 +97,7 @@ class SnapshotHistoryDialog(QDialog):
         """)
         detail_layout = QVBoxLayout(self._detail_frame)
         detail_layout.setContentsMargins(8, 6, 8, 6)
-        self._detail_label = QLabel("Wähle eine Version aus der Liste.")
+        self._detail_label = QLabel(t("Wähle eine Version aus der Liste."))
         self._detail_label.setStyleSheet(f"color: {THEME.text_secondary};")
         self._detail_label.setWordWrap(True)
         detail_layout.addWidget(self._detail_label)
@@ -103,29 +106,31 @@ class SnapshotHistoryDialog(QDialog):
         # Buttons
         btn_row = QHBoxLayout()
 
-        self._btn_restore = QPushButton("⟲ Wiederherstellen")
+        self._btn_restore = QPushButton(t("⟲ Wiederherstellen"))
         self._btn_restore.clicked.connect(self._on_restore)
         self._btn_restore.setEnabled(False)
         btn_row.addWidget(self._btn_restore)
 
-        self._btn_delete = QPushButton("🗑 Löschen")
+        self._btn_delete = QPushButton(t("🗑 Löschen"))
         self._btn_delete.clicked.connect(self._on_delete)
         self._btn_delete.setEnabled(False)
         btn_row.addWidget(self._btn_delete)
 
-        self._btn_diff = QPushButton("⇄ Mit aktuellem vergleichen")
+        self._btn_diff = QPushButton(t("⇄ Mit aktuellem vergleichen"))
         self._btn_diff.clicked.connect(self._on_diff)
         self._btn_diff.setEnabled(False)
         self._btn_diff.setToolTip(
-            "Vergleicht den ausgewaehlten Snapshot visuell mit dem aktuell "
-            "geoeffneten Pattern — markiert hinzugefuegte, entfernte und "
-            "geaenderte Stiche."
+            t(
+                "Vergleicht den ausgewaehlten Snapshot visuell mit dem aktuell "
+                "geoeffneten Pattern — markiert hinzugefuegte, entfernte und "
+                "geaenderte Stiche."
+            )
         )
         btn_row.addWidget(self._btn_diff)
 
         btn_row.addStretch(1)
 
-        btn_close = QPushButton("Schließen")
+        btn_close = QPushButton(t("Schließen"))
         btn_close.clicked.connect(self.accept)
         btn_close.setDefault(True)
         btn_row.addWidget(btn_close)
@@ -146,8 +151,10 @@ class SnapshotHistoryDialog(QDialog):
 
         if self._list.count() == 0:
             empty = QListWidgetItem(
-                "Noch keine Versionen vorhanden.\n"
-                "Speichern oder warten bis die naechste Auto-Version erstellt wird."
+                t(
+                    "Noch keine Versionen vorhanden.\n"
+                    "Speichern oder warten bis die naechste Auto-Version erstellt wird."
+                )
             )
             empty.setFlags(Qt.ItemFlag.NoItemFlags)
             self._list.addItem(empty)
@@ -174,7 +181,7 @@ class SnapshotHistoryDialog(QDialog):
         self._btn_delete.setEnabled(enabled)
         self._btn_diff.setEnabled(enabled)
         if path is None:
-            self._detail_label.setText("Wähle eine Version aus der Liste.")
+            self._detail_label.setText(t("Wähle eine Version aus der Liste."))
             return
         self._update_detail(path)
 
@@ -210,9 +217,11 @@ class SnapshotHistoryDialog(QDialog):
             return
         reply = QMessageBox.question(
             self,
-            "Version wiederherstellen",
-            "Aktuelles Muster durch diese Version ersetzen?\n\n"
-            "Nicht gespeicherte Änderungen gehen verloren.",
+            t("Version wiederherstellen"),
+            t(
+                "Aktuelles Muster durch diese Version ersetzen?\n\n"
+                "Nicht gespeicherte Änderungen gehen verloren."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -236,7 +245,7 @@ class SnapshotHistoryDialog(QDialog):
         except Exception as e:
             QMessageBox.warning(
                 self,
-                "Vergleich fehlgeschlagen",
+                t("Vergleich fehlgeschlagen"),
                 f"Snapshot konnte nicht geladen werden:\n{e}",
             )
 
@@ -246,7 +255,7 @@ class SnapshotHistoryDialog(QDialog):
             return
         reply = QMessageBox.question(
             self,
-            "Version löschen",
+            t("Version löschen"),
             f"Diese Version dauerhaft löschen?\n\n{path.name}",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )

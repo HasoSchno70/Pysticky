@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core import Pattern
+from ...core.i18n import t
 from ..styles import THEME
 
 
@@ -47,7 +48,7 @@ class ReplaceColorDialog(QDialog):
         self._source_index = current_color_index
         self._target_index = 0
 
-        self.setWindowTitle("Farbe ersetzen")
+        self.setWindowTitle(t("Farbe ersetzen"))
         self.setMinimumWidth(400)
 
         self._setup_ui()
@@ -58,14 +59,14 @@ class ReplaceColorDialog(QDialog):
         layout.setSpacing(15)
 
         # Beschreibung
-        desc = QLabel("Ersetzt alle Stiche einer Farbe durch eine andere Farbe.")
+        desc = QLabel(t("Ersetzt alle Stiche einer Farbe durch eine andere Farbe."))
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {THEME.text_muted};")
         layout.addWidget(desc)
 
         # Quellfarbe
         source_layout = QHBoxLayout()
-        source_layout.addWidget(QLabel("Ersetze:"))
+        source_layout.addWidget(QLabel(t("Ersetze:")))
 
         self.source_combo = QComboBox()
         self._populate_combo(self.source_combo)
@@ -88,7 +89,7 @@ class ReplaceColorDialog(QDialog):
 
         # Zielfarbe
         target_layout = QHBoxLayout()
-        target_layout.addWidget(QLabel("Durch:"))
+        target_layout.addWidget(QLabel(t("Durch:")))
 
         self.target_combo = QComboBox()
         self._populate_combo(self.target_combo)
@@ -156,11 +157,11 @@ class ReplaceColorDialog(QDialog):
         if source_count > 0:
             self.info_label.setText(f"{source_count} Stiche werden ersetzt")
         else:
-            self.info_label.setText("Keine Stiche mit dieser Farbe vorhanden")
+            self.info_label.setText(t("Keine Stiche mit dieser Farbe vorhanden"))
 
     def _on_accept(self) -> None:
         if self._source_index == self._target_index:
-            QMessageBox.warning(self, "Hinweis", "Quell- und Zielfarbe sind identisch.")
+            QMessageBox.warning(self, t("Hinweis"), t("Quell- und Zielfarbe sind identisch."))
             return
 
         self.accept()
