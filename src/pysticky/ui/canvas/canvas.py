@@ -15,7 +15,9 @@ Die Funktionalität ist in Mixins aufgeteilt:
 - MirrorMixin: Spiegelmodus-Funktionalität
 - RenderingMixin: Zeichnen
 - ZoomMixin: Zoom-Funktionen
-- EventsMixin: Event-Handler
+- MouseEventsMixin: Maus-/Viewport-Events (Pan, Tool-Delegation, Batching, Wheel-Zoom)
+- KeyboardEventsMixin: Tastatur-Events
+- TabletGestureMixin: Stift-Tablet- und Touch-Gesten-Events
 - PropertiesMixin: Properties
 """
 
@@ -32,16 +34,26 @@ from .cache import CanvasCache
 from .enums import MirrorMode
 from .mixins import (
     CoordinatesMixin,
-    EventsMixin,
+    KeyboardEventsMixin,
     MirrorMixin,
+    MouseEventsMixin,
     PropertiesMixin,
     RenderingMixin,
+    TabletGestureMixin,
     ZoomMixin,
 )
 
 
 class CrossStitchCanvas(
-    CoordinatesMixin, MirrorMixin, RenderingMixin, ZoomMixin, EventsMixin, PropertiesMixin, QWidget
+    CoordinatesMixin,
+    MirrorMixin,
+    RenderingMixin,
+    ZoomMixin,
+    MouseEventsMixin,
+    KeyboardEventsMixin,
+    TabletGestureMixin,
+    PropertiesMixin,
+    QWidget,
 ):
     """
     Canvas zur Anzeige und Bearbeitung von Kreuzstich-Mustern.

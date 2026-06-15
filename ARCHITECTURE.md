@@ -80,7 +80,9 @@ Mixins aus `ui/canvas/mixins/`:
 - `MirrorMixin` — Spiegel-/Symmetriemodus
 - `RenderingMixin` — Zeichnen (paintEvent)
 - `ZoomMixin` — Zoom
-- `EventsMixin` — Maus-/Tablet-/Tastatur-Events, Tool-Delegation, Undo-Batching
+- `MouseEventsMixin` — Maus-/Viewport-Events: Pan, Tool-Delegation, Undo-Batching, Wheel-Zoom
+- `KeyboardEventsMixin` — Tastatur-Events (Tool-Tasten, Sticken-Navigation, Pfeil-Pan)
+- `TabletGestureMixin` — Stift-Tablet (Druck) und Touch-Pinch-Gesten
 - `PropertiesMixin` — Properties/Zustand
 
 ### 3. Werkzeuge (`ui/tools/`)

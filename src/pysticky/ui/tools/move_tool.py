@@ -4,7 +4,7 @@ Bewegen-Werkzeug (Hand-Tool / Pan).
 Reines Navigations-Tool im Photoshop-Stil:
 - Linksklick + Drag pannt die Ansicht.
 - Klick allein setzt keinen Stich — der Tool-Code gibt leere Change-Listen
-  zurueck; die Pan-Logik selbst sitzt im Canvas-EventsMixin und wird
+  zurueck; die Pan-Logik selbst sitzt im Canvas-MouseEventsMixin und wird
   aktiviert, sobald das MOVE-Tool ausgewaehlt ist.
 - Mittelmaus-Pan bleibt unabhaengig vom aktiven Werkzeug verfuegbar.
 """

@@ -1,14 +1,14 @@
 """
-Event-Handler-Mixin für Canvas.
+Maus-Event-Mixin für Canvas.
 
-Enthält alle Maus- und Tastatur-Event-Handler.
+Enthält die Maus- und Viewport-Event-Handler: Zeichnen/Tool-Delegation,
+Pan, Undo-Batching, Wheel-Zoom und Resize.
 """
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QMouseEvent, QTabletEvent, QWheelEvent
-from PySide6.QtWidgets import QGestureEvent, QPinchGesture
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QMouseEvent, QWheelEvent
 
 from ...tools.progress_tool import MARK_COMPLETED, UNMARK_COMPLETED
 from ...tools.tool_enum import Tool
@@ -17,70 +17,14 @@ if TYPE_CHECKING:
     from ..canvas import CrossStitchCanvas
 
 
-class EventsMixin:
-    """Mixin für Event-Handler."""
+class MouseEventsMixin:
+    """Mixin für Maus- und Viewport-Event-Handler."""
 
     def wheelEvent(self: "CrossStitchCanvas", event: QWheelEvent) -> None:
         if event.angleDelta().y() > 0:
             self.zoom_in()
         else:
             self.zoom_out()
-
-    def event(self: "CrossStitchCanvas", event: QEvent) -> bool:
-        """Override fuer Gesture-Events. Maus/Tastatur lassen wir Qt durchreichen."""
-        if event.type() == QEvent.Type.Gesture:
-            return self._handle_gesture(event)
-        return super().event(event)
-
-    def _handle_gesture(self: "CrossStitchCanvas", event: QGestureEvent) -> bool:
-        """Verarbeitet Pinch-Gesture fuer Touch-Zoom."""
-        pinch = event.gesture(Qt.GestureType.PinchGesture)
-        if pinch is None or not isinstance(pinch, QPinchGesture):
-            return False
-
-        state = pinch.state()
-        if state == Qt.GestureState.GestureStarted:
-            self._gesture_last_scale = 1.0
-            event.accept()
-            return True
-        if state in (Qt.GestureState.GestureUpdated, Qt.GestureState.GestureFinished):
-            total = float(pinch.totalScaleFactor())
-            # Schwelle, damit nicht jeder Mikro-Pinch zoomt
-            delta_ratio = total / max(self._gesture_last_scale, 1e-6)
-            if delta_ratio > 1.15:
-                self.zoom_in()
-                self._gesture_last_scale = total
-            elif delta_ratio < 1 / 1.15:
-                self.zoom_out()
-                self._gesture_last_scale = total
-            event.accept()
-            return True
-        return False
-
-    def tabletEvent(self: "CrossStitchCanvas", event: QTabletEvent) -> None:
-        """Stift-Pressure aufnehmen.
-
-        Qt sendet bei aktivem Tablet auch synthetische Maus-Events, die
-        durch unsere bestehende `mousePressEvent`/`mouseMoveEvent`-Logik
-        laufen. Wir speichern hier nur den Pressure-Wert, den das
-        Pencil-Tool dann fuer die Brush-Groesse nutzt.
-        """
-        try:
-            pressure = float(event.pressure())
-        except (AttributeError, TypeError):
-            pressure = 0.0
-        self._tablet_pressure = max(0.0, min(1.0, pressure))
-
-        etype = event.type()
-        if etype == QEvent.Type.TabletPress:
-            self._tablet_in_use = True
-        elif etype == QEvent.Type.TabletRelease:
-            self._tablet_in_use = False
-            self._tablet_pressure = 0.0
-
-        # NICHT accept() — Qt soll die synthetischen Mouse-Events weiter
-        # generieren. Ohne ignore() wuerde die Maus-Pipeline ausbleiben.
-        event.ignore()
 
     def mousePressEvent(self: "CrossStitchCanvas", event: QMouseEvent) -> None:
         # WICHTIG: event.accept() bei Middle-Klick verhindert Windows
@@ -279,86 +223,6 @@ class EventsMixin:
 
     def leaveEvent(self: "CrossStitchCanvas", event) -> None:
         self._cursor_pos = None
-        self.update()
-
-    def keyPressEvent(self: "CrossStitchCanvas", event) -> None:
-        key = event.key()
-        modifiers = event.modifiers()
-        ctrl = modifiers & Qt.KeyboardModifier.ControlModifier
-        shift = modifiers & Qt.KeyboardModifier.ShiftModifier
-
-        current_tool = self._tool_manager.current_tool
-
-        # Text-Tool: Enter bestätigt
-        if current_tool == Tool.TEXT and key in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            self.text_confirmed.emit()
-            return
-
-        # Select-Tool: Tool-spezifische Tasten (F/R/H/V).
-        # Ctrl+C/X/V und Entf laufen ueber QActions im Bearbeiten-Menue —
-        # damit sind sie auch aktiv, wenn ein anderes Tool gerade vorne ist.
-        # F/R/H/V bleiben hier, weil sie sonst mit Tool-Shortcuts kollidieren
-        # wuerden (R = Rect-Tool etc.) — nur das aktive Select-Tool will sie.
-        if current_tool in (Tool.SELECT, Tool.SELECT_LASSO):
-            if key == Qt.Key.Key_F:
-                self.selection_fill.emit()
-                return
-            if key == Qt.Key.Key_R:
-                (self.selection_rotate_ccw if shift else self.selection_rotate_cw).emit()
-                return
-            if key == Qt.Key.Key_H:
-                self.selection_flip_h.emit()
-                return
-            if key == Qt.Key.Key_V and not ctrl:
-                self.selection_flip_v.emit()
-                return
-
-        # Werkzeug-Event
-        ctx = self._create_tool_context(0, 0)
-        if ctx and self._tool_manager.on_key_press(ctx, event):
-            self.update()
-            return
-
-        # Sticken-Modus: Pfeiltasten springen zur naechsten/vorherigen
-        # ungehakten Zelle der aktuell aktiven Farbe (Reading-Order).
-        if current_tool == Tool.PROGRESS:
-            if key in (Qt.Key.Key_Right, Qt.Key.Key_Down):
-                if self.jump_to_next_stitch(forward=True):
-                    return
-            elif key in (Qt.Key.Key_Left, Qt.Key.Key_Up):
-                if self.jump_to_next_stitch(forward=False):
-                    return
-            elif key in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
-                # Aktuelle Cursor-Zelle abhaken
-                if self._stitch_cursor is not None:
-                    cx, cy = self._stitch_cursor
-                    if not self._batch_active:
-                        self._batch_active = True
-                        self.batch_started.emit("Fortschritt markieren")
-                    self.stitch_marked_completed.emit(cx, cy)
-                    self._batch_active = False
-                    self.batch_ended.emit()
-                    # Direkt zur naechsten Zelle springen — Workflow-Beschleunigung
-                    self.jump_to_next_stitch(forward=True)
-                    return
-
-        # Pan mit Pfeiltasten
-        pan_amount = 20
-        if key == Qt.Key.Key_Left:
-            self._offset_x += pan_amount
-        elif key == Qt.Key.Key_Right:
-            self._offset_x -= pan_amount
-        elif key == Qt.Key.Key_Up:
-            self._offset_y += pan_amount
-        elif key == Qt.Key.Key_Down:
-            self._offset_y -= pan_amount
-        else:
-            from PySide6.QtWidgets import QWidget
-
-            QWidget.keyPressEvent(self, event)
-            return
-
-        self.offset_changed.emit(self._offset_x, self._offset_y)
         self.update()
 
     def resizeEvent(self: "CrossStitchCanvas", event) -> None:

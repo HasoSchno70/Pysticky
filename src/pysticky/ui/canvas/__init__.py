@@ -12,7 +12,7 @@ Die Canvas-Funktionalität ist modular in Mixins aufgeteilt:
 - MirrorMixin: Spiegelmodus-Funktionalität
 - RenderingMixin: Zeichnen
 - ZoomMixin: Zoom-Funktionen
-- EventsMixin: Event-Handler
+- MouseEventsMixin / KeyboardEventsMixin / TabletGestureMixin: Event-Handler
 - PropertiesMixin: Properties
 """
 
