@@ -308,13 +308,13 @@ class ExportHandlersMixin:
         from ...io import ImageExporter
 
         exporter = ImageExporter(self.current_pattern)
-        success = exporter.export(
-            path, cell_size=cell_size, show_grid=show_grid, show_symbols=show_symbols
-        )
-        if success:
+        try:
+            exporter.export(
+                path, cell_size=cell_size, show_grid=show_grid, show_symbols=show_symbols
+            )
             self.status_bar.showMessage(f"Bild exportiert: {path}", 5000)
-        else:
-            QMessageBox.critical(self, "Fehler", "Bild-Export fehlgeschlagen.")
+        except Exception as e:  # noqa: BLE001 - Fehlerdetail dem User zeigen
+            QMessageBox.critical(self, "Fehler", f"Bild-Export fehlgeschlagen:\n{e}")
 
     def _on_export_oxs(self: "MainWindow") -> None:
         """Exportiert das Muster als OXS (Open Cross Stitch XML)."""

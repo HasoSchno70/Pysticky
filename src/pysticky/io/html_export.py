@@ -167,7 +167,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
             return True
         except OSError as e:
             logger.error("Fehler beim HTML-Export: %s", e)
-            return False
+            raise
 
     def _calculate_statistics(self) -> None:
         """Berechnet Farbstatistiken und Garnbedarf.

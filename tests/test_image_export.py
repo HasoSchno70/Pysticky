@@ -92,3 +92,12 @@ def test_image_export_empty_pattern(empty_pattern, tmp_path):
     ok = ImageExporter(empty_pattern).export(target, cell_size=10)
     assert ok is True
     assert target.exists()
+
+
+def test_image_export_unwritable_path_raises(pattern_with_stitches, tmp_path):
+    """Fehlschlag liefert kein stilles False mehr, sondern eine Exception
+    mit Detail (Ziel-Pfad), damit das UI den Grund anzeigen kann."""
+    target = tmp_path / "fehlt" / "out.png"  # Ordner existiert nicht
+    with pytest.raises(OSError) as exc_info:
+        ImageExporter(pattern_with_stitches).export(target, cell_size=10)
+    assert "out.png" in str(exc_info.value)

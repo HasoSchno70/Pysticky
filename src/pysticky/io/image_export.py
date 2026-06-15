@@ -97,6 +97,11 @@ class ImageExporter:
 
         Returns:
             True bei Erfolg
+
+        Raises:
+            RuntimeError: Wenn der Maler nicht initialisiert werden kann
+                (z. B. Bild zu gross).
+            OSError: Wenn die Datei nicht geschrieben werden kann.
         """
         from ..core import NO_STITCH
 
@@ -110,7 +115,10 @@ class ImageExporter:
 
         painter = QPainter()
         if not painter.begin(image):
-            return False
+            raise RuntimeError(
+                f"Bild-Maler konnte nicht initialisiert werden "
+                f"(Bild evtl. zu gross: {img_w}x{img_h} Pixel)."
+            )
 
         try:
             composite = pattern.layer_stack.get_composite_grid()
@@ -187,4 +195,6 @@ class ImageExporter:
         elif filepath.lower().endswith(".bmp"):
             fmt = "BMP"
 
-        return image.save(filepath, fmt)
+        if not image.save(filepath, fmt):
+            raise OSError(f"Bild konnte nicht gespeichert werden: {filepath}")
+        return True

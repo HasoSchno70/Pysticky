@@ -338,7 +338,7 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
 
         except OSError as e:
             logger.error("Fehler beim PDF-Export: %s", e, exc_info=True)
-            return False
+            raise
 
     def _calculate_statistics(self) -> None:
         """Berechnet Farbstatistiken und Garnbedarf.
