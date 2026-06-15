@@ -1,0 +1,159 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pysticky"
+dynamic = ["version"]
+description = "Professionelle Kreuzstich-Software"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Hans Schnorrenberger"}
+]
+keywords = ["embroidery", "cross-stitch", "sticken", "kreuzstich", "pattern"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Multimedia :: Graphics :: Editors",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "PySide6>=6.6.0",
+    "Pillow>=10.0.0",
+    "numpy>=1.24.0",
+    "reportlab>=4.0.0",
+    "defusedxml>=0.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-qt>=4.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8",
+    "pre-commit>=3.5",
+]
+build = [
+    "pyinstaller>=6.0",
+]
+
+[project.gui-scripts]
+pysticky = "pysticky.main:main"
+
+[project.urls]
+Homepage = "https://github.com/pysticky/pysticky"
+
+[tool.setuptools.dynamic]
+version = {attr = "pysticky.config.APP_VERSION"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pysticky = [
+    "resources/**/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.mypy]
+# Statische Typpruefung NUR fuer den Qt-freien Kern (core/io/plugins) —
+# die Schichten sind bewusst UI-frei und durchgaengig typannotiert. Die
+# PySide6-UI (src/pysticky/ui) ist ausgeklammert: die Qt-Stubs sind
+# unvollstaendig und wuerden nur Rauschen erzeugen.
+# Pragmatischer Einstieg: nicht strict. Spaeter schrittweise verschaerfen.
+python_version = "3.10"
+mypy_path = "src"
+explicit_package_bases = true
+namespace_packages = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+files = ["src/pysticky/core", "src/pysticky/io", "src/pysticky/plugins"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N"]
+# N802: Qt erzwingt camelCase fuer ueberschriebene Methoden (paintEvent,
+# mousePressEvent, eventFilter, sizeHint, ...). Umbenennen wuerde die
+# Qt-Anbindung brechen — daher projektweit ignoriert.
+ignore = ["N802"]
+
+[tool.ruff.lint.per-file-ignores]
+# Kolorimetrie-Fachkonvention: CIE L*, X/Y/Z (Tristimulus) sind per
+# Definition Grossbuchstaben. Lowercase waere unleserlich (und `l` triggert
+# E741). Gilt nur fuer das Farbmathematik-Modul.
+"src/pysticky/core/color_math.py" = ["N803", "N806"]
+
+# --- Bewusste, dateiweite Ausnahmen (Stand: Lint-Sweep) -------------------
+# Begruendung je Regel:
+#   E402  Modul-Statement (logger=, Backend-Setup) bewusst vor den Imports.
+#   F401  reportlab-Imports im `try/except ImportError`-Block (optionale Dep)
+#         bzw. Paket-Re-Exports — Entfernen wuerde Features/API brechen.
+#   N806  Mathe-/Dimensions-Kurznamen (H/W, X/Y/Z, R/G/B) wie in color_math.
+#   N814/N817  Qt-/Bibliotheks-Aliasse mit konventioneller Schreibweise.
+#   E741  mehrdeutige Schleifenvariablen (l/I/O) in Alt-Code/Tests.
+#   E501  lange Zeilen: f-String-Stylesheets und generiertes HTML/PDF-Markup.
+"src/pysticky/core/file_io.py" = ["E741"]
+"src/pysticky/core/image_import.py" = ["N806"]
+"src/pysticky/core/layer.py" = ["E501"]
+"src/pysticky/core/pattern.py" = ["N806"]
+"src/pysticky/core/thread.py" = ["N806"]
+"src/pysticky/io/export_cache.py" = ["N806"]
+"src/pysticky/io/formats/oxs_io.py" = ["E501"]
+"src/pysticky/io/html_export_pages.py" = ["E501"]
+"src/pysticky/io/html_export_sections.py" = ["E501"]
+"src/pysticky/io/pdf_export.py" = ["E402", "F401", "N817"]
+"src/pysticky/io/pdf_export_sections.py" = ["E501", "F401"]
+"src/pysticky/ui/builders/mw_menus_mixin.py" = ["E501"]
+"src/pysticky/ui/builders/mw_toolbar_mixin.py" = ["E501"]
+"src/pysticky/ui/canvas/canvas.py" = ["N806", "N814"]
+"src/pysticky/ui/canvas/mixins/rendering_mixin.py" = ["E741"]
+"src/pysticky/ui/canvas/performance.py" = ["E402", "E741"]
+"src/pysticky/ui/dialogs/color_harmony_dialog.py" = ["E741"]
+"src/pysticky/ui/dialogs/color_management_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/heatmap_dialog.py" = ["N806"]
+"src/pysticky/ui/dialogs/hoop_planner_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/image_import_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/new_project_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/pattern_import_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/pattern_library_dialog.py" = ["E402"]
+"src/pysticky/ui/dialogs/pattern_preview_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/pattern_properties_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/replace_color_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/statistics_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/stitch_path_dialog.py" = ["E501"]
+"src/pysticky/ui/dialogs/swap_colors_dialog.py" = ["E501"]
+"src/pysticky/ui/handlers/edit_handlers.py" = ["E501"]
+"src/pysticky/ui/handlers/misc_handlers.py" = ["E501"]
+"src/pysticky/ui/handlers/panel_handlers.py" = ["E501"]
+"src/pysticky/ui/handlers/view_handlers.py" = ["N806"]
+"src/pysticky/ui/main_window.py" = ["E501"]
+"src/pysticky/ui/panels/info_panel.py" = ["E501"]
+"src/pysticky/ui/panels/layer_panel.py" = ["E501"]
+"src/pysticky/ui/widgets/color_bar.py" = ["E402", "E501"]
+"src/pysticky/ui/widgets/path_preview.py" = ["E501"]
+"tests/test_demo_file.py" = ["E741"]
+"tests/test_diamond.py" = ["E741"]
+"tests/test_image_import.py" = ["E402"]
+"tests/test_layer.py" = ["E741"]
+"tests/test_select_tools.py" = ["N817"]

@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Hintergrund-Gradient -->
+    <radialGradient id="bg" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#2a2a4a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </radialGradient>
+    <!-- Stoff-Textur-Gradient -->
+    <linearGradient id="fabric" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f0e8"/>
+      <stop offset="50%" stop-color="#ede6d8"/>
+      <stop offset="100%" stop-color="#e8e0d0"/>
+    </linearGradient>
+    <!-- Nadel-Gradient -->
+    <linearGradient id="needle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e0e0e0"/>
+      <stop offset="30%" stop-color="#c0c0c0"/>
+      <stop offset="100%" stop-color="#808080"/>
+    </linearGradient>
+    <!-- Faden-Gradient -->
+    <linearGradient id="thread" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e04040"/>
+      <stop offset="50%" stop-color="#cc2020"/>
+      <stop offset="100%" stop-color="#a01818"/>
+    </linearGradient>
+    <!-- Grüner Akzent -->
+    <linearGradient id="green_accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6ec6a0"/>
+      <stop offset="100%" stop-color="#4a9ae0"/>
+    </linearGradient>
+    <!-- Schatten-Filter -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Hintergrund-Kreis -->
+  <circle cx="100" cy="100" r="96" fill="url(#bg)" stroke="#3a3a5a" stroke-width="2"/>
+  <circle cx="100" cy="100" r="92" fill="none" stroke="#4a4a6a" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+
+  <!-- Aida-Stoff (Raster-Quadrat) -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="32" width="90" height="90" rx="4" ry="4" fill="url(#fabric)" stroke="#c8c0b0" stroke-width="1.5"/>
+    <!-- Gitterlinien (Aida-Stoff-Textur) -->
+    <g stroke="#d0c8b8" stroke-width="0.4" opacity="0.6">
+      <!-- Vertikal -->
+      <line x1="50" y1="32" x2="50" y2="122"/>
+      <line x1="60" y1="32" x2="60" y2="122"/>
+      <line x1="70" y1="32" x2="70" y2="122"/>
+      <line x1="80" y1="32" x2="80" y2="122"/>
+      <line x1="90" y1="32" x2="90" y2="122"/>
+      <line x1="100" y1="32" x2="100" y2="122"/>
+      <line x1="110" y1="32" x2="110" y2="122"/>
+      <line x1="120" y1="32" x2="120" y2="122"/>
+      <!-- Horizontal -->
+      <line x1="40" y1="42" x2="130" y2="42"/>
+      <line x1="40" y1="52" x2="130" y2="52"/>
+      <line x1="40" y1="62" x2="130" y2="62"/>
+      <line x1="40" y1="72" x2="130" y2="72"/>
+      <line x1="40" y1="82" x2="130" y2="82"/>
+      <line x1="40" y1="92" x2="130" y2="92"/>
+      <line x1="40" y1="102" x2="130" y2="102"/>
+      <line x1="40" y1="112" x2="130" y2="112"/>
+    </g>
+  </g>
+
+  <!-- Kreuzstiche auf dem Stoff -->
+  <g stroke-width="2.5" stroke-linecap="round" opacity="0.9">
+    <!-- Reihe 1: Herz-Muster in Rot -->
+    <!-- Kreuz 1 -->
+    <line x1="52" y1="44" x2="58" y2="50" stroke="#cc2020"/>
+    <line x1="58" y1="44" x2="52" y2="50" stroke="#cc2020"/>
+    <!-- Kreuz 2 -->
+    <line x1="62" y1="44" x2="68" y2="50" stroke="#cc2020"/>
+    <line x1="68" y1="44" x2="62" y2="50" stroke="#cc2020"/>
+    <!-- Kreuz 3 -->
+    <line x1="82" y1="44" x2="88" y2="50" stroke="#cc2020"/>
+    <line x1="88" y1="44" x2="82" y2="50" stroke="#cc2020"/>
+    <!-- Kreuz 4 -->
+    <line x1="92" y1="44" x2="98" y2="50" stroke="#cc2020"/>
+    <line x1="98" y1="44" x2="92" y2="50" stroke="#cc2020"/>
+
+    <!-- Reihe 2 -->
+    <line x1="42" y1="54" x2="48" y2="60" stroke="#cc2020"/>
+    <line x1="48" y1="54" x2="42" y2="60" stroke="#cc2020"/>
+    <line x1="52" y1="54" x2="58" y2="60" stroke="#cc2020"/>
+    <line x1="58" y1="54" x2="52" y2="60" stroke="#cc2020"/>
+    <line x1="62" y1="54" x2="68" y2="60" stroke="#cc2020"/>
+    <line x1="68" y1="54" x2="62" y2="60" stroke="#cc2020"/>
+    <line x1="72" y1="54" x2="78" y2="60" stroke="#cc2020"/>
+    <line x1="78" y1="54" x2="72" y2="60" stroke="#cc2020"/>
+    <line x1="82" y1="54" x2="88" y2="60" stroke="#cc2020"/>
+    <line x1="88" y1="54" x2="82" y2="60" stroke="#cc2020"/>
+    <line x1="92" y1="54" x2="98" y2="60" stroke="#cc2020"/>
+    <line x1="98" y1="54" x2="92" y2="60" stroke="#cc2020"/>
+    <line x1="102" y1="54" x2="108" y2="60" stroke="#cc2020"/>
+    <line x1="108" y1="54" x2="102" y2="60" stroke="#cc2020"/>
+
+    <!-- Reihe 3 -->
+    <line x1="42" y1="64" x2="48" y2="70" stroke="#cc2020"/>
+    <line x1="48" y1="64" x2="42" y2="70" stroke="#cc2020"/>
+    <line x1="52" y1="64" x2="58" y2="70" stroke="#cc2020"/>
+    <line x1="58" y1="64" x2="52" y2="70" stroke="#cc2020"/>
+    <line x1="62" y1="64" x2="68" y2="70" stroke="#cc2020"/>
+    <line x1="68" y1="64" x2="62" y2="70" stroke="#cc2020"/>
+    <line x1="72" y1="64" x2="78" y2="70" stroke="#cc2020"/>
+    <line x1="78" y1="64" x2="72" y2="70" stroke="#cc2020"/>
+    <line x1="82" y1="64" x2="88" y2="70" stroke="#cc2020"/>
+    <line x1="88" y1="64" x2="82" y2="70" stroke="#cc2020"/>
+    <line x1="92" y1="64" x2="98" y2="70" stroke="#cc2020"/>
+    <line x1="98" y1="64" x2="92" y2="70" stroke="#cc2020"/>
+    <line x1="102" y1="64" x2="108" y2="70" stroke="#cc2020"/>
+    <line x1="108" y1="64" x2="102" y2="70" stroke="#cc2020"/>
+
+    <!-- Reihe 4 -->
+    <line x1="52" y1="74" x2="58" y2="80" stroke="#cc2020"/>
+    <line x1="58" y1="74" x2="52" y2="80" stroke="#cc2020"/>
+    <line x1="62" y1="74" x2="68" y2="80" stroke="#cc2020"/>
+    <line x1="68" y1="74" x2="62" y2="80" stroke="#cc2020"/>
+    <line x1="72" y1="74" x2="78" y2="80" stroke="#cc2020"/>
+    <line x1="78" y1="74" x2="72" y2="80" stroke="#cc2020"/>
+    <line x1="82" y1="74" x2="88" y2="80" stroke="#cc2020"/>
+    <line x1="88" y1="74" x2="82" y2="80" stroke="#cc2020"/>
+    <line x1="92" y1="74" x2="98" y2="80" stroke="#cc2020"/>
+    <line x1="98" y1="74" x2="92" y2="80" stroke="#cc2020"/>
+
+    <!-- Reihe 5 -->
+    <line x1="62" y1="84" x2="68" y2="90" stroke="#cc2020"/>
+    <line x1="68" y1="84" x2="62" y2="90" stroke="#cc2020"/>
+    <line x1="72" y1="84" x2="78" y2="90" stroke="#cc2020"/>
+    <line x1="78" y1="84" x2="72" y2="90" stroke="#cc2020"/>
+    <line x1="82" y1="84" x2="88" y2="90" stroke="#cc2020"/>
+    <line x1="88" y1="84" x2="82" y2="90" stroke="#cc2020"/>
+
+    <!-- Reihe 6 (Spitze) -->
+    <line x1="72" y1="94" x2="78" y2="100" stroke="#cc2020"/>
+    <line x1="78" y1="94" x2="72" y2="100" stroke="#cc2020"/>
+
+    <!-- Grüne Deko-Stiche (Blätter/Ranken) -->
+    <line x1="52" y1="104" x2="58" y2="110" stroke="#4a9a6a"/>
+    <line x1="58" y1="104" x2="52" y2="110" stroke="#4a9a6a"/>
+    <line x1="62" y1="104" x2="68" y2="110" stroke="#4a9a6a"/>
+    <line x1="68" y1="104" x2="62" y2="110" stroke="#4a9a6a"/>
+    <line x1="102" y1="104" x2="108" y2="110" stroke="#4a9a6a"/>
+    <line x1="108" y1="104" x2="102" y2="110" stroke="#4a9a6a"/>
+    <line x1="112" y1="104" x2="118" y2="110" stroke="#4a9a6a"/>
+    <line x1="118" y1="104" x2="112" y2="110" stroke="#4a9a6a"/>
+
+    <!-- Blaue Deko-Stiche -->
+    <line x1="112" y1="44" x2="118" y2="50" stroke="#4a80c0"/>
+    <line x1="118" y1="44" x2="112" y2="50" stroke="#4a80c0"/>
+    <line x1="112" y1="74" x2="118" y2="80" stroke="#4a80c0"/>
+    <line x1="118" y1="74" x2="112" y2="80" stroke="#4a80c0"/>
+  </g>
+
+  <!-- Nadel mit Faden -->
+  <g filter="url(#shadow)">
+    <!-- Faden (geschwungene Linie) -->
+    <path d="M 132,45 C 145,52 138,70 150,78 C 158,84 162,75 155,95 C 148,115 165,108 158,130"
+          fill="none" stroke="url(#thread)" stroke-width="2" stroke-linecap="round"/>
+    <!-- Faden-Schleife -->
+    <path d="M 158,130 C 152,138 168,145 160,155 C 155,162 145,158 148,148"
+          fill="none" stroke="url(#thread)" stroke-width="1.8" stroke-linecap="round"/>
+
+    <!-- Nadel -->
+    <g transform="translate(128, 28) rotate(35)">
+      <!-- Nadelkörper -->
+      <rect x="-1.2" y="0" width="2.4" height="32" rx="1.2" fill="url(#needle)"/>
+      <!-- Nadelöhr -->
+      <ellipse cx="0" cy="4" rx="1" ry="2.5" fill="none" stroke="#808080" stroke-width="0.6"/>
+      <!-- Nadelspitze -->
+      <polygon points="-1.2,32 1.2,32 0,37" fill="#909090"/>
+      <!-- Glanzlicht -->
+      <line x1="0.3" y1="8" x2="0.3" y2="28" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+    </g>
+  </g>
+
+  <!-- "PySticky" Text im Kreuzstich-Stil -->
+  <g filter="url(#glow)">
+    <text x="100" y="168" text-anchor="middle"
+          font-family="'Segoe UI', 'Arial', sans-serif"
+          font-size="22" font-weight="800" letter-spacing="1.5"
+          fill="url(#green_accent)">
+      PySticky
+    </text>
+  </g>
+
+  <!-- Untertitel -->
+  <text x="100" y="185" text-anchor="middle"
+        font-family="'Segoe UI', 'Arial', sans-serif"
+        font-size="8" fill="#8a8aa0" letter-spacing="2.5"
+        font-style="italic">
+    KREUZSTICH-DESIGN
+  </text>
+
+  <!-- Dekorative Punkte -->
+  <circle cx="55" cy="175" r="1.5" fill="#6ec6a0" opacity="0.5"/>
+  <circle cx="145" cy="175" r="1.5" fill="#4a9ae0" opacity="0.5"/>
+  <circle cx="65" cy="180" r="1" fill="#cc2020" opacity="0.4"/>
+  <circle cx="135" cy="180" r="1" fill="#cc2020" opacity="0.4"/>
+</svg>

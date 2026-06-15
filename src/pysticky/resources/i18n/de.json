@@ -1,0 +1,5 @@
+{
+  "_comment": "Deutsche Default-Sprache. Die meisten Strings sind hier nicht aufgefuehrt, weil sie identisch zum Source-String sind (Identity-Fallback). Eintraege hier sind nur fuer Variation/Klarheit.",
+  "_meta_language_name": "Deutsch",
+  "_meta_language_code": "de"
+}

@@ -1,0 +1,2423 @@
+[
+    {
+        "MadeiraNumber": "1",
+        "Color": {
+            "R": 160,
+            "G": 187,
+            "B": 213
+        },
+        "Name": "Light Blue"
+    },
+    {
+        "MadeiraNumber": "2",
+        "Color": {
+            "R": 184,
+            "G": 204,
+            "B": 224
+        },
+        "Name": "Pastel Blue"
+    },
+    {
+        "MadeiraNumber": "3",
+        "Color": {
+            "R": 221,
+            "G": 232,
+            "B": 242
+        },
+        "Name": "Baby Blue"
+    },
+    {
+        "MadeiraNumber": "4",
+        "Color": {
+            "R": 236,
+            "G": 243,
+            "B": 249
+        },
+        "Name": "Pale Blue"
+    },
+    {
+        "MadeiraNumber": "5",
+        "Color": {
+            "R": 110,
+            "G": 150,
+            "B": 190
+        },
+        "Name": "Medium Blue"
+    },
+    {
+        "MadeiraNumber": "6",
+        "Color": {
+            "R": 85,
+            "G": 127,
+            "B": 173
+        },
+        "Name": "Dresden Blue"
+    },
+    {
+        "MadeiraNumber": "7",
+        "Color": {
+            "R": 67,
+            "G": 109,
+            "B": 157
+        },
+        "Name": "Dark Dresden Blue"
+    },
+    {
+        "MadeiraNumber": "8",
+        "Color": {
+            "R": 49,
+            "G": 89,
+            "B": 139
+        },
+        "Name": "Deep Dresden Blue"
+    },
+    {
+        "MadeiraNumber": "10",
+        "Color": {
+            "R": 4,
+            "G": 83,
+            "B": 145
+        },
+        "Name": "Dark Sapphire"
+    },
+    {
+        "MadeiraNumber": "11",
+        "Color": {
+            "R": 3,
+            "G": 65,
+            "B": 115
+        },
+        "Name": "Deep Sapphire"
+    },
+    {
+        "MadeiraNumber": "12",
+        "Color": {
+            "R": 0,
+            "G": 51,
+            "B": 95
+        },
+        "Name": "Very Dark Sapphire"
+    },
+    {
+        "MadeiraNumber": "101",
+        "Color": {
+            "R": 233,
+            "G": 224,
+            "B": 210
+        },
+        "Name": "Eggshell"
+    },
+    {
+        "MadeiraNumber": "102",
+        "Color": {
+            "R": 225,
+            "G": 208,
+            "B": 192
+        },
+        "Name": "Light Beige"
+    },
+    {
+        "MadeiraNumber": "103",
+        "Color": {
+            "R": 212,
+            "G": 188,
+            "B": 168
+        },
+        "Name": "Beige"
+    },
+    {
+        "MadeiraNumber": "104",
+        "Color": {
+            "R": 183,
+            "G": 154,
+            "B": 131
+        },
+        "Name": "Dark Beige"
+    },
+    {
+        "MadeiraNumber": "106",
+        "Color": {
+            "R": 189,
+            "G": 141,
+            "B": 98
+        },
+        "Name": "Light Tan"
+    },
+    {
+        "MadeiraNumber": "107",
+        "Color": {
+            "R": 175,
+            "G": 121,
+            "B": 74
+        },
+        "Name": "Tan"
+    },
+    {
+        "MadeiraNumber": "108",
+        "Color": {
+            "R": 158,
+            "G": 102,
+            "B": 54
+        },
+        "Name": "Dark Tan"
+    },
+    {
+        "MadeiraNumber": "109",
+        "Color": {
+            "R": 141,
+            "G": 85,
+            "B": 40
+        },
+        "Name": "Very Dark Tan"
+    },
+    {
+        "MadeiraNumber": "110",
+        "Color": {
+            "R": 121,
+            "G": 68,
+            "B": 31
+        },
+        "Name": "Deep Tan"
+    },
+    {
+        "MadeiraNumber": "201",
+        "Color": {
+            "R": 242,
+            "G": 204,
+            "B": 205
+        },
+        "Name": "Light Rose"
+    },
+    {
+        "MadeiraNumber": "202",
+        "Color": {
+            "R": 235,
+            "G": 187,
+            "B": 190
+        },
+        "Name": "Rose"
+    },
+    {
+        "MadeiraNumber": "203",
+        "Color": {
+            "R": 232,
+            "G": 173,
+            "B": 179
+        },
+        "Name": "Medium Rose"
+    },
+    {
+        "MadeiraNumber": "204",
+        "Color": {
+            "R": 228,
+            "G": 159,
+            "B": 166
+        },
+        "Name": "Dark Rose"
+    },
+    {
+        "MadeiraNumber": "205",
+        "Color": {
+            "R": 223,
+            "G": 139,
+            "B": 150
+        },
+        "Name": "Very Dark Rose"
+    },
+    {
+        "MadeiraNumber": "206",
+        "Color": {
+            "R": 218,
+            "G": 118,
+            "B": 133
+        },
+        "Name": "Deep Rose"
+    },
+    {
+        "MadeiraNumber": "208",
+        "Color": {
+            "R": 234,
+            "G": 82,
+            "B": 105
+        },
+        "Name": "Light Red"
+    },
+    {
+        "MadeiraNumber": "209",
+        "Color": {
+            "R": 226,
+            "G": 47,
+            "B": 73
+        },
+        "Name": "Red"
+    },
+    {
+        "MadeiraNumber": "210",
+        "Color": {
+            "R": 213,
+            "G": 4,
+            "B": 39
+        },
+        "Name": "Dark Red"
+    },
+    {
+        "MadeiraNumber": "211",
+        "Color": {
+            "R": 189,
+            "G": 2,
+            "B": 35
+        },
+        "Name": "Very Dark Red"
+    },
+    {
+        "MadeiraNumber": "212",
+        "Color": {
+            "R": 165,
+            "G": 1,
+            "B": 31
+        },
+        "Name": "Deep Red"
+    },
+    {
+        "MadeiraNumber": "213",
+        "Color": {
+            "R": 141,
+            "G": 1,
+            "B": 28
+        },
+        "Name": "Very Deep Red"
+    },
+    {
+        "MadeiraNumber": "214",
+        "Color": {
+            "R": 121,
+            "G": 0,
+            "B": 25
+        },
+        "Name": "Extremely Deep Red"
+    },
+    {
+        "MadeiraNumber": "301",
+        "Color": {
+            "R": 242,
+            "G": 212,
+            "B": 167
+        },
+        "Name": "Light Yellow"
+    },
+    {
+        "MadeiraNumber": "302",
+        "Color": {
+            "R": 243,
+            "G": 200,
+            "B": 141
+        },
+        "Name": "Yellow"
+    },
+    {
+        "MadeiraNumber": "303",
+        "Color": {
+            "R": 247,
+            "G": 190,
+            "B": 110
+        },
+        "Name": "Medium Yellow"
+    },
+    {
+        "MadeiraNumber": "304",
+        "Color": {
+            "R": 254,
+            "G": 182,
+            "B": 72
+        },
+        "Name": "Dark Yellow"
+    },
+    {
+        "MadeiraNumber": "305",
+        "Color": {
+            "R": 255,
+            "G": 170,
+            "B": 0
+        },
+        "Name": "Tangerine"
+    },
+    {
+        "MadeiraNumber": "306",
+        "Color": {
+            "R": 255,
+            "G": 145,
+            "B": 0
+        },
+        "Name": "Dark Tangerine"
+    },
+    {
+        "MadeiraNumber": "307",
+        "Color": {
+            "R": 255,
+            "G": 114,
+            "B": 0
+        },
+        "Name": "Orange"
+    },
+    {
+        "MadeiraNumber": "309",
+        "Color": {
+            "R": 239,
+            "G": 78,
+            "B": 15
+        },
+        "Name": "Light Burnt Orange"
+    },
+    {
+        "MadeiraNumber": "310",
+        "Color": {
+            "R": 223,
+            "G": 64,
+            "B": 5
+        },
+        "Name": "Burnt Orange"
+    },
+    {
+        "MadeiraNumber": "312",
+        "Color": {
+            "R": 255,
+            "G": 247,
+            "B": 186
+        },
+        "Name": "Pale Yellow"
+    },
+    {
+        "MadeiraNumber": "313",
+        "Color": {
+            "R": 255,
+            "G": 237,
+            "B": 139
+        },
+        "Name": "Light Canary"
+    },
+    {
+        "MadeiraNumber": "314",
+        "Color": {
+            "R": 255,
+            "G": 226,
+            "B": 85
+        },
+        "Name": "Canary"
+    },
+    {
+        "MadeiraNumber": "315",
+        "Color": {
+            "R": 255,
+            "G": 218,
+            "B": 0
+        },
+        "Name": "Bright Yellow"
+    },
+    {
+        "MadeiraNumber": "317",
+        "Color": {
+            "R": 255,
+            "G": 249,
+            "B": 218
+        },
+        "Name": "Cream"
+    },
+    {
+        "MadeiraNumber": "401",
+        "Color": {
+            "R": 241,
+            "G": 248,
+            "B": 247
+        },
+        "Name": "Celeste"
+    },
+    {
+        "MadeiraNumber": "402",
+        "Color": {
+            "R": 222,
+            "G": 240,
+            "B": 240
+        },
+        "Name": "Light Celeste"
+    },
+    {
+        "MadeiraNumber": "403",
+        "Color": {
+            "R": 204,
+            "G": 232,
+            "B": 231
+        },
+        "Name": "Pastel Turquoise"
+    },
+    {
+        "MadeiraNumber": "404",
+        "Color": {
+            "R": 178,
+            "G": 221,
+            "B": 221
+        },
+        "Name": "Light Turquoise"
+    },
+    {
+        "MadeiraNumber": "405",
+        "Color": {
+            "R": 139,
+            "G": 205,
+            "B": 206
+        },
+        "Name": "Medium Turquoise"
+    },
+    {
+        "MadeiraNumber": "406",
+        "Color": {
+            "R": 99,
+            "G": 185,
+            "B": 186
+        },
+        "Name": "Turquoise"
+    },
+    {
+        "MadeiraNumber": "407",
+        "Color": {
+            "R": 57,
+            "G": 164,
+            "B": 166
+        },
+        "Name": "Dark Turquoise"
+    },
+    {
+        "MadeiraNumber": "408",
+        "Color": {
+            "R": 10,
+            "G": 142,
+            "B": 146
+        },
+        "Name": "Very Dark Turquoise"
+    },
+    {
+        "MadeiraNumber": "410",
+        "Color": {
+            "R": 2,
+            "G": 120,
+            "B": 125
+        },
+        "Name": "Deep Turquoise"
+    },
+    {
+        "MadeiraNumber": "501",
+        "Color": {
+            "R": 223,
+            "G": 241,
+            "B": 224
+        },
+        "Name": "Lightest Green"
+    },
+    {
+        "MadeiraNumber": "502",
+        "Color": {
+            "R": 203,
+            "G": 231,
+            "B": 206
+        },
+        "Name": "Pastel Green"
+    },
+    {
+        "MadeiraNumber": "503",
+        "Color": {
+            "R": 181,
+            "G": 220,
+            "B": 186
+        },
+        "Name": "Light Green"
+    },
+    {
+        "MadeiraNumber": "504",
+        "Color": {
+            "R": 151,
+            "G": 205,
+            "B": 158
+        },
+        "Name": "Medium Light Green"
+    },
+    {
+        "MadeiraNumber": "505",
+        "Color": {
+            "R": 117,
+            "G": 189,
+            "B": 127
+        },
+        "Name": "Medium Green"
+    },
+    {
+        "MadeiraNumber": "506",
+        "Color": {
+            "R": 74,
+            "G": 169,
+            "B": 89
+        },
+        "Name": "Green"
+    },
+    {
+        "MadeiraNumber": "507",
+        "Color": {
+            "R": 16,
+            "G": 148,
+            "B": 41
+        },
+        "Name": "Dark Green"
+    },
+    {
+        "MadeiraNumber": "508",
+        "Color": {
+            "R": 0,
+            "G": 128,
+            "B": 23
+        },
+        "Name": "Very Dark Green"
+    },
+    {
+        "MadeiraNumber": "509",
+        "Color": {
+            "R": 0,
+            "G": 110,
+            "B": 16
+        },
+        "Name": "Deep Green"
+    },
+    {
+        "MadeiraNumber": "510",
+        "Color": {
+            "R": 0,
+            "G": 92,
+            "B": 11
+        },
+        "Name": "Very Deep Green"
+    },
+    {
+        "MadeiraNumber": "512",
+        "Color": {
+            "R": 0,
+            "G": 76,
+            "B": 7
+        },
+        "Name": "Extremely Deep Green"
+    },
+    {
+        "MadeiraNumber": "513",
+        "Color": {
+            "R": 28,
+            "G": 64,
+            "B": 31
+        },
+        "Name": "Forest Green"
+    },
+    {
+        "MadeiraNumber": "601",
+        "Color": {
+            "R": 233,
+            "G": 218,
+            "B": 233
+        },
+        "Name": "Light Lilac"
+    },
+    {
+        "MadeiraNumber": "602",
+        "Color": {
+            "R": 221,
+            "G": 201,
+            "B": 222
+        },
+        "Name": "Lilac"
+    },
+    {
+        "MadeiraNumber": "603",
+        "Color": {
+            "R": 209,
+            "G": 183,
+            "B": 210
+        },
+        "Name": "Medium Lilac"
+    },
+    {
+        "MadeiraNumber": "604",
+        "Color": {
+            "R": 196,
+            "G": 161,
+            "B": 197
+        },
+        "Name": "Dark Lilac"
+    },
+    {
+        "MadeiraNumber": "605",
+        "Color": {
+            "R": 181,
+            "G": 139,
+            "B": 182
+        },
+        "Name": "Very Dark Lilac"
+    },
+    {
+        "MadeiraNumber": "606",
+        "Color": {
+            "R": 165,
+            "G": 112,
+            "B": 165
+        },
+        "Name": "Light Purple"
+    },
+    {
+        "MadeiraNumber": "607",
+        "Color": {
+            "R": 149,
+            "G": 85,
+            "B": 146
+        },
+        "Name": "Purple"
+    },
+    {
+        "MadeiraNumber": "608",
+        "Color": {
+            "R": 130,
+            "G": 55,
+            "B": 125
+        },
+        "Name": "Dark Purple"
+    },
+    {
+        "MadeiraNumber": "609",
+        "Color": {
+            "R": 111,
+            "G": 23,
+            "B": 105
+        },
+        "Name": "Very Dark Purple"
+    },
+    {
+        "MadeiraNumber": "610",
+        "Color": {
+            "R": 92,
+            "G": 0,
+            "B": 86
+        },
+        "Name": "Deep Purple"
+    },
+    {
+        "MadeiraNumber": "612",
+        "Color": {
+            "R": 72,
+            "G": 0,
+            "B": 68
+        },
+        "Name": "Very Deep Purple"
+    },
+    {
+        "MadeiraNumber": "701",
+        "Color": {
+            "R": 201,
+            "G": 225,
+            "B": 185
+        },
+        "Name": "Lightest Emerald"
+    },
+    {
+        "MadeiraNumber": "702",
+        "Color": {
+            "R": 178,
+            "G": 213,
+            "B": 160
+        },
+        "Name": "Light Emerald"
+    },
+    {
+        "MadeiraNumber": "703",
+        "Color": {
+            "R": 154,
+            "G": 200,
+            "B": 135
+        },
+        "Name": "Emerald"
+    },
+    {
+        "MadeiraNumber": "704",
+        "Color": {
+            "R": 128,
+            "G": 186,
+            "B": 109
+        },
+        "Name": "Medium Emerald"
+    },
+    {
+        "MadeiraNumber": "705",
+        "Color": {
+            "R": 102,
+            "G": 171,
+            "B": 82
+        },
+        "Name": "Dark Emerald"
+    },
+    {
+        "MadeiraNumber": "706",
+        "Color": {
+            "R": 70,
+            "G": 154,
+            "B": 53
+        },
+        "Name": "Very Dark Emerald"
+    },
+    {
+        "MadeiraNumber": "708",
+        "Color": {
+            "R": 186,
+            "G": 149,
+            "B": 172
+        },
+        "Name": "Light Mauve"
+    },
+    {
+        "MadeiraNumber": "709",
+        "Color": {
+            "R": 152,
+            "G": 100,
+            "B": 135
+        },
+        "Name": "Mauve"
+    },
+    {
+        "MadeiraNumber": "710",
+        "Color": {
+            "R": 118,
+            "G": 59,
+            "B": 97
+        },
+        "Name": "Dark Mauve"
+    },
+    {
+        "MadeiraNumber": "711",
+        "Color": {
+            "R": 132,
+            "G": 62,
+            "B": 111
+        },
+        "Name": "Medium Dark Mauve"
+    },
+    {
+        "MadeiraNumber": "712",
+        "Color": {
+            "R": 91,
+            "G": 28,
+            "B": 82
+        },
+        "Name": "Very Dark Mauve"
+    },
+    {
+        "MadeiraNumber": "801",
+        "Color": {
+            "R": 147,
+            "G": 115,
+            "B": 90
+        },
+        "Name": "Light Brown"
+    },
+    {
+        "MadeiraNumber": "802",
+        "Color": {
+            "R": 127,
+            "G": 92,
+            "B": 63
+        },
+        "Name": "Brown"
+    },
+    {
+        "MadeiraNumber": "803",
+        "Color": {
+            "R": 108,
+            "G": 72,
+            "B": 42
+        },
+        "Name": "Medium Brown"
+    },
+    {
+        "MadeiraNumber": "804",
+        "Color": {
+            "R": 91,
+            "G": 55,
+            "B": 28
+        },
+        "Name": "Dark Brown"
+    },
+    {
+        "MadeiraNumber": "805",
+        "Color": {
+            "R": 76,
+            "G": 41,
+            "B": 16
+        },
+        "Name": "Very Dark Brown"
+    },
+    {
+        "MadeiraNumber": "806",
+        "Color": {
+            "R": 58,
+            "G": 27,
+            "B": 4
+        },
+        "Name": "Deep Brown"
+    },
+    {
+        "MadeiraNumber": "810",
+        "Color": {
+            "R": 130,
+            "G": 102,
+            "B": 140
+        },
+        "Name": "Light Lavender"
+    },
+    {
+        "MadeiraNumber": "811",
+        "Color": {
+            "R": 113,
+            "G": 81,
+            "B": 121
+        },
+        "Name": "Lavender"
+    },
+    {
+        "MadeiraNumber": "812",
+        "Color": {
+            "R": 95,
+            "G": 59,
+            "B": 102
+        },
+        "Name": "Dark Lavender"
+    },
+    {
+        "MadeiraNumber": "813",
+        "Color": {
+            "R": 74,
+            "G": 33,
+            "B": 82
+        },
+        "Name": "Very Dark Lavender"
+    },
+    {
+        "MadeiraNumber": "901",
+        "Color": {
+            "R": 182,
+            "G": 158,
+            "B": 126
+        },
+        "Name": "Light Topaz"
+    },
+    {
+        "MadeiraNumber": "902",
+        "Color": {
+            "R": 163,
+            "G": 135,
+            "B": 100
+        },
+        "Name": "Topaz"
+    },
+    {
+        "MadeiraNumber": "903",
+        "Color": {
+            "R": 143,
+            "G": 112,
+            "B": 73
+        },
+        "Name": "Dark Topaz"
+    },
+    {
+        "MadeiraNumber": "904",
+        "Color": {
+            "R": 121,
+            "G": 89,
+            "B": 47
+        },
+        "Name": "Very Dark Topaz"
+    },
+    {
+        "MadeiraNumber": "905",
+        "Color": {
+            "R": 101,
+            "G": 69,
+            "B": 18
+        },
+        "Name": "Deep Topaz"
+    },
+    {
+        "MadeiraNumber": "908",
+        "Color": {
+            "R": 102,
+            "G": 126,
+            "B": 160
+        },
+        "Name": "Light Delft Blue"
+    },
+    {
+        "MadeiraNumber": "909",
+        "Color": {
+            "R": 81,
+            "G": 106,
+            "B": 143
+        },
+        "Name": "Delft Blue"
+    },
+    {
+        "MadeiraNumber": "910",
+        "Color": {
+            "R": 60,
+            "G": 85,
+            "B": 124
+        },
+        "Name": "Dark Delft Blue"
+    },
+    {
+        "MadeiraNumber": "911",
+        "Color": {
+            "R": 37,
+            "G": 63,
+            "B": 102
+        },
+        "Name": "Very Dark Delft Blue"
+    },
+    {
+        "MadeiraNumber": "913",
+        "Color": {
+            "R": 43,
+            "G": 78,
+            "B": 123
+        },
+        "Name": "Medium Dark Delft Blue"
+    },
+    {
+        "MadeiraNumber": "915",
+        "Color": {
+            "R": 0,
+            "G": 32,
+            "B": 71
+        },
+        "Name": "Navy"
+    },
+    {
+        "MadeiraNumber": "1001",
+        "Color": {
+            "R": 249,
+            "G": 249,
+            "B": 249
+        },
+        "Name": "White"
+    },
+    {
+        "MadeiraNumber": "1002",
+        "Color": {
+            "R": 236,
+            "G": 236,
+            "B": 236
+        },
+        "Name": "Pearl"
+    },
+    {
+        "MadeiraNumber": "1003",
+        "Color": {
+            "R": 218,
+            "G": 218,
+            "B": 218
+        },
+        "Name": "Light Grey"
+    },
+    {
+        "MadeiraNumber": "1004",
+        "Color": {
+            "R": 194,
+            "G": 194,
+            "B": 194
+        },
+        "Name": "Grey"
+    },
+    {
+        "MadeiraNumber": "1005",
+        "Color": {
+            "R": 158,
+            "G": 158,
+            "B": 158
+        },
+        "Name": "Medium Grey"
+    },
+    {
+        "MadeiraNumber": "1006",
+        "Color": {
+            "R": 129,
+            "G": 129,
+            "B": 129
+        },
+        "Name": "Dark Grey"
+    },
+    {
+        "MadeiraNumber": "1007",
+        "Color": {
+            "R": 100,
+            "G": 100,
+            "B": 100
+        },
+        "Name": "Very Dark Grey"
+    },
+    {
+        "MadeiraNumber": "1008",
+        "Color": {
+            "R": 76,
+            "G": 76,
+            "B": 76
+        },
+        "Name": "Deep Grey"
+    },
+    {
+        "MadeiraNumber": "1010",
+        "Color": {
+            "R": 50,
+            "G": 50,
+            "B": 50
+        },
+        "Name": "Very Deep Grey"
+    },
+    {
+        "MadeiraNumber": "1011",
+        "Color": {
+            "R": 178,
+            "G": 170,
+            "B": 200
+        },
+        "Name": "Light Periwinkle"
+    },
+    {
+        "MadeiraNumber": "1012",
+        "Color": {
+            "R": 156,
+            "G": 147,
+            "B": 181
+        },
+        "Name": "Periwinkle"
+    },
+    {
+        "MadeiraNumber": "1013",
+        "Color": {
+            "R": 133,
+            "G": 121,
+            "B": 160
+        },
+        "Name": "Dark Periwinkle"
+    },
+    {
+        "MadeiraNumber": "1014",
+        "Color": {
+            "R": 108,
+            "G": 93,
+            "B": 136
+        },
+        "Name": "Very Dark Periwinkle"
+    },
+    {
+        "MadeiraNumber": "1101",
+        "Color": {
+            "R": 255,
+            "G": 255,
+            "B": 255
+        },
+        "Name": "Bright White"
+    },
+    {
+        "MadeiraNumber": "1102",
+        "Color": {
+            "R": 240,
+            "G": 240,
+            "B": 240
+        },
+        "Name": "Winter White"
+    },
+    {
+        "MadeiraNumber": "1205",
+        "Color": {
+            "R": 11,
+            "G": 111,
+            "B": 125
+        },
+        "Name": "Medium Dark Teal"
+    },
+    {
+        "MadeiraNumber": "1206",
+        "Color": {
+            "R": 7,
+            "G": 90,
+            "B": 103
+        },
+        "Name": "Dark Teal"
+    },
+    {
+        "MadeiraNumber": "1208",
+        "Color": {
+            "R": 2,
+            "G": 60,
+            "B": 70
+        },
+        "Name": "Very Dark Teal"
+    },
+    {
+        "MadeiraNumber": "1301",
+        "Color": {
+            "R": 224,
+            "G": 222,
+            "B": 204
+        },
+        "Name": "Light Grey Green"
+    },
+    {
+        "MadeiraNumber": "1302",
+        "Color": {
+            "R": 207,
+            "G": 206,
+            "B": 181
+        },
+        "Name": "Grey Green"
+    },
+    {
+        "MadeiraNumber": "1303",
+        "Color": {
+            "R": 187,
+            "G": 187,
+            "B": 156
+        },
+        "Name": "Medium Grey Green"
+    },
+    {
+        "MadeiraNumber": "1304",
+        "Color": {
+            "R": 165,
+            "G": 166,
+            "B": 132
+        },
+        "Name": "Dark Grey Green"
+    },
+    {
+        "MadeiraNumber": "1305",
+        "Color": {
+            "R": 142,
+            "G": 144,
+            "B": 109
+        },
+        "Name": "Very Dark Grey Green"
+    },
+    {
+        "MadeiraNumber": "1306",
+        "Color": {
+            "R": 118,
+            "G": 121,
+            "B": 85
+        },
+        "Name": "Deep Grey Green"
+    },
+    {
+        "MadeiraNumber": "1308",
+        "Color": {
+            "R": 94,
+            "G": 98,
+            "B": 62
+        },
+        "Name": "Very Deep Grey Green"
+    },
+    {
+        "MadeiraNumber": "1309",
+        "Color": {
+            "R": 72,
+            "G": 76,
+            "B": 42
+        },
+        "Name": "Extremely Deep Grey Green"
+    },
+    {
+        "MadeiraNumber": "1310",
+        "Color": {
+            "R": 50,
+            "G": 55,
+            "B": 20
+        },
+        "Name": "Forest Green"
+    },
+    {
+        "MadeiraNumber": "1311",
+        "Color": {
+            "R": 28,
+            "G": 34,
+            "B": 1
+        },
+        "Name": "Dark Forest Green"
+    },
+    {
+        "MadeiraNumber": "1401",
+        "Color": {
+            "R": 203,
+            "G": 223,
+            "B": 170
+        },
+        "Name": "Lightest Green"
+    },
+    {
+        "MadeiraNumber": "1402",
+        "Color": {
+            "R": 183,
+            "G": 209,
+            "B": 144
+        },
+        "Name": "Light Green"
+    },
+    {
+        "MadeiraNumber": "1403",
+        "Color": {
+            "R": 161,
+            "G": 194,
+            "B": 118
+        },
+        "Name": "Medium Light Green"
+    },
+    {
+        "MadeiraNumber": "1404",
+        "Color": {
+            "R": 139,
+            "G": 178,
+            "B": 91
+        },
+        "Name": "Medium Green"
+    },
+    {
+        "MadeiraNumber": "1405",
+        "Color": {
+            "R": 114,
+            "G": 160,
+            "B": 63
+        },
+        "Name": "Green"
+    },
+    {
+        "MadeiraNumber": "1406",
+        "Color": {
+            "R": 88,
+            "G": 140,
+            "B": 36
+        },
+        "Name": "Dark Green"
+    },
+    {
+        "MadeiraNumber": "1407",
+        "Color": {
+            "R": 60,
+            "G": 119,
+            "B": 10
+        },
+        "Name": "Very Dark Green"
+    },
+    {
+        "MadeiraNumber": "1409",
+        "Color": {
+            "R": 31,
+            "G": 93,
+            "B": 0
+        },
+        "Name": "Deep Green"
+    },
+    {
+        "MadeiraNumber": "1410",
+        "Color": {
+            "R": 1,
+            "G": 72,
+            "B": 0
+        },
+        "Name": "Very Deep Green"
+    },
+    {
+        "MadeiraNumber": "1501",
+        "Color": {
+            "R": 233,
+            "G": 244,
+            "B": 213
+        },
+        "Name": "Light Mint"
+    },
+    {
+        "MadeiraNumber": "1502",
+        "Color": {
+            "R": 218,
+            "G": 236,
+            "B": 194
+        },
+        "Name": "Mint"
+    },
+    {
+        "MadeiraNumber": "1503",
+        "Color": {
+            "R": 201,
+            "G": 226,
+            "B": 172
+        },
+        "Name": "Medium Mint"
+    },
+    {
+        "MadeiraNumber": "1504",
+        "Color": {
+            "R": 182,
+            "G": 216,
+            "B": 149
+        },
+        "Name": "Dark Mint"
+    },
+    {
+        "MadeiraNumber": "1505",
+        "Color": {
+            "R": 159,
+            "G": 204,
+            "B": 124
+        },
+        "Name": "Very Dark Mint"
+    },
+    {
+        "MadeiraNumber": "1506",
+        "Color": {
+            "R": 133,
+            "G": 190,
+            "B": 95
+        },
+        "Name": "Deep Mint"
+    },
+    {
+        "MadeiraNumber": "1508",
+        "Color": {
+            "R": 103,
+            "G": 170,
+            "B": 63
+        },
+        "Name": "Very Deep Mint"
+    },
+    {
+        "MadeiraNumber": "1509",
+        "Color": {
+            "R": 73,
+            "G": 149,
+            "B": 31
+        },
+        "Name": "Extremely Deep Mint"
+    },
+    {
+        "MadeiraNumber": "1601",
+        "Color": {
+            "R": 204,
+            "G": 209,
+            "B": 175
+        },
+        "Name": "Light Olive"
+    },
+    {
+        "MadeiraNumber": "1602",
+        "Color": {
+            "R": 186,
+            "G": 193,
+            "B": 151
+        },
+        "Name": "Olive"
+    },
+    {
+        "MadeiraNumber": "1603",
+        "Color": {
+            "R": 169,
+            "G": 177,
+            "B": 128
+        },
+        "Name": "Medium Olive"
+    },
+    {
+        "MadeiraNumber": "1604",
+        "Color": {
+            "R": 150,
+            "G": 159,
+            "B": 104
+        },
+        "Name": "Dark Olive"
+    },
+    {
+        "MadeiraNumber": "1605",
+        "Color": {
+            "R": 129,
+            "G": 139,
+            "B": 80
+        },
+        "Name": "Very Dark Olive"
+    },
+    {
+        "MadeiraNumber": "1606",
+        "Color": {
+            "R": 109,
+            "G": 118,
+            "B": 57
+        },
+        "Name": "Deep Olive"
+    },
+    {
+        "MadeiraNumber": "1607",
+        "Color": {
+            "R": 88,
+            "G": 97,
+            "B": 34
+        },
+        "Name": "Very Deep Olive"
+    },
+    {
+        "MadeiraNumber": "1610",
+        "Color": {
+            "R": 66,
+            "G": 75,
+            "B": 10
+        },
+        "Name": "Extremely Deep Olive"
+    },
+    {
+        "MadeiraNumber": "1701",
+        "Color": {
+            "R": 222,
+            "G": 213,
+            "B": 194
+        },
+        "Name": "Lightest Tan"
+    },
+    {
+        "MadeiraNumber": "1702",
+        "Color": {
+            "R": 210,
+            "G": 197,
+            "B": 173
+        },
+        "Name": "Light Tan"
+    },
+    {
+        "MadeiraNumber": "1703",
+        "Color": {
+            "R": 196,
+            "G": 180,
+            "B": 152
+        },
+        "Name": "Tan"
+    },
+    {
+        "MadeiraNumber": "1704",
+        "Color": {
+            "R": 181,
+            "G": 162,
+            "B": 130
+        },
+        "Name": "Medium Tan"
+    },
+    {
+        "MadeiraNumber": "1705",
+        "Color": {
+            "R": 164,
+            "G": 142,
+            "B": 106
+        },
+        "Name": "Dark Tan"
+    },
+    {
+        "MadeiraNumber": "1706",
+        "Color": {
+            "R": 143,
+            "G": 119,
+            "B": 81
+        },
+        "Name": "Very Dark Tan"
+    },
+    {
+        "MadeiraNumber": "1708",
+        "Color": {
+            "R": 122,
+            "G": 95,
+            "B": 54
+        },
+        "Name": "Deep Tan"
+    },
+    {
+        "MadeiraNumber": "1709",
+        "Color": {
+            "R": 100,
+            "G": 73,
+            "B": 28
+        },
+        "Name": "Very Deep Tan"
+    },
+    {
+        "MadeiraNumber": "1710",
+        "Color": {
+            "R": 79,
+            "G": 52,
+            "B": 2
+        },
+        "Name": "Extremely Deep Tan"
+    },
+    {
+        "MadeiraNumber": "1712",
+        "Color": {
+            "R": 60,
+            "G": 34,
+            "B": 0
+        },
+        "Name": "Brown"
+    },
+    {
+        "MadeiraNumber": "1801",
+        "Color": {
+            "R": 225,
+            "G": 225,
+            "B": 225
+        },
+        "Name": "Light Silver"
+    },
+    {
+        "MadeiraNumber": "1802",
+        "Color": {
+            "R": 204,
+            "G": 204,
+            "B": 204
+        },
+        "Name": "Silver"
+    },
+    {
+        "MadeiraNumber": "1803",
+        "Color": {
+            "R": 185,
+            "G": 185,
+            "B": 185
+        },
+        "Name": "Medium Silver"
+    },
+    {
+        "MadeiraNumber": "1804",
+        "Color": {
+            "R": 164,
+            "G": 164,
+            "B": 164
+        },
+        "Name": "Dark Silver"
+    },
+    {
+        "MadeiraNumber": "1805",
+        "Color": {
+            "R": 141,
+            "G": 141,
+            "B": 141
+        },
+        "Name": "Very Dark Silver"
+    },
+    {
+        "MadeiraNumber": "1806",
+        "Color": {
+            "R": 115,
+            "G": 115,
+            "B": 115
+        },
+        "Name": "Deep Silver"
+    },
+    {
+        "MadeiraNumber": "1807",
+        "Color": {
+            "R": 91,
+            "G": 91,
+            "B": 91
+        },
+        "Name": "Very Deep Silver"
+    },
+    {
+        "MadeiraNumber": "1809",
+        "Color": {
+            "R": 67,
+            "G": 67,
+            "B": 67
+        },
+        "Name": "Extremely Deep Silver"
+    },
+    {
+        "MadeiraNumber": "1811",
+        "Color": {
+            "R": 43,
+            "G": 43,
+            "B": 43
+        },
+        "Name": "Charcoal"
+    },
+    {
+        "MadeiraNumber": "1901",
+        "Color": {
+            "R": 218,
+            "G": 194,
+            "B": 181
+        },
+        "Name": "Light Mocha"
+    },
+    {
+        "MadeiraNumber": "1902",
+        "Color": {
+            "R": 202,
+            "G": 173,
+            "B": 156
+        },
+        "Name": "Mocha"
+    },
+    {
+        "MadeiraNumber": "1903",
+        "Color": {
+            "R": 185,
+            "G": 152,
+            "B": 132
+        },
+        "Name": "Medium Mocha"
+    },
+    {
+        "MadeiraNumber": "1904",
+        "Color": {
+            "R": 167,
+            "G": 130,
+            "B": 107
+        },
+        "Name": "Dark Mocha"
+    },
+    {
+        "MadeiraNumber": "1905",
+        "Color": {
+            "R": 146,
+            "G": 106,
+            "B": 82
+        },
+        "Name": "Very Dark Mocha"
+    },
+    {
+        "MadeiraNumber": "1906",
+        "Color": {
+            "R": 126,
+            "G": 82,
+            "B": 57
+        },
+        "Name": "Deep Mocha"
+    },
+    {
+        "MadeiraNumber": "1907",
+        "Color": {
+            "R": 106,
+            "G": 59,
+            "B": 34
+        },
+        "Name": "Very Deep Mocha"
+    },
+    {
+        "MadeiraNumber": "1909",
+        "Color": {
+            "R": 84,
+            "G": 38,
+            "B": 14
+        },
+        "Name": "Extremely Deep Mocha"
+    },
+    {
+        "MadeiraNumber": "1910",
+        "Color": {
+            "R": 170,
+            "G": 165,
+            "B": 191
+        },
+        "Name": "Light Blue Violet"
+    },
+    {
+        "MadeiraNumber": "1911",
+        "Color": {
+            "R": 147,
+            "G": 140,
+            "B": 174
+        },
+        "Name": "Blue Violet"
+    },
+    {
+        "MadeiraNumber": "1912",
+        "Color": {
+            "R": 122,
+            "G": 113,
+            "B": 152
+        },
+        "Name": "Dark Blue Violet"
+    },
+    {
+        "MadeiraNumber": "1913",
+        "Color": {
+            "R": 96,
+            "G": 85,
+            "B": 128
+        },
+        "Name": "Very Dark Blue Violet"
+    },
+    {
+        "MadeiraNumber": "2001",
+        "Color": {
+            "R": 242,
+            "G": 226,
+            "B": 188
+        },
+        "Name": "Light Gold"
+    },
+    {
+        "MadeiraNumber": "2002",
+        "Color": {
+            "R": 235,
+            "G": 213,
+            "B": 164
+        },
+        "Name": "Gold"
+    },
+    {
+        "MadeiraNumber": "2003",
+        "Color": {
+            "R": 226,
+            "G": 198,
+            "B": 135
+        },
+        "Name": "Medium Gold"
+    },
+    {
+        "MadeiraNumber": "2004",
+        "Color": {
+            "R": 216,
+            "G": 182,
+            "B": 105
+        },
+        "Name": "Dark Gold"
+    },
+    {
+        "MadeiraNumber": "2005",
+        "Color": {
+            "R": 203,
+            "G": 163,
+            "B": 73
+        },
+        "Name": "Very Dark Gold"
+    },
+    {
+        "MadeiraNumber": "2006",
+        "Color": {
+            "R": 188,
+            "G": 143,
+            "B": 42
+        },
+        "Name": "Deep Gold"
+    },
+    {
+        "MadeiraNumber": "2008",
+        "Color": {
+            "R": 170,
+            "G": 120,
+            "B": 11
+        },
+        "Name": "Very Deep Gold"
+    },
+    {
+        "MadeiraNumber": "2009",
+        "Color": {
+            "R": 150,
+            "G": 100,
+            "B": 0
+        },
+        "Name": "Antique Gold"
+    },
+    {
+        "MadeiraNumber": "2010",
+        "Color": {
+            "R": 130,
+            "G": 82,
+            "B": 0
+        },
+        "Name": "Dark Antique Gold"
+    },
+    {
+        "MadeiraNumber": "2101",
+        "Color": {
+            "R": 240,
+            "G": 230,
+            "B": 218
+        },
+        "Name": "Light Fawn"
+    },
+    {
+        "MadeiraNumber": "2102",
+        "Color": {
+            "R": 232,
+            "G": 218,
+            "B": 200
+        },
+        "Name": "Fawn"
+    },
+    {
+        "MadeiraNumber": "2103",
+        "Color": {
+            "R": 221,
+            "G": 202,
+            "B": 180
+        },
+        "Name": "Medium Fawn"
+    },
+    {
+        "MadeiraNumber": "2104",
+        "Color": {
+            "R": 208,
+            "G": 184,
+            "B": 158
+        },
+        "Name": "Dark Fawn"
+    },
+    {
+        "MadeiraNumber": "2105",
+        "Color": {
+            "R": 192,
+            "G": 163,
+            "B": 133
+        },
+        "Name": "Very Dark Fawn"
+    },
+    {
+        "MadeiraNumber": "2106",
+        "Color": {
+            "R": 174,
+            "G": 140,
+            "B": 106
+        },
+        "Name": "Deep Fawn"
+    },
+    {
+        "MadeiraNumber": "2108",
+        "Color": {
+            "R": 153,
+            "G": 115,
+            "B": 78
+        },
+        "Name": "Very Deep Fawn"
+    },
+    {
+        "MadeiraNumber": "2109",
+        "Color": {
+            "R": 132,
+            "G": 91,
+            "B": 52
+        },
+        "Name": "Extremely Deep Fawn"
+    },
+    {
+        "MadeiraNumber": "2110",
+        "Color": {
+            "R": 111,
+            "G": 68,
+            "B": 28
+        },
+        "Name": "Burnt Umber"
+    },
+    {
+        "MadeiraNumber": "2112",
+        "Color": {
+            "R": 90,
+            "G": 48,
+            "B": 4
+        },
+        "Name": "Dark Burnt Umber"
+    },
+    {
+        "MadeiraNumber": "2113",
+        "Color": {
+            "R": 71,
+            "G": 29,
+            "B": 0
+        },
+        "Name": "Very Dark Burnt Umber"
+    },
+    {
+        "MadeiraNumber": "2201",
+        "Color": {
+            "R": 255,
+            "G": 222,
+            "B": 222
+        },
+        "Name": "Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2202",
+        "Color": {
+            "R": 254,
+            "G": 206,
+            "B": 207
+        },
+        "Name": "Light Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2203",
+        "Color": {
+            "R": 252,
+            "G": 188,
+            "B": 191
+        },
+        "Name": "Medium Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2204",
+        "Color": {
+            "R": 249,
+            "G": 169,
+            "B": 173
+        },
+        "Name": "Dark Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2205",
+        "Color": {
+            "R": 246,
+            "G": 147,
+            "B": 153
+        },
+        "Name": "Very Dark Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2206",
+        "Color": {
+            "R": 241,
+            "G": 123,
+            "B": 131
+        },
+        "Name": "Deep Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2208",
+        "Color": {
+            "R": 235,
+            "G": 96,
+            "B": 109
+        },
+        "Name": "Very Deep Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2209",
+        "Color": {
+            "R": 226,
+            "G": 68,
+            "B": 84
+        },
+        "Name": "Extremely Deep Shell Pink"
+    },
+    {
+        "MadeiraNumber": "2210",
+        "Color": {
+            "R": 214,
+            "G": 36,
+            "B": 57
+        },
+        "Name": "Garnet"
+    },
+    {
+        "MadeiraNumber": "2211",
+        "Color": {
+            "R": 199,
+            "G": 2,
+            "B": 31
+        },
+        "Name": "Dark Garnet"
+    },
+    {
+        "MadeiraNumber": "2301",
+        "Color": {
+            "R": 239,
+            "G": 234,
+            "B": 222
+        },
+        "Name": "Natural"
+    },
+    {
+        "MadeiraNumber": "2302",
+        "Color": {
+            "R": 229,
+            "G": 219,
+            "B": 202
+        },
+        "Name": "Ecru"
+    },
+    {
+        "MadeiraNumber": "2303",
+        "Color": {
+            "R": 217,
+            "G": 202,
+            "B": 181
+        },
+        "Name": "Light Ecru"
+    },
+    {
+        "MadeiraNumber": "2304",
+        "Color": {
+            "R": 203,
+            "G": 184,
+            "B": 159
+        },
+        "Name": "Medium Ecru"
+    },
+    {
+        "MadeiraNumber": "2306",
+        "Color": {
+            "R": 187,
+            "G": 165,
+            "B": 136
+        },
+        "Name": "Dark Ecru"
+    },
+    {
+        "MadeiraNumber": "2307",
+        "Color": {
+            "R": 169,
+            "G": 143,
+            "B": 111
+        },
+        "Name": "Very Dark Ecru"
+    },
+    {
+        "MadeiraNumber": "2308",
+        "Color": {
+            "R": 149,
+            "G": 120,
+            "B": 85
+        },
+        "Name": "Deep Ecru"
+    },
+    {
+        "MadeiraNumber": "2309",
+        "Color": {
+            "R": 128,
+            "G": 96,
+            "B": 60
+        },
+        "Name": "Very Deep Ecru"
+    },
+    {
+        "MadeiraNumber": "2310",
+        "Color": {
+            "R": 107,
+            "G": 72,
+            "B": 35
+        },
+        "Name": "Dark Coffee"
+    },
+    {
+        "MadeiraNumber": "2311",
+        "Color": {
+            "R": 86,
+            "G": 49,
+            "B": 12
+        },
+        "Name": "Very Dark Coffee"
+    },
+    {
+        "MadeiraNumber": "2312",
+        "Color": {
+            "R": 67,
+            "G": 29,
+            "B": 0
+        },
+        "Name": "Deep Coffee"
+    },
+    {
+        "MadeiraNumber": "2400",
+        "Color": {
+            "R": 0,
+            "G": 0,
+            "B": 0
+        },
+        "Name": "Black"
+    },
+    {
+        "MadeiraNumber": "2401",
+        "Color": {
+            "R": 216,
+            "G": 224,
+            "B": 211
+        },
+        "Name": "Lightest Green Grey"
+    },
+    {
+        "MadeiraNumber": "2402",
+        "Color": {
+            "R": 196,
+            "G": 207,
+            "B": 188
+        },
+        "Name": "Light Green Grey"
+    },
+    {
+        "MadeiraNumber": "2403",
+        "Color": {
+            "R": 172,
+            "G": 187,
+            "B": 164
+        },
+        "Name": "Green Grey"
+    },
+    {
+        "MadeiraNumber": "2404",
+        "Color": {
+            "R": 147,
+            "G": 165,
+            "B": 139
+        },
+        "Name": "Medium Green Grey"
+    },
+    {
+        "MadeiraNumber": "2405",
+        "Color": {
+            "R": 121,
+            "G": 141,
+            "B": 112
+        },
+        "Name": "Dark Green Grey"
+    },
+    {
+        "MadeiraNumber": "2406",
+        "Color": {
+            "R": 94,
+            "G": 115,
+            "B": 86
+        },
+        "Name": "Very Dark Green Grey"
+    },
+    {
+        "MadeiraNumber": "2408",
+        "Color": {
+            "R": 67,
+            "G": 90,
+            "B": 59
+        },
+        "Name": "Deep Green Grey"
+    },
+    {
+        "MadeiraNumber": "2409",
+        "Color": {
+            "R": 43,
+            "G": 67,
+            "B": 34
+        },
+        "Name": "Very Deep Green Grey"
+    },
+    {
+        "MadeiraNumber": "2410",
+        "Color": {
+            "R": 20,
+            "G": 46,
+            "B": 10
+        },
+        "Name": "Extremely Deep Green Grey"
+    },
+    {
+        "MadeiraNumber": "2501",
+        "Color": {
+            "R": 221,
+            "G": 236,
+            "B": 209
+        },
+        "Name": "Lightest Spring Green"
+    },
+    {
+        "MadeiraNumber": "2502",
+        "Color": {
+            "R": 205,
+            "G": 226,
+            "B": 187
+        },
+        "Name": "Light Spring Green"
+    },
+    {
+        "MadeiraNumber": "2503",
+        "Color": {
+            "R": 186,
+            "G": 215,
+            "B": 163
+        },
+        "Name": "Spring Green"
+    },
+    {
+        "MadeiraNumber": "2504",
+        "Color": {
+            "R": 165,
+            "G": 202,
+            "B": 138
+        },
+        "Name": "Medium Spring Green"
+    },
+    {
+        "MadeiraNumber": "2505",
+        "Color": {
+            "R": 142,
+            "G": 188,
+            "B": 112
+        },
+        "Name": "Dark Spring Green"
+    },
+    {
+        "MadeiraNumber": "2506",
+        "Color": {
+            "R": 118,
+            "G": 172,
+            "B": 86
+        },
+        "Name": "Very Dark Spring Green"
+    },
+    {
+        "MadeiraNumber": "2508",
+        "Color": {
+            "R": 92,
+            "G": 154,
+            "B": 57
+        },
+        "Name": "Deep Spring Green"
+    },
+    {
+        "MadeiraNumber": "2509",
+        "Color": {
+            "R": 63,
+            "G": 133,
+            "B": 29
+        },
+        "Name": "Very Deep Spring Green"
+    },
+    {
+        "MadeiraNumber": "2510",
+        "Color": {
+            "R": 32,
+            "G": 111,
+            "B": 2
+        },
+        "Name": "Extremely Deep Spring Green"
+    },
+    {
+        "MadeiraNumber": "2601",
+        "Color": {
+            "R": 217,
+            "G": 210,
+            "B": 194
+        },
+        "Name": "Light Taupe"
+    },
+    {
+        "MadeiraNumber": "2602",
+        "Color": {
+            "R": 201,
+            "G": 192,
+            "B": 173
+        },
+        "Name": "Taupe"
+    },
+    {
+        "MadeiraNumber": "2603",
+        "Color": {
+            "R": 183,
+            "G": 172,
+            "B": 150
+        },
+        "Name": "Medium Taupe"
+    },
+    {
+        "MadeiraNumber": "2604",
+        "Color": {
+            "R": 164,
+            "G": 150,
+            "B": 126
+        },
+        "Name": "Dark Taupe"
+    },
+    {
+        "MadeiraNumber": "2605",
+        "Color": {
+            "R": 142,
+            "G": 126,
+            "B": 101
+        },
+        "Name": "Very Dark Taupe"
+    },
+    {
+        "MadeiraNumber": "2606",
+        "Color": {
+            "R": 119,
+            "G": 102,
+            "B": 77
+        },
+        "Name": "Deep Taupe"
+    },
+    {
+        "MadeiraNumber": "2608",
+        "Color": {
+            "R": 96,
+            "G": 78,
+            "B": 53
+        },
+        "Name": "Very Deep Taupe"
+    },
+    {
+        "MadeiraNumber": "2609",
+        "Color": {
+            "R": 74,
+            "G": 56,
+            "B": 31
+        },
+        "Name": "Extremely Deep Taupe"
+    },
+    {
+        "MadeiraNumber": "2610",
+        "Color": {
+            "R": 53,
+            "G": 36,
+            "B": 9
+        },
+        "Name": "Umber"
+    },
+    {
+        "MadeiraNumber": "2611",
+        "Color": {
+            "R": 32,
+            "G": 16,
+            "B": 0
+        },
+        "Name": "Dark Umber"
+    },
+    {
+        "MadeiraNumber": "2701",
+        "Color": {
+            "R": 234,
+            "G": 232,
+            "B": 231
+        },
+        "Name": "Mist"
+    },
+    {
+        "MadeiraNumber": "2702",
+        "Color": {
+            "R": 218,
+            "G": 217,
+            "B": 216
+        },
+        "Name": "Light Mist"
+    },
+    {
+        "MadeiraNumber": "2703",
+        "Color": {
+            "R": 200,
+            "G": 200,
+            "B": 199
+        },
+        "Name": "Medium Mist"
+    },
+    {
+        "MadeiraNumber": "2704",
+        "Color": {
+            "R": 180,
+            "G": 180,
+            "B": 179
+        },
+        "Name": "Dark Mist"
+    }
+]

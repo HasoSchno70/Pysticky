@@ -1,0 +1,11 @@
+{
+  "main_script": "run.py",
+  "app_name": "PySticky",
+  "version": "0.8.0",
+  "author": "Hans Schnorrenberger",
+  "description": "",
+  "icon": "src\\pysticky\\resources\\icons\\sticken.ico",
+  "build_mode": "onedir",
+  "console": false,
+  "hidden_imports": []
+}

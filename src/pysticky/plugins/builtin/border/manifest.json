@@ -1,0 +1,8 @@
+{
+  "id": "pysticky.border",
+  "name": "Rahmen generieren",
+  "version": "1.0.0",
+  "description": "Zeichnet einen rechteckigen Rahmen am Rand des Musters in der aktiven Farbe.",
+  "entry_module": "plugin",
+  "entry_function": "run"
+}

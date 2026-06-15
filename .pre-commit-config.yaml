@@ -1,0 +1,31 @@
+# Pre-commit-Hooks fuer PySticky.
+#
+# VORAUSSETZUNG: Das Projekt muss ein Git-Repo sein. Aktivieren mit:
+#   git init            (falls noch nicht geschehen)
+#   pip install pre-commit
+#   pre-commit install
+#
+# Danach laufen die Hooks automatisch bei jedem `git commit` — nur auf den
+# geaenderten Dateien. Einmalig ueber alles: `pre-commit run --all-files`.
+#
+# ruff-format ersetzt black (gleiche line-length=100). black bleibt in den
+# dev-Extras fuer manuelle Nutzung, ist hier aber nicht noetig.
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.6
+    hooks:
+      - id: ruff           # Lint (mit Autofix der sicheren Regeln)
+        args: [--fix]
+      - id: ruff-format    # Formatierung (ersetzt black)
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]

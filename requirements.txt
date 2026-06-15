@@ -1,0 +1,12 @@
+# Laufzeit-Abhaengigkeiten von PySticky.
+# Identisch zu [project.dependencies] in pyproject.toml.
+#
+# Dev-/Build-Extras stehen unter [project.optional-dependencies]:
+#   pip install -e ".[dev]"     pytest, pytest-qt, black, ruff
+#   pip install -e ".[build]"   pyinstaller
+
+PySide6>=6.6.0
+Pillow>=10.0.0
+numpy>=1.24.0
+reportlab>=4.0.0
+defusedxml>=0.7.0

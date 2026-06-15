@@ -1,0 +1,133 @@
+# -*- coding: utf-8 -*-
+"""
+Tests für den StitchPathOptimizer.
+"""
+
+import pytest
+
+from pysticky.core import (
+    OptimizationStrategy,
+    Pattern,
+    StitchPathOptimizer,
+    Thread,
+    compare_strategies,
+)
+
+
+@pytest.fixture
+def pattern_with_stitches():
+    """Pattern mit Stichen für Optimierung."""
+    p = Pattern(width=20, height=20)
+    p.color_entries.clear()
+    p.add_color(Thread.from_hex("Rot", "#FF0000"))
+    p.add_color(Thread.from_hex("Blau", "#0000FF"))
+
+    # Rot: Diagonale
+    for i in range(10):
+        p.set_stitch(i, i, 0)
+    # Blau: Reihe
+    for x in range(10):
+        p.set_stitch(x, 15, 1)
+
+    return p
+
+
+class TestStitchPathOptimizer:
+    """Tests für den Optimizer."""
+
+    def test_row_by_row(self, pattern_with_stitches):
+        """Test: Zeilenweise Optimierung."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize(OptimizationStrategy.ROW_BY_ROW)
+        assert result is not None
+        assert result.total_stitches == 20
+
+    def test_nearest_neighbor(self, pattern_with_stitches):
+        """Test: Nearest-Neighbor Optimierung."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize(OptimizationStrategy.NEAREST_NEIGHBOR)
+        assert result is not None
+        assert result.total_stitches == 20
+
+    def test_danish_method(self, pattern_with_stitches):
+        """Test: Danish Method."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize(OptimizationStrategy.DANISH_METHOD)
+        assert result is not None
+        assert result.total_stitches == 20
+
+    def test_column_by_column(self, pattern_with_stitches):
+        """Test: Spaltenweise."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize(OptimizationStrategy.COLUMN_BY_COLUMN)
+        assert result is not None
+
+    def test_diagonal(self, pattern_with_stitches):
+        """Test: Diagonal."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize(OptimizationStrategy.DIAGONAL)
+        assert result is not None
+
+    def test_empty_pattern(self):
+        """Test: Leeres Pattern."""
+        p = Pattern(width=10, height=10)
+        p.color_entries.clear()
+        optimizer = StitchPathOptimizer(p)
+        result = optimizer.optimize()
+        assert result is not None
+        assert result.total_stitches == 0
+
+    def test_cancellation(self, pattern_with_stitches):
+        """Test: Abbruch der Optimierung."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches, cancel_check=lambda: True)
+        result = optimizer.optimize()
+        assert result is None
+
+    def test_progress_callback(self, pattern_with_stitches):
+        """Test: Progress-Callback."""
+        progress_values = []
+
+        def on_progress(current, total, message):
+            progress_values.append((current, total, message))
+
+        optimizer = StitchPathOptimizer(pattern_with_stitches, progress_callback=on_progress)
+        result = optimizer.optimize()
+        assert result is not None
+        assert len(progress_values) > 0
+
+    def test_statistics(self, pattern_with_stitches):
+        """Test: Statistiken abrufen."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize()
+        stats = optimizer.get_statistics(result)
+        assert stats["total_stitches"] == 20
+        assert stats["total_colors"] == 2
+
+    def test_color_paths(self, pattern_with_stitches):
+        """Test: Farbpfade."""
+        optimizer = StitchPathOptimizer(pattern_with_stitches)
+        result = optimizer.optimize()
+        assert len(result.color_paths) == 2
+        # Jeder Pfad sollte Stiche haben
+        for path in result.color_paths:
+            assert path.stitch_count > 0
+            assert len(path.steps) == path.stitch_count
+
+
+class TestCompareStrategies:
+    """Tests für Strategievergleich."""
+
+    def test_compare_all(self, pattern_with_stitches):
+        """Test: Alle Strategien vergleichen."""
+        results = compare_strategies(pattern_with_stitches)
+        assert results is not None
+        assert len(results) == len(OptimizationStrategy)
+
+    def test_compare_cancel(self, pattern_with_stitches):
+        """Test: Vergleich abbrechen."""
+        results = compare_strategies(pattern_with_stitches, cancel_check=lambda: True)
+        assert results is None
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
