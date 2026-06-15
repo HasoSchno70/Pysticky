@@ -103,6 +103,8 @@ class ImageExporter:
                 (z. B. Bild zu gross).
             OSError: Wenn die Datei nicht geschrieben werden kann.
         """
+        import numpy as np
+
         from ..core import NO_STITCH
 
         pattern = self._pattern
@@ -110,8 +112,45 @@ class ImageExporter:
 
         img_w = pattern.width * cell_size
         img_h = pattern.height * cell_size
-        image = QImage(img_w, img_h, QImage.Format.Format_ARGB32)
-        image.fill(QColor(250, 250, 245))
+
+        composite = pattern.layer_stack.get_composite_grid()
+        type_grid = pattern.layer_stack.get_composite_stitch_type_grid()
+        h, w = composite.shape
+        bg = (250, 250, 245)
+
+        # Farb-LUT (color_idx -> RGB)
+        n_colors = len(pattern.color_entries)
+        palette = np.empty((max(n_colors, 1), 3), dtype=np.uint8)
+        for i, entry in enumerate(pattern.color_entries):
+            col = entry.thread.color
+            palette[i] = (col.r, col.g, col.b)
+
+        valid = (composite != NO_STITCH) & (composite >= 0) & (composite < n_colors)
+
+        # Sonder-Stiche (French Knot / Bead / Partial) werden weiter einzeln
+        # gezeichnet; alle anderen (Vollstiche) rendern wir vektorisiert.
+        special = np.zeros_like(type_grid, dtype=bool)
+        for st in np.unique(type_grid):
+            sti = int(st)
+            if is_french_knot(sti) or is_bead(sti) or is_partial_stitch(sti):
+                special |= type_grid == st
+
+        # Basisbild (1 Pixel/Stich): Hintergrund, dann Vollstiche einfaerben.
+        # Sonder-Stich-Zellen bleiben Hintergrund (sie werden ueberzeichnet).
+        base = np.empty((h, w, 3), dtype=np.uint8)
+        base[:] = bg
+        full = valid & ~special
+        base[full] = palette[composite[full]]
+
+        # Auf Zellgroesse hochskalieren (nearest -> harte Bloecke).
+        base = np.ascontiguousarray(base)
+        src = QImage(base.data, w, h, w * 3, QImage.Format.Format_RGB888)
+        image = src.scaled(
+            img_w,
+            img_h,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.FastTransformation,
+        ).convertToFormat(QImage.Format.Format_ARGB32)
 
         painter = QPainter()
         if not painter.begin(image):
@@ -121,51 +160,36 @@ class ImageExporter:
             )
 
         try:
-            composite = pattern.layer_stack.get_composite_grid()
-            type_grid = pattern.layer_stack.get_composite_stitch_type_grid()
+            # Sonder-Stiche einzeln zeichnen (nur gueltige Farb-Zellen).
+            for y, x in np.argwhere(special & valid):
+                color_idx = int(composite[y, x])
+                col = pattern.color_entries[color_idx].thread.color
+                color = QColor(col.r, col.g, col.b)
+                px = int(x) * cell_size
+                py = int(y) * cell_size
+                stype = int(type_grid[y, x])
+                if is_french_knot(stype):
+                    _fill_french_knot(painter, px, py, cell_size, color)
+                elif is_bead(stype):
+                    _fill_bead(painter, px, py, cell_size, color)
+                elif is_partial_stitch(stype):
+                    _fill_partial_stitch(painter, stype, px, py, cell_size, color)
 
-            # Stiche zeichnen
-            for y in range(pattern.height):
-                for x in range(pattern.width):
-                    color_idx = int(composite[y, x])
-                    if color_idx == NO_STITCH or color_idx >= len(pattern.color_entries):
+            # Symbole (optional, zwangslaeufig pro Zelle).
+            if show_symbols and cell_size >= 8:
+                painter.setFont(QFont("Segoe UI", max(4, int(cell_size * 0.6))))
+                for y, x in np.argwhere(valid):
+                    entry = pattern.color_entries[int(composite[y, x])]
+                    if not entry.symbol:
                         continue
-
-                    entry = pattern.color_entries[color_idx]
                     c = entry.thread.color
-                    color = QColor(c.r, c.g, c.b)
-                    px = x * cell_size
-                    py = y * cell_size
-
-                    stype = int(type_grid[y, x])
-                    if is_french_knot(stype):
-                        # Stoff-Hintergrund + Punkt
-                        painter.fillRect(
-                            QRectF(px, py, cell_size, cell_size),
-                            QColor(250, 250, 245),
-                        )
-                        _fill_french_knot(painter, px, py, cell_size, color)
-                    elif is_bead(stype):
-                        painter.fillRect(
-                            QRectF(px, py, cell_size, cell_size),
-                            QColor(250, 250, 245),
-                        )
-                        _fill_bead(painter, px, py, cell_size, color)
-                    elif is_partial_stitch(stype):
-                        _fill_partial_stitch(painter, stype, px, py, cell_size, color)
-                    else:
-                        painter.fillRect(QRectF(px, py, cell_size, cell_size), color)
-
-                    if show_symbols and cell_size >= 8 and entry.symbol:
-                        text_color = QColor(0, 0, 0) if c.is_light else QColor(255, 255, 255)
-                        painter.setPen(text_color)
-                        font_size = max(4, int(cell_size * 0.6))
-                        painter.setFont(QFont("Segoe UI", font_size))
-                        painter.drawText(
-                            QRectF(px, py, cell_size, cell_size),
-                            Qt.AlignmentFlag.AlignCenter,
-                            entry.symbol,
-                        )
+                    text_color = QColor(0, 0, 0) if c.is_light else QColor(255, 255, 255)
+                    painter.setPen(text_color)
+                    painter.drawText(
+                        QRectF(int(x) * cell_size, int(y) * cell_size, cell_size, cell_size),
+                        Qt.AlignmentFlag.AlignCenter,
+                        entry.symbol,
+                    )
 
             # Rasterlinien
             if show_grid:
