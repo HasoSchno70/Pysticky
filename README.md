@@ -220,6 +220,9 @@ pip install -e ".[dev]"     # pytest, pytest-qt, black, ruff
 pip install -e ".[build]"   # pyinstaller
 ```
 
+Aufbau des Codes (Schichten, Mixin-Muster, Theme-System, Werkzeuge):
+siehe [ARCHITECTURE.md](ARCHITECTURE.md). Build-Anleitung in [BUILD.md](BUILD.md).
+
 ## Bedienung
 
 ### Maus
