@@ -211,13 +211,13 @@ class OXSImporter:
             palette = pm.get_palette(palette_name)
             if palette is None:
                 continue
-            for thread in palette.threads:
-                if thread.manufacturer and thread.catalog_number:
+            for pal_thread in palette.threads:
+                if pal_thread.manufacturer and pal_thread.catalog_number:
                     key = (
-                        thread.manufacturer.lower(),
-                        thread.catalog_number.lower(),
+                        pal_thread.manufacturer.lower(),
+                        pal_thread.catalog_number.lower(),
                     )
-                    all_threads_by_key.setdefault(key, thread)
+                    all_threads_by_key.setdefault(key, pal_thread)
                     if palette.is_beads:
                         bead_keys.add(key)
                     if palette.is_diamond:

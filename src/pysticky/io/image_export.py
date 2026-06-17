@@ -213,12 +213,13 @@ class ImageExporter:
             painter.end()
 
         filepath = str(filepath)
-        fmt = None
+        fmt: str | None = None
         if filepath.lower().endswith(".jpg") or filepath.lower().endswith(".jpeg"):
             fmt = "JPEG"
         elif filepath.lower().endswith(".bmp"):
             fmt = "BMP"
 
-        if not image.save(filepath, fmt):
+        # PySide6 akzeptiert zur Laufzeit str als Format; der Stub verlangt bytes.
+        if not image.save(filepath, fmt):  # type: ignore[arg-type]
             raise OSError(f"Bild konnte nicht gespeichert werden: {filepath}")
         return True

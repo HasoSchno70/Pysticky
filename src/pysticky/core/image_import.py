@@ -253,9 +253,9 @@ def import_image(
     index_grid = np.full((target_height, target_width), _NO_STITCH, dtype=np.int16)
     for y in range(target_height):
         for x in range(target_width):
-            thread = quantized[y][x]
-            if thread:
-                key = f"{thread.manufacturer}_{thread.catalog_number}"
+            cell_thread = quantized[y][x]
+            if cell_thread:
+                key = f"{cell_thread.manufacturer}_{cell_thread.catalog_number}"
                 color_index = thread_to_index.get(key)
                 if color_index is not None:
                     index_grid[y, x] = color_index
@@ -327,7 +327,7 @@ def _quantize_simple(
             distances_sq = np.sum(diff**2, axis=2)
             nearest_indices[start:end] = np.argmin(distances_sq, axis=1)
 
-        nearest_indices = nearest_indices.reshape(height, width)
+        nearest_indices = nearest_indices.reshape(height, width)  # type: ignore[assignment]
         final_result: list[list[Thread | None]] = []
         for y in range(height):
             row: list[Thread | None] = []
@@ -359,7 +359,7 @@ def _quantize_simple(
         distances_sq = np.sum(diff**2, axis=2)
         nearest_indices[start:end] = np.argmin(distances_sq, axis=1)
 
-    nearest_indices = nearest_indices.reshape(height, width)
+    nearest_indices = nearest_indices.reshape(height, width)  # type: ignore[assignment]
 
     # Zähle Farbverwendung
     unique, counts = np.unique(nearest_indices, return_counts=True)
@@ -508,7 +508,7 @@ def _quantize_with_ordered_dithering(
         distances_sq = np.sum(diff**2, axis=2)
         nearest_indices[start:end] = np.argmin(distances_sq, axis=1)
 
-    nearest_indices = nearest_indices.reshape(height, width)
+    nearest_indices = nearest_indices.reshape(height, width)  # type: ignore[assignment]
 
     result: list[list[Thread | None]] = []
     for y in range(height):
