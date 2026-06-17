@@ -40,3 +40,7 @@ coverage.xml
 
 # pystarter build output (PySticky.spec/setup.iss + dist/installer)
 pystarter_output/
+
+# Persoenliche Arbeitsdateien / grosse Beispiel-Exporte (nicht im Repo)
+Muster/
+examples/
