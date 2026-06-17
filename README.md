@@ -201,8 +201,8 @@ Implementation: [core/smart_resize.py](src/pysticky/core/smart_resize.py).
 ## Installation
 
 ```bash
-git clone https://github.com/yourname/pysticky.git
-cd pysticky
+git clone https://github.com/HasoSchno70/Pysticky.git
+cd Pysticky
 
 python -m venv .venv
 # Windows
