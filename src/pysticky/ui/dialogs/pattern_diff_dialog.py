@@ -32,6 +32,7 @@ from ...core.pattern_diff import (
     DIFF_REMOVED,
     DiffResult,
 )
+from ..styles import THEME
 
 # Farben fuer die Diff-Visualisierung
 COLOR_ADDED = QColor(60, 200, 60, 220)  # gruen
@@ -86,7 +87,10 @@ class PatternDiffDialog(QDialog):
             )
         stats = QLabel(stats_text)
         stats.setTextFormat(Qt.TextFormat.RichText)
-        stats.setStyleSheet("padding: 8px; background: #f0f0f0; border-radius: 4px;")
+        stats.setStyleSheet(
+            f"padding: 8px; background: {THEME.bg_light}; "
+            f"color: {THEME.text_primary}; border-radius: 4px;"
+        )
         layout.addWidget(stats)
 
         # Drei Spalten

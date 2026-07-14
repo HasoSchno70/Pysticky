@@ -5,7 +5,7 @@ Moderner Muster-Editor fuer Kreuzstich, in Python + PySide6.
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.6+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Tests](https://img.shields.io/badge/Tests-697%20passing-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-787%20passing-brightgreen.svg)
 
 ## Features
 
@@ -331,7 +331,7 @@ src/pysticky/
     ├── symbols.txt            # 86 Standard-Symbole (erweiterbar)
     └── icons/                 # App-Icons
 tests/
-├── conftest.py + 36+ test_*.py # 697 Tests, alle gruen
+├── conftest.py + 36+ test_*.py # 787 Tests, alle gruen
 ```
 
 ## Entwicklung
@@ -339,7 +339,7 @@ tests/
 ### Tests
 
 ```bash
-pytest tests/                            # 697 Tests in ~11 s
+pytest tests/                            # 787 Tests in ~11 s
 pytest tests/ --cov=src/pysticky         # mit Coverage-Report
 ```
 

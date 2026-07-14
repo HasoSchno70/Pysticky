@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
+from ..styles import THEME
 
 
 class ColorButton(QPushButton):
@@ -33,11 +34,11 @@ class ColorButton(QPushButton):
         self.setStyleSheet(f"""
             QPushButton {{
                 background-color: {self._color.name()};
-                border: 2px solid #555;
+                border: 2px solid {THEME.border_medium};
                 border-radius: 4px;
             }}
             QPushButton:hover {{
-                border-color: #888;
+                border-color: {THEME.border_light};
             }}
         """)
 
