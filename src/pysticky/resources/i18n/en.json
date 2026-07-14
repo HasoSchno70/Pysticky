@@ -1289,5 +1289,12 @@
   "<br><b>R&uuml;ckstiche:</b> {n} Linien (als farbige Linien im Muster dargestellt)": "<br><b>Backstitches:</b> {n} lines (shown as colored lines in the pattern)",
   "Seiten": "Pages",
   "🗑️ Löschen": "🗑️ Delete",
-  "Sprache:": "Language:"
+  "Sprache:": "Language:",
+  "Registriere hier deine aktuell laufenden Projekte (.pxs-Dateien). Darunter siehst du eine kombinierte Einkaufsliste über alle registrierten Projekte hinweg, verglichen mit deinem Vorrat.": "Register your currently active projects (.pxs files) here. Below you'll see a combined shopping list across all registered projects, compared against your stock.",
+  "+ Muster hinzufügen…": "+ Add pattern…",
+  "Aktuelles Muster hinzufügen": "Add current pattern",
+  "Mehrere Projekte": "Multiple Projects",
+  "PySticky-Muster (*.pxs)": "PySticky Patterns (*.pxs)",
+  "⚠ Nicht ladbar: ": "⚠ Could not load: ",
+  "Stränge insgesamt zu kaufen": "skeins to buy in total"
 }

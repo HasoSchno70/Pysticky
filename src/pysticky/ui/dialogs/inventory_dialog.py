@@ -4,23 +4,30 @@ wieviele Straenge er noch im Schrank hat.
 
 Datenquelle / -ziel: core.inventory.Inventory (JSON in App-Daten).
 
-Zwei Tabs:
+Drei Tabs:
 1. "Im Muster" — nur die Farben des aktuellen Musters (schneller Einstieg)
 2. "Alle Eintraege" — komplette Vorratsliste mit Suchfeld, ohne Pattern-Bezug
+3. "Mehrere Projekte" — registrierte .pxs-Dateien + kombinierte Einkaufsliste
+   ueber alle registrierten Projekte hinweg (core.project_list.ProjectList)
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPushButton,
     QSpinBox,
@@ -32,7 +39,8 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
-from ...core.inventory import Inventory
+from ...core.inventory import Inventory, compute_shopping_list_multi
+from ...core.project_list import ProjectList
 from ..styles import THEME
 from .swap_colors_dialog import _color_icon
 
@@ -43,10 +51,12 @@ if TYPE_CHECKING:
 class InventoryDialog(QDialog):
     """Dialog zur Pflege der Garn-Vorratsliste."""
 
-    def __init__(self, pattern: "Pattern", parent=None) -> None:
+    def __init__(self, pattern: "Pattern", parent=None, current_file: Path | None = None) -> None:
         super().__init__(parent)
         self._pattern = pattern
+        self._current_file = current_file
         self._inventory = Inventory()
+        self._project_list = ProjectList()
         self._dirty = False
 
         self.setWindowTitle(t("Garn-Vorratsliste"))
@@ -54,6 +64,7 @@ class InventoryDialog(QDialog):
         self._setup_ui()
         self._populate_pattern_tab()
         self._populate_all_tab()
+        self._populate_projects_tab()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -130,6 +141,72 @@ class InventoryDialog(QDialog):
         al.addLayout(bottom)
 
         self._tabs.addTab(all_tab, t("Alle Einträge"))
+
+        # === Tab 3: Mehrere Projekte ===
+        projects_tab = QWidget()
+        prl = QVBoxLayout(projects_tab)
+        prl.setContentsMargins(0, 8, 0, 0)
+        prl.setSpacing(8)
+
+        projects_intro = QLabel(
+            t(
+                "Registriere hier deine aktuell laufenden Projekte (.pxs-Dateien). "
+                "Darunter siehst du eine kombinierte Einkaufsliste über alle "
+                "registrierten Projekte hinweg, verglichen mit deinem Vorrat."
+            )
+        )
+        projects_intro.setWordWrap(True)
+        projects_intro.setStyleSheet(f"color: {THEME.text_muted};")
+        prl.addWidget(projects_intro)
+
+        self._project_listwidget = QListWidget()
+        self._project_listwidget.setMaximumHeight(120)
+        prl.addWidget(self._project_listwidget)
+
+        project_buttons = QHBoxLayout()
+        btn_add_project = QPushButton(t("+ Muster hinzufügen…"))
+        btn_add_project.clicked.connect(self._add_project_file)
+        project_buttons.addWidget(btn_add_project)
+
+        self._btn_add_current = QPushButton(t("Aktuelles Muster hinzufügen"))
+        self._btn_add_current.clicked.connect(self._add_current_pattern)
+        self._btn_add_current.setEnabled(self._current_file is not None)
+        project_buttons.addWidget(self._btn_add_current)
+
+        btn_remove_project = QPushButton(t("Entfernen"))
+        btn_remove_project.clicked.connect(self._remove_selected_project)
+        project_buttons.addWidget(btn_remove_project)
+
+        project_buttons.addStretch(1)
+        prl.addLayout(project_buttons)
+
+        self._projects_warning = QLabel("")
+        self._projects_warning.setWordWrap(True)
+        self._projects_warning.setStyleSheet(f"color: {THEME.warning};")
+        self._projects_warning.hide()
+        prl.addWidget(self._projects_warning)
+
+        self._multi_shopping_table = QTableWidget()
+        self._multi_shopping_table.setColumnCount(5)
+        self._multi_shopping_table.setHorizontalHeaderLabels(
+            ["", t("Farbe"), t("Nr."), t("Benötigt"), t("Zu kaufen")]
+        )
+        self._multi_shopping_table.verticalHeader().setVisible(False)
+        self._multi_shopping_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        mhdr = self._multi_shopping_table.horizontalHeader()
+        mhdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        mhdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        for col in (2, 3, 4):
+            mhdr.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        self._multi_shopping_table.setColumnWidth(0, 28)
+        prl.addWidget(self._multi_shopping_table, 1)
+
+        self._multi_summary = QLabel("")
+        self._multi_summary.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._multi_summary.setStyleSheet(f"font-size: 13px; padding: 6px; color: {THEME.error};")
+        prl.addWidget(self._multi_summary)
+
+        self._tabs.addTab(projects_tab, t("Mehrere Projekte"))
 
         # === Dialog-Buttons ===
         button_box = QDialogButtonBox(
@@ -271,8 +348,110 @@ class InventoryDialog(QDialog):
         self._populate_all_tab()
         self._dirty = True
 
+    # === Tab 3 Mehrere Projekte ===
+
+    def _populate_projects_tab(self) -> None:
+        self._project_listwidget.clear()
+        for path in self._project_list.items():
+            item = QListWidgetItem(Path(path).name)
+            item.setToolTip(path)
+            item.setData(Qt.ItemDataRole.UserRole, path)
+            self._project_listwidget.addItem(item)
+        self._refresh_multi_shopping()
+
+    def _add_project_file(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, t("Muster hinzufügen"), "", t("PySticky-Muster (*.pxs)")
+        )
+        if not path:
+            return
+        if self._project_list.add(path):
+            self._dirty = True
+            self._populate_projects_tab()
+
+    def _add_current_pattern(self) -> None:
+        if self._current_file is None:
+            return
+        if self._project_list.add(self._current_file):
+            self._dirty = True
+            self._populate_projects_tab()
+
+    def _remove_selected_project(self) -> None:
+        item = self._project_listwidget.currentItem()
+        if item is None:
+            return
+        path = item.data(Qt.ItemDataRole.UserRole)
+        self._project_list.remove(path)
+        self._dirty = True
+        self._populate_projects_tab()
+
+    def _refresh_multi_shopping(self) -> None:
+        """Laedt alle registrierten Projekte und berechnet die kombinierte
+        Einkaufsliste. Dateien, die nicht geladen werden koennen (geloescht,
+        verschoben, beschaedigt), werden uebersprungen und aufgelistet."""
+        from ...core import load_pattern
+        from .statistics_dialog import PatternStatisticsDialog
+
+        patterns = []
+        failed: list[str] = []
+        for path in self._project_list.items():
+            try:
+                patterns.append(load_pattern(path))
+            except (OSError, ValueError) as e:
+                failed.append(f"{Path(path).name}: {e}")
+
+        if failed:
+            self._projects_warning.setText(t("⚠ Nicht ladbar: ") + " · ".join(failed))
+            self._projects_warning.show()
+        else:
+            self._projects_warning.hide()
+
+        if not patterns:
+            self._multi_shopping_table.setRowCount(0)
+            self._multi_summary.setText("")
+            return
+
+        items = compute_shopping_list_multi(
+            patterns, self._inventory, PatternStatisticsDialog.STITCHES_PER_SKEIN
+        )
+
+        self._multi_shopping_table.setRowCount(len(items))
+        total_to_buy = 0
+        for row, item in enumerate(items):
+            thread = item["thread"]
+            c = thread.color
+            icon = QTableWidgetItem("")
+            icon.setIcon(_color_icon(c.r, c.g, c.b, size=18))
+            self._multi_shopping_table.setItem(row, 0, icon)
+            self._multi_shopping_table.setItem(row, 1, QTableWidgetItem(thread.name))
+            self._multi_shopping_table.setItem(
+                row, 2, QTableWidgetItem(thread.catalog_number or "")
+            )
+            self._multi_shopping_table.setItem(row, 3, QTableWidgetItem(f"{item['needed_skeins']}"))
+            to_buy_item = QTableWidgetItem(f"{item['to_buy']}")
+            if item["to_buy"] > 0:
+                to_buy_item.setForeground(QColor(THEME.error))
+                total_to_buy += item["to_buy"]
+            else:
+                to_buy_item.setForeground(QColor(THEME.accent_primary))
+            self._multi_shopping_table.setItem(row, 4, to_buy_item)
+
+        if total_to_buy > 0:
+            self._multi_summary.setStyleSheet(
+                f"font-size: 13px; padding: 6px; color: {THEME.error};"
+            )
+            self._multi_summary.setText(
+                f"<b>{total_to_buy}</b> " + t("Stränge insgesamt zu kaufen")
+            )
+        else:
+            self._multi_summary.setStyleSheet(
+                f"font-size: 13px; padding: 6px; color: {THEME.success};"
+            )
+            self._multi_summary.setText(t("✓ Du hast alles im Vorrat!"))
+
     def _on_save(self) -> None:
         self._inventory.save()
+        self._project_list.save()
         self.accept()
 
     def reject(self) -> None:

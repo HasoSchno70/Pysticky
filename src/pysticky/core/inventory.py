@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
+
+if TYPE_CHECKING:
+    from .thread import Thread
 
 
 def get_inventory_path() -> Path:
@@ -142,6 +145,62 @@ def compute_shopping_list(
             {
                 "thread": thread,
                 "stitch_count": count,
+                "needed_skeins": needed,
+                "on_hand": on_hand,
+                "to_buy": to_buy,
+            }
+        )
+    return out
+
+
+def compute_shopping_list_multi(
+    patterns: Iterable,
+    inventory: Inventory,
+    stitches_per_skein: dict[int, int],
+) -> list[dict]:
+    """Berechnet die kombinierte Einkaufsliste ueber mehrere Muster hinweg.
+
+    Summiert den Garnbedarf (in Straengen) pro Farbe ueber alle uebergebenen
+    Patterns, bevor der Vorrat EINMAL insgesamt abgezogen wird — so wird
+    derselbe Vorrats-Strang nicht mehrfach (einmal pro Projekt) verrechnet.
+
+    Args:
+        patterns: die zu aggregierenden Patterns (mit color_entries)
+        inventory: globale Vorratsliste
+        stitches_per_skein: Mapping fabric_count -> Stiche pro Strang
+
+    Returns:
+        Liste von Dicts pro Farbe: {"thread", "needed_skeins", "on_hand", "to_buy"}
+    """
+    from math import ceil
+
+    needed_by_key: dict[str, int] = {}
+    thread_by_key: dict[str, "Thread"] = {}
+    for pattern in patterns:
+        spk = stitches_per_skein.get(pattern.fabric_count, 1800)
+        for entry in pattern.color_entries:
+            if entry.skip_stitching:
+                continue
+            thread = entry.thread
+            count = entry.stitch_count
+            if count <= 0:
+                continue
+            needed = ceil(count / spk)
+            if count > 1000:
+                needed += 1
+            key = _key(thread.manufacturer, thread.catalog_number)
+            needed_by_key[key] = needed_by_key.get(key, 0) + needed
+            thread_by_key.setdefault(key, thread)
+
+    out: list[dict] = []
+    for key in sorted(needed_by_key):
+        thread = thread_by_key[key]
+        needed = needed_by_key[key]
+        on_hand = inventory.get(thread.manufacturer, thread.catalog_number)
+        to_buy = max(0, needed - on_hand)
+        out.append(
+            {
+                "thread": thread,
                 "needed_skeins": needed,
                 "on_hand": on_hand,
                 "to_buy": to_buy,

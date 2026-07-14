@@ -220,7 +220,7 @@ class EditHandlersMixin:
         """Öffnet die Garn-Vorratsliste."""
         from ..dialogs import InventoryDialog
 
-        dialog = InventoryDialog(self.current_pattern, self)
+        dialog = InventoryDialog(self.current_pattern, self, current_file=self.current_file)
         dialog.exec()
 
     def _on_show_hoop_planner(self: "MainWindow") -> None:
