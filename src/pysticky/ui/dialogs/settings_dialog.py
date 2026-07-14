@@ -158,6 +158,10 @@ class SettingsDialog(QDialog):
             self.files_tab.reset_to_defaults()
             self.shortcuts_tab.reset_to_defaults()
 
+    def _apply_theme(self) -> None:
+        """Erneuert das Stylesheet nach einem Live-Theme-Wechsel."""
+        self._apply_styles()
+
     def _apply_styles(self):
         """Wendet das zentrale Styling an."""
         self.setStyleSheet(f"""

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..core.i18n import t
 from .html_export import _html_encode
 
 if TYPE_CHECKING:
@@ -90,16 +91,32 @@ class HTMLPagesMixin(_Base):
             "background:#f5f5f5;padding:3px 8px;border-radius:4px;"
             "white-space:nowrap;"
         )
-        top_pill = f"<span style='{pill_style}'>&uarr; Seite {top}</span>" if top else ""
-        bottom_pill = f"<span style='{pill_style}'>&darr; Seite {bottom}</span>" if bottom else ""
-        left_pill = f"<span style='{pill_style}'>&larr; Seite {left}</span>" if left else ""
-        right_pill = f"<span style='{pill_style}'>Seite {right} &rarr;</span>" if right else ""
+        top_pill = (
+            f"<span style='{pill_style}'>{t('&uarr; Seite {n}').format(n=top)}</span>"
+            if top
+            else ""
+        )
+        bottom_pill = (
+            f"<span style='{pill_style}'>{t('&darr; Seite {n}').format(n=bottom)}</span>"
+            if bottom
+            else ""
+        )
+        left_pill = (
+            f"<span style='{pill_style}'>{t('&larr; Seite {n}').format(n=left)}</span>"
+            if left
+            else ""
+        )
+        right_pill = (
+            f"<span style='{pill_style}'>{t('Seite {n} &rarr;').format(n=right)}</span>"
+            if right
+            else ""
+        )
 
         # 3x3 Layout — feste, klare Zellen statt absoluter Positionierung
         return (
             "<div class='page-navigator' style='float:right;margin-left:12px;'>"
             "<div style='font-size:9px;color:#666;margin-bottom:2px;text-align:center;'>"
-            "Seiten-Index"
+            f"{t('Seiten-Index')}"
             "</div>"
             "<table style='border-collapse:separate;border-spacing:4px;'>"
             f"<tr><td></td><td style='text-align:center;'>{top_pill}</td><td></td></tr>"
@@ -320,18 +337,47 @@ class HTMLPagesMixin(_Base):
                 # Backstitch-Info für Seite
                 backstitch_info = ""
                 if page_backstitches:
-                    backstitch_info = f" &middot; {len(page_backstitches)} R&uuml;ckstiche"
+                    backstitch_info = t(" &middot; {n} R&uuml;ckstiche").format(
+                        n=len(page_backstitches)
+                    )
 
                 # Kombinierter Page-Navigator: Index-Grid + Nachbar-Pfeile
                 # in einem sauberen 3x3-Layout
                 page_navigator = self._build_page_navigator(pages_x, pages_y, page_x, page_y)
 
+                page_title_line = t("Seite {page} von {total}").format(
+                    page=page_nr, total=total_pages
+                )
+                page_info_line = t(
+                    "Spalten {sx}-{ex} &middot; Zeilen {sy}-{ey} &middot; {n} Stiche{backstitch_info}"
+                ).format(
+                    sx=start_x + 1,
+                    ex=end_x + 1,
+                    sy=start_y + 1,
+                    ey=end_y + 1,
+                    n=total_page_stitches,
+                    backstitch_info=backstitch_info,
+                )
+                mini_legend_heading = t("Farben dieser Seite ({n}):").format(
+                    n=len(page_color_counts)
+                )
+                mini_legend_backstitch_note = (
+                    t(
+                        "<br><b>R&uuml;ckstiche:</b> {n} Linien (als farbige Linien im Muster dargestellt)"
+                    ).format(n=len(page_backstitches))
+                    if page_backstitches
+                    else ""
+                )
+                page_footer_line = t(
+                    "{title} &middot; Seite {page}/{total} &middot; {date}"
+                ).format(title=_html_encode(title), page=page_nr, total=total_pages, date=date)
+
                 pages.append(f"""
 <div class='page-break'></div>
 <div id='seite{page_nr}'>
 <div class='page-header'>
-<div class='title'>Seite {page_nr} von {total_pages}</div>
-<div class='info'>Spalten {start_x + 1}-{end_x + 1} &middot; Zeilen {start_y + 1}-{end_y + 1} &middot; {total_page_stitches} Stiche{backstitch_info}</div>
+<div class='title'>{page_title_line}</div>
+<div class='info'>{page_info_line}</div>
 {page_navigator}
 </div>
 
@@ -346,11 +392,11 @@ class HTMLPagesMixin(_Base):
 </div>
 
 <div class='mini-legend'>
-<b>Farben dieser Seite ({len(page_color_counts)}):</b> {"".join(mini_legend_items)}
-{f"<br><b>R&uuml;ckstiche:</b> {len(page_backstitches)} Linien (als farbige Linien im Muster dargestellt)" if page_backstitches else ""}
+<b>{mini_legend_heading}</b> {"".join(mini_legend_items)}
+{mini_legend_backstitch_note}
 </div>
 
-<div class='page-footer'>{_html_encode(title)} &middot; Seite {page_nr}/{total_pages} &middot; {date}{(" &middot; " + _html_encode(copyright_)) if copyright_ else ""}</div>
+<div class='page-footer'>{page_footer_line}{(" &middot; " + _html_encode(copyright_)) if copyright_ else ""}</div>
 </div>""")
 
                 page_nr += 1

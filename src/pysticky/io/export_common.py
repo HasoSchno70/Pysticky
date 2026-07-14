@@ -65,9 +65,17 @@ _MODE_TERMS: dict[str, dict[str, str]] = {
 
 
 def terms_for(pattern: "Pattern") -> dict[str, str]:
-    """Liefert die modus-spezifischen Begriffe fuer den Export."""
+    """Liefert die modus-spezifischen Begriffe fuer den Export.
+
+    Uebersetzt bei JEDEM Aufruf frisch in der aktuell aktiven UI-Sprache
+    (statt einmalig zur Modul-Importzeit), damit ein Sprachwechsel zur
+    Laufzeit auch fuer PDF-/HTML-Exports sofort wirkt.
+    """
+    from ..core.i18n import t
+
     mode = getattr(pattern, "mode", "stitch")
-    return _MODE_TERMS.get(mode, _MODE_TERMS["stitch"])
+    raw = _MODE_TERMS.get(mode, _MODE_TERMS["stitch"])
+    return {k: t(v) for k, v in raw.items()}
 
 
 def is_diamond_mode(pattern: "Pattern") -> bool:
@@ -78,9 +86,12 @@ def is_diamond_mode(pattern: "Pattern") -> bool:
 def fabric_label_for(pattern: "Pattern") -> str:
     """Stoff/Drill-Raster-Bezeichnung. Im DP-Modus haengt der Text vom
     fabric_count ab (siehe info_panel: 10≈2.5mm, 9≈2.8mm, 8≈3.0mm)."""
+    from ..core.i18n import t
+
     if is_diamond_mode(pattern):
-        mapping = {10: "2.5 mm Square", 9: "2.8 mm Round", 8: "3.0 mm Round"}
-        return mapping.get(pattern.fabric_count, f"{pattern.fabric_count} (Drill-Pitch)")
+        mapping = {10: t("2.5 mm Square"), 9: t("2.8 mm Round"), 8: t("3.0 mm Round")}
+        fallback = t("{count} (Drill-Pitch)").format(count=pattern.fabric_count)
+        return mapping.get(pattern.fabric_count, fallback)
     return f"Aida {pattern.fabric_count}"
 
 

@@ -277,7 +277,9 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
 
             # Notizen (optional)
             if self._notes.strip():
-                story.append(Paragraph("Notizen", self._styles["Title2"]))
+                from ..core.i18n import t
+
+                story.append(Paragraph(t("Notizen"), self._styles["Title2"]))
                 story.append(Spacer(1, 6 * mm))
                 for line in self._notes.strip().split("\n"):
                     story.append(Paragraph(line or "&nbsp;", self._styles["Normal"]))

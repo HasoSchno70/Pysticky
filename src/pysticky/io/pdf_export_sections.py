@@ -39,10 +39,12 @@ class PDFSectionsMixin(_Base):
         """Erstellt das Deckblatt."""
         elements = []
 
+        from ..core.i18n import t
+
         elements.append(Spacer(1, 30 * mm))
 
         # Titel
-        elements.append(Paragraph("✂ KREUZSTICH-MUSTER", self._styles["Title1"]))
+        elements.append(Paragraph(t("✂ KREUZSTICH-MUSTER"), self._styles["Title1"]))
         elements.append(Paragraph(title, self._styles["Title2"]))
 
         # Wasserzeichen (Author + Copyright)
@@ -50,9 +52,13 @@ class PDFSectionsMixin(_Base):
 
         author, copyright_ = get_watermark(self.pattern)
         if author:
-            elements.append(Paragraph(f"von {author}", self._styles["CenterText"]))
+            elements.append(
+                Paragraph(t("von {author}").format(author=author), self._styles["CenterText"])
+            )
 
-        elements.append(Paragraph(f"Erstellt am {date}", self._styles["SmallCenter"]))
+        elements.append(
+            Paragraph(t("Erstellt am {date}").format(date=date), self._styles["SmallCenter"])
+        )
         if copyright_:
             elements.append(Paragraph(copyright_, self._styles["SmallCenter"]))
 
@@ -76,29 +82,47 @@ class PDFSectionsMixin(_Base):
         backstitch_count = 0 if is_dp else len(self.pattern.backstitches)
 
         # Farben-Info mit übersprungenen
-        colors_text = f"{len(self._color_stats)} verschiedene"
+        colors_text = t("{n} verschiedene").format(n=len(self._color_stats))
         if self._skipped_colors > 0:
-            skip_label = "nicht kleben" if is_dp else "nicht sticken"
+            skip_label = t("nicht kleben") if is_dp else t("nicht sticken")
             colors_text += f" ({self._skipped_colors} {skip_label})"
 
         unit_label = terms["unit_plural"]
         if self._skipped_colors > 0:
-            stitches_text = f"{self._stitches_to_do} {unit_label} (+ {self._total_stitches - self._stitches_to_do} Stofffarbe)"
+            stitches_text = t("{count} {unit} (+ {extra} Stofffarbe)").format(
+                count=self._stitches_to_do,
+                unit=unit_label,
+                extra=self._total_stitches - self._stitches_to_do,
+            )
         else:
-            stitches_text = f"{self._total_stitches} {unit_label}"
+            stitches_text = t("{count} {unit}").format(count=self._total_stitches, unit=unit_label)
 
         info_data = [
-            ["Mustergröße", f"{self.pattern.width} × {self.pattern.height} {unit_label}"],
+            [
+                t("Mustergröße"),
+                t("{w} × {h} {unit}").format(
+                    w=self.pattern.width, h=self.pattern.height, unit=unit_label
+                ),
+            ],
             [terms["fabric_label"], fabric_name],
-            ["Fertige Größe", f"{phys_width:.1f} × {phys_height:.1f} cm"],
-            ["Anzahl Farben", colors_text],
-            [f"Gesamt-{unit_label}", stitches_text],
-            [terms["supply_label"], f"ca. {self._total_skeins} {terms['supply_unit']}"],
-            ["Musterseiten", f"{total_pages} Seiten"],
+            [
+                t("Fertige Größe"),
+                t("{w} × {h} cm").format(w=f"{phys_width:.1f}", h=f"{phys_height:.1f}"),
+            ],
+            [t("Anzahl Farben"), colors_text],
+            [
+                t("Gesamt-{unit}").format(unit=unit_label),
+                stitches_text,
+            ],
+            [
+                terms["supply_label"],
+                t("ca. {n} {unit}").format(n=self._total_skeins, unit=terms["supply_unit"]),
+            ],
+            [t("Musterseiten"), t("{n} Seiten").format(n=total_pages)],
         ]
 
         if backstitch_count > 0:
-            info_data.insert(5, ["Rückstiche", f"{backstitch_count} Linien"])
+            info_data.insert(5, [t("Rückstiche"), t("{n} Linien").format(n=backstitch_count)])
 
         table = Table(info_data, colWidths=[60 * mm, 80 * mm])
         table.setStyle(
@@ -123,6 +147,7 @@ class PDFSectionsMixin(_Base):
 
     def _create_preview(self, title: str, phys_width: float, phys_height: float) -> list:
         """Erstellt die Vorschau-Seite."""
+        from ..core.i18n import t
         from .export_common import fabric_label_for, is_diamond_mode, terms_for
 
         terms = terms_for(self.pattern)
@@ -134,7 +159,9 @@ class PDFSectionsMixin(_Base):
         fabric_name = fabric_label_for(self.pattern)
         elements.append(
             Paragraph(
-                f"Fertige Größe auf {fabric_name}: {phys_width:.1f} × {phys_height:.1f} cm",
+                t("Fertige Größe auf {fabric}: {w} × {h} cm").format(
+                    fabric=fabric_name, w=f"{phys_width:.1f}", h=f"{phys_height:.1f}"
+                ),
                 self._styles["CenterText"],
             )
         )
@@ -154,7 +181,9 @@ class PDFSectionsMixin(_Base):
             elements.append(Spacer(1, 5 * mm))
             elements.append(
                 Paragraph(
-                    f"Rückstiche: {len(self.pattern.backstitches)} Linien werden über dem Muster gezeigt.",
+                    t("Rückstiche: {n} Linien werden über dem Muster gezeigt.").format(
+                        n=len(self.pattern.backstitches)
+                    ),
                     self._styles["SmallCenter"],
                 )
             )
@@ -163,6 +192,7 @@ class PDFSectionsMixin(_Base):
 
     def _create_legend(self) -> list:
         """Erstellt die Legende."""
+        from ..core.i18n import t
         from .export_common import is_diamond_mode, terms_for
 
         terms = terms_for(self.pattern)
@@ -171,7 +201,7 @@ class PDFSectionsMixin(_Base):
         elements = []
         elements.append(
             Paragraph(
-                "Drill-Legende und Material" if is_dp else "Legende und Materialbedarf",
+                t("Drill-Legende und Material") if is_dp else t("Legende und Materialbedarf"),
                 self._styles["Title1"],
             )
         )
@@ -184,14 +214,22 @@ class PDFSectionsMixin(_Base):
         supply_label = terms["supply_unit"]
 
         # Zusammenfassung mit Info über übersprungene Farben
-        summary_parts = [f"{len(thread_stats)} Farben"]
+        summary_parts = [t("{n} Farben").format(n=len(thread_stats))]
         if self._skipped_colors > 0:
-            action_verb = "zu klebende" if is_dp else "zu stickende"
-            summary_parts.append(f"{self._stitches_to_do} {action_verb} {unit_label}")
-            summary_parts.append(f"{self._skipped_colors} Farbe(n) = Stofffarbe")
+            action_verb = t("zu klebende") if is_dp else t("zu stickende")
+            summary_parts.append(
+                t("{count} {verb} {unit}").format(
+                    count=self._stitches_to_do, verb=action_verb, unit=unit_label
+                )
+            )
+            summary_parts.append(t("{n} Farbe(n) = Stofffarbe").format(n=self._skipped_colors))
         else:
-            summary_parts.append(f"{self._total_stitches} {unit_label}")
-        summary_parts.append(f"ca. {self._total_skeins} {supply_label} benötigt")
+            summary_parts.append(
+                t("{count} {unit}").format(count=self._total_stitches, unit=unit_label)
+            )
+        summary_parts.append(
+            t("ca. {n} {unit} benötigt").format(n=self._total_skeins, unit=supply_label)
+        )
 
         elements.append(Paragraph(" · ".join(summary_parts), self._styles["CenterText"]))
 
@@ -205,9 +243,9 @@ class PDFSectionsMixin(_Base):
         # Tabellen-Header — im DP-Modus entfaellt die Symbol-Spalte.
         code_col = terms["code_header"]
         if is_dp:
-            header = ["Nr.", "Farbe", code_col, "Farbname"]
+            header = [t("Nr."), t("Farbe"), code_col, t("Farbname")]
         else:
-            header = ["Nr.", "Sym.", "Farbe", code_col, "Farbname"]
+            header = [t("Nr."), t("Sym."), t("Farbe"), code_col, t("Farbname")]
         header.extend(cross_ref_palettes)
         header.extend([unit_label, "%", supply_label])
         n_cross = len(cross_ref_palettes)
@@ -304,7 +342,7 @@ class PDFSectionsMixin(_Base):
                         "",
                         "",
                         "",
-                        "Zu kleben:",
+                        t("Zu kleben:"),
                         *empty_cross,
                         str(self._stitches_to_do),
                         "100%",
@@ -317,7 +355,7 @@ class PDFSectionsMixin(_Base):
                         "",
                         "",
                         "",
-                        "Gesamt:",
+                        t("Gesamt:"),
                         *empty_cross,
                         str(self._total_stitches),
                         "100%",
@@ -332,7 +370,7 @@ class PDFSectionsMixin(_Base):
                         "",
                         "",
                         "",
-                        "Zu sticken:",
+                        t("Zu sticken:"),
                         *empty_cross,
                         str(self._stitches_to_do),
                         "100%",
@@ -346,7 +384,7 @@ class PDFSectionsMixin(_Base):
                         "",
                         "",
                         "",
-                        "Gesamt:",
+                        t("Gesamt:"),
                         *empty_cross,
                         str(self._total_stitches),
                         "100%",
@@ -423,7 +461,7 @@ class PDFSectionsMixin(_Base):
             elements.append(Spacer(1, 3 * mm))
             elements.append(
                 Paragraph(
-                    "<font size='8' color='#ff9800'>⊘ = Stofffarbe, wird nicht gestickt</font>",
+                    f"<font size='8' color='#ff9800'>⊘ = {t('Stofffarbe, wird nicht gestickt')}</font>",
                     self._styles["Normal"],
                 )
             )
@@ -431,13 +469,13 @@ class PDFSectionsMixin(_Base):
         # Rückstich-Legende — im DP-Modus weglassen
         if not is_dp and self.pattern.backstitches:
             elements.append(Spacer(1, 10 * mm))
-            elements.append(Paragraph("Rückstiche", self._styles["Title2"]))
+            elements.append(Paragraph(t("Rückstiche"), self._styles["Title2"]))
 
             bs_by_color: dict[int, int] = {}
             for bs in self.pattern.backstitches:
                 bs_by_color[bs.color_index] = bs_by_color.get(bs.color_index, 0) + 1
 
-            bs_data = [["Farbe", "Symbol", "Garnnummer", "Farbname", "Anzahl"]]
+            bs_data = [[t("Farbe"), t("Symbol"), t("Garnnummer"), t("Farbname"), t("Anzahl")]]
             for color_idx, count in sorted(bs_by_color.items()):
                 entry = self.pattern.get_color_entry(color_idx)
                 if entry:
@@ -451,7 +489,7 @@ class PDFSectionsMixin(_Base):
                         ]
                     )
 
-            bs_data.append(["", "", "", "Gesamt:", str(len(self.pattern.backstitches))])
+            bs_data.append(["", "", "", t("Gesamt:"), str(len(self.pattern.backstitches))])
 
             bs_table = Table(bs_data, colWidths=[10 * mm, 15 * mm, 40 * mm, 55 * mm, 20 * mm])
 
@@ -488,9 +526,9 @@ class PDFSectionsMixin(_Base):
         # Bead-Legende (Perlen)
         if bead_stats:
             elements.append(Spacer(1, 10 * mm))
-            elements.append(Paragraph("Perlen (Beads)", self._styles["Title2"]))
+            elements.append(Paragraph(t("Perlen (Beads)"), self._styles["Title2"]))
 
-            bead_data = [["Farbe", "Symbol", "Perlen-Nr.", "Farbname", "Anzahl"]]
+            bead_data = [[t("Farbe"), t("Symbol"), t("Perlen-Nr."), t("Farbname"), t("Anzahl")]]
             total_beads = 0
             for stat in bead_stats:
                 thread = stat["thread"]
@@ -506,7 +544,7 @@ class PDFSectionsMixin(_Base):
                     ]
                 )
 
-            bead_data.append(["", "", "", "Gesamt:", str(total_beads)])
+            bead_data.append(["", "", "", t("Gesamt:"), str(total_beads)])
 
             bead_table = Table(bead_data, colWidths=[10 * mm, 15 * mm, 40 * mm, 55 * mm, 20 * mm])
 
@@ -540,18 +578,28 @@ class PDFSectionsMixin(_Base):
 
     def _create_overview(self, pages_x: int, pages_y: int) -> list:
         """Erstellt die Übersichts-Seite."""
+        from ..core.i18n import t
+        from .export_common import terms_for
+
         elements = []
 
         total_pages = pages_x * pages_y
 
-        from .export_common import terms_for
-
         unit_label = terms_for(self.pattern)["unit_plural"]
-        elements.append(Paragraph("Seitenübersicht", self._styles["Title1"]))
+        elements.append(Paragraph(t("Seitenübersicht"), self._styles["Title1"]))
         elements.append(
             Paragraph(
-                f"{total_pages} Musterseiten · {pages_x} Spalten × {pages_y} Zeilen · "
-                f"je {self.STITCHES_PER_PAGE_X}×{self.STITCHES_PER_PAGE_Y} {unit_label} · {self._page_format_name}",
+                t(
+                    "{total} Musterseiten · {px} Spalten × {py} Zeilen · je {w}×{h} {unit} · {fmt}"
+                ).format(
+                    total=total_pages,
+                    px=pages_x,
+                    py=pages_y,
+                    w=self.STITCHES_PER_PAGE_X,
+                    h=self.STITCHES_PER_PAGE_Y,
+                    unit=unit_label,
+                    fmt=self._page_format_name,
+                ),
                 self._styles["CenterText"],
             )
         )
@@ -605,7 +653,15 @@ class PDFSectionsMixin(_Base):
                 range_y1 = sy * self.STITCHES_PER_PAGE_Y + 1
                 range_y2 = min((sy + 1) * self.STITCHES_PER_PAGE_Y, self.pattern.height)
 
-                cell_text = f"Seite {page_nr}\nX: {range_x1}-{range_x2}\nY: {range_y1}-{range_y2}"
+                cell_text = t(
+                    "Seite {page_nr}\nX: {range_x1}-{range_x2}\nY: {range_y1}-{range_y2}"
+                ).format(
+                    page_nr=page_nr,
+                    range_x1=range_x1,
+                    range_x2=range_x2,
+                    range_y1=range_y1,
+                    range_y2=range_y2,
+                )
                 row.append(cell_text)
                 page_nr += 1
             page_data.append(row)
@@ -634,6 +690,8 @@ class PDFSectionsMixin(_Base):
         self, page_num: int, pages_x: int, pages_y: int, total_pages: int, title: str, date: str
     ) -> list:
         """Erstellt eine einzelne Musterseite mit integriertem Stickpfad."""
+        from ..core.i18n import t
+
         elements = []
 
         page_x = page_num % pages_x
@@ -650,20 +708,28 @@ class PDFSectionsMixin(_Base):
         # Nachbarseiten fuer Page-Marker
         neighbors = []
         if page_x > 0:
-            neighbors.append(f"&larr; S. {page_num}")
+            neighbors.append(t("&larr; S. {n}").format(n=page_num))
         if page_x < pages_x - 1:
-            neighbors.append(f"S. {page_num + 2} &rarr;")
+            neighbors.append(t("S. {n} &rarr;").format(n=page_num + 2))
         if page_y > 0:
-            neighbors.append(f"&uarr; S. {page_num + 1 - pages_x}")
+            neighbors.append(t("&uarr; S. {n}").format(n=page_num + 1 - pages_x))
         if page_y < pages_y - 1:
-            neighbors.append(f"&darr; S. {page_num + 1 + pages_x}")
+            neighbors.append(t("&darr; S. {n}").format(n=page_num + 1 + pages_x))
         neighbors_str = "  ".join(neighbors)
 
         # Header
         elements.append(
             Paragraph(
-                f"<b>Seite {page_num + 1} von {total_pages}</b>  |  "
-                f"Spalten {start_x + 1}-{end_x + 1}  ·  Zeilen {start_y + 1}-{end_y + 1}"
+                t(
+                    "<b>Seite {page} von {total}</b>  |  Spalten {sx}-{ex}  ·  Zeilen {sy}-{ey}"
+                ).format(
+                    page=page_num + 1,
+                    total=total_pages,
+                    sx=start_x + 1,
+                    ex=end_x + 1,
+                    sy=start_y + 1,
+                    ey=end_y + 1,
+                )
                 + (
                     f"  |  <font size='8' color='#888'>{neighbors_str}</font>"
                     if neighbors_str
@@ -716,11 +782,12 @@ class PDFSectionsMixin(_Base):
 
             legend_text = "  |  ".join(legend_parts[:12])  # Max 12 Farben anzeigen
             if len(page_colors) > 12:
-                legend_text += f"  |  ... (+{len(page_colors) - 12} weitere)"
+                legend_text += t("  |  ... (+{n} weitere)").format(n=len(page_colors) - 12)
 
             elements.append(
                 Paragraph(
-                    f"<font size='7'><b>Farben:</b> {legend_text}</font>", self._styles["Normal"]
+                    f"<font size='7'><b>{t('Farben:')}</b> {legend_text}</font>",
+                    self._styles["Normal"],
                 )
             )
 
@@ -734,9 +801,17 @@ class PDFSectionsMixin(_Base):
             total_jumps = sum(p.jump_count for p in page_paths)
             elements.append(
                 Paragraph(
-                    f"<font size='7'><b>Stickpfad:</b> {total_stitches} Stiche  |  "
-                    f"{len(page_paths)} Farben  |  {total_jumps} Sprünge  |  "
-                    f"<font color='#dd5555'>- - -</font> = Sprung</font>",
+                    "<font size='7'>"
+                    + t(
+                        "<b>Stickpfad:</b> {stitches} Stiche  |  "
+                        "{colors} Farben  |  {jumps} Sprünge  |  "
+                        "<font color='#dd5555'>- - -</font> = Sprung"
+                    ).format(
+                        stitches=total_stitches,
+                        colors=len(page_paths),
+                        jumps=total_jumps,
+                    )
+                    + "</font>",
                     self._styles["Normal"],
                 )
             )
@@ -745,7 +820,11 @@ class PDFSectionsMixin(_Base):
         elements.append(Spacer(1, 2 * mm))
         elements.append(
             Paragraph(
-                f"<font size='7' color='#999999'>{title} · Seite {page_num + 1}/{total_pages} · {date}</font>",
+                "<font size='7' color='#999999'>"
+                + t("{title} · Seite {page}/{total} · {date}").format(
+                    title=title, page=page_num + 1, total=total_pages, date=date
+                )
+                + "</font>",
                 self._styles["CenterText"],
             )
         )

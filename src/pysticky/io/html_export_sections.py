@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..core.i18n import t
 from .html_export import _html_encode
 
 if TYPE_CHECKING:
@@ -26,7 +27,7 @@ class HTMLSectionsMixin(_Base):
 <html lang='de'>
 <head>
 <meta charset='UTF-8'>
-<title>Stickmuster: {_html_encode(title)}</title>
+<title>{t("Stickmuster: {title}").format(title=_html_encode(title))}</title>
 <style>
 * {{ box-sizing: border-box; }}
 body {{ font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; padding-top: 60px; }}
@@ -156,20 +157,20 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         total_pages = pages_x * pages_y
 
         nav = ["<div class='nav-bar'>", "<div>"]
-        nav.append("<a href='#deckblatt'>Deckblatt</a>")
-        nav.append("<a href='#vorschau'>Vorschau</a>")
-        nav.append("<a href='#legende'>Legende</a>")
-        nav.append("<a href='#uebersicht'>&Uuml;bersicht</a>")
+        nav.append(f"<a href='#deckblatt'>{t('Deckblatt')}</a>")
+        nav.append(f"<a href='#vorschau'>{t('Vorschau')}</a>")
+        nav.append(f"<a href='#legende'>{t('Legende')}</a>")
+        nav.append(f"<a href='#uebersicht'>{t('&Uuml;bersicht')}</a>")
 
         if total_pages <= 10:
             for i in range(1, total_pages + 1):
-                nav.append(f"<a href='#seite{i}'>S.{i}</a>")
+                nav.append(f"<a href='#seite{i}'>{t('S.{n}').format(n=i)}</a>")
         else:
-            nav.append("<a href='#seite1'>Muster &rarr;</a>")
+            nav.append(f"<a href='#seite1'>{t('Muster &rarr;')}</a>")
 
         nav.append("</div>")
         nav.append(
-            "<div><a href='javascript:window.print()' class='btn-print'>&#128424; Als PDF drucken</a></div>"
+            f"<div><a href='javascript:window.print()' class='btn-print'>&#128424; {t('Als PDF drucken')}</a></div>"
         )
         nav.append("</div>")
 
@@ -264,7 +265,9 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             backstitch_svg = self._generate_backstitches_svg(cell_w)
             backstitch_count = len(self.pattern.backstitches)
             backstitch_info = (
-                f"<tr><td>&#8600; R&uuml;ckstiche</td><td>{backstitch_count} Linien</td></tr>"
+                t("<tr><td>&#8600; R&uuml;ckstiche</td><td>{n} Linien</td></tr>").format(
+                    n=backstitch_count
+                )
                 if backstitch_count > 0
                 else ""
             )
@@ -273,10 +276,14 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         # Wasserzeichen — author + copyright fuer Cover
         author, copyright_ = self._watermark()
-        author_html = f"<p class='cover-date'>von {_html_encode(author)}</p>" if author else ""
+        author_html = (
+            f"<p class='cover-date'>{t('von {author}').format(author=_html_encode(author))}</p>"
+            if author
+            else ""
+        )
 
         # Cover-Title und Subtitle je Modus
-        cover_title = "DIAMOND-PAINTING-VORLAGE" if is_dp else "KREUZSTICH-MUSTER"
+        cover_title = t("DIAMOND-PAINTING-VORLAGE") if is_dp else t("KREUZSTICH-MUSTER")
         cover_icon = "&#128142;" if is_dp else "&#9986;"  # 💎 vs. ✂
 
         # Stats-Box: im DP-Modus zeigen wir "Drills" statt "Stiche" und
@@ -292,6 +299,16 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         )
         totals_text = terms["totals_template"].format(n=self._total_stitches)
 
+        preview_label_suffix = t(" (inkl. R&uuml;ckstiche)") if backstitch_count > 0 else ""
+        backstitch_stat_tile = (
+            t(
+                "<div class='stat-item'><div class='stat-icon'>&#8600;</div>"
+                "<div class='stat-value'>{n}</div><div class='stat-label'>R&uuml;ckstiche</div></div>"
+            ).format(n=backstitch_count)
+            if backstitch_count > 0
+            else ""
+        )
+
         return f"""
 <div id='deckblatt' class='cover-page'>
 <div class='cover-header'>
@@ -299,7 +316,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 <h1 class='cover-title'>{cover_title}</h1>
 <p class='cover-subtitle'>{_html_encode(title)}</p>
 {author_html}
-<p class='cover-date'>Erstellt am {date}</p>
+<p class='cover-date'>{t("Erstellt am {date}").format(date=date)}</p>
 </div>
 
 <div class='cover-body'>
@@ -310,27 +327,27 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 {backstitch_svg}
 </svg>
 </div>
-<div class='cover-preview-label'>{terms["preview_caption"]}{" (inkl. R&uuml;ckstiche)" if backstitch_count > 0 else ""}</div>
+<div class='cover-preview-label'>{terms["preview_caption"]}{preview_label_suffix}</div>
 </div>
 
 <div class='stats-box'>
 <div class='stat-item'><div class='stat-icon'>&#128208;</div><div class='stat-value'>{self.pattern.width}&times;{self.pattern.height}</div><div class='stat-label'>{stats_total_unit}</div></div>
-<div class='stat-item'><div class='stat-icon'>&#127912;</div><div class='stat-value'>{len(self._color_stats)}</div><div class='stat-label'>Farben</div></div>
+<div class='stat-item'><div class='stat-icon'>&#127912;</div><div class='stat-value'>{len(self._color_stats)}</div><div class='stat-label'>{t("Farben")}</div></div>
 <div class='stat-item'><div class='stat-icon'>{terms["supply_icon"]}</div><div class='stat-value'>{self._total_skeins}</div><div class='stat-label'>{stats_supply_label}</div></div>
-<div class='stat-item'><div class='stat-icon'>&#128196;</div><div class='stat-value'>{total_pages}</div><div class='stat-label'>Seiten</div></div>
-{f"<div class='stat-item'><div class='stat-icon'>&#8600;</div><div class='stat-value'>{backstitch_count}</div><div class='stat-label'>R&uuml;ckstiche</div></div>" if backstitch_count > 0 else ""}
+<div class='stat-item'><div class='stat-icon'>&#128196;</div><div class='stat-value'>{total_pages}</div><div class='stat-label'>{t("Seiten")}</div></div>
+{backstitch_stat_tile}
 </div>
 
 <div class='cover-info'>
 <table>
-<tr><td>&#128207; Mustergr&ouml;&szlig;e</td><td>{size_text}</td></tr>
+<tr><td>&#128207; {t("Mustergr&ouml;&szlig;e")}</td><td>{size_text}</td></tr>
 <tr><td>&#129526; {terms["fabric_label"]}</td><td>{_html_encode(fabric_name)}</td></tr>
-<tr><td>&#128207; Fertige Gr&ouml;&szlig;e</td><td>{phys_width:.1f} &times; {phys_height:.1f} cm</td></tr>
-<tr><td>&#127912; Anzahl Farben</td><td>{len(self._color_stats)} verschiedene Farben</td></tr>
-<tr><td>&#10010; Gesamt</td><td>{totals_text}</td></tr>
+<tr><td>&#128207; {t("Fertige Gr&ouml;&szlig;e")}</td><td>{t("{w} &times; {h} cm").format(w=f"{phys_width:.1f}", h=f"{phys_height:.1f}")}</td></tr>
+<tr><td>&#127912; {t("Anzahl Farben")}</td><td>{t("{n} verschiedene Farben").format(n=len(self._color_stats))}</td></tr>
+<tr><td>&#10010; {t("Gesamt")}</td><td>{totals_text}</td></tr>
 {backstitch_info}
-<tr><td>{terms["supply_icon"]} {terms["supply_label"]}</td><td>ca. {self._total_skeins} {stats_supply_label}</td></tr>
-<tr><td>&#128196; Musterseiten</td><td>{total_pages} Seiten</td></tr>
+<tr><td>{terms["supply_icon"]} {terms["supply_label"]}</td><td>{t("ca. {n} {unit}").format(n=self._total_skeins, unit=stats_supply_label)}</td></tr>
+<tr><td>&#128196; {t("Musterseiten")}</td><td>{t("{n} Seiten").format(n=total_pages)}</td></tr>
 {self._render_started_date_row()}
 </table>
 </div>
@@ -338,7 +355,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </div>
 
 <div class='cover-footer'>
-<p class='cover-footer-text'>Erstellt mit PySticky &middot; {date}{(" &middot; " + _html_encode(copyright_)) if copyright_ else ""}</p>
+<p class='cover-footer-text'>{t("Erstellt mit PySticky &middot; {date}").format(date=date)}{(" &middot; " + _html_encode(copyright_)) if copyright_ else ""}</p>
 </div>
 </div>"""
 
@@ -354,7 +371,9 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             display = d.strftime("%d.%m.%Y")
         except ValueError:
             display = started
-        return f"<tr><td>&#128197; Begonnen am</td><td>{_html_encode(display)}</td></tr>"
+        return t("<tr><td>&#128197; Begonnen am</td><td>{date}</td></tr>").format(
+            date=_html_encode(display)
+        )
 
     def _render_notes_block(self) -> str:
         """Notizen-Block (optional) — sichtbar wenn Notizen gepflegt sind."""
@@ -364,7 +383,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         lines = "<br>".join(_html_encode(line) for line in notes.split("\n"))
         return (
             "<div class='cover-info' style='margin-top: 16px;'>"
-            "<table><tr><td style='vertical-align: top;'>&#128221; Notizen</td>"
+            f"<table><tr><td style='vertical-align: top;'>&#128221; {t('Notizen')}</td>"
             f"<td>{lines}</td></tr></table></div>"
         )
 
@@ -419,13 +438,16 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         backstitch_info = ""
         if self.pattern.backstitches:
-            backstitch_info = f"<div class='backstitch-info'><strong>&#8600; R&uuml;ckstiche:</strong> {len(self.pattern.backstitches)} Linien werden &uuml;ber dem Muster gezeigt.</div>"
+            backstitch_info = t(
+                "<div class='backstitch-info'><strong>&#8600; R&uuml;ckstiche:</strong> "
+                "{n} Linien werden &uuml;ber dem Muster gezeigt.</div>"
+            ).format(n=len(self.pattern.backstitches))
 
         return f"""
 <div class='page-break'></div>
 <div id='vorschau'>
-<h1>Vorschau des fertigen Musters</h1>
-<h3>Fertige Gr&ouml;&szlig;e auf {_html_encode(fabric_name)}: {phys_width:.1f} &times; {phys_height:.1f} cm</h3>
+<h1>{t("Vorschau des fertigen Musters")}</h1>
+<h3>{t("Fertige Gr&ouml;&szlig;e auf {fabric}: {w} &times; {h} cm").format(fabric=_html_encode(fabric_name), w=f"{phys_width:.1f}", h=f"{phys_height:.1f}")}</h3>
 <div class='preview-container'>
 <svg class='preview-svg' width='{total_width:.1f}' height='{total_height:.1f}'
      shape-rendering='crispEdges'>
@@ -516,13 +538,13 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </tr>""")
 
             bead_section = f"""
-<h2 style='margin-top:30px;'>&#9679; Perlen (Beads)</h2>
-<p style='text-align:center;color:#666;font-size:12px;'>Perlen werden ueber dem Stoff angenaeht und kommen meist am Ende der Stickarbeit dran.</p>
+<h2 style='margin-top:30px;'>&#9679; {t("Perlen (Beads)")}</h2>
+<p style='text-align:center;color:#666;font-size:12px;'>{t("Perlen werden ueber dem Stoff angenaeht und kommen meist am Ende der Stickarbeit dran.")}</p>
 <table class='legend-table' style='max-width:600px;'>
-<tr><th>Farbe</th><th>Symbol</th><th>Perlen-Nr.</th><th>Farbname</th><th>Anzahl</th></tr>
+<tr><th>{t("Farbe")}</th><th>{t("Symbol")}</th><th>{t("Perlen-Nr.")}</th><th>{t("Farbname")}</th><th>{t("Anzahl")}</th></tr>
 {"".join(bead_rows)}
 <tr style='background:#e8f4fc;font-weight:bold;'>
-<td colspan='4' style='text-align:right;'>Gesamt:</td>
+<td colspan='4' style='text-align:right;'>{t("Gesamt:")}</td>
 <td style='text-align:right;'>{total_beads}</td>
 </tr>
 </table>"""
@@ -551,13 +573,13 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </tr>""")
 
             backstitch_section = f"""
-<h2 style='margin-top:30px;'>&#8600; R&uuml;ckstiche</h2>
-<p style='text-align:center;color:#666;font-size:12px;'>R&uuml;ckstiche werden nach den Kreuzstichen gearbeitet und bilden Konturen und Details.</p>
+<h2 style='margin-top:30px;'>&#8600; {t("R&uuml;ckstiche")}</h2>
+<p style='text-align:center;color:#666;font-size:12px;'>{t("R&uuml;ckstiche werden nach den Kreuzstichen gearbeitet und bilden Konturen und Details.")}</p>
 <table class='legend-table' style='max-width:600px;'>
-<tr><th>Farbe</th><th>Symbol</th><th>Garnnummer</th><th>Farbname</th><th>Anzahl</th></tr>
+<tr><th>{t("Farbe")}</th><th>{t("Symbol")}</th><th>{t("Garnnummer")}</th><th>{t("Farbname")}</th><th>{t("Anzahl")}</th></tr>
 {"".join(bs_rows)}
 <tr style='background:#e8f4fc;font-weight:bold;'>
-<td colspan='4' style='text-align:right;'>Gesamt:</td>
+<td colspan='4' style='text-align:right;'>{t("Gesamt:")}</td>
 <td style='text-align:right;'>{len(self.pattern.backstitches)}</td>
 </tr>
 </table>"""
@@ -570,7 +592,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         terms = terms_for(self.pattern)
         is_dp = is_diamond_mode(self.pattern)
-        legend_title = "Drill-Legende und Material" if is_dp else "Legende und Materialbedarf"
+        legend_title = t("Drill-Legende und Material") if is_dp else t("Legende und Materialbedarf")
         unit_col = terms["unit_plural"]  # Stiche / Drills
         supply_col = terms["supply_unit"]  # Stränge / Drills
         code_col = terms["code_header"]  # Garnnummer / Drill-Code
@@ -579,7 +601,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         if is_dp:
             symbol_header = ""
         else:
-            symbol_header = "<th>Symbol</th>"
+            symbol_header = f"<th>{t('Symbol')}</th>"
 
         # Zur Vereinfachung: im DP-Modus zusaetzlich die Symbol-Spalte
         # aus den Rows herausfiltern (sie steht im Format "<td...>Symbol</td>").
@@ -599,19 +621,29 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         # Summary-Row neu bauen (wir brauchen modus-spezifischen colspan)
         summary_row = f"""<tr style='background:#e8f4fc;font-weight:bold;'>
-<td colspan='{summary_colspan}' style='text-align:right;'>Gesamt:</td>
+<td colspan='{summary_colspan}' style='text-align:right;'>{t("Gesamt:")}</td>
 <td style='text-align:right;'>{self._total_stitches}</td>
 <td style='text-align:right;'>100%</td>
 <td style='text-align:center;'>{self._total_skeins}</td>
 </tr>"""
 
+        legend_summary_line = t(
+            "{n} Farben &middot; {stitches} {unit} &middot; ca. {supply_n} {supply_unit} ben&ouml;tigt"
+        ).format(
+            n=len(thread_stats),
+            stitches=self._total_stitches,
+            unit=unit_col,
+            supply_n=self._total_skeins,
+            supply_unit=supply_col,
+        )
+
         return f"""
 <div class='page-break'></div>
 <div id='legende'>
 <h1>{legend_title}</h1>
-<h3>{len(thread_stats)} Farben &middot; {self._total_stitches} {unit_col} &middot; ca. {self._total_skeins} {supply_col} ben&ouml;tigt</h3>
+<h3>{legend_summary_line}</h3>
 <table class='legend-table'>
-<tr><th>Nr.</th>{symbol_header}<th>Farbe</th><th>{code_col}</th><th>Farbname</th>{cross_ref_headers}<th>{unit_col}</th><th>%</th><th>{supply_col}</th></tr>
+<tr><th>{t("Nr.")}</th>{symbol_header}<th>{t("Farbe")}</th><th>{code_col}</th><th>{t("Farbname")}</th>{cross_ref_headers}<th>{unit_col}</th><th>%</th><th>{supply_col}</th></tr>
 {rows_html}
 {summary_row}
 </table>
@@ -635,9 +667,10 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         # Muster als SVG (halbe/Viertel als Polygone, Drills im DP-Modus
         # als facettierte Quadrate).
-        from .export_common import is_diamond_mode, svg_shape_for_stitch
+        from .export_common import is_diamond_mode, svg_shape_for_stitch, terms_for
 
         is_dp_overview = is_diamond_mode(self.pattern)
+        overview_unit_label = terms_for(self.pattern)["unit_plural"]
         svg_rects = []
         for y in range(self.pattern.height):
             for x in range(self.pattern.width):
@@ -710,17 +743,30 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
                 page_nr += 1
             page_cells.append("</tr>")
 
+        overview_summary_line = t(
+            "{total} Musterseiten &middot; {px} Spalten &times; {py} Zeilen &middot; je 40&times;40 {unit}"
+        ).format(total=total_pages, px=pages_x, py=pages_y, unit=overview_unit_label)
+
+        overview_backstitch_note = (
+            t(
+                "<p><strong>&#8600; R&uuml;ckstiche:</strong> {n} R&uuml;ckstiche werden auf den "
+                "Musterseiten als Linien angezeigt.</p>"
+            ).format(n=len(self.pattern.backstitches))
+            if self.pattern.backstitches
+            else ""
+        )
+
         return f"""
 <div class='page-break'></div>
 <div id='uebersicht' class='overview-section'>
 <div class='overview-header'>
-<h1>&#128506; Seiten&uuml;bersicht</h1>
-<p>{total_pages} Musterseiten &middot; {pages_x} Spalten &times; {pages_y} Zeilen &middot; je 40&times;40 {"Drills" if is_dp_overview else "Stiche"}</p>
+<h1>&#128506; {t("Seiten&uuml;bersicht")}</h1>
+<p>{overview_summary_line}</p>
 </div>
 
 <div class='overview-container'>
 <div class='overview-preview-box'>
-<div class='overview-preview-title'>&#128444; Muster&uuml;bersicht</div>
+<div class='overview-preview-title'>&#128444; {t("Muster&uuml;bersicht")}</div>
 <div class='overview-preview-inner'>
 <svg width='{int(overview_w)}' height='{int(overview_h)}' style='display:block;'>
 {"".join(svg_rects)}
@@ -732,7 +778,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </div>
 
 <div class='overview-grid-box'>
-<div class='overview-grid-title'>&#128196; Seiten ausw&auml;hlen</div>
+<div class='overview-grid-title'>&#128196; {t("Seiten ausw&auml;hlen")}</div>
 <table class='overview-table'>
 {"".join(page_cells)}
 </table>
@@ -740,8 +786,8 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </div>
 
 <div class='overview-info'>
-<p><strong>&#128161; Tipp:</strong> Klicken Sie auf eine Seitennummer um direkt zur entsprechenden Musterseite zu springen.</p>
-<p><strong>&#128209; Seitenformat:</strong> Jede Seite zeigt einen Bereich von 40&times;40 Stichen mit 10er-Rasterlinien.</p>
-{f"<p><strong>&#8600; R&uuml;ckstiche:</strong> {len(self.pattern.backstitches)} R&uuml;ckstiche werden auf den Musterseiten als Linien angezeigt.</p>" if self.pattern.backstitches else ""}
+<p><strong>&#128161; {t("Tipp:")}</strong> {t("Klicken Sie auf eine Seitennummer um direkt zur entsprechenden Musterseite zu springen.")}</p>
+<p><strong>&#128209; {t("Seitenformat:")}</strong> {t("Jede Seite zeigt einen Bereich von 40&times;40 Stichen mit 10er-Rasterlinien.")}</p>
+{overview_backstitch_note}
 </div>
 </div>"""
