@@ -39,11 +39,11 @@ class MouseEventsMixin:
             is_move_tool and event.button() == Qt.MouseButton.LeftButton
         ):
             self._panning = True
-            self._last_pan_point = event.pos()
+            self._last_pan_point = event.position().toPoint()
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             return
 
-        ctx = self._create_tool_context(event.pos().x(), event.pos().y())
+        ctx = self._create_tool_context(int(event.position().x()), int(event.position().y()))
         if not ctx:
             return
 
@@ -135,25 +135,25 @@ class MouseEventsMixin:
         self.update()
 
     def mouseMoveEvent(self: "CrossStitchCanvas", event: QMouseEvent) -> None:
-        self._cursor_pos = event.pos()
+        self._cursor_pos = event.position().toPoint()
 
         # Pan
         if self._panning:
-            delta = event.pos() - self._last_pan_point
+            delta = event.position().toPoint() - self._last_pan_point
             self._offset_x += delta.x()
             self._offset_y += delta.y()
-            self._last_pan_point = event.pos()
+            self._last_pan_point = event.position().toPoint()
             self.offset_changed.emit(self._offset_x, self._offset_y)
             self.update()
             return
 
         # Position-Signal
-        grid_x, grid_y = self._screen_to_grid(event.pos().x(), event.pos().y())
+        grid_x, grid_y = self._screen_to_grid(int(event.position().x()), int(event.position().y()))
         if self._is_valid_grid_pos(grid_x, grid_y):
             self.position_changed.emit(grid_x, grid_y)
 
         # Werkzeug-Event
-        ctx = self._create_tool_context(event.pos().x(), event.pos().y())
+        ctx = self._create_tool_context(int(event.position().x()), int(event.position().y()))
         if ctx:
             changes = self._tool_manager.on_mouse_move(ctx, event)
 
@@ -186,7 +186,7 @@ class MouseEventsMixin:
 
         # Progress-Tool: Batch beenden bei beliebigem Button
         if is_progress_tool:
-            ctx = self._create_tool_context(event.pos().x(), event.pos().y())
+            ctx = self._create_tool_context(int(event.position().x()), int(event.position().y()))
             if ctx:
                 self._tool_manager.on_mouse_release(ctx, event)
             if self._batch_active:
@@ -203,7 +203,7 @@ class MouseEventsMixin:
             return
 
         # Werkzeug-Event
-        ctx = self._create_tool_context(event.pos().x(), event.pos().y())
+        ctx = self._create_tool_context(int(event.position().x()), int(event.position().y()))
         if ctx:
             changes = self._tool_manager.on_mouse_release(ctx, event)
 

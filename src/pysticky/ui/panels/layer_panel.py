@@ -331,8 +331,8 @@ class DraggableLayerList(QListWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
-            self._drag_start_pos = event.pos()
-            item = self.itemAt(event.pos())
+            self._drag_start_pos = event.position().toPoint()
+            item = self.itemAt(event.position().toPoint())
             if item:
                 self._dragged_item = item
         super().mousePressEvent(event)
@@ -346,7 +346,7 @@ class DraggableLayerList(QListWidget):
             super().mouseMoveEvent(event)
             return
 
-        if (event.pos() - self._drag_start_pos).manhattanLength() < 10:
+        if (event.position().toPoint() - self._drag_start_pos).manhattanLength() < 10:
             super().mouseMoveEvent(event)
             return
 
@@ -389,7 +389,7 @@ class DraggableLayerList(QListWidget):
 
         event.acceptProposedAction()
 
-        pos = event.pos()
+        pos = event.position().toPoint()
         item = self.itemAt(pos)
         source_row = int(event.mimeData().data("application/x-layer-index").data().decode())
 

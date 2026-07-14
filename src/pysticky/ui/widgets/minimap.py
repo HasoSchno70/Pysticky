@@ -197,11 +197,11 @@ class MinimapWidget(QFrame):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = True
-            self._handle_click(event.pos())
+            self._handle_click(event.position().toPoint())
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if self._dragging:
-            self._handle_click(event.pos())
+            self._handle_click(event.position().toPoint())
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:

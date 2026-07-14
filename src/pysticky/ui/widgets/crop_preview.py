@@ -260,7 +260,7 @@ class CropPreviewWidget(QLabel):
         if event.button() != Qt.MouseButton.LeftButton:
             return
 
-        pos = event.pos()
+        pos = event.position().toPoint()
         self._drag_start = pos
         self._dragging = True
 
@@ -281,7 +281,7 @@ class CropPreviewWidget(QLabel):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """Maus bewegt."""
-        pos = event.pos()
+        pos = event.position().toPoint()
 
         if not self._dragging:
             self._update_cursor(pos)

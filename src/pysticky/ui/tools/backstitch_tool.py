@@ -139,7 +139,9 @@ class BackstitchTool(BaseTool):
                 self._active = False
             else:
                 # Versuchen, Rückstich an Position zu löschen
-                half_x, half_y = self._to_half_stitch(event.pos().x(), event.pos().y(), ctx)
+                half_x, half_y = self._to_half_stitch(
+                    int(event.position().x()), int(event.position().y()), ctx
+                )
                 # Suche den Backstitch zum Löschen
                 bs = ctx.pattern.backstitch_manager.find_at(half_x, half_y, tolerance=2)
                 if bs:
@@ -157,7 +159,9 @@ class BackstitchTool(BaseTool):
         if event.button() != Qt.MouseButton.LeftButton:
             return []
 
-        half_x, half_y = self._to_half_stitch(event.pos().x(), event.pos().y(), ctx)
+        half_x, half_y = self._to_half_stitch(
+            int(event.position().x()), int(event.position().y()), ctx
+        )
 
         if self._start_x is None:
             # Startpunkt setzen
@@ -188,7 +192,9 @@ class BackstitchTool(BaseTool):
     ) -> list[tuple[int, int, int | None]]:
         """Mausbewegung verarbeiten."""
         if self._start_x is not None:
-            half_x, half_y = self._to_half_stitch(event.pos().x(), event.pos().y(), ctx)
+            half_x, half_y = self._to_half_stitch(
+                int(event.position().x()), int(event.position().y()), ctx
+            )
 
             if half_x != self._start_x or half_y != self._start_y:
                 self._preview = BackstitchPreview(

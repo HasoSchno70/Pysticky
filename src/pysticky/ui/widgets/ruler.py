@@ -234,9 +234,9 @@ class RulerWidget(QWidget):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if self._orientation == Qt.Orientation.Horizontal:
-            self._hover_pos = self._screen_to_grid(event.pos().x())
+            self._hover_pos = self._screen_to_grid(int(event.position().x()))
         else:
-            self._hover_pos = self._screen_to_grid(event.pos().y())
+            self._hover_pos = self._screen_to_grid(int(event.position().y()))
 
         # Bounds-Check
         if self._hover_pos < 0 or self._hover_pos >= self._pattern_size:

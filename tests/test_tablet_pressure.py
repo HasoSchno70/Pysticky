@@ -85,6 +85,7 @@ def test_pencil_with_no_tablet_yields_single_stitch(pattern_with_colors):
     press = QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
         QPointF(0, 0),
+        QPointF(0, 0),
         Qt.MouseButton.LeftButton,
         Qt.MouseButton.LeftButton,
         Qt.KeyboardModifier.NoModifier,
@@ -106,6 +107,7 @@ def test_pencil_with_pressure_creates_brush(pattern_with_colors):
 
     press = QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
+        QPointF(0, 0),
         QPointF(0, 0),
         Qt.MouseButton.LeftButton,
         Qt.MouseButton.LeftButton,
@@ -138,6 +140,7 @@ def test_pencil_with_half_pressure_creates_smaller_brush(pattern_with_colors):
 
     press = QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
+        QPointF(0, 0),
         QPointF(0, 0),
         Qt.MouseButton.LeftButton,
         Qt.MouseButton.LeftButton,
@@ -172,6 +175,7 @@ def test_pencil_with_pressure_disabled_in_settings(pattern_with_colors):
     press = QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
         QPointF(0, 0),
+        QPointF(0, 0),
         Qt.MouseButton.LeftButton,
         Qt.MouseButton.LeftButton,
         Qt.KeyboardModifier.NoModifier,
@@ -202,6 +206,7 @@ def test_pencil_with_max_brush_size_1_disables_brush(pattern_with_colors):
     press = QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
         QPointF(0, 0),
+        QPointF(0, 0),
         Qt.MouseButton.LeftButton,
         Qt.MouseButton.LeftButton,
         Qt.KeyboardModifier.NoModifier,
@@ -225,6 +230,7 @@ def test_pencil_pressure_zero_means_single_stitch(pattern_with_colors):
 
     press = QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
+        QPointF(0, 0),
         QPointF(0, 0),
         Qt.MouseButton.LeftButton,
         Qt.MouseButton.LeftButton,

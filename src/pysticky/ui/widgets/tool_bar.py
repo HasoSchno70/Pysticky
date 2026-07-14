@@ -5,12 +5,13 @@ Verwendet eine gemeinsame Basisklasse für alle Button-Typen
 und das zentrale Styling-System.
 """
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QCursor, QFont, QPainter
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
     QLabel,
+    QScrollArea,
     QSizePolicy,
     QToolButton,
     QVBoxLayout,
@@ -289,11 +290,22 @@ class SymmetryToggle(BaseToolButton):
 
 
 class ToolBar(QWidget):
-    """Vertikale Werkzeugleiste."""
+    """Vertikale Werkzeugleiste.
+
+    Bei niedrigen Fenstern reicht die Hoehe oft nicht fuer alle Werkzeuge —
+    statt eines klassischen Scrollbalkens scrollt der Inhalt automatisch,
+    sobald die Maus oben/unten in eine schmale Hover-Zone kommt (aehnlich
+    Drag&Drop-Auto-Scroll). Kleine ▲/▼-Hinweise am Rand zeigen an, wenn in
+    dieser Richtung noch mehr Werkzeuge folgen.
+    """
 
     tool_changed = Signal(object)
     mirror_h_clicked = Signal()
     mirror_v_clicked = Signal()
+
+    HOVER_ZONE_PX = 28
+    SCROLL_STEP_PX = 6
+    SCROLL_INTERVAL_MS = 16
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -306,10 +318,43 @@ class ToolBar(QWidget):
         self._button_group = QButtonGroup(self)
         self._button_group.setExclusive(True)
 
+        # Pollt die Cursor-Position statt auf Mouse-Move-Events zu warten:
+        # die Tool-Buttons fuellen fast die komplette Breite/Hoehe des
+        # Scroll-Bereichs, ein Event-Filter auf dem Viewport wuerde also
+        # kaum je feuern (Mouse-Move-Events gehen an das Button-Widget
+        # unter dem Cursor, nicht an den Viewport dahinter).
+        self._scroll_timer = QTimer(self)
+        self._scroll_timer.setInterval(self.SCROLL_INTERVAL_MS)
+        self._scroll_timer.timeout.connect(self._poll_auto_scroll)
+        self._scroll_timer.start()
+
         self._setup_ui()
 
     def _setup_ui(self) -> None:
-        layout = QVBoxLayout(self)
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        self._scroll_area = QScrollArea(self)
+        self._scroll_area.setWidgetResizable(True)
+        self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self._scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        outer_layout.addWidget(self._scroll_area)
+
+        content = QWidget()
+        self._scroll_area.setWidget(content)
+
+        # ▲/▼-Scroll-Hinweise: eigene Overlay-Labels ueber dem Scroll-Bereich,
+        # transparent fuer Maus-Events, damit die Hover-Auto-Scroll-Zone
+        # darunter weiter funktioniert.
+        self._scroll_hint_top = self._create_scroll_hint("▲")
+        self._scroll_hint_bottom = self._create_scroll_hint("▼")
+        bar = self._scroll_area.verticalScrollBar()
+        bar.valueChanged.connect(self._update_scroll_hints)
+        bar.rangeChanged.connect(self._update_scroll_hints)
+
+        layout = QVBoxLayout(content)
         layout.setContentsMargins(6, 10, 6, 10)
         layout.setSpacing(4)
 
@@ -384,6 +429,55 @@ class ToolBar(QWidget):
         self.setFixedWidth(90)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         self.reapply_styles()
+        self._position_scroll_hints()
+        QTimer.singleShot(0, self._update_scroll_hints)
+
+    def _create_scroll_hint(self, arrow: str) -> QLabel:
+        """Erstellt ein ▲/▼-Overlay-Label (zeigt an, dass in dieser Richtung
+        noch weitere Werkzeuge folgen)."""
+        label = QLabel(arrow, self)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setFixedHeight(16)
+        label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        label.hide()
+        return label
+
+    def _position_scroll_hints(self) -> None:
+        """Positioniert die Scroll-Hinweise am oberen/unteren Rand."""
+        w = self.width()
+        self._scroll_hint_top.setGeometry(0, 0, w, 16)
+        self._scroll_hint_bottom.setGeometry(0, self.height() - 16, w, 16)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._position_scroll_hints()
+
+    def _update_scroll_hints(self) -> None:
+        """Zeigt/versteckt die ▲/▼-Hinweise je nach Scroll-Position."""
+        bar = self._scroll_area.verticalScrollBar()
+        self._scroll_hint_top.setVisible(bar.value() > bar.minimum())
+        self._scroll_hint_bottom.setVisible(bar.value() < bar.maximum())
+
+    def _poll_auto_scroll(self) -> None:
+        """Scrollt automatisch, wenn der Cursor (global) ueber der oberen/
+        unteren Hover-Zone des Viewports steht — per Polling statt Events,
+        da die Tool-Buttons fast den ganzen Viewport ausfuellen und Mouse-
+        Move-Events so direkt an die Buttons gehen, nicht an den Viewport.
+        """
+        bar = self._scroll_area.verticalScrollBar()
+        if bar.maximum() == bar.minimum():
+            return
+
+        viewport = self._scroll_area.viewport()
+        local_pos = viewport.mapFromGlobal(QCursor.pos())
+        if not viewport.rect().contains(local_pos):
+            return
+
+        y = local_pos.y()
+        if y < self.HOVER_ZONE_PX:
+            bar.setValue(bar.value() - self.SCROLL_STEP_PX)
+        elif y > viewport.height() - self.HOVER_ZONE_PX:
+            bar.setValue(bar.value() + self.SCROLL_STEP_PX)
 
     def reapply_styles(self) -> None:
         """Setzt alle Stylesheets neu (für Theme-Wechsel)."""
@@ -394,6 +488,17 @@ class ToolBar(QWidget):
                 border-right: 1px solid {THEME.border_medium};
             }}
         """)
+        self._scroll_area.setStyleSheet("background: transparent; border: none;")
+        self._scroll_area.viewport().setStyleSheet("background: transparent;")
+        self._scroll_area.widget().setStyleSheet("background: transparent;")
+        hint_style = f"""
+            color: {THEME.accent_primary};
+            background: {THEME.bg_dark};
+            font-size: 11px;
+            font-weight: bold;
+        """
+        self._scroll_hint_top.setStyleSheet(hint_style)
+        self._scroll_hint_bottom.setStyleSheet(hint_style)
         for btn in self._buttons.values():
             btn._apply_stylesheet()
         for btn in self._toggle_buttons:
