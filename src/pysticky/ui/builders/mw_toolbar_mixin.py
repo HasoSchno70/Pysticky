@@ -211,61 +211,95 @@ class ToolbarBuilderMixin:
             QToolButton[section="symmetry"]:checked {{ background: {tint(THEME.error, 120)}; border-color: {THEME.error}; }}
             QToolButton[section="stitch"]:checked   {{ background: {tint(THEME.warning, 140)}; border-color: {THEME.warning}; }}
             QToolButton:disabled             {{ color: {THEME.text_disabled}; background: transparent; }}
+
+            /* Modus-Umschalter: bewusst auffaelliger als die uebrigen
+               Toggle-Buttons — zeigt den AKTUELLEN Modus, nicht das Ziel,
+               und hebt sich per Farbe/Groesse klar vom Rest der Toolbar ab. */
+            QToolButton#modeSwitchBtn {{
+                font-size: 13px;
+                font-weight: 800;
+                padding: 6px 16px;
+                border-radius: 8px;
+                border: 2px solid transparent;
+            }}
+            QToolButton#modeSwitchBtn[stitchMode="true"] {{
+                background: {tint(THEME.accent_secondary, 130)};
+                border-color: {THEME.accent_secondary};
+                color: {THEME.text_primary};
+            }}
+            QToolButton#modeSwitchBtn[stitchMode="true"]:hover {{
+                background: {tint(THEME.accent_secondary, 190)};
+            }}
+            QToolButton#modeSwitchBtn[stitchMode="false"] {{
+                background: {tint(THEME.accent_purple, 130)};
+                border-color: {THEME.accent_purple};
+                color: {THEME.text_primary};
+            }}
+            QToolButton#modeSwitchBtn[stitchMode="false"]:hover {{
+                background: {tint(THEME.accent_purple, 190)};
+            }}
         """
 
     def _add_mode_switch(self: "MainWindow", toolbar: QToolBar) -> None:
         """Fuegt den Stitch/Diamond-Mode-Switch in die Toolbar ein.
 
-        Ein prominenter Toggle-Button — Icon und Text aendern sich mit dem
-        aktuellen Modus: zeigt jeweils, WOHIN man wechselt, nicht wo man
-        gerade ist. So ist die Aktion auf einen Blick klar.
+        Zeigt IMMER den AKTUELLEN Modus (nicht das Wechselziel) — Text,
+        Icon und Hintergrundfarbe machen auf einen Blick klar, in welchem
+        Modus man gerade arbeitet. Eigene, kraeftigere Styling-Klasse
+        (#modeSwitchBtn, siehe _get_toolbar_stylesheet) statt der
+        generischen Toggle-Button-Tints, damit sich der Schalter deutlich
+        vom Rest der Toolbar abhebt.
 
         QLabel mit parent=toolbar erzeugen, sonst kurzes Top-Level-Phantom
         beim ersten Show / nach setUpdatesEnabled-Refresh.
         """
         label = QLabel(t("Modus:"), toolbar)
-        label.setStyleSheet(f"color: {THEME.text_muted}; padding: 0 4px 0 8px;")
+        label.setStyleSheet(f"color: {THEME.text_primary}; font-weight: 700; padding: 0 4px 0 8px;")
         toolbar.addWidget(label)
 
         self.btn_mode_switch = self._create_toggle_button(
-            "💎",
-            t("Diamond"),
+            "🧵",
+            t("Kreuzstich"),
             t(
-                "Modus wechseln: aktuell Kreuzstich.\n"
-                "Klicken, um in die Diamond-Painting-Ansicht zu wechseln "
+                "Aktueller Modus: Kreuzstich.\n"
+                "Klicken, um zu Diamond-Painting zu wechseln "
                 "(laedt automatisch die DMC-Diamond-Painting-Palette)."
             ),
-            section="view",
+            section="mode",
         )
-        self.btn_mode_switch.setMinimumWidth(90)
+        self.btn_mode_switch.setObjectName("modeSwitchBtn")
+        self.btn_mode_switch.setProperty("stitchMode", "true")
+        self.btn_mode_switch.setMinimumWidth(130)
         self.btn_mode_switch.toggled.connect(self._on_mode_switch_toggled)
         toolbar.addWidget(self.btn_mode_switch)
 
     def _refresh_mode_switch_button(self: "MainWindow") -> None:
-        """Aktualisiert Icon/Text/Tooltip des Mode-Buttons nach Modus-Wechsel."""
+        """Aktualisiert Icon/Text/Tooltip/Farbe des Mode-Buttons nach Modus-Wechsel."""
         btn = getattr(self, "btn_mode_switch", None)
         if btn is None:
             return
-        if btn.isChecked():
-            # Aktuell Diamond -> Button zeigt Weg zurueck zu Kreuzstich
+        is_diamond = btn.isChecked()
+        if is_diamond:
+            emoji = "💎"
+            btn.setText(t("Diamond"))
+            btn.setToolTip(
+                t("Aktueller Modus: Diamond-Painting.\nKlicken, um zu Kreuzstich zu wechseln.")
+            )
+        else:
             emoji = "🧵"
             btn.setText(t("Kreuzstich"))
             btn.setToolTip(
                 t(
-                    "Modus wechseln: aktuell Diamond-Painting.\n"
-                    "Klicken, um in die Kreuzstich-Ansicht zu wechseln."
-                )
-            )
-        else:
-            emoji = "💎"
-            btn.setText(t("Diamond"))
-            btn.setToolTip(
-                t(
-                    "Modus wechseln: aktuell Kreuzstich.\n"
-                    "Klicken, um in die Diamond-Painting-Ansicht zu wechseln "
+                    "Aktueller Modus: Kreuzstich.\n"
+                    "Klicken, um zu Diamond-Painting zu wechseln "
                     "(laedt automatisch die DMC-Diamond-Painting-Palette)."
                 )
             )
+        # Dynamic-Property fuer die #modeSwitchBtn-QSS-Selektoren — Qt
+        # wertet Property-Selektoren nur nach explizitem Re-Polish neu aus.
+        btn.setProperty("stitchMode", "false" if is_diamond else "true")
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
         # Icon neu erzeugen und im Emoji-Cache-Tupel updaten (sonst wird
         # beim Theme-Wechsel weiterhin das alte Emoji gerendert).
         btn.setIcon(QIcon(self._create_emoji_icon(emoji, 20)))

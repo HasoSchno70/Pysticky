@@ -13,6 +13,7 @@ from .config import APP_NAME, ORG_NAME
 from .ui import MainWindow
 from .ui.styles import apply_theme_to_app, set_theme
 from .ui.wheel_guard import install_wheel_guard
+from .ui.widgets.custom_tooltip import install_custom_tooltips
 from .utils import get_logger, setup_logging
 
 logger = get_logger(__name__)
@@ -52,6 +53,15 @@ class PySticky:
         self.app.setApplicationName(self.APP_NAME_CONST)
         self.app.setOrganizationName(self.ORG_NAME_CONST)
 
+        # "Fusion" statt des nativen Plattform-Stils: der native Windows-
+        # Stil ("windowsvista") rendert Tooltips und manche QPushButtons
+        # teils ueber die OS-Theme-Engine statt ueber unsere QSS/Palette —
+        # das fuehrt zu falschen Farben (z.B. schwarzer Tooltip-Text auf
+        # dunklem Grund) bzw. unsichtbaren Button-Glyphen, wenn OS- und
+        # App-Theme voneinander abweichen. Fusion respektiert QSS/Palette
+        # vollstaendig und macht das Theming plattformunabhaengig konsistent.
+        self.app.setStyle("Fusion")
+
         self.app.setHighDpiScaleFactorRoundingPolicy(
             Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
         )
@@ -87,6 +97,11 @@ class PySticky:
         # Wheel-Guard: verhindert versehentliche Wert-Aenderungen in
         # SpinBoxes/ComboBoxes/Slidern beim Scrollen ueber sie.
         install_wheel_guard(self.app)
+
+        # Custom-Tooltip statt Qt's nativem QToolTip: Qt rendert Tooltips
+        # fuer Widgets innerhalb von QDockWidgets auf Windows nachweislich
+        # mit schwarzem statt Theme-Hintergrund (siehe custom_tooltip.py).
+        install_custom_tooltips(self.app)
 
         self.main_window = MainWindow()
 

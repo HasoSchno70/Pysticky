@@ -136,6 +136,11 @@ def reapply_theme(app) -> None:
     for widget in app.topLevelWidgets():
         _restyle_widget_tree(widget)
 
+    # Custom-Tooltip-Popup (ersetzt Qt's natives QToolTip) neu einfaerben
+    from .widgets.custom_tooltip import reapply_custom_tooltip_theme
+
+    reapply_custom_tooltip_theme()
+
 
 def _append_dark_qss(app) -> None:
     """Lädt dark.qss und hängt es an das App-Stylesheet an."""
@@ -453,6 +458,19 @@ def get_qcolor(hex_color: str) -> QColor:
 
 def apply_theme_to_app(app) -> None:
     """Wendet das Theme auf die gesamte Anwendung an."""
+    # Windows 11 laesst native Popups (Context-Menues, Datei-Dialoge) je
+    # nach OS-weitem Dark/Light-Modus einfaerben — unabhaengig von unserer
+    # eigenen QSS/Palette, sobald das App-Theme vom System-Theme abweicht.
+    # Qt 6.5+ erlaubt, das explizit zu fixieren, statt dem OS zu folgen.
+    # (Tooltips selbst laufen seit custom_tooltip.py nicht mehr ueber Qt's
+    # natives QToolTip, das auf Windows fuer Dock-Widget-Inhalte nachweislich
+    # falsch rendert — siehe dort.)
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtGui import QGuiApplication
+
+    scheme = _Qt.ColorScheme.Dark if _current_theme_name == "dark" else _Qt.ColorScheme.Light
+    QGuiApplication.styleHints().setColorScheme(scheme)
+
     app.setStyleSheet(f"""
         QMainWindow {{
             background: {THEME.bg_dark};

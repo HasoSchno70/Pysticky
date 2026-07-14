@@ -196,6 +196,7 @@ class LayerListItem(QWidget):
                     background: {THEME.accent_primary};
                     border: 1px solid {THEME.accent_primary};
                     border-radius: 6px;
+                    padding: 0;
                 }}
                 QPushButton:hover {{
                     background: {THEME.success};
@@ -209,6 +210,7 @@ class LayerListItem(QWidget):
                     background: {THEME.bg_light};
                     border: 1px solid {THEME.border_medium};
                     border-radius: 6px;
+                    padding: 0;
                 }}
                 QPushButton:hover {{
                     background: {THEME.bg_lighter};
@@ -225,6 +227,7 @@ class LayerListItem(QWidget):
                     background: {THEME.error};
                     border: 1px solid {THEME.error};
                     border-radius: 6px;
+                    padding: 0;
                 }}
                 QPushButton:hover {{
                     background: {THEME.warning};
@@ -238,6 +241,7 @@ class LayerListItem(QWidget):
                     background: {THEME.bg_light};
                     border: 1px solid {THEME.border_medium};
                     border-radius: 6px;
+                    padding: 0;
                 }}
                 QPushButton:hover {{
                     background: {THEME.bg_lighter};
@@ -640,11 +644,25 @@ class LayerPanel(QWidget):
         self._refresh_list()
 
     def _get_btn_style(self) -> str:
+        # padding explizit auf 0: die globale App-QSS setzt fuer QPushButton
+        # "padding: 6px 16px; min-height: 22px;" (siehe apply_theme_to_app).
+        # Diese Werte werden hier NICHT automatisch durch das Fehlen einer
+        # eigenen Angabe ausser Kraft gesetzt — Qt merged ungesetzte
+        # Properties aus der App-weiten Stylesheet rein. Bei
+        # setFixedSize(28, 26) blieb dadurch kein Platz mehr fuer das Glyph
+        # (16px Padding pro Seite > 28px Breite) — die Buttons wirkten
+        # komplett leer.
+        # WICHTIG: min-width/min-height NICHT hier auf 0 setzen — ein in
+        # der QSS gesetztes min-width/min-height ueberschreibt Qts intern
+        # via setFixedSize() gesetzte minimumSize/maximumSize, wodurch der
+        # Button auf seine Inhaltsgroesse zusammenschrumpft statt bei den
+        # fixen 28x26px zu bleiben.
         return f"""
             QPushButton {{
                 background: {THEME.bg_light};
                 border: 1px solid {THEME.border_light};
                 border-radius: 3px;
+                padding: 0;
                 font-size: 12px;
                 font-weight: bold;
                 color: {THEME.text_secondary};

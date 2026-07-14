@@ -20,9 +20,10 @@ from PySide6.QtGui import (
     QPolygonF,
     QWheelEvent,
 )
-from PySide6.QtWidgets import QToolTip, QWidget
+from PySide6.QtWidgets import QWidget
 
 from ...core import ColorPath, Pattern
+from .custom_tooltip import hide_custom_tooltip, show_custom_tooltip
 
 
 class PathPreviewWidget(QWidget):
@@ -227,9 +228,9 @@ class PathPreviewWidget(QWidget):
                 tip = f"Schritt {step.step_number}  |  Position ({step.x}, {step.y})  |  Distanz: {step.distance_from_prev:.1f}"
                 if step.is_jump:
                     tip += "  |  \u26a0 Sprung!"
-                QToolTip.showText(event.globalPosition().toPoint(), tip, self)
+                show_custom_tooltip(tip, event.globalPosition().toPoint())
             else:
-                QToolTip.hideText()
+                hide_custom_tooltip()
         event.accept()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
