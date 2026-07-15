@@ -377,10 +377,9 @@ class InventoryDialog(QDialog):
         # "Zu kaufen"-Spalte fuer diese Zeile neu einfaerben, ohne die
         # komplette Einkaufsliste neu zu berechnen.
         for row in range(self._pattern_table.rowCount()):
-            if (
-                self._pattern_table.item(row, 2).text() == (thread.manufacturer or "")
-                and self._pattern_table.item(row, 3).text() == (thread.catalog_number or "")
-            ):
+            if self._pattern_table.item(row, 2).text() == (
+                thread.manufacturer or ""
+            ) and self._pattern_table.item(row, 3).text() == (thread.catalog_number or ""):
                 needed_text = self._pattern_table.item(row, 4).text()
                 needed = 0 if needed_text == "–" else int(needed_text)
                 self._set_pattern_to_buy_cell(row, needed, value)
