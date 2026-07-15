@@ -79,7 +79,15 @@ target-version = ['py310']
 # PySide6-UI (src/pysticky/ui) ist ausgeklammert: die Qt-Stubs sind
 # unvollstaendig und wuerden nur Rauschen erzeugen.
 # Pragmatischer Einstieg: nicht strict. Spaeter schrittweise verschaerfen.
-python_version = "3.10"
+#
+# python_version=3.12 statt des eigentlichen Minimums 3.10: neuere numpy-
+# Versionen nutzen in ihren eigenen .pyi-Stubs PEP-695-Syntax (`type X = ...`),
+# die mypy unter einem 3.10/3.11-Ziel als Syntaxfehler ablehnt -- unabhaengig
+# davon, mit welcher Python-Version mypy selbst laeuft. Die tatsaechliche
+# 3.10-Kompatibilitaet von PySticky wird weiterhin durch die CI-Testmatrix
+# sichergestellt (pytest laeuft dort wirklich unter 3.10/3.11), nicht durch
+# dieses Setting.
+python_version = "3.12"
 mypy_path = "src"
 explicit_package_bases = true
 namespace_packages = true
