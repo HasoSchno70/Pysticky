@@ -748,6 +748,10 @@ class MiscHandlersMixin:
             if hasattr(w, "_apply_theme"):
                 w._apply_theme()
 
+        # 6b) Farbige Dock-Tab-Punkte neu rendern (Farben aus THEME)
+        if hasattr(self, "_apply_dock_tab_colors"):
+            self._apply_dock_tab_colors()
+
         # 7) Canvas neu zeichnen
         self.canvas.update()
         self.update()

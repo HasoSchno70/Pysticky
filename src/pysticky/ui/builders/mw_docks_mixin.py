@@ -7,12 +7,26 @@ Enthält die Erstellung der Dock-Widgets.
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QDockWidget
 
 from ...core.i18n import t
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
+
+
+def _make_dot_icon(color_hex: str, size: int = 14) -> QIcon:
+    """Erstellt ein kleines farbiges Kreis-Icon (fuer Dock-Tab-Markierungen)."""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(QColor(0, 0, 0, 0))
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(color_hex))
+    painter.drawEllipse(1, 1, size - 2, size - 2)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class DockBuilderMixin:
@@ -89,6 +103,38 @@ class DockBuilderMixin:
         # Größen anpassen
         self.resizeDocks([layer_dock], [220], Qt.Orientation.Horizontal)
         self.resizeDocks([palette_dock], [400], Qt.Orientation.Horizontal)
+
+        # Rechts getabbte Docks bekommen je einen farbigen Tab-Punkt, damit
+        # die Tabs sich unterscheiden lassen statt alle gleich grau zu wirken.
+        self._dock_tab_widgets = {
+            palette_dock: "accent_purple",
+            info_dock: "info",
+            tile_dock: "accent_secondary",
+            progress_dock: "success",
+        }
+        self._apply_dock_tab_colors()
+
+    def _apply_dock_tab_colors(self: "MainWindow") -> None:
+        """Setzt/aktualisiert die farbigen Tab-Punkte (siehe _create_dock_widgets).
+
+        Wird auch nach einem Theme-Wechsel erneut aufgerufen, damit die
+        Farben zum jeweils aktiven Theme passen (siehe _reapply_all_widget_styles).
+        """
+        from PySide6.QtCore import QSize
+        from PySide6.QtWidgets import QTabBar
+
+        from ..styles import THEME
+
+        mapping = getattr(self, "_dock_tab_widgets", None)
+        if not mapping:
+            return
+        for dock, color_attr in mapping.items():
+            color_hex = getattr(THEME, color_attr)
+            dock.setWindowIcon(_make_dot_icon(color_hex))
+
+        for tab_bar in self.findChildren(QTabBar):
+            if tab_bar.iconSize().width() < 14:
+                tab_bar.setIconSize(QSize(14, 14))
 
     def _create_dock(self, title: str, widget) -> QDockWidget:
         """Erstellt ein Dock-Widget mit Standard-Einstellungen."""

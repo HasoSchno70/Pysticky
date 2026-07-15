@@ -78,6 +78,11 @@ class ToolbarBuilderMixin:
         self._add_section_divider(toolbar, THEME.warning)
 
         # === EINSTELLUNGEN ===
+        # Garn-Vorrat bekommt einen eigenen Toolbar-Button — vorher nur tief
+        # im Bearbeiten-Menue versteckt (schwer zu finden, siehe User-Feedback).
+        self._add_toolbar_action(
+            toolbar, self.action_inventory, "🧶", t("Garn-Vorrat"), section="misc"
+        )
         self._add_toolbar_action(
             toolbar, self.action_settings, "⚙️", t("Einstellungen"), section="misc"
         )

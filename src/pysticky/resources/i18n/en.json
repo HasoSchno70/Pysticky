@@ -1296,5 +1296,7 @@
   "Mehrere Projekte": "Multiple Projects",
   "PySticky-Muster (*.pxs)": "PySticky Patterns (*.pxs)",
   "⚠ Nicht ladbar: ": "⚠ Could not load: ",
-  "Stränge insgesamt zu kaufen": "skeins to buy in total"
+  "Stränge insgesamt zu kaufen": "skeins to buy in total",
+  "Garn-Vorrat": "Thread Inventory",
+  "Farbe ersetzen (Ctrl+R)": "Replace color (Ctrl+R)"
 }

@@ -54,7 +54,7 @@ class ActionsBuilderMixin:
         self.action_import_image.triggered.connect(self._on_import_image)
 
         self.action_import_xsd_pat = QAction(t("Muster importieren (XSD/PAT/OXS)..."), self)
-        self.action_import_xsd_pat.setShortcut("Ctrl+Shift+I")
+        self.action_import_xsd_pat.setShortcut("Ctrl+Alt+I")
         self.action_import_xsd_pat.setToolTip(t("Muster importieren (XSD/PAT/OXS)..."))
         self.action_import_xsd_pat.triggered.connect(self._on_import_xsd_pat)
 
@@ -156,8 +156,8 @@ class ActionsBuilderMixin:
         self.action_resize.triggered.connect(self._on_resize_pattern)
 
         self.action_replace_color = QAction(t("Farbe &ersetzen..."), self)
-        self.action_replace_color.setShortcut("Ctrl+H")
-        self.action_replace_color.setToolTip(t("Farbe ersetzen (Ctrl+H)"))
+        self.action_replace_color.setShortcut("Ctrl+R")
+        self.action_replace_color.setToolTip(t("Farbe ersetzen (Ctrl+R)"))
         self.action_replace_color.triggered.connect(self._on_replace_color)
 
         self.action_swap_colors = QAction(t("Farben &tauschen..."), self)

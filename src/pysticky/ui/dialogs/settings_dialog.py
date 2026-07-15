@@ -7,6 +7,7 @@ Die einzelnen Tabs sind in separate Widgets ausgelagert.
 
 from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
@@ -42,13 +43,45 @@ class SettingsDialog(QDialog):
         self._settings = QSettings()
 
         self.setWindowTitle(t("Einstellungen"))
-        # Kompaktere Default-Größe — Tabs mit viel Inhalt sind ohnehin scrollbar
         self.setMinimumSize(680, 560)
-        self.resize(780, 680)
 
         self._setup_ui()
         self._load_settings()
         self._apply_styles()
+        self._auto_size_to_content()
+
+    def _auto_size_to_content(self) -> None:
+        """Groesse so waehlen, dass moeglichst alle Tabs ohne Scrollen passen.
+
+        Die Tabs unterscheiden sich stark in ihrer natuerlichen Hoehe (z.B.
+        "Allgemein" ist viel hoeher als "Tastenkuerzel") — bei fixer
+        Default-Groesse musste man staendig scrollen. Begrenzt auf einen
+        Anteil der verfuegbaren Bildschirmflaeche, damit der Dialog auf
+        kleineren/anderen Monitoren nicht ueber den Rand waechst (dafuer
+        bleibt die QScrollArea pro Tab als Fallback erhalten).
+        """
+        tabs = [
+            self.general_tab,
+            self.canvas_tab,
+            self.tools_tab,
+            self.colors_tab,
+            self.files_tab,
+            self.shortcuts_tab,
+        ]
+        content_w = max(tab.sizeHint().width() for tab in tabs)
+        content_h = max(tab.sizeHint().height() for tab in tabs)
+
+        # Chrome: Tab-Leiste, Button-Reihe, Layout-Abstaende, Scrollbar-Breite
+        target_w = content_w + 60
+        target_h = content_h + 150
+
+        screen = self.screen() or QApplication.primaryScreen()
+        avail = screen.availableGeometry() if screen else None
+        if avail is not None:
+            target_w = min(target_w, int(avail.width() * 0.9))
+            target_h = min(target_h, int(avail.height() * 0.92))
+
+        self.resize(max(target_w, self.minimumWidth()), max(target_h, self.minimumHeight()))
 
     def _setup_ui(self):
         """Erstellt die UI-Struktur."""
