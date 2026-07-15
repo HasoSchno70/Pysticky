@@ -61,8 +61,15 @@ class _CustomTooltip(QWidget):
             }}
         """)
 
-    def show_at(self, text: str, global_pos: QPoint) -> None:
-        """Zeigt den Tooltip mit `text`, positioniert relativ zu `global_pos`."""
+    def show_at(self, text: str, global_pos: QPoint, widget: QWidget | None = None) -> None:
+        """Zeigt den Tooltip mit `text`.
+
+        Vertikal wird bevorzugt unterhalb von `widget` positioniert (statt
+        nur mit festem Cursor-Offset) — bei kleinen Widgets (z.B. einer
+        ~30px hohen QSpinBox) reichte der reine Cursor-Offset sonst nicht
+        aus, um das Widget selbst nicht zu verdecken, wenn der Cursor nahe
+        am oberen Rand des Widgets steht.
+        """
         if not text:
             self.hide()
             return
@@ -74,12 +81,18 @@ class _CustomTooltip(QWidget):
         geo = screen.availableGeometry() if screen else None
 
         x = global_pos.x() + 12
-        y = global_pos.y() + 20
+        if widget is not None:
+            y = widget.mapToGlobal(QPoint(0, widget.height())).y() + 6
+        else:
+            y = global_pos.y() + 20
         if geo is not None:
             if x + self.width() > geo.right():
                 x = geo.right() - self.width()
             if y + self.height() > geo.bottom():
-                y = global_pos.y() - self.height() - 4
+                if widget is not None:
+                    y = widget.mapToGlobal(QPoint(0, 0)).y() - self.height() - 4
+                else:
+                    y = global_pos.y() - self.height() - 4
 
         self.move(x, y)
         self.show()
@@ -95,9 +108,9 @@ def _get_instance() -> _CustomTooltip:
     return _instance
 
 
-def show_custom_tooltip(text: str, global_pos: QPoint) -> None:
+def show_custom_tooltip(text: str, global_pos: QPoint, widget: QWidget | None = None) -> None:
     """Zeigt den Custom-Tooltip an — fuer manuelle Aufrufe (statt QToolTip.showText)."""
-    _get_instance().show_at(text, global_pos)
+    _get_instance().show_at(text, global_pos, widget)
 
 
 def hide_custom_tooltip() -> None:
@@ -122,7 +135,7 @@ class _TooltipEventFilter(QObject):
             if isinstance(obj, QWidget):
                 text = obj.toolTip()
                 if text:
-                    show_custom_tooltip(text, event.globalPos())
+                    show_custom_tooltip(text, event.globalPos(), obj)
                     return True
                 hide_custom_tooltip()
             return False
