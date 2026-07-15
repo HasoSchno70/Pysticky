@@ -71,7 +71,12 @@ class PatternStatisticsDialog(QDialog):
         self._pattern = pattern
 
         self.setWindowTitle(t("Muster-Statistiken & Garnverbrauch"))
-        self.setMinimumSize(750, 650)
+        # Breit genug fuer alle 6 Tabs (inkl. "Einkaufsliste") gewaehlt, damit
+        # die Tab-Leiste auch dann nicht abgeschnitten wird, wenn
+        # _auto_size_to_content() aus irgendeinem Grund (Bildschirm/DPI-
+        # Eigenheiten) nicht ausreichend vergroessert -- diese Mindestbreite
+        # ist der harte Boden, unter den auto_size_dialog() nie geht.
+        self.setMinimumSize(1200, 650)
 
         self._setup_ui()
         self._apply_styles()
