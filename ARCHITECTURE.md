@@ -75,7 +75,7 @@ Pattern-Verwaltung.
 
 ### 2. Der Canvas (`ui/canvas/`)
 
-`CrossStitchCanvas` (`canvas.py`) ist ein `QWidget` und komponiert sechs
+`CrossStitchCanvas` (`canvas.py`) ist ein `QWidget` und komponiert acht
 Mixins aus `ui/canvas/mixins/`:
 
 - `CoordinatesMixin` — Umrechnung Bildschirm ↔ Raster

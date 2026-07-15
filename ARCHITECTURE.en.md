@@ -75,7 +75,7 @@ pattern management.
 
 ### 2. The Canvas (`ui/canvas/`)
 
-`CrossStitchCanvas` (`canvas.py`) is a `QWidget` and composes six mixins from
+`CrossStitchCanvas` (`canvas.py`) is a `QWidget` and composes eight mixins from
 `ui/canvas/mixins/`:
 
 - `CoordinatesMixin` — screen ↔ grid coordinate conversion
