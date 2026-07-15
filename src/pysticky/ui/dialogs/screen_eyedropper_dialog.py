@@ -76,7 +76,7 @@ def find_nearest_thread(
 class ScreenEyedropperDialog(QDialog):
     """Vollbild-Overlay mit Screenshot, das einen Klick zur Farbe konvertiert."""
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, palette_names: Optional[list[str]] = None) -> None:
         super().__init__(parent)
         self.setWindowFlags(
             Qt.WindowType.Window
@@ -85,6 +85,13 @@ class ScreenEyedropperDialog(QDialog):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
         self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
+
+        # Ohne Einschraenkung wurde die gepickte Farbe gegen ALLE geladenen
+        # Garnpaletten gematcht -- das konnte eine Farbe eines ganz anderen
+        # Herstellers als den im aktuellen Muster verwendeten zurueckliefern.
+        # Der Aufrufer kann hier die aktuell verwendete Palette uebergeben,
+        # damit das Ergebnis konsistent beim selben Hersteller bleibt.
+        self._palette_names = palette_names
 
         self._picked_color: Optional[QColor] = None
         self._picked_thread: Optional[Thread] = None
@@ -146,8 +153,9 @@ class ScreenEyedropperDialog(QDialog):
             self.reject()
             return
         self._picked_color = color
-        # Naechsten Thread suchen
-        self._picked_thread = find_nearest_thread(color)
+        # Naechsten Thread suchen (auf die uebergebene Palette eingeschraenkt,
+        # falls gesetzt -- sonst ueber alle geladenen Paletten).
+        self._picked_thread = find_nearest_thread(color, self._palette_names)
         self.accept()
 
     def keyPressEvent(self, event) -> None:

@@ -149,7 +149,12 @@ class EditHandlersMixin:
         """Oeffnet den Vollbild-Screen-Eyedropper."""
         from ..dialogs import ScreenEyedropperDialog
 
-        dialog = ScreenEyedropperDialog(self)
+        # Match auf die aktuell im Palette-Panel gewaehlte Palette
+        # einschraenken, statt ueber alle Hersteller zu suchen -- sonst
+        # landet leicht eine Farbe eines fremden Herstellers im Muster.
+        current_palette = self.palette_panel.current_palette_name()
+        palette_names = [current_palette] if current_palette else None
+        dialog = ScreenEyedropperDialog(self, palette_names=palette_names)
         if dialog.exec() != dialog.DialogCode.Accepted:
             return
 
