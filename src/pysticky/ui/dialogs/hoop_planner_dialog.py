@@ -1,5 +1,5 @@
 """
-Multi-Hoop-Planer-Dialog: zeigt wie ein grosses Muster in mehrere
+Rahmenaufteilung-Dialog: zeigt wie ein grosses Muster in mehrere
 Stickrahmen-Sektoren aufgeteilt werden kann.
 
 User stellt Rahmen-Groesse + Ueberlappung ein, sieht eine grafische
@@ -118,7 +118,7 @@ class _HoopPreviewWidget(QFrame):
 
         # Sektoren-Overlay
         if self._plan is None or self._plan.fits_single_hoop:
-            # Kein Multi-Hoop noetig — Hinweis
+            # Keine Aufteilung noetig — Hinweis
             painter.setPen(QColor(THEME.success))
             font = QFont("Segoe UI", 10, QFont.Weight.Bold)
             painter.setFont(font)
@@ -185,7 +185,7 @@ class HoopPlannerDialog(QDialog):
         super().__init__(parent)
         self._pattern = pattern
 
-        self.setWindowTitle(t("Multi-Hoop-Planer"))
+        self.setWindowTitle(t("Rahmenaufteilung"))
         self.setMinimumSize(820, 600)
         self._setup_ui()
         self._recalculate()

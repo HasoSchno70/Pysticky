@@ -255,7 +255,7 @@ class ActionsBuilderMixin:
         )
         self.action_isolate_color.triggered.connect(self._on_toggle_isolate_current_color)
 
-        self.action_hoop_planner = QAction(t("&Multi-Hoop-Planer..."), self)
+        self.action_hoop_planner = QAction(t("&Rahmenaufteilung..."), self)
         self.action_hoop_planner.setToolTip(t("Großes Muster auf mehrere Stickrahmen aufteilen"))
         self.action_hoop_planner.triggered.connect(self._on_show_hoop_planner)
 

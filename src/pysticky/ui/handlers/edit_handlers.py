@@ -224,7 +224,7 @@ class EditHandlersMixin:
         dialog.exec()
 
     def _on_show_hoop_planner(self: "MainWindow") -> None:
-        """Öffnet den Multi-Hoop-Planer."""
+        """Öffnet die Rahmenaufteilung."""
         from ..dialogs import HoopPlannerDialog
 
         dialog = HoopPlannerDialog(self.current_pattern, self)

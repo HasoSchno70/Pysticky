@@ -1,5 +1,5 @@
 """
-Multi-Hoop-Planung: teilt ein grosses Muster in mehrere Stickrahmen-Sektoren
+Rahmenaufteilung: teilt ein grosses Muster in mehrere Stickrahmen-Sektoren
 mit konfigurierbarer Ueberlappung.
 
 Pure Funktionen — kein Qt, keine UI.
@@ -43,7 +43,7 @@ class HoopSector:
 
 @dataclass(frozen=True)
 class HoopPlan:
-    """Ergebnis der Multi-Hoop-Berechnung."""
+    """Ergebnis der Rahmenaufteilungs-Berechnung."""
 
     pattern_width: int
     pattern_height: int

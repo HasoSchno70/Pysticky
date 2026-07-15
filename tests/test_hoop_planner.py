@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests fuer den Multi-Hoop-Planer (core/hoop_planner.py)."""
+"""Tests fuer die Rahmenaufteilung (core/hoop_planner.py)."""
 
 import pytest
 
