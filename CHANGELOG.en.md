@@ -10,6 +10,40 @@ versioning based on [Semantic Versioning](https://semver.org/) (pre-1.0:
 
 ## [Unreleased]
 
+## [0.8.1] — 2026-07-15
+
+### Added
+
+- Yarn inventory list: the "In Pattern" tab now shows Needed/To Buy next
+  to stock; "All Entries" allows manually adding a color (manufacturer
+  picked from loaded palettes, color selectable directly instead of
+  looking up the catalog number) and now also shows a color swatch
+- Combined shopping list across multiple projects (yarn inventory)
+- Community docs: SECURITY.md, CODE_OF_CONDUCT.md, CHANGELOG.md,
+  issue/PR templates (German + English)
+- Full English translations of all documentation files
+- README: Screenshots section
+- CI: version tags automatically publish a GitHub Release with the
+  `.exe` attached
+
+### Changed
+
+- The top icon toolbar now scrolls on hover in narrow windows instead of
+  showing Qt's default overflow menu (like the left tool palette)
+- Settings dialog: auto-sizing now also accounts for the tab bar's own
+  required width
+- Moved the yarn inventory button into the toolbar (previously hidden
+  only in the Edit menu)
+- Layer panel buttons, custom tooltip instead of QToolTip, more visible
+  mode switch
+
+### Fixed
+
+- Settings dialog theme bug, PDF/HTML export i18n gap
+- Duplicate keyboard shortcuts (yarn inventory vs. pattern import,
+  replace color vs. highlight color)
+- ARCHITECTURE.md: corrected mixin count (six -> eight)
+
 ## [0.8.0] — 2026-07-15
 
 First public snapshot. The list below is a rough summary — the full,

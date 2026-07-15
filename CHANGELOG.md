@@ -10,6 +10,40 @@ vor 1.0: `0.MINOR.PATCH`, Breaking Changes möglich innerhalb 0.x).
 
 ## [Unreleased]
 
+## [0.8.1] — 2026-07-15
+
+### Hinzugefügt
+
+- Garn-Vorratsliste: "Im Muster"-Tab zeigt jetzt Benötigt/Zu-kaufen neben
+  dem Bestand; "Alle Einträge" erlaubt manuelles Hinzufügen einer Farbe
+  (Hersteller-Auswahl aus geladenen Paletten, Farbe direkt wählbar statt
+  Katalognummer nachzuschlagen) und zeigt jetzt ebenfalls ein Farbquadrat
+- Kombinierte Einkaufsliste über mehrere Projekte hinweg (Garn-Vorrat)
+- Community-Docs: SECURITY.md, CODE_OF_CONDUCT.md, CHANGELOG.md,
+  Issue-/PR-Templates (Deutsch + Englisch)
+- Vollständige englische Übersetzungen aller Doku-Dateien
+- README: Screenshots-Sektion
+- CI: Versions-Tags veröffentlichen automatisch ein GitHub-Release mit
+  angehängter `.exe`
+
+### Geändert
+
+- Obere Icon-Leiste scrollt bei schmalen Fenstern per Hover statt Qt's
+  Standard-Überlaufmenü zu zeigen (wie die linke Werkzeugleiste)
+- Einstellungen-Dialog: Auto-Größe berücksichtigt jetzt auch die
+  benötigte Breite der Tab-Leiste selbst
+- Garn-Vorrat-Button in die Werkzeugleiste geholt (vorher nur im
+  Bearbeiten-Menü versteckt)
+- Layer-Panel-Buttons, Custom-Tooltip statt QToolTip, Modus-Switch
+  deutlicher sichtbar
+
+### Behoben
+
+- Settings-Dialog Theme-Bug, PDF/HTML-Export i18n-Lücke
+- Doppelte Tastenkürzel (Garn-Vorrat vs. Muster-Import, Farbe ersetzen
+  vs. hervorheben)
+- ARCHITECTURE.md: Mixin-Zahl korrigiert (sechs -> acht)
+
 ## [0.8.0] — 2026-07-15
 
 Erster öffentlicher Stand. Die folgende Liste ist eine grobe Zusammenfassung
