@@ -257,6 +257,10 @@ class CropPreviewWidget(QLabel):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Maus gedrückt."""
+        # WICHTIG: event.accept() bei Mittel-/Rechtsklick verhindert Windows
+        # AutoScroll-Modus (das flackernde "Scrollen deaktiviert"-Toast),
+        # siehe MouseEventsMixin.mousePressEvent fuer den gleichen Fix.
+        event.accept()
         if event.button() != Qt.MouseButton.LeftButton:
             return
 

@@ -39,6 +39,7 @@ from ...core.constants import COMMON_FABRIC_COUNTS
 from ...core.i18n import t
 from ..styles import THEME
 from ..widgets.statistics_widgets import StatCard
+from .dialog_sizing import auto_size_dialog
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -75,6 +76,14 @@ class PatternStatisticsDialog(QDialog):
         self._setup_ui()
         self._apply_styles()
         self._calculate_statistics()
+        self._auto_size_to_content()
+
+    def _auto_size_to_content(self) -> None:
+        """Groesse so waehlen, dass moeglichst alle Tabs ohne Scrollen passen
+        (gleiches Muster wie SettingsDialog — 6 Tabs mit Emoji brauchen bei
+        fixer Default-Groesse oft mehr Breite als die Tab-Leiste hat)."""
+        tabbar_w = self._tabs.tabBar().sizeHint().width() + 40
+        auto_size_dialog(self, self._tab_widgets, min_width=tabbar_w)
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -83,6 +92,7 @@ class PatternStatisticsDialog(QDialog):
 
         # Tabs
         tabs = QTabWidget()
+        self._tabs = tabs
 
         # Tab 1: Übersicht
         overview_tab = QWidget()
@@ -114,6 +124,14 @@ class PatternStatisticsDialog(QDialog):
         self._setup_shopping_tab(shopping_tab)
         tabs.addTab(shopping_tab, t("🛒 Einkaufsliste"))
 
+        self._tab_widgets = [
+            overview_tab,
+            colors_tab,
+            thread_tab,
+            time_tab,
+            progress_tab,
+            shopping_tab,
+        ]
         layout.addWidget(tabs, 1)
 
         # Footer

@@ -7,7 +7,6 @@ Die einzelnen Tabs sind in separate Widgets ausgelagert.
 
 from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtWidgets import (
-    QApplication,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
@@ -20,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from ...core.i18n import t
 from ..styles import THEME, Styles
+from .dialog_sizing import auto_size_dialog
 from .settings_tabs import CanvasTab, ColorsTab, FilesTab, GeneralTab, ShortcutsTab, ToolsTab
 
 
@@ -68,25 +68,11 @@ class SettingsDialog(QDialog):
             self.files_tab,
             self.shortcuts_tab,
         ]
-        content_w = max(tab.sizeHint().width() for tab in tabs)
-        content_h = max(tab.sizeHint().height() for tab in tabs)
-
         # Tab-Leiste selbst braucht bei 6 Tabs (Emoji + Label) oft mehr
         # Breite als die schmalste Tab-Seite — sonst zeigt Qt Scroll-Pfeile
         # an der Tab-Leiste, obwohl der Dialog laengst breit genug waere.
         tabbar_w = self.tabs.tabBar().sizeHint().width() + 40
-
-        # Chrome: Tab-Leiste, Button-Reihe, Layout-Abstaende, Scrollbar-Breite
-        target_w = max(content_w + 60, tabbar_w)
-        target_h = content_h + 150
-
-        screen = self.screen() or QApplication.primaryScreen()
-        avail = screen.availableGeometry() if screen else None
-        if avail is not None:
-            target_w = min(target_w, int(avail.width() * 0.9))
-            target_h = min(target_h, int(avail.height() * 0.92))
-
-        self.resize(max(target_w, self.minimumWidth()), max(target_h, self.minimumHeight()))
+        auto_size_dialog(self, tabs, min_width=tabbar_w)
 
     def _setup_ui(self):
         """Erstellt die UI-Struktur."""
