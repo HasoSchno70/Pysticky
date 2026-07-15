@@ -276,8 +276,8 @@ class HeatmapDialog(QDialog):
         h = 14
         img = QImage(w, h, QImage.Format.Format_RGB32)
         for x in range(w):
-            t = x / float(w - 1)
-            r, g, b = _intensity_to_rgb(t)
+            intensity = x / float(w - 1)
+            r, g, b = _intensity_to_rgb(intensity)
             color = (0xFF << 24) | (r << 16) | (g << 8) | b
             for y in range(h):
                 img.setPixel(x, y, color)
