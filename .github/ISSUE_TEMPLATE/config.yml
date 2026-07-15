@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Sicherheitslücke melden
+    url: https://github.com/HasoSchno70/Pysticky/security/advisories/new
+    about: Bitte Sicherheitslücken NICHT als öffentliches Issue melden — siehe SECURITY.md

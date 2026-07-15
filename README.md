@@ -370,3 +370,8 @@ MIT — siehe [LICENSE](LICENSE).
 3. Commit mit aussagekraeftiger Message
 4. Tests laufen lassen (`pytest tests/`)
 5. Pull Request
+
+Mehr Details in [CONTRIBUTING.md](CONTRIBUTING.md). Für alle Mitwirkenden
+gilt unser [Verhaltenskodex](CODE_OF_CONDUCT.md). Sicherheitslücken bitte
+gemäß [SECURITY.md](SECURITY.md) melden. Änderungen an PySticky stehen im
+[CHANGELOG](CHANGELOG.md).
