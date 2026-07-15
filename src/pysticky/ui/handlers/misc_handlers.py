@@ -718,11 +718,15 @@ class MiscHandlersMixin:
 
     def _reapply_all_widget_styles(self: "MainWindow") -> None:
         """Setzt alle Widget-Stylesheets neu nach Theme-Wechsel."""
-        from PySide6.QtWidgets import QToolBar, QWidget
+        from PySide6.QtWidgets import QWidget
+
+        from ..styles import THEME
+        from ..widgets.icon_toolbar import IconToolBar
 
         # 1) Haupt-Toolbar (oben) — hat eigenes Stylesheet
-        for toolbar in self.findChildren(QToolBar):
+        for toolbar in self.findChildren(IconToolBar):
             toolbar.setStyleSheet(self._get_toolbar_stylesheet())
+            toolbar.reapply_hint_style(THEME.accent_primary, THEME.bg_dark)
 
         # 1b) Emoji-Icons neu rendern mit aktueller Theme-Farbe
         self._refresh_toolbar_icons()

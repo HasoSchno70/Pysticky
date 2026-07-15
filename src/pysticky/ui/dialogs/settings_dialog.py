@@ -71,8 +71,13 @@ class SettingsDialog(QDialog):
         content_w = max(tab.sizeHint().width() for tab in tabs)
         content_h = max(tab.sizeHint().height() for tab in tabs)
 
+        # Tab-Leiste selbst braucht bei 6 Tabs (Emoji + Label) oft mehr
+        # Breite als die schmalste Tab-Seite — sonst zeigt Qt Scroll-Pfeile
+        # an der Tab-Leiste, obwohl der Dialog laengst breit genug waere.
+        tabbar_w = self.tabs.tabBar().sizeHint().width() + 40
+
         # Chrome: Tab-Leiste, Button-Reihe, Layout-Abstaende, Scrollbar-Breite
-        target_w = content_w + 60
+        target_w = max(content_w + 60, tabbar_w)
         target_h = content_h + 150
 
         screen = self.screen() or QApplication.primaryScreen()

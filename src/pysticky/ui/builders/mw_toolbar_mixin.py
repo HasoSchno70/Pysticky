@@ -6,12 +6,13 @@ Enthält die Erstellung der Toolbar und Hilfsmethoden.
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QColor, QFont, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QComboBox, QFrame, QLabel, QToolBar, QToolButton, QWidget
+from PySide6.QtWidgets import QComboBox, QFrame, QLabel, QToolButton, QWidget
 
 from ...core.i18n import t
 from ..styles import THEME
+from ..widgets.icon_toolbar import IconToolBar
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
@@ -21,16 +22,18 @@ class ToolbarBuilderMixin:
     """Mixin für Toolbar-Erstellung."""
 
     def _create_toolbar(self: "MainWindow") -> None:
-        """Erstellt die Toolbar mit Icons und farblich gruppierten Sektionen."""
+        """Erstellt die Toolbar mit Icons und farblich gruppierten Sektionen.
+
+        Eigenes ``IconToolBar``-Widget statt nativer ``QToolBar`` — dadurch
+        scrollt die Leiste bei schmalen Fenstern per Hover genauso wie die
+        linke Werkzeugleiste, statt Qt's ">>"-Ueberlaufmenue zu zeigen.
+        Eingehaengt wird sie in ``_create_central_widget`` (MainWindow).
+        """
         self._emoji_actions: list[tuple[QAction, str, int]] = []
         self._emoji_buttons: list[tuple[QToolButton, str, int]] = []
         self._toolbar_section_buttons: list[tuple[QToolButton, str]] = []
 
-        toolbar = QToolBar(t("Hauptwerkzeuge"))
-        toolbar.setMovable(False)
-        toolbar.setIconSize(QSize(24, 24))
-        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.addToolBar(toolbar)
+        toolbar = IconToolBar()
         self._toolbar = toolbar
 
         # === DATEI === (gruen)
@@ -88,8 +91,10 @@ class ToolbarBuilderMixin:
         )
 
         toolbar.setStyleSheet(self._get_toolbar_stylesheet())
+        toolbar.reapply_hint_style(THEME.accent_primary, THEME.bg_dark)
+        toolbar.finalize()
 
-    def _add_section_divider(self, toolbar: QToolBar, color: str) -> None:
+    def _add_section_divider(self, toolbar: IconToolBar, color: str) -> None:
         """Vertikale Trennlinie in der angegebenen Akzentfarbe.
 
         WICHTIG: Wrapper + Line werden mit ``parent=toolbar`` konstruiert.
@@ -117,21 +122,14 @@ class ToolbarBuilderMixin:
         layout.addWidget(line)
         toolbar.addWidget(wrapper)
 
-    def _add_stitch_type_picker(self: "MainWindow", toolbar: QToolBar) -> None:
-        """Fuegt einen kompakten Stichtyp-Picker (QComboBox mit Glyphen) hinzu.
-
-        WICHTIG: ``QToolBar.addWidget()`` returnt eine ``QWidgetAction`` —
-        ``setVisible`` auf das Widget direkt aufrufen funktioniert in
-        QToolBar nicht zuverlaessig. Stattdessen muss die zurueckgegebene
-        Action gesteuert werden. Deshalb speichern wir hier die Actions
-        unter ``*_action``, damit der View-Handler sie ausblenden kann.
-        """
+    def _add_stitch_type_picker(self: "MainWindow", toolbar: IconToolBar) -> None:
+        """Fuegt einen kompakten Stichtyp-Picker (QComboBox mit Glyphen) hinzu."""
         # parent=toolbar verhindert Top-Level-Phantom beim ersten Show.
         self.combo_stitch_type_label = QLabel(t("Stich:"), toolbar)
         self.combo_stitch_type_label.setStyleSheet(
             f"color: {THEME.text_muted}; padding: 0 4px 0 8px;"
         )
-        self.combo_stitch_type_label_action = toolbar.addWidget(self.combo_stitch_type_label)
+        toolbar.addWidget(self.combo_stitch_type_label)
 
         self.combo_stitch_type = QComboBox()
         self.combo_stitch_type.setToolTip(
@@ -154,7 +152,7 @@ class ToolbarBuilderMixin:
             self.combo_stitch_type.addItem(f"{glyph}  {short}", userData=stype)
         self.combo_stitch_type.setCurrentIndex(0)
         self.combo_stitch_type.currentIndexChanged.connect(self._on_stitch_type_picker_changed)
-        self.combo_stitch_type_action = toolbar.addWidget(self.combo_stitch_type)
+        toolbar.addWidget(self.combo_stitch_type)
 
     def _on_stitch_type_picker_changed(self: "MainWindow", index: int) -> None:
         """Toolbar-Dropdown geaendert -> normalen Handler triggern."""
@@ -175,12 +173,10 @@ class ToolbarBuilderMixin:
         # man sieht die Gruppe als sanfter Hintergrund, der Button selbst
         # bleibt klar erkennbar.
         return f"""
-            QToolBar {{
+            IconToolBar {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 {THEME.bg_light}, stop:0.5 {THEME.bg_medium}, stop:1 {THEME.bg_light});
                 border-bottom: 2px solid {THEME.accent_primary};
-                spacing: 2px;
-                padding: 4px;
             }}
             QToolButton {{
                 background: transparent;
@@ -245,7 +241,7 @@ class ToolbarBuilderMixin:
             }}
         """
 
-    def _add_mode_switch(self: "MainWindow", toolbar: QToolBar) -> None:
+    def _add_mode_switch(self: "MainWindow", toolbar: IconToolBar) -> None:
         """Fuegt den Stitch/Diamond-Mode-Switch in die Toolbar ein.
 
         Zeigt IMMER den AKTUELLEN Modus (nicht das Wechselziel) — Text,
@@ -318,7 +314,7 @@ class ToolbarBuilderMixin:
         self._on_toggle_diamond_view(checked)
         self._refresh_mode_switch_button()
 
-    def _add_view_toggles(self: "MainWindow", toolbar: QToolBar) -> None:
+    def _add_view_toggles(self: "MainWindow", toolbar: IconToolBar) -> None:
         """Fügt Ansicht-Toggle-Buttons hinzu."""
         self.chk_symbols = self._create_toggle_button(
             "🔠", t("Symbole"), t("Symbole anzeigen"), section="view"
@@ -330,9 +326,7 @@ class ToolbarBuilderMixin:
             "↙️", t("Rückstiche"), t("Rückstiche anzeigen"), section="view"
         )
         self.chk_backstitches.toggled.connect(self._on_toggle_backstitches)
-        # Action speichern fuer Visibility-Toggle im DP-Modus (siehe
-        # _add_stitch_type_picker fuer den Hintergrund).
-        self.chk_backstitches_action = toolbar.addWidget(self.chk_backstitches)
+        toolbar.addWidget(self.chk_backstitches)
 
         self.chk_only_active = self._create_toggle_button(
             "🗗", t("Nur Ebene"), t("Nur aktive Ebene anzeigen"), section="view"
@@ -340,7 +334,7 @@ class ToolbarBuilderMixin:
         self.chk_only_active.toggled.connect(self._on_toggle_only_active)
         toolbar.addWidget(self.chk_only_active)
 
-    def _add_symmetry_controls(self: "MainWindow", toolbar: QToolBar) -> None:
+    def _add_symmetry_controls(self: "MainWindow", toolbar: IconToolBar) -> None:
         """Fügt Symmetrie-Steuerelemente hinzu."""
         sym_label = QLabel(" 🔀 ", toolbar)  # parent verhindert Phantom-Top-Level
         sym_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 14px;")
@@ -407,7 +401,12 @@ class ToolbarBuilderMixin:
         """
 
     def _add_toolbar_action(
-        self, toolbar: QToolBar, action: QAction, icon_text: str, label: str, section: str = "misc"
+        self,
+        toolbar: IconToolBar,
+        action: QAction,
+        icon_text: str,
+        label: str,
+        section: str = "misc",
     ) -> QToolButton:
         """Fügt eine Action mit Emoji-Icon zur Toolbar hinzu (mit Section-Tint)."""
         btn = QToolButton()

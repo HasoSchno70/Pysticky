@@ -192,9 +192,19 @@ class MainWindow(
             self.move(x, y)
 
     def _create_central_widget(self) -> None:
-        """Erstellt das zentrale Widget mit Canvas und Werkzeugleiste."""
+        """Erstellt das zentrale Widget mit Icon-Toolbar, Canvas und Werkzeugleiste."""
         central = QWidget()
-        main_layout = QHBoxLayout(central)
+        central_layout = QVBoxLayout(central)
+        central_layout.setContentsMargins(0, 0, 0, 0)
+        central_layout.setSpacing(0)
+
+        # Obere Icon-Leiste (self._toolbar) wurde bereits in _create_toolbar()
+        # gebaut — hier nur einhaengen, da sie kein natives QToolBar mehr ist
+        # und daher nicht ueber self.addToolBar() geht.
+        central_layout.addWidget(self._toolbar)
+
+        body = QWidget()
+        main_layout = QHBoxLayout(body)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
@@ -221,6 +231,7 @@ class MainWindow(
         right_layout.addWidget(self.color_bar)
 
         main_layout.addWidget(right_widget, 1)
+        central_layout.addWidget(body, 1)
         self.setCentralWidget(central)
 
     def _create_status_bar(self) -> None:

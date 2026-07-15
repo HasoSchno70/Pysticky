@@ -303,13 +303,9 @@ class ViewHandlersMixin:
                     combo.setCurrentIndex(idx)
 
     def _apply_tool_availability_for_mode(self: "MainWindow", diamond: bool) -> None:
-        # Toolbar-Repaint waehrend der Action-Visibility-Wechsel aussetzen.
-        # QWidgetActions, die in einer QToolBar verborgen werden und wieder
-        # auftauchen, koennen sonst einen Frame lang Top-Level rendern
-        # (Phantom-Fenster). Das ist besonders sichtbar beim DP→Stick-
-        # Wechsel, wo gleich vier QWidgetActions in Folge re-sichtbar werden:
-        # Symbol-Picker-Label, Combo, Backstitch-Toggle und der Backstitch-
-        # Tool-Button.
+        # Repaint waehrend der Visibility-Wechsel aussetzen, damit die
+        # mehreren Show/Hide-Aenderungen (Stitch-Picker, Backstitch-Toggle,
+        # Backstitch-Tool-Button) nicht einzeln flackern.
         toolbar = getattr(self, "_toolbar", None)
         if toolbar is not None:
             toolbar.setUpdatesEnabled(False)
@@ -347,11 +343,9 @@ class ViewHandlersMixin:
                 action.setVisible(not diamond)
 
         # Stitch-Type-Picker in der Toolbar: Combo + Label komplett ausblenden,
-        # weil's im DP-Modus eh nur einen Drill-Typ gibt.
-        # WICHTIG: QToolBar.addWidget gibt eine QWidgetAction zurueck. setVisible
-        # auf das Widget selbst hat in QToolBar oft keine Wirkung — man muss
-        # die zurueckgegebene Action verbergen. Die Actions wurden beim Aufbau
-        # unter `*_action` gespeichert.
+        # weil's im DP-Modus eh nur einen Drill-Typ gibt. Die Toolbar ist ein
+        # eigenes IconToolBar-Widget (kein natives QToolBar), setVisible auf
+        # den Widgets selbst wirkt hier also direkt.
         combo = getattr(self, "combo_stitch_type", None)
         if combo is not None:
             cur = combo.itemData(combo.currentIndex())
@@ -360,15 +354,15 @@ class ViewHandlersMixin:
                     if combo.itemData(i) == 0:
                         combo.setCurrentIndex(i)
                         break
-        for action_attr in ("combo_stitch_type_action", "combo_stitch_type_label_action"):
-            act = getattr(self, action_attr, None)
-            if act is not None:
-                act.setVisible(not diamond)
+        for widget_attr in ("combo_stitch_type", "combo_stitch_type_label"):
+            widget = getattr(self, widget_attr, None)
+            if widget is not None:
+                widget.setVisible(not diamond)
 
-        # Rueckstich-View-Toggle im Toolbar (gleiche QWidgetAction-Story).
-        bs_toggle_action = getattr(self, "chk_backstitches_action", None)
-        if bs_toggle_action is not None:
-            bs_toggle_action.setVisible(not diamond)
+        # Rueckstich-View-Toggle im Toolbar.
+        bs_toggle = getattr(self, "chk_backstitches", None)
+        if bs_toggle is not None:
+            bs_toggle.setVisible(not diamond)
         # Wenn die View-Backstitch-Anzeige aktiv war, im DP-Modus auch
         # ausschalten — sonst rendert der Canvas weiter Rueckstich-Linien
         # die da nicht hingehoeren.
