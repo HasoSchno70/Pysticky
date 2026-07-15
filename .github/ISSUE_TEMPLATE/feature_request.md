@@ -1,5 +1,5 @@
 ---
-name: Feature Request
+name: Feature Request (Deutsch)
 about: Eine Idee oder einen Verbesserungsvorschlag einbringen
 title: ""
 labels: enhancement

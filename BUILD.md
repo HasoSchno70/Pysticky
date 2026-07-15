@@ -1,5 +1,7 @@
 # PySticky Build-Anleitung
 
+*Deutsch | [English](BUILD.en.md)*
+
 ## Voraussetzungen
 
 - Python 3.10+ installiert

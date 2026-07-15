@@ -1,5 +1,7 @@
 # PySticky — Kreuzstich-Software
 
+*Deutsch | [English](README.en.md)*
+
 Moderner Muster-Editor fuer Kreuzstich, in Python + PySide6.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)

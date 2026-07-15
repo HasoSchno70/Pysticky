@@ -1,5 +1,5 @@
 ---
-name: Bug Report
+name: Bug Report (Deutsch)
 about: Etwas funktioniert nicht wie erwartet
 title: ""
 labels: bug

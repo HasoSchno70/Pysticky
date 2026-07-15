@@ -1,5 +1,7 @@
 # Architektur
 
+*Deutsch | [English](ARCHITECTURE.en.md)*
+
 Dieses Dokument beschreibt den Aufbau von PySticky für neue Mitwirkende.
 Es erklärt vor allem die wiederkehrenden Muster (Mixins, Theme-System,
 Werkzeuge), damit man sich im Code schnell zurechtfindet.

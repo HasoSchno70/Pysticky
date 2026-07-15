@@ -1,5 +1,7 @@
 # Changelog
 
+*Deutsch | [English](CHANGELOG.en.md)*
+
 Alle nennenswerten Änderungen an PySticky werden hier dokumentiert.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),

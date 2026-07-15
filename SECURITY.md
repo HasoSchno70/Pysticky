@@ -1,5 +1,7 @@
 # Sicherheitsrichtlinie
 
+*Deutsch | [English](SECURITY.en.md)*
+
 ## Unterstützte Versionen
 
 PySticky ist derzeit vor der 1.0-Veröffentlichung. Unterstützt wird immer nur

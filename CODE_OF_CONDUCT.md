@@ -1,5 +1,7 @@
 # Verhaltenskodex
 
+*Deutsch | [English](CODE_OF_CONDUCT.en.md)*
+
 ## Unsere Verpflichtung
 
 Wir als Mitglieder, Mitwirkende und Maintainer verpflichten uns, die Teilnahme

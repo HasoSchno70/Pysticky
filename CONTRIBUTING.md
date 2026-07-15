@@ -1,5 +1,7 @@
 # Mitmachen bei PySticky
 
+*Deutsch | [English](CONTRIBUTING.en.md)*
+
 Schön, dass du beitragen möchtest! PySticky ist ein PySide6/Qt-Programm zum
 Entwerfen von Kreuzstichmustern. Beiträge aller Art sind willkommen — Bugfixes,
 Features, Übersetzungen, Doku.
