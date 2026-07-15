@@ -64,4 +64,10 @@ def auto_size_dialog(
         target_w = min(target_w, int(avail.width() * max_width_frac))
         target_h = min(target_h, int(avail.height() * max_height_frac))
 
+    # min_width ist eine harte Anforderung (z.B. "Tab-Leiste passt sonst
+    # nicht") -- die Bildschirm-Kappung oben darf sie nicht mehr unterbieten.
+    # Lieber etwas breiter als der empfohlene Bildschirmanteil als eine
+    # abgeschnittene Tab-Leiste.
+    target_w = max(target_w, min_width)
+
     dialog.resize(max(target_w, dialog.minimumWidth()), max(target_h, dialog.minimumHeight()))
