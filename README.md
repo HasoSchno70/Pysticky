@@ -5,7 +5,15 @@ Moderner Muster-Editor fuer Kreuzstich, in Python + PySide6.
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![PySide6](https://img.shields.io/badge/PySide6-6.6+-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Tests](https://img.shields.io/badge/Tests-787%20passing-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-798%20passing-brightgreen.svg)
+
+## Screenshots
+
+|                                       Editor                                        |                                    Garn-Vorratsliste                                     |                                   Muster-Statistiken                                    |
+| :-----------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
+| ![Editor](docs/screenshots/editor_main.png) | ![Garn-Vorratsliste](docs/screenshots/garn_vorrat.png) | ![Statistiken](docs/screenshots/statistik.png) |
+
+*(Beispielmuster generiert, kein reales Foto — zeigt Farbquantisierung beim Bildimport.)*
 
 ## Features
 

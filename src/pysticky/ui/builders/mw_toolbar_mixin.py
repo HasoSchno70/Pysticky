@@ -433,7 +433,10 @@ class ToolbarBuilderMixin:
         pixmap = self._create_emoji_icon(icon_text, 20)
         btn.setIcon(QIcon(pixmap))
         btn.setText(label)
-        btn.setMinimumWidth(60)
+        # Breite an der tatsaechlichen Label-Breite ausrichten, sonst elidet
+        # Qt laengere Uebersetzungen (z.B. "Backstitches") mit "...".
+        text_width = btn.fontMetrics().horizontalAdvance(label)
+        btn.setMinimumWidth(max(60, text_width + 16))
         self._emoji_buttons.append((btn, icon_text, 20))
         self._toolbar_section_buttons.append((btn, section))
         return btn
