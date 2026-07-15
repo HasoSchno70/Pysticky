@@ -210,6 +210,14 @@ Implementation: [core/smart_resize.py](src/pysticky/core/smart_resize.py).
 
 ## Installation
 
+### Prebuilt .exe (Windows)
+
+A prebuilt Windows `.exe` is available on the
+[Releases page](https://github.com/HasoSchno70/Pysticky/releases) —
+download and run directly, no Python installation required.
+
+### From source
+
 ```bash
 git clone https://github.com/HasoSchno70/Pysticky.git
 cd Pysticky

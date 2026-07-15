@@ -103,3 +103,17 @@ Die `PySticky.exe` kann direkt weitergegeben werden. Sie enthält:
 - Alle Ressourcen (Paletten, Styles)
 
 Kein Python muss auf dem Zielrechner installiert sein.
+
+## Release veröffentlichen (GitHub)
+
+Ein Versions-Tag pushen löst in der CI (`.github/workflows/ci.yml`) automatisch
+einen Build **und** ein GitHub-Release mit der `.exe` als Download-Anhang aus:
+
+```powershell
+git tag v0.9.0
+git push origin v0.9.0
+```
+
+Ohne Tag-Push baut die CI die `.exe` bei jedem Push auf `main` weiterhin,
+aber nur als temporäres Actions-Artifact (verfällt nach ~90 Tagen, nur mit
+Repo-Zugriff sichtbar) — kein öffentlicher Download-Link.

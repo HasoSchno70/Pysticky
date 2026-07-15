@@ -105,3 +105,18 @@ The `PySticky.exe` can be distributed directly. It contains:
 - All resources (palettes, styles)
 
 No Python needs to be installed on the target machine.
+
+## Publishing a Release (GitHub)
+
+Pushing a version tag automatically triggers a build **and** a GitHub
+Release with the `.exe` attached as a downloadable asset, via CI
+(`.github/workflows/ci.yml`):
+
+```powershell
+git tag v0.9.0
+git push origin v0.9.0
+```
+
+Without a tag push, CI still builds the `.exe` on every push to `main`,
+but only as a temporary Actions artifact (expires after ~90 days, only
+visible with repo access) — not a public download link.

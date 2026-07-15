@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    tags: ["v*.*.*"]
   pull_request:
     branches: [main]
 
@@ -57,7 +58,9 @@ jobs:
   build:
     runs-on: windows-latest
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -81,3 +84,17 @@ jobs:
         with:
           name: PySticky-Windows
           path: dist/
+
+      # Nur bei Versions-Tags (v1.2.3): baut nicht nur, sondern veroeffentlicht
+      # die .exe direkt als herunterladbares GitHub-Release-Asset. Ohne dies
+      # gaebe es nur das temporaere Actions-Artifact oben (verfaellt, nur mit
+      # Repo-Zugriff sichtbar) statt eines oeffentlichen Download-Links.
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" "dist/PySticky.exe" `
+            --repo "${{ github.repository }}" `
+            --title "PySticky ${{ github.ref_name }}" `
+            --generate-notes
