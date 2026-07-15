@@ -35,8 +35,9 @@ htmlcov/
 .coverage
 coverage.xml
 
-# PyInstaller
+# PyInstaller (pysticky.spec ist bewusst versioniert -- wird fuer Builds gebraucht)
 *.spec
+!pysticky.spec
 
 # pystarter build output (PySticky.spec/setup.iss + dist/installer)
 pystarter_output/
