@@ -24,14 +24,18 @@ def auto_size_dialog(
     chrome_h: int = 150,
     max_width_frac: float = 0.9,
     max_height_frac: float = 0.92,
+    content_size: tuple[int, int] | None = None,
 ) -> None:
-    """Passt `dialog` an die groesste `sizeHint()` aus `content_widgets` an.
+    """Passt `dialog` an den tatsaechlichen Platzbedarf seines Inhalts an.
 
     Args:
         dialog: der zu vergroessernde Dialog.
         content_widgets: Widgets, deren sizeHint() den Platzbedarf bestimmt
             (z.B. alle Tab-Seiten eines QTabWidget, oder eine Liste mit nur
-            dem einen Hauptinhalts-Widget bei tabelosen Dialogen).
+            dem einen Hauptinhalts-Widget bei tabelosen Dialogen). Es wird
+            jeweils das Maximum ueber Breite/Hoehe genommen — passend fuer
+            Tabs, von denen immer nur einer sichtbar ist. Wird ignoriert,
+            wenn `content_size` gesetzt ist.
         min_width: zusaetzliche Mindestbreite, die unabhaengig vom Inhalt
             erreicht werden soll (z.B. die Breite einer Tab-Leiste, die
             schmaler Inhalt sonst unterschreiten wuerde).
@@ -39,9 +43,17 @@ def auto_size_dialog(
             zum reinen Inhalts-sizeHint hinzukommt.
         max_width_frac/max_height_frac: Obergrenze als Anteil der
             verfuegbaren Bildschirmflaeche.
+        content_size: (Breite, Hoehe) direkt vorgeben statt aus
+            `content_widgets` per max() abzuleiten — noetig, wenn mehrere
+            Bereiche gleichzeitig sichtbar sind (z.B. nebeneinander- oder
+            untereinandergestapelte Sektionen), wo sich die Groessen
+            addieren statt dass nur die groesste zaehlt.
     """
-    content_w = max((w.sizeHint().width() for w in content_widgets), default=0)
-    content_h = max((w.sizeHint().height() for w in content_widgets), default=0)
+    if content_size is not None:
+        content_w, content_h = content_size
+    else:
+        content_w = max((w.sizeHint().width() for w in content_widgets), default=0)
+        content_h = max((w.sizeHint().height() for w in content_widgets), default=0)
 
     target_w = max(content_w + chrome_w, min_width)
     target_h = content_h + chrome_h

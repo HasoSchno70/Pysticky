@@ -43,6 +43,7 @@ from ...core.constants import (
 from ...core.i18n import t
 from ..styles import THEME, Styles
 from ..widgets.crop_preview import CropPreviewWidget
+from .dialog_sizing import auto_size_dialog
 from .image_import_presets import (
     BUILTIN_PRESETS,
     load_user_presets,
@@ -87,6 +88,20 @@ class ImageImportDialog(QDialog):
         self._setup_ui()
         self._connect_signals()
         self._check_dependencies()
+        self._auto_size_to_content()
+
+    def _auto_size_to_content(self) -> None:
+        """Groesse so waehlen, dass die linke Einstellungs-Spalte nicht
+        gestaucht wird -- bei fixer Default-Groesse wirkte v.a. die
+        "Farben"-Sektion (5 Zeilen Combos/Spinner) gedrungen und schwer
+        lesbar/bedienbar, weil 6 Gruppen (Voreinstellung, Bilddatei,
+        Mustergroesse, Farben, Bild-Anpassung, Konturen) untereinander in
+        die feste Hoehe von 650px gequetscht wurden.
+        """
+        left_hint = self._left_layout.sizeHint()
+        content_w = left_hint.width() + self._right_panel.minimumWidth() + 20
+        content_h = left_hint.height()
+        auto_size_dialog(self, [], content_size=(content_w, content_h), chrome_w=40, chrome_h=40)
 
     def _check_dependencies(self) -> None:
         """Prüft ob alle Abhängigkeiten installiert sind."""
@@ -266,8 +281,10 @@ class ImageImportDialog(QDialog):
         layout = QHBoxLayout(self)
         layout.setSpacing(20)
 
-        layout.addLayout(self._setup_left_panel())
-        layout.addWidget(self._setup_right_panel())
+        self._left_layout = self._setup_left_panel()
+        self._right_panel = self._setup_right_panel()
+        layout.addLayout(self._left_layout)
+        layout.addWidget(self._right_panel)
 
     def _setup_left_panel(self) -> QVBoxLayout:
         """Erstellt die linke Seite: Einstellungen, Presets, Buttons."""
