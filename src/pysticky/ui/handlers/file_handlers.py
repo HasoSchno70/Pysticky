@@ -11,9 +11,12 @@ from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from ...core.i18n import t
+from ...utils import get_logger
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
+
+logger = get_logger(__name__)
 
 
 class FileHandlersMixin:
@@ -234,7 +237,10 @@ class FileHandlersMixin:
                 # rate-limit-respektierend, damit nicht jeder Save eine Version erzeugt.
                 if hasattr(self, "_maybe_create_snapshot"):
                     self._maybe_create_snapshot()
-            except OSError as e:
+            except (OSError, TypeError, ValueError) as e:
+                # json.dump wirft bei nicht-serialisierbarem Zustand TypeError/ValueError,
+                # nicht nur OSError — ohne breiten Catch crasht die App beim Speichern.
+                logger.exception("Speichern fehlgeschlagen")
                 QMessageBox.critical(
                     self, t("Fehler"), f"Datei konnte nicht gespeichert werden:\n{e}"
                 )
@@ -270,7 +276,10 @@ class FileHandlersMixin:
                 self._update_title()
                 self._add_recent_file(path)
                 self.status_bar.showMessage(f"Gespeichert: {path}", 3000)
-            except OSError as e:
+            except (OSError, TypeError, ValueError) as e:
+                # json.dump wirft bei nicht-serialisierbarem Zustand TypeError/ValueError,
+                # nicht nur OSError — ohne breiten Catch crasht die App beim Speichern.
+                logger.exception("Speichern fehlgeschlagen")
                 QMessageBox.critical(
                     self, t("Fehler"), f"Datei konnte nicht gespeichert werden:\n{e}"
                 )

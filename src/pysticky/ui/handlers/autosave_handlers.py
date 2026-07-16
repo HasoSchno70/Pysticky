@@ -10,8 +10,12 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QMessageBox
 
+from ...utils import get_logger
+
 if TYPE_CHECKING:
     from ..main_window import MainWindow
+
+logger = get_logger(__name__)
 
 
 class AutosaveHandlersMixin:
@@ -50,12 +54,15 @@ class AutosaveHandlersMixin:
             temp_path.rename(autosave_path)
 
             self.status_bar.showMessage(f"Autosave: {autosave_path.name}", 3000)
-        except OSError as e:
+        except (OSError, TypeError, ValueError) as e:
+            # json.dump kann auch TypeError/ValueError werfen — Autosave darf
+            # die App nie crashen, aber der Fehler muss im Log sichtbar sein.
+            logger.exception("Autosave fehlgeschlagen")
             try:
                 if temp_path.exists():
                     temp_path.unlink()
             except OSError:
-                pass
+                logger.warning("Autosave-Tempdatei konnte nicht entfernt werden: %s", temp_path)
             self.status_bar.showMessage(f"Autosave fehlgeschlagen: {e}", 5000)
 
         # Snapshot wenn ueberfaellig (rate-limited via should_snapshot)
@@ -74,9 +81,10 @@ class AutosaveHandlersMixin:
             return
         try:
             create_snapshot(self.current_pattern, key)
-        except OSError:
-            # Stille fehler — Versionen sind ein "nice-to-have", nicht kritisch
-            pass
+        except (OSError, TypeError, ValueError):
+            # Versionen sind ein "nice-to-have", nicht kritisch — aber loggen,
+            # damit ein dauerhaft fehlschlagender Snapshot nicht unsichtbar bleibt.
+            logger.exception("Snapshot konnte nicht erzeugt werden")
 
     def _check_autosave_recovery(self: "MainWindow") -> None:
         """
@@ -116,4 +124,4 @@ class AutosaveHandlersMixin:
         try:
             temp_autosave.unlink()
         except OSError:
-            pass
+            logger.warning("Autosave-Datei konnte nicht entfernt werden: %s", temp_autosave)

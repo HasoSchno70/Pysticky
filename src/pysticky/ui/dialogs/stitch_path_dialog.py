@@ -58,13 +58,13 @@ class StitchPathDialog(QDialog):
         self._is_running = False
 
         self._setup_ui()
-        self._apply_style()
+        self._apply_theme()
 
         self.setWindowTitle(t("Stickpfad-Optimierung"))
         self.setMinimumSize(*UI_CONFIG.dialog_min_xlarge)
         self.resize(1200, 850)
 
-    def _apply_style(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{ background-color: {THEME.bg_medium}; color: {THEME.text_primary}; }}
             QGroupBox {{ background-color: {THEME.bg_light}; border: 1px solid {THEME.border_medium}; border-radius: 4px; margin-top: 12px; padding-top: 8px; color: {THEME.text_primary}; font-weight: bold; }}
