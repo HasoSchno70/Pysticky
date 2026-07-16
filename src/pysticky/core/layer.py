@@ -239,7 +239,7 @@ class Layer:
 
         values = self.grid[valid_mask].flatten()
         unique, counts = np.unique(values, return_counts=True)
-        return {int(idx): int(cnt) for idx, cnt in zip(unique, counts)}
+        return {int(index): int(cnt) for index, cnt in zip(unique, counts)}
 
     def replace_color(self, old_index: int, new_index: int) -> int:
         """
@@ -340,7 +340,7 @@ class Layer:
 
         values = self.grid[mask].flatten()
         unique, counts = np.unique(values, return_counts=True)
-        return {int(idx): int(cnt) for idx, cnt in zip(unique, counts)}
+        return {int(index): int(cnt) for index, cnt in zip(unique, counts)}
 
     def reset_completion(self) -> None:
         """Setzt den gesamten Fortschritt zurück."""

@@ -75,10 +75,10 @@ class _HoopPreviewWidget(QFrame):
         composite = pattern.layer_stack.get_composite_grid()
         for y in range(h):
             for x in range(w):
-                idx = int(composite[y, x])
-                if idx == NO_STITCH or idx >= len(pattern.color_entries):
+                index = int(composite[y, x])
+                if index == NO_STITCH or index >= len(pattern.color_entries):
                     continue
-                c = pattern.color_entries[idx].thread.color
+                c = pattern.color_entries[index].thread.color
                 img.setPixelColor(x, y, to_qcolor(c))
         return img
 

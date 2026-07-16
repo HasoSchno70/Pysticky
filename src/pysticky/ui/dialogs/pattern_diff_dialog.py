@@ -111,11 +111,11 @@ class PatternDiffDialog(QDialog):
     def _make_column(self, title: str, pixmap: QPixmap) -> QFrame:
         frame = QFrame()
         frame.setFrameShape(QFrame.Shape.StyledPanel)
-        col = QVBoxLayout(frame)
+        column_layout = QVBoxLayout(frame)
 
         header = QLabel(f"<b>{title}</b>")
         header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        col.addWidget(header)
+        column_layout.addWidget(header)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(False)
@@ -124,7 +124,7 @@ class PatternDiffDialog(QDialog):
         label.setPixmap(pixmap)
         label.setStyleSheet("background: white;")
         scroll.setWidget(label)
-        col.addWidget(scroll, 1)
+        column_layout.addWidget(scroll, 1)
         return frame
 
     def _render_pattern(self, pattern: Pattern) -> QPixmap:

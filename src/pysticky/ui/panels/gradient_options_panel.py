@@ -159,43 +159,43 @@ class GradientOptionsPanel(QWidget):
         if not self._pattern:
             return
 
-        start_idx = self._start_combo.currentData()
-        if start_idx is not None and start_idx < len(self._pattern.color_entries):
-            entry = self._pattern.color_entries[start_idx]
+        start_index = self._start_combo.currentData()
+        if start_index is not None and start_index < len(self._pattern.color_entries):
+            entry = self._pattern.color_entries[start_index]
             self._start_preview.set_color(to_qcolor(entry.thread.color))
 
-        end_idx = self._end_combo.currentData()
-        if end_idx is not None and end_idx < len(self._pattern.color_entries):
-            entry = self._pattern.color_entries[end_idx]
+        end_index = self._end_combo.currentData()
+        if end_index is not None and end_index < len(self._pattern.color_entries):
+            entry = self._pattern.color_entries[end_index]
             self._end_preview.set_color(to_qcolor(entry.thread.color))
 
     def _on_start_changed(self, index: int) -> None:
         self._update_previews()
-        color_idx = self._start_combo.currentData()
-        if color_idx is not None:
-            self.start_color_changed.emit(color_idx)
+        color_index = self._start_combo.currentData()
+        if color_index is not None:
+            self.start_color_changed.emit(color_index)
 
     def _on_end_changed(self, index: int) -> None:
         self._update_previews()
-        color_idx = self._end_combo.currentData()
-        if color_idx is not None:
-            self.end_color_changed.emit(color_idx)
+        color_index = self._end_combo.currentData()
+        if color_index is not None:
+            self.end_color_changed.emit(color_index)
 
     def _on_swap(self) -> None:
-        start_idx = self._start_combo.currentIndex()
-        end_idx = self._end_combo.currentIndex()
-        self._start_combo.setCurrentIndex(end_idx)
-        self._end_combo.setCurrentIndex(start_idx)
+        start_index = self._start_combo.currentIndex()
+        end_index = self._end_combo.currentIndex()
+        self._start_combo.setCurrentIndex(end_index)
+        self._end_combo.setCurrentIndex(start_index)
 
     @property
     def start_color_index(self) -> int:
-        idx = self._start_combo.currentData()
-        return idx if idx is not None else 0
+        index = self._start_combo.currentData()
+        return index if index is not None else 0
 
     @property
     def end_color_index(self) -> int:
-        idx = self._end_combo.currentData()
-        return idx if idx is not None else 0
+        index = self._end_combo.currentData()
+        return index if index is not None else 0
 
     def set_start_color(self, index: int) -> None:
         if 0 <= index < self._start_combo.count():

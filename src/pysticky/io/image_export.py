@@ -122,8 +122,8 @@ class ImageExporter:
         n_colors = len(pattern.color_entries)
         palette = np.empty((max(n_colors, 1), 3), dtype=np.uint8)
         for i, entry in enumerate(pattern.color_entries):
-            col = entry.thread.color
-            palette[i] = (col.r, col.g, col.b)
+            thread_color = entry.thread.color
+            palette[i] = (thread_color.r, thread_color.g, thread_color.b)
 
         valid = (composite != NO_STITCH) & (composite >= 0) & (composite < n_colors)
 
@@ -163,8 +163,8 @@ class ImageExporter:
             # Sonder-Stiche einzeln zeichnen (nur gültige Farb-Zellen).
             for y, x in np.argwhere(special & valid):
                 color_idx = int(composite[y, x])
-                col = pattern.color_entries[color_idx].thread.color
-                color = QColor(col.r, col.g, col.b)
+                thread_color = pattern.color_entries[color_idx].thread.color
+                color = QColor(thread_color.r, thread_color.g, thread_color.b)
                 px = int(x) * cell_size
                 py = int(y) * cell_size
                 stype = int(type_grid[y, x])

@@ -99,7 +99,7 @@ def plan_hoops(
     rows = max(1, ceil((ph - overlap) / step_y)) if ph > hoop_height else 1
 
     sectors: list[HoopSector] = []
-    idx = 0
+    index = 0
     for r in range(rows):
         for c in range(cols):
             x_start = c * step_x
@@ -119,7 +119,7 @@ def plan_hoops(
 
             sectors.append(
                 HoopSector(
-                    index=idx,
+                    index=index,
                     row=r,
                     col=c,
                     x_start=x_start,
@@ -129,7 +129,7 @@ def plan_hoops(
                     stitch_count=stitch_count,
                 )
             )
-            idx += 1
+            index += 1
 
     return HoopPlan(
         pattern_width=pw,

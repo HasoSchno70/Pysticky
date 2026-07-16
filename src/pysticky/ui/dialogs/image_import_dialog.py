@@ -143,10 +143,10 @@ class ImageImportDialog(QDialog):
             preset = BUILTIN_PRESETS[index - 1]
         else:
             # User Preset
-            user_idx = index - builtin_count - 1
+            user_index = index - builtin_count - 1
             user_presets = load_user_presets()
-            if user_idx < len(user_presets):
-                preset = user_presets[user_idx]
+            if user_index < len(user_presets):
+                preset = user_presets[user_index]
             else:
                 return
 
@@ -176,9 +176,9 @@ class ImageImportDialog(QDialog):
         # Palette — DP-Presets springen automatisch auf "DMC Diamond Painting".
         preset_palette = preset.get("palette")
         if preset_palette:
-            idx_p = self.combo_palette.findText(preset_palette)
-            if idx_p >= 0:
-                self.combo_palette.setCurrentIndex(idx_p)
+            palette_index = self.combo_palette.findText(preset_palette)
+            if palette_index >= 0:
+                self.combo_palette.setCurrentIndex(palette_index)
 
         # DP-Modus-Flag: wird im _get_settings ausgewertet und beim Import
         # an das Pattern weitergegeben.
@@ -632,13 +632,13 @@ class ImageImportDialog(QDialog):
         for name in sorted(pm.available_palettes):
             self.combo_palette.addItem(name)
 
-        idx = self.combo_palette.findText("DMC")
-        if idx >= 0:
-            self.combo_palette.setCurrentIndex(idx)
+        index = self.combo_palette.findText("DMC")
+        if index >= 0:
+            self.combo_palette.setCurrentIndex(index)
         else:
-            idx = self.combo_palette.findText("Anchor")
-            if idx >= 0:
-                self.combo_palette.setCurrentIndex(idx)
+            index = self.combo_palette.findText("Anchor")
+            if index >= 0:
+                self.combo_palette.setCurrentIndex(index)
 
     def _connect_signals(self) -> None:
         # Debounce-Timer für Live-Vorschau (800ms)

@@ -598,9 +598,9 @@ class ColorManagementDialog(QDialog):
         for layer in self._pattern.layer_stack:
             for y in range(self._pattern.height):
                 for x in range(self._pattern.width):
-                    old_idx = layer.get_stitch(x, y)
-                    if old_idx is not None and old_idx in index_map:
-                        layer.set_stitch(x, y, index_map[old_idx])
+                    old_index = layer.get_stitch(x, y)
+                    if old_index is not None and old_index in index_map:
+                        layer.set_stitch(x, y, index_map[old_index])
 
         # Backstitches aktualisieren
         for bs in self._pattern.backstitches:
@@ -642,27 +642,27 @@ class ColorManagementDialog(QDialog):
                 self._swap_colors(i, i + 1)
             self._color_list.setCurrentRow(count - 1)
 
-    def _swap_colors(self, idx1: int, idx2: int) -> None:
+    def _swap_colors(self, index1: int, index2: int) -> None:
         """Tauscht zwei Farben."""
         entries = self._pattern.color_entries
-        entries[idx1], entries[idx2] = entries[idx2], entries[idx1]
+        entries[index1], entries[index2] = entries[index2], entries[index1]
 
         # Indizes in Layern aktualisieren
         for layer in self._pattern.layer_stack:
             for y in range(self._pattern.height):
                 for x in range(self._pattern.width):
-                    color_idx = layer.get_stitch(x, y)
-                    if color_idx == idx1:
-                        layer.set_stitch(x, y, idx2)
-                    elif color_idx == idx2:
-                        layer.set_stitch(x, y, idx1)
+                    color_index = layer.get_stitch(x, y)
+                    if color_index == index1:
+                        layer.set_stitch(x, y, index2)
+                    elif color_index == index2:
+                        layer.set_stitch(x, y, index1)
 
         # Backstitches
         for bs in self._pattern.backstitches:
-            if bs.color_index == idx1:
-                bs.color_index = idx2
-            elif bs.color_index == idx2:
-                bs.color_index = idx1
+            if bs.color_index == index1:
+                bs.color_index = index2
+            elif bs.color_index == index2:
+                bs.color_index = index1
 
         self._populate_list()
         self._changes_made = True
@@ -699,8 +699,8 @@ class ColorManagementDialog(QDialog):
             [item.index for item in selected if isinstance(item, ColorListItem)], reverse=True
         )
 
-        for idx in indices_to_remove:
-            self._remove_color_at_index(idx)
+        for index in indices_to_remove:
+            self._remove_color_at_index(index)
 
         self._populate_list()
         self._changes_made = True
@@ -725,28 +725,28 @@ class ColorManagementDialog(QDialog):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            for idx in sorted(unused_indices, reverse=True):
-                self._remove_color_at_index(idx)
+            for index in sorted(unused_indices, reverse=True):
+                self._remove_color_at_index(index)
 
             self._populate_list()
             self._changes_made = True
 
             QMessageBox.information(self, t("Fertig"), f"{len(unused_indices)} Farbe(n) entfernt.")
 
-    def _remove_color_at_index(self, idx: int) -> None:
+    def _remove_color_at_index(self, index: int) -> None:
         """Entfernt eine Farbe und aktualisiert alle Referenzen."""
         # Stiche mit dieser Farbe komplett entfernen, höhere Farbindizes
         # um 1 nach unten verschieben (vektorisiert über numpy statt
         # Pixel-für-Pixel-Python-Schleife).
         for layer in self._pattern.layer_stack:
-            layer.replace_color(idx, NO_STITCH)
-            layer.shift_color_indices(idx + 1, -1)
+            layer.replace_color(index, NO_STITCH)
+            layer.shift_color_indices(index + 1, -1)
 
         # Rückstiche mit dieser Farbe entfernen, höhere Indizes anpassen
-        self._pattern.backstitch_manager.update_color_indices(idx)
+        self._pattern.backstitch_manager.update_color_indices(index)
 
         # Farbe entfernen
-        del self._pattern.color_entries[idx]
+        del self._pattern.color_entries[index]
 
         # Stichzahlen neu berechnen -- set_stitch()-Aufrufe in _on_merge_colors()
         # aktualisieren entry.stitch_count nicht selbst, daher hier zentral
@@ -783,25 +783,25 @@ class ColorManagementDialog(QDialog):
         if reply != QMessageBox.StandardButton.Yes:
             return
 
-        target_idx = target.index
+        target_index = target.index
         source_indices = sorted([s.index for s in sources], reverse=True)
 
         # Stiche umfärben
         for layer in self._pattern.layer_stack:
             for y in range(self._pattern.height):
                 for x in range(self._pattern.width):
-                    color_idx = layer.get_stitch(x, y)
-                    if color_idx in source_indices:
-                        layer.set_stitch(x, y, target_idx)
+                    color_index = layer.get_stitch(x, y)
+                    if color_index in source_indices:
+                        layer.set_stitch(x, y, target_index)
 
         # Backstitches umfärben
         for bs in self._pattern.backstitches:
             if bs.color_index in source_indices:
-                bs.color_index = target_idx
+                bs.color_index = target_index
 
         # Quellfarben entfernen
-        for idx in source_indices:
-            self._remove_color_at_index(idx)
+        for index in source_indices:
+            self._remove_color_at_index(index)
 
         self._populate_list()
         self._changes_made = True

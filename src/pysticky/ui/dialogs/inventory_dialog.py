@@ -154,8 +154,8 @@ class InventoryDialog(QDialog):
         hdr = self._pattern_table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for col in (2, 3, 4, 5, 6):
-            hdr.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        for column in (2, 3, 4, 5, 6):
+            hdr.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self._pattern_table.setColumnWidth(0, PATTERN_SWATCH_SIZE + 12)
         pl.addWidget(self._pattern_table)
         self._tabs.addTab(pattern_tab, "🧵 " + t("Im Muster"))
@@ -285,8 +285,8 @@ class InventoryDialog(QDialog):
         mhdr = self._multi_shopping_table.horizontalHeader()
         mhdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         mhdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for col in (2, 3, 4):
-            mhdr.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        for column in (2, 3, 4):
+            mhdr.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self._multi_shopping_table.setColumnWidth(0, PATTERN_SWATCH_SIZE + 12)
         prl.addWidget(self._multi_shopping_table, 1)
 

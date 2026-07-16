@@ -783,8 +783,8 @@ class PatternPreviewDialog(QDialog):
         progress = self._pattern.get_progress_statistics()
 
         fabric_counts = COMMON_FABRIC_COUNTS
-        idx = self._fabric_combo.currentIndex()
-        count = fabric_counts[idx] if 0 <= idx < len(fabric_counts) else DEFAULT_FABRIC_COUNT
+        index = self._fabric_combo.currentIndex()
+        count = fabric_counts[index] if 0 <= index < len(fabric_counts) else DEFAULT_FABRIC_COUNT
         stitches_per_cm = count / 2.54
 
         w_cm = self._pattern.width / stitches_per_cm

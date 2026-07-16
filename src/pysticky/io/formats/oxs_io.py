@@ -225,11 +225,11 @@ class OXSImporter:
         palindex_map: dict[int, int] = {}
 
         for item in palette_el.findall("palette_item"):
-            idx_str = item.get("index", "")
+            index_str = item.get("index", "")
             try:
-                palindex = int(idx_str)
+                palindex = int(index_str)
             except ValueError:
-                self.warnings.append(f"Palette-Item ohne gueltigen Index: {idx_str}")
+                self.warnings.append(f"Palette-Item ohne gueltigen Index: {index_str}")
                 continue
 
             number = item.get("number", "").strip()
@@ -312,11 +312,11 @@ class OXSImporter:
                         thread.strand_ratios = [1] * len(components)
 
             # In Pattern einfügen
-            pattern_idx = pattern.add_color(thread, is_bead=is_bead, is_diamond=is_diamond)
+            pattern_index = pattern.add_color(thread, is_bead=is_bead, is_diamond=is_diamond)
             # Symbol übernehmen wenn aus OXS gesetzt
             if symbol:
-                pattern.set_symbol(pattern_idx, symbol)
-            palindex_map[palindex] = pattern_idx
+                pattern.set_symbol(pattern_index, symbol)
+            palindex_map[palindex] = pattern_index
 
         return palindex_map
 
@@ -330,13 +330,13 @@ class OXSImporter:
         if section is None:
             return
         for el in section.findall("stitch"):
-            x, y, idx = _parse_stitch_xy_palindex(el)
-            if x is None or y is None or idx is None:
+            x, y, palindex = _parse_stitch_xy_palindex(el)
+            if x is None or y is None or palindex is None:
                 continue
-            color_idx = palindex_map.get(idx)
-            if color_idx is None:
+            color_index = palindex_map.get(palindex)
+            if color_index is None:
                 continue
-            self._place_stitch(pattern, x - 1, y - 1, color_idx, StitchType.FULL.value)
+            self._place_stitch(pattern, x - 1, y - 1, color_index, StitchType.FULL.value)
 
     def _read_half_stitches(
         self,
@@ -348,17 +348,17 @@ class OXSImporter:
         if section is None:
             return
         for el in section.findall("halfstitch"):
-            x, y, idx = _parse_stitch_xy_palindex(el)
-            if x is None or y is None or idx is None:
+            x, y, palindex = _parse_stitch_xy_palindex(el)
+            if x is None or y is None or palindex is None:
                 continue
-            color_idx = palindex_map.get(idx)
-            if color_idx is None:
+            color_index = palindex_map.get(palindex)
+            if color_index is None:
                 continue
             direction = el.get("direction", "1")
             stitch_code = (
                 StitchType.HALF_TL_BR.value if direction == "1" else StitchType.HALF_TR_BL.value
             )
-            self._place_stitch(pattern, x - 1, y - 1, color_idx, stitch_code)
+            self._place_stitch(pattern, x - 1, y - 1, color_index, stitch_code)
 
     def _read_quarter_stitches(
         self,
@@ -370,15 +370,15 @@ class OXSImporter:
         if section is None:
             return
         for el in section.findall("quarterstitch"):
-            x, y, idx = _parse_stitch_xy_palindex(el)
-            if x is None or y is None or idx is None:
+            x, y, palindex = _parse_stitch_xy_palindex(el)
+            if x is None or y is None or palindex is None:
                 continue
-            color_idx = palindex_map.get(idx)
-            if color_idx is None:
+            color_index = palindex_map.get(palindex)
+            if color_index is None:
                 continue
             position = el.get("position", "TL").upper()
             stitch_code = _QUARTER_POS_TO_CODE.get(position, StitchType.QUARTER_TL.value)
-            self._place_stitch(pattern, x - 1, y - 1, color_idx, stitch_code)
+            self._place_stitch(pattern, x - 1, y - 1, color_index, stitch_code)
 
     def _read_three_quarter_stitches(
         self,
@@ -390,13 +390,13 @@ class OXSImporter:
         if section is None:
             return
         for el in section.findall("threequarterstitch"):
-            x, y, idx = _parse_stitch_xy_palindex(el)
-            if x is None or y is None or idx is None:
+            x, y, palindex = _parse_stitch_xy_palindex(el)
+            if x is None or y is None or palindex is None:
                 continue
-            color_idx = palindex_map.get(idx)
-            if color_idx is None:
+            color_index = palindex_map.get(palindex)
+            if color_index is None:
                 continue
-            self._place_stitch(pattern, x - 1, y - 1, color_idx, StitchType.THREE_QUARTER.value)
+            self._place_stitch(pattern, x - 1, y - 1, color_index, StitchType.THREE_QUARTER.value)
 
     def _read_backstitches(
         self,
@@ -416,8 +416,8 @@ class OXSImporter:
                 palindex = int(el.get("palindex", ""))
             except (ValueError, TypeError):
                 continue
-            color_idx = palindex_map.get(palindex)
-            if color_idx is None:
+            color_index = palindex_map.get(palindex)
+            if color_index is None:
                 continue
             # OXS-Koord 1-basiert (Ecke der ersten Zelle = 1,1; Mitte = 1.5,1.5)
             # Pattern-Half-Stitch-Koord (Ecke = 0,0; Mitte = 1,1)
@@ -425,7 +425,7 @@ class OXSImporter:
             hy1 = int(round((y1 - 1) * 2))
             hx2 = int(round((x2 - 1) * 2))
             hy2 = int(round((y2 - 1) * 2))
-            pattern.add_backstitch(hx1, hy1, hx2, hy2, color_idx)
+            pattern.add_backstitch(hx1, hy1, hx2, hy2, color_index)
 
     def _read_ornaments(
         self,
@@ -448,8 +448,8 @@ class OXSImporter:
                 palindex = int(el.get("palindex", ""))
             except (ValueError, TypeError):
                 continue
-            color_idx = palindex_map.get(palindex)
-            if color_idx is None:
+            color_index = palindex_map.get(palindex)
+            if color_index is None:
                 continue
 
             objtype = el.get("objecttype", "knot").lower()
@@ -464,19 +464,19 @@ class OXSImporter:
             # OXS: x=1.5 für Mitte der ersten Zelle. Pattern: x=0 für erste Zelle.
             px = int(x1 - 1)
             py = int(y1 - 1)
-            self._place_stitch(pattern, px, py, color_idx, stitch_code)
+            self._place_stitch(pattern, px, py, color_index, stitch_code)
 
     def _place_stitch(
         self,
         pattern: Pattern,
         x: int,
         y: int,
-        color_idx: int,
+        color_index: int,
         stitch_type: int,
     ) -> None:
         """Setzt einen Stich in Pattern-Koord (0-basiert), mit Bounds-Check."""
         if 0 <= x < pattern.width and 0 <= y < pattern.height:
-            pattern.set_stitch(x, y, color_idx, stitch_type=stitch_type)
+            pattern.set_stitch(x, y, color_index, stitch_type=stitch_type)
 
 
 @dataclass
@@ -594,11 +594,11 @@ class OXSExporter:
 
         for y in range(pattern.height):
             for x in range(pattern.width):
-                color_idx = int(composite[y, x])
-                if color_idx == NO_STITCH:
+                color_index = int(composite[y, x])
+                if color_index == NO_STITCH:
                     continue
                 stitch_code = int(composite_types[y, x])
-                palindex = color_idx + 1  # +1 wegen cloth-entry
+                palindex = color_index + 1  # +1 wegen cloth-entry
 
                 if stitch_code == StitchType.FULL.value:
                     ET.SubElement(

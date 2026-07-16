@@ -202,8 +202,8 @@ class _TargetThreadSelector(QDialog):
     def _on_select(self) -> None:
         row = self._table.currentRow()
         if row >= 0:
-            idx = self._table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-            self._selected_thread = self._thread_data[idx][0]
+            index = self._table.item(row, 0).data(Qt.ItemDataRole.UserRole)
+            self._selected_thread = self._thread_data[index][0]
             self.accept()
 
     def _on_double_click(self) -> None:

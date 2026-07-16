@@ -406,8 +406,8 @@ class Pattern:
             Index der neuen Farbe in color_entries
 
         Example:
-            >>> idx = pattern.add_color(Thread.from_hex("Blau", "#0000FF"))
-            >>> pattern.set_stitch(10, 10, color_index=idx)
+            >>> index = pattern.add_color(Thread.from_hex("Blau", "#0000FF"))
+            >>> pattern.set_stitch(10, 10, color_index=index)
         """
         # Nächstes freies Symbol finden
         used_symbols = {entry.symbol for entry in self.color_entries}
@@ -506,9 +506,9 @@ class Pattern:
         num_colors = len(self.color_entries)
         for layer in self.layer_stack:
             color_counts = layer.get_color_counts()
-            for idx, count in color_counts.items():
-                if 0 <= idx < num_colors:
-                    self.color_entries[idx].stitch_count += count
+            for index, count in color_counts.items():
+                if 0 <= index < num_colors:
+                    self.color_entries[index].stitch_count += count
 
     def get_bounds(self) -> tuple[int, int, int, int]:
         """
@@ -628,7 +628,7 @@ class Pattern:
         das sichtbare Composite.
 
         Yields:
-            (x, y, color_idx, layer) für jeden gesetzten Stich.
+            (x, y, color_index, layer) für jeden gesetzten Stich.
         """
         for layer in self.layer_stack:
             positions = np.argwhere(layer.grid != NO_STITCH)
@@ -663,10 +663,10 @@ class Pattern:
 
         # Alte Stichzahlen im Bereich abziehen
         old_region = layer.grid[min_y : max_y + 1, min_x : max_x + 1].copy()
-        for idx_val in np.unique(old_region):
-            if idx_val != NO_STITCH and 0 <= idx_val < len(self.color_entries):
-                count = int(np.count_nonzero(old_region == idx_val))
-                self.color_entries[idx_val].stitch_count -= count
+        for index_val in np.unique(old_region):
+            if index_val != NO_STITCH and 0 <= index_val < len(self.color_entries):
+                count = int(np.count_nonzero(old_region == index_val))
+                self.color_entries[index_val].stitch_count -= count
 
         # Numpy-Slicing für schnelles Füllen
         layer.grid[min_y : max_y + 1, min_x : max_x + 1] = color_index
@@ -858,10 +858,10 @@ class Pattern:
         completed_per_color: dict[int, int] = {}
 
         for layer in self.layer_stack:
-            for idx, count in layer.get_color_counts().items():
-                total_per_color[idx] = total_per_color.get(idx, 0) + count
-            for idx, count in layer.get_completed_color_counts().items():
-                completed_per_color[idx] = completed_per_color.get(idx, 0) + count
+            for index, count in layer.get_color_counts().items():
+                total_per_color[index] = total_per_color.get(index, 0) + count
+            for index, count in layer.get_completed_color_counts().items():
+                completed_per_color[index] = completed_per_color.get(index, 0) + count
 
         total = sum(total_per_color.values())
         completed = sum(completed_per_color.values())

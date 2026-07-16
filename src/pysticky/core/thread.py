@@ -35,8 +35,8 @@ def _blend_colors_lab(
 
     # Lab-Werte aufsummieren
     L_sum = a_sum = b_sum = 0.0
-    for col, w in zip(colors, weights):
-        L, a, b = rgb_to_lab(col.r, col.g, col.b)
+    for color, w in zip(colors, weights):
+        L, a, b = rgb_to_lab(color.r, color.g, color.b)
         L_sum += L * w
         a_sum += a * w
         b_sum += b * w

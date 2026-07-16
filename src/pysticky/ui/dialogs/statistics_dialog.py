@@ -447,8 +447,8 @@ class PatternStatisticsDialog(QDialog):
         hdr = table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for col in (2, 3, 4, 5):
-            hdr.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        for column in (2, 3, 4, 5):
+            hdr.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         table.setColumnWidth(0, 28)
         table.setRowCount(len(items))
 
