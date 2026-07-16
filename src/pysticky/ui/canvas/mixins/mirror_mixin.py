@@ -125,7 +125,7 @@ class MirrorMixin:
                 if color_idx is not None:
                     layer.set_stitch(x, y, color_idx)
                 else:
-                    layer.clear_stitch(x, y)
+                    layer.remove_stitch(x, y)
 
         return True
 
@@ -153,6 +153,6 @@ class MirrorMixin:
                 if color_idx is not None:
                     layer.set_stitch(x, y, color_idx)
                 else:
-                    layer.clear_stitch(x, y)
+                    layer.remove_stitch(x, y)
 
         return True

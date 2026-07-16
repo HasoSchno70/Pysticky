@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
+from ...core.layer import NO_STITCH
 from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
@@ -748,26 +749,23 @@ class ColorManagementDialog(QDialog):
 
     def _remove_color_at_index(self, idx: int) -> None:
         """Entfernt eine Farbe und aktualisiert alle Referenzen."""
-        # Stiche mit dieser Farbe löschen
+        # Stiche mit dieser Farbe komplett entfernen, hoehere Farbindizes
+        # um 1 nach unten verschieben (vektorisiert ueber numpy statt
+        # Pixel-fuer-Pixel-Python-Schleife).
         for layer in self._pattern.layer_stack:
-            for y in range(self._pattern.height):
-                for x in range(self._pattern.width):
-                    color_idx = layer.get_stitch(x, y)
-                    if color_idx == idx:
-                        layer.clear_stitch(x, y)
-                    elif color_idx is not None and color_idx > idx:
-                        layer.set_stitch(x, y, color_idx - 1)
+            layer.replace_color(idx, NO_STITCH)
+            layer.shift_color_indices(idx + 1, -1)
 
-        # Backstitches aktualisieren
-        self._pattern.backstitches = [
-            bs for bs in self._pattern.backstitches if bs.color_index != idx
-        ]
-        for bs in self._pattern.backstitches:
-            if bs.color_index > idx:
-                bs.color_index -= 1
+        # Rueckstiche mit dieser Farbe entfernen, hoehere Indizes anpassen
+        self._pattern.backstitch_manager.update_color_indices(idx)
 
         # Farbe entfernen
         del self._pattern.color_entries[idx]
+
+        # Stichzahlen neu berechnen -- set_stitch()-Aufrufe in _on_merge_colors()
+        # aktualisieren entry.stitch_count nicht selbst, daher hier zentral
+        # aus dem tatsaechlichen Grid-Inhalt neu ableiten.
+        self._pattern.recalculate_stitch_counts()
 
     def _on_merge_colors(self) -> None:
         """Führt ausgewählte Farben zusammen."""
