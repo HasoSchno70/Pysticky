@@ -24,7 +24,7 @@ from .core.constants import (
 # APP_VERSION ist die EINZIGE Versionsquelle: pyproject.toml liest sie via
 # [tool.setuptools.dynamic] aus dieser Konstante. Hier hochzaehlen genuegt.
 APP_NAME: Final[str] = "PySticky"
-APP_VERSION: Final[str] = "0.8.1"
+APP_VERSION: Final[str] = "0.8.2"
 ORG_NAME: Final[str] = "PySticky"
 
 

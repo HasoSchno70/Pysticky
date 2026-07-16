@@ -10,6 +10,31 @@ versioning based on [Semantic Versioning](https://semver.org/) (pre-1.0:
 
 ## [Unreleased]
 
+## [0.8.2] — 2026-07-15
+
+### Fixed
+
+- Heatmap dialog wouldn't open at all (loop variable `t` shadowed the
+  `t()` translation function, causing a silent crash during setup)
+- Image import dialog: the left settings column (especially the "Colors"
+  section) looked cramped/hard to read at the fixed default size
+- Windows autoscroll toast ("Scrolling disabled") when dragging in the
+  image import crop preview (missing `event.accept()` on middle-click)
+- Custom tooltip could cover a small widget's own number (e.g. a spin
+  box) instead of appearing below it
+- Statistics dialog: the tab bar (6 tabs incl. "Shopping List") got
+  truncated on narrower screens; minimum width now fixed at 1200px, plus
+  a bug fix in the auto-sizing calculation that could undercut the tab
+  bar's own minimum width
+- Screen eyedropper matched picked colors against all loaded thread
+  palettes instead of only the currently selected one — could pull in
+  colors from an unrelated manufacturer
+
+### Changed
+
+- Renamed "Multi-Hoop Planner" to "Split Across Frames" ("multi-hooping"
+  is a machine-embroidery term, not standard in hand cross-stitch)
+
 ## [0.8.1] — 2026-07-15
 
 ### Added

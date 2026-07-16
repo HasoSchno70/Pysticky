@@ -10,6 +10,31 @@ vor 1.0: `0.MINOR.PATCH`, Breaking Changes möglich innerhalb 0.x).
 
 ## [Unreleased]
 
+## [0.8.2] — 2026-07-15
+
+### Behoben
+
+- Heatmap-Dialog öffnete sich gar nicht (Schleifenvariable `t` überschrieb
+  die Übersetzungsfunktion `t()`, stiller Absturz beim Aufbau)
+- Bild-Import-Dialog: linke Einstellungs-Spalte (v.a. "Farben"-Sektion)
+  wirkte gestaucht/schwer lesbar bei fixer Default-Größe
+- Windows-Autoscroll-Toast ("Scrollen deaktiviert") beim Ziehen im
+  Bild-Import-Zuschnitt (fehlendes `event.accept()` bei Mittelklick)
+- Custom-Tooltip konnte bei kleinen Widgets (z.B. Spinbox) die eigene
+  Zahl verdecken statt darunter zu erscheinen
+- Statistik-Dialog: Tab-Leiste (6 Tabs inkl. "Einkaufsliste") wurde bei
+  schmalen Bildschirmen abgeschnitten; Mindestbreite jetzt fest auf
+  1200px, dazu ein Bug in der Auto-Größen-Berechnung behoben, der die
+  Mindestbreite für die Tab-Leiste wieder unterschreiten konnte
+- Screen-Eyedropper matchte gepickte Farben gegen alle geladenen
+  Garnpaletten statt nur die aktuell gewählte — konnte Farben eines
+  fremden Herstellers ins Muster bringen
+
+### Geändert
+
+- "Multi-Hoop-Planer" umbenannt zu "Rahmenaufteilung" ("Multi-Hoop" ist
+  ein Maschinenstickerei-Fachbegriff, im Handkreuzstich nicht gebräuchlich)
+
 ## [0.8.1] — 2026-07-15
 
 ### Hinzugefügt
