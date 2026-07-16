@@ -36,6 +36,11 @@ class _ActionTile(QFrame):
         self.setFixedSize(220, 120)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
+    def set_accent(self, accent: str) -> None:
+        """Aktualisiert die Akzentfarbe (z.B. nach einem Live-Themewechsel)."""
+        self._accent = accent
+        self.update()
+
     def enterEvent(self, event) -> None:
         self._hovered = True
         self.update()
@@ -133,21 +138,21 @@ class WelcomeWidget(QWidget):
         outer.addStretch(1)
 
         # Header-Karte
-        header = QLabel("PySticky")
-        header.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        header.setStyleSheet(
+        self._header_label = QLabel("PySticky")
+        self._header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._header_label.setStyleSheet(
             f"font-size: 36px; font-weight: 700; color: {THEME.accent_primary}; "
             f"letter-spacing: 2px; background: transparent;"
         )
-        outer.addWidget(header)
+        outer.addWidget(self._header_label)
 
-        subtitle = QLabel(t("Kreuzstich-Muster Editor"))
-        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle.setStyleSheet(
+        self._subtitle_label = QLabel(t("Kreuzstich-Muster Editor"))
+        self._subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._subtitle_label.setStyleSheet(
             f"font-size: 13px; color: {THEME.text_muted}; "
             f"letter-spacing: 3px; background: transparent;"
         )
-        outer.addWidget(subtitle)
+        outer.addWidget(self._subtitle_label)
 
         outer.addSpacing(20)
 
@@ -156,41 +161,41 @@ class WelcomeWidget(QWidget):
         tiles_row.setSpacing(16)
         tiles_row.addStretch(1)
 
-        new_tile = _ActionTile(
+        self._new_tile = _ActionTile(
             "📄",
             t("Neues Muster"),
             t("Leinwand mit Standardgröße erstellen."),
             THEME.accent_primary,
         )
-        new_tile.clicked.connect(self.new_clicked.emit)
-        tiles_row.addWidget(new_tile)
+        self._new_tile.clicked.connect(self.new_clicked.emit)
+        tiles_row.addWidget(self._new_tile)
 
-        open_tile = _ActionTile(
+        self._open_tile = _ActionTile(
             "📂",
             t("Datei öffnen"),
             t("Bestehendes .pxs-Muster laden."),
             THEME.accent_secondary,
         )
-        open_tile.clicked.connect(self.open_clicked.emit)
-        tiles_row.addWidget(open_tile)
+        self._open_tile.clicked.connect(self.open_clicked.emit)
+        tiles_row.addWidget(self._open_tile)
 
-        import_tile = _ActionTile(
+        self._import_tile = _ActionTile(
             "🖼",
             t("Aus Bild"),
             t("Foto / Grafik in ein Muster umwandeln."),
             THEME.info,
         )
-        import_tile.clicked.connect(self.import_image_clicked.emit)
-        tiles_row.addWidget(import_tile)
+        self._import_tile.clicked.connect(self.import_image_clicked.emit)
+        tiles_row.addWidget(self._import_tile)
 
-        demo_tile = _ActionTile(
+        self._demo_tile = _ActionTile(
             "🎨",
             t("Demo-Muster"),
             t("Beispiel zum Ausprobieren — Herz mit Rahmen."),
             THEME.accent_purple,
         )
-        demo_tile.clicked.connect(self.demo_clicked.emit)
-        tiles_row.addWidget(demo_tile)
+        self._demo_tile.clicked.connect(self.demo_clicked.emit)
+        tiles_row.addWidget(self._demo_tile)
 
         tiles_row.addStretch(1)
         outer.addLayout(tiles_row)
@@ -198,13 +203,13 @@ class WelcomeWidget(QWidget):
         outer.addSpacing(16)
 
         # Recent-Files-Liste
-        recent_label = QLabel(t("Zuletzt geöffnet"))
-        recent_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        recent_label.setStyleSheet(
+        self._recent_label = QLabel(t("Zuletzt geöffnet"))
+        self._recent_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._recent_label.setStyleSheet(
             f"font-size: 10px; color: {THEME.text_muted}; "
             f"letter-spacing: 2px; font-weight: 600; background: transparent;"
         )
-        outer.addWidget(recent_label)
+        outer.addWidget(self._recent_label)
 
         self._recent_list = QListWidget()
         self._recent_list.setMaximumHeight(240)
@@ -214,7 +219,26 @@ class WelcomeWidget(QWidget):
         self._recent_list.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         self._recent_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._recent_list.setUniformItemSizes(True)
-        self._recent_list.setStyleSheet(f"""
+        self._recent_list.setStyleSheet(self._recent_list_stylesheet())
+        self._recent_list.itemDoubleClicked.connect(self._on_recent_double_clicked)
+        recent_row = QHBoxLayout()
+        recent_row.addStretch(1)
+        recent_row.addWidget(self._recent_list, 4)
+        recent_row.addStretch(1)
+        outer.addLayout(recent_row)
+
+        self._empty_recent_label = QLabel(t("Noch keine Dateien geöffnet."))
+        self._empty_recent_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_recent_label.setStyleSheet(
+            f"color: {THEME.text_disabled}; font-style: italic; background: transparent;"
+        )
+        outer.addWidget(self._empty_recent_label)
+
+        outer.addStretch(2)
+
+    @staticmethod
+    def _recent_list_stylesheet() -> str:
+        return f"""
             QListWidget {{
                 background: {THEME.bg_medium};
                 border: 1px solid {THEME.border_medium};
@@ -233,22 +257,35 @@ class WelcomeWidget(QWidget):
                 background: {THEME.accent_primary};
                 color: {THEME.bg_dark};
             }}
-        """)
-        self._recent_list.itemDoubleClicked.connect(self._on_recent_double_clicked)
-        recent_row = QHBoxLayout()
-        recent_row.addStretch(1)
-        recent_row.addWidget(self._recent_list, 4)
-        recent_row.addStretch(1)
-        outer.addLayout(recent_row)
+        """
 
-        self._empty_recent_label = QLabel(t("Noch keine Dateien geöffnet."))
-        self._empty_recent_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    def _apply_theme(self) -> None:
+        """Aktualisiert alle gecachten THEME-Farben nach einem Live-Themewechsel."""
+        self._header_label.setStyleSheet(
+            f"font-size: 36px; font-weight: 700; color: {THEME.accent_primary}; "
+            f"letter-spacing: 2px; background: transparent;"
+        )
+        self._subtitle_label.setStyleSheet(
+            f"font-size: 13px; color: {THEME.text_muted}; "
+            f"letter-spacing: 3px; background: transparent;"
+        )
+        self._recent_label.setStyleSheet(
+            f"font-size: 10px; color: {THEME.text_muted}; "
+            f"letter-spacing: 2px; font-weight: 600; background: transparent;"
+        )
+        self._recent_list.setStyleSheet(self._recent_list_stylesheet())
         self._empty_recent_label.setStyleSheet(
             f"color: {THEME.text_disabled}; font-style: italic; background: transparent;"
         )
-        outer.addWidget(self._empty_recent_label)
-
-        outer.addStretch(2)
+        self._new_tile.set_accent(THEME.accent_primary)
+        self._open_tile.set_accent(THEME.accent_secondary)
+        self._import_tile.set_accent(THEME.info)
+        self._demo_tile.set_accent(THEME.accent_purple)
+        # Recent-Files-Items werden mit eigenen, inline gestylten Labels
+        # gebaut (siehe set_recent_files) -- am einfachsten neu aufbauen,
+        # statt jedes Item-Widget einzeln zu durchsuchen.
+        self.set_recent_files(self._recent_files)
+        self.update()
 
     def paintEvent(self, event) -> None:
         """Dezenter Hintergrund-Gradient — passt zur Canvas-Optik."""
