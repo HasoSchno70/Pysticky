@@ -5,6 +5,8 @@ Farbverlauf-Tool für automatische Übergänge zwischen 2 Farben.
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPen
 
+from ...utils import clamp_int
+from ..color_utils import to_qcolor
 from .base_tool import BaseTool, ToolContext
 
 
@@ -84,8 +86,8 @@ class GradientTool(BaseTool):
         if not ctx.pattern:
             return []
 
-        x = max(0, min(ctx.grid_x, ctx.pattern.width - 1))
-        y = max(0, min(ctx.grid_y, ctx.pattern.height - 1))
+        x = clamp_int(ctx.grid_x, 0, ctx.pattern.width - 1)
+        y = clamp_int(ctx.grid_y, 0, ctx.pattern.height - 1)
         self._end_pos = (x, y)
 
         # Vorschau berechnen
@@ -225,12 +227,7 @@ class GradientTool(BaseTool):
         for x, y, color_idx in self._preview_points:
             entry = ctx.pattern.get_color_entry(color_idx)
             if entry:
-                color = QColor(
-                    entry.thread.color.r,
-                    entry.thread.color.g,
-                    entry.thread.color.b,
-                    180,  # Halbtransparent
-                )
+                color = to_qcolor(entry.thread.color, 180)  # Halbtransparent
 
                 screen_x = x * cell_size + offset_x
                 screen_y = y * cell_size + offset_y

@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from ...core.color_math import delta_e
 from ...core.i18n import t
+from ..color_utils import to_qcolor
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -204,8 +205,8 @@ class SimilarColorsDialog(QDialog):
                 idx_b,
                 ea.thread.name,
                 eb.thread.name,
-                QColor(ca.r, ca.g, ca.b),
-                QColor(cb.r, cb.g, cb.b),
+                to_qcolor(ca),
+                to_qcolor(cb),
                 dist,
             )
             self._scroll_layout.addWidget(row)

@@ -6,6 +6,8 @@ Enthält alle Zoom-Funktionen.
 
 from typing import TYPE_CHECKING
 
+from ....utils import clamp_int
+
 if TYPE_CHECKING:
     from ..canvas import CrossStitchCanvas
 
@@ -44,7 +46,7 @@ class ZoomMixin:
     def set_zoom(self: "CrossStitchCanvas", factor: float) -> None:
         """Setzt den Zoom-Faktor (1.0 = 100%)."""
         new_size = int(self.DEFAULT_CELL_SIZE * factor)
-        new_size = max(self.MIN_CELL_SIZE, min(new_size, self.MAX_CELL_SIZE))
+        new_size = clamp_int(new_size, self.MIN_CELL_SIZE, self.MAX_CELL_SIZE)
         self._set_cell_size(new_size)
 
     def get_zoom_percent(self: "CrossStitchCanvas") -> float:

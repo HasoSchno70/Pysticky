@@ -16,6 +16,8 @@ from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
 from ...core import Pattern
 from ...core.i18n import t
+from ...utils import clamp
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -53,10 +55,10 @@ class MinimapWidget(QFrame):
         self.update()
 
     def set_viewport(self, x: float, y: float, w: float, h: float) -> None:
-        self._viewport_x = max(0.0, min(1.0, x))
-        self._viewport_y = max(0.0, min(1.0, y))
-        self._viewport_w = max(0.01, min(1.0, w))
-        self._viewport_h = max(0.01, min(1.0, h))
+        self._viewport_x = clamp(x, 0.0, 1.0)
+        self._viewport_y = clamp(y, 0.0, 1.0)
+        self._viewport_w = clamp(w, 0.01, 1.0)
+        self._viewport_h = clamp(h, 0.01, 1.0)
         self.update()
 
     def _get_available_size(self) -> tuple[int, int]:
@@ -99,9 +101,7 @@ class MinimapWidget(QFrame):
                         px_end = max(px + 1, int((x + 1) * scale_x))
                         py_end = max(py + 1, int((y + 1) * scale_y))
 
-                        color = QColor(
-                            entry.thread.color.r, entry.thread.color.g, entry.thread.color.b
-                        ).rgb()
+                        color = to_qcolor(entry.thread.color).rgb()
 
                         for py2 in range(py, min(py_end, img_h)):
                             for px2 in range(px, min(px_end, img_w)):
@@ -215,8 +215,8 @@ class MinimapWidget(QFrame):
         if img_rect.width() <= 0 or img_rect.height() <= 0:
             return
 
-        rel_x = max(0.0, min(1.0, (pos.x() - img_rect.left()) / img_rect.width()))
-        rel_y = max(0.0, min(1.0, (pos.y() - img_rect.top()) / img_rect.height()))
+        rel_x = clamp((pos.x() - img_rect.left()) / img_rect.width(), 0.0, 1.0)
+        rel_y = clamp((pos.y() - img_rect.top()) / img_rect.height(), 0.0, 1.0)
 
         self.viewport_changed.emit(rel_x, rel_y)
 

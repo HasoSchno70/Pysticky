@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..core.i18n import t
+from .export_common import css_rgb
 from .html_export import _html_encode
 
 if TYPE_CHECKING:
@@ -254,7 +255,7 @@ class HTMLPagesMixin(_Base):
                             # Klebevorlage.
                             rgb = self._get_pixel_color(mx, my)
                             if rgb is not None:
-                                bg = f"background:rgb({rgb[0]},{rgb[1]},{rgb[2]});"
+                                bg = f"background:{css_rgb(rgb)};"
                                 row_cells.append(f"<td{class_str} style='{bg}'></td>")
                             else:
                                 row_cells.append(f"<td{class_str}></td>")
@@ -317,7 +318,7 @@ class HTMLPagesMixin(_Base):
                         mini_legend_items.append(
                             f"<span class='mini-legend-item'>"
                             f"<span class='color-box' "
-                            f"style='background:rgb({thread.color.r},{thread.color.g},{thread.color.b});"
+                            f"style='background:{css_rgb(thread.color.to_tuple())};"
                             f"width:14px;height:14px;border:1px solid #999;"
                             f"display:inline-block;vertical-align:middle;'></span>"
                             f"<b>{code}</b>"
@@ -326,7 +327,7 @@ class HTMLPagesMixin(_Base):
                     else:
                         mini_legend_items.append(
                             f"<span class='mini-legend-item'>"
-                            f"<span class='color-box' style='background:rgb({thread.color.r},{thread.color.g},{thread.color.b})'></span>"
+                            f"<span class='color-box' style='background:{css_rgb(thread.color.to_tuple())}'></span>"
                             f"{_html_encode(stat['symbol'])}={code} "
                             f"<small>({count}\u00d7, {threads_needed}F)</small></span>"
                         )

@@ -5,6 +5,7 @@ Rechteck-Werkzeug zum Zeichnen von Rechtecken.
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPen
 
+from ..color_utils import to_qcolor
 from .base_tool import BaseTool, ToolContext
 
 
@@ -134,12 +135,7 @@ class RectTool(BaseTool):
         # Halbtransparent in aktueller Farbe zeichnen
         color_entry = ctx.pattern.get_color_entry(ctx.current_color_index)
         if color_entry:
-            color = QColor(
-                color_entry.thread.color.r,
-                color_entry.thread.color.g,
-                color_entry.thread.color.b,
-                150,
-            )
+            color = to_qcolor(color_entry.thread.color, 150)
         else:
             color = QColor(100, 200, 150, 150)
 

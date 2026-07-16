@@ -164,11 +164,12 @@ class EditHandlersMixin:
             if color is None:
                 return
             # Fallback: Ad-hoc-Thread aus reiner Farbe
-            from ...core import Thread, ThreadColor
+            from ...core import Thread
+            from ..color_utils import from_qcolor
 
             thread = Thread(
                 name=f"#{color.red():02X}{color.green():02X}{color.blue():02X}",
-                color=ThreadColor(color.red(), color.green(), color.blue()),
+                color=from_qcolor(color),
             )
 
         self.add_color_to_pattern(thread)

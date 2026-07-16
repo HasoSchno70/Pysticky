@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...core import Pattern
 from ...core.i18n import t
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -161,16 +162,12 @@ class GradientOptionsPanel(QWidget):
         start_idx = self._start_combo.currentData()
         if start_idx is not None and start_idx < len(self._pattern.color_entries):
             entry = self._pattern.color_entries[start_idx]
-            self._start_preview.set_color(
-                QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
-            )
+            self._start_preview.set_color(to_qcolor(entry.thread.color))
 
         end_idx = self._end_combo.currentData()
         if end_idx is not None and end_idx < len(self._pattern.color_entries):
             entry = self._pattern.color_entries[end_idx]
-            self._end_preview.set_color(
-                QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
-            )
+            self._end_preview.set_color(to_qcolor(entry.thread.color))
 
     def _on_start_changed(self, index: int) -> None:
         self._update_previews()

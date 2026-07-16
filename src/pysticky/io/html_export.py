@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from .export_cache import CompositeGridCache
 from .export_common import (
     count_page_colors,
+    css_rgb,
     get_pixel_color,
     get_pixel_stitch_type,
     get_pixel_symbol,
@@ -293,7 +294,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
             # Farbe holen
             entry = self.pattern.get_color_entry(bs.color_index)
             if entry:
-                color = f"rgb({entry.thread.color.r},{entry.thread.color.g},{entry.thread.color.b})"
+                color = css_rgb(entry.thread.color.to_tuple())
             else:
                 color = "rgb(0,0,0)"
 
@@ -364,8 +365,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
                 color_rgb = self._get_pixel_color(sx, sy)
                 if color_rgb is None:
                     continue
-                r, g, b = color_rgb
-                fill = f"rgb({r},{g},{b})"
+                fill = css_rgb(color_rgb)
 
                 # Zell-Position relativ zum Seiten-Offset
                 cx_left = (sx - start_stitch_x) * cell_size + offset_x

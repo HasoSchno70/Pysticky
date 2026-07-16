@@ -43,8 +43,8 @@ from PySide6.QtWidgets import (
 from ...core.i18n import t
 from ...core.inventory import Inventory, compute_shopping_list, compute_shopping_list_multi
 from ...core.project_list import ProjectList
+from ..color_utils import color_swatch_icon
 from ..styles import THEME
-from .swap_colors_dialog import _color_icon
 
 PATTERN_SWATCH_SIZE = 26
 
@@ -325,7 +325,7 @@ class InventoryDialog(QDialog):
             needed = needed_by_key.get((thread.manufacturer, thread.catalog_number), 0)
 
             icon_item = QTableWidgetItem("")
-            icon_item.setIcon(_color_icon(c.r, c.g, c.b, size=PATTERN_SWATCH_SIZE))
+            icon_item.setIcon(color_swatch_icon(c, PATTERN_SWATCH_SIZE))
             icon_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self._pattern_table.setItem(row, 0, icon_item)
 
@@ -398,7 +398,7 @@ class InventoryDialog(QDialog):
         thread = palette.find_by_number(num) if palette is not None else None
         if thread is not None:
             c = thread.color
-            return QIcon(_color_icon(c.r, c.g, c.b, size=PATTERN_SWATCH_SIZE))
+            return QIcon(color_swatch_icon(c, PATTERN_SWATCH_SIZE))
         return self._unknown_swatch_icon()
 
     def _unknown_swatch_icon(self) -> QIcon:
@@ -584,7 +584,7 @@ class InventoryDialog(QDialog):
                 for thread in sorted(palette.threads, key=lambda th: th.catalog_number or ""):
                     c = thread.color
                     color_combo.addItem(
-                        QIcon(_color_icon(c.r, c.g, c.b, size=16)),
+                        QIcon(color_swatch_icon(c, 16)),
                         f"{thread.catalog_number or '?'} — {thread.name}",
                         thread,
                     )
@@ -705,7 +705,7 @@ class InventoryDialog(QDialog):
             thread = item["thread"]
             c = thread.color
             icon = QTableWidgetItem("")
-            icon.setIcon(_color_icon(c.r, c.g, c.b, size=PATTERN_SWATCH_SIZE))
+            icon.setIcon(color_swatch_icon(c, PATTERN_SWATCH_SIZE))
             self._multi_shopping_table.setItem(row, 0, icon)
             self._multi_shopping_table.setItem(row, 1, QTableWidgetItem(thread.name))
             self._multi_shopping_table.setItem(

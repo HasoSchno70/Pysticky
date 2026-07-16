@@ -15,6 +15,7 @@ from PySide6.QtGui import QColor, QContextMenuEvent, QImage, QMouseEvent, QPaint
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
 from ...core.file_io import load_pattern
+from ..color_utils import to_qcolor
 from ..styles import THEME
 from .pattern_library_data import LibraryEntry
 
@@ -166,7 +167,7 @@ class ThumbnailWidget(QFrame):
                     color_idx = pattern.get_stitch(x, y)
                     if color_idx is not None and 0 <= color_idx < len(pattern.color_entries):
                         color = pattern.color_entries[color_idx].thread.color
-                        qcolor = QColor(color.r, color.g, color.b)
+                        qcolor = to_qcolor(color)
 
                         px = int(x * scale)
                         py = int(y * scale)

@@ -44,6 +44,7 @@ from ...core.constants import (
     MIN_ZOOM_PERCENT,
 )
 from ...core.i18n import t
+from ...utils import clamp_int
 from ..rendering import PreviewRenderEngine, RenderMode
 from ..styles import THEME, Styles
 
@@ -113,7 +114,7 @@ class PreviewCanvas(QWidget):
 
     def set_zoom(self, percent: int) -> None:
         """Setzt den Zoom-Level (25-400%)."""
-        percent = max(self.MIN_ZOOM, min(self.MAX_ZOOM, percent))
+        percent = clamp_int(percent, self.MIN_ZOOM, self.MAX_ZOOM)
         if percent != self._zoom_percent:
             self._zoom_percent = percent
             self.zoom_changed.emit(percent)
@@ -134,7 +135,7 @@ class PreviewCanvas(QWidget):
         zoom_w = (available_w / self._pattern.width) / self.PREVIEW_CELL_SIZE * 100
         zoom_h = (available_h / self._pattern.height) / self.PREVIEW_CELL_SIZE * 100
         zoom = int(min(zoom_w, zoom_h))
-        zoom = max(self.MIN_ZOOM, min(self.MAX_ZOOM, zoom))
+        zoom = clamp_int(zoom, self.MIN_ZOOM, self.MAX_ZOOM)
 
         self._zoom_percent = zoom
         # Zentrieren

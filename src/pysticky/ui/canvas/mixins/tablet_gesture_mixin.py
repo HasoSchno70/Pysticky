@@ -11,6 +11,8 @@ from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QTabletEvent
 from PySide6.QtWidgets import QGestureEvent, QPinchGesture
 
+from ....utils import clamp
+
 if TYPE_CHECKING:
     from ..canvas import CrossStitchCanvas
 
@@ -61,7 +63,7 @@ class TabletGestureMixin:
             pressure = float(event.pressure())
         except (AttributeError, TypeError):
             pressure = 0.0
-        self._tablet_pressure = max(0.0, min(1.0, pressure))
+        self._tablet_pressure = clamp(pressure, 0.0, 1.0)
 
         etype = event.type()
         if etype == QEvent.Type.TabletPress:

@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from ...config import UI_CONFIG
 from ...core.i18n import t
 from ...core.pattern import Pattern
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -353,7 +354,7 @@ class PatternImportDialog(QDialog):
                 color_idx = p.get_stitch(x, y)
                 if color_idx is not None and 0 <= color_idx < len(p.color_entries):
                     color = p.color_entries[color_idx].thread.color
-                    qcolor = QColor(color.r, color.g, color.b)
+                    qcolor = to_qcolor(color)
 
                     px = int(x * scale)
                     py = int(y * scale)

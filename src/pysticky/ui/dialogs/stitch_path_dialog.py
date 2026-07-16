@@ -36,6 +36,7 @@ from ...core import (
 from ...core.constants import DEFAULT_FABRIC_COUNT, MAX_FABRIC_COUNT, MIN_FABRIC_COUNT
 from ...core.i18n import t
 from ...core.stitch_path_optimizer import StitchPathOptimizer
+from ..color_utils import to_qcolor
 from ..styles import THEME
 from ..widgets.path_preview import PathPreviewWidget
 from ..workers import OptimizationWorker
@@ -434,7 +435,7 @@ class StitchPathDialog(QDialog):
             color_item = QTableWidgetItem(color_name)
             if entry:
                 tc = entry.thread.color
-                color_item.setBackground(QColor(tc.r, tc.g, tc.b))
+                color_item.setBackground(to_qcolor(tc))
                 color_item.setForeground(
                     QColor(0, 0, 0) if tc.luminance > 0.5 else QColor(255, 255, 255)
                 )

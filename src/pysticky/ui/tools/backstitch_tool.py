@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPen
 
+from ..color_utils import to_qcolor
 from .base_tool import BaseTool, ToolContext
 
 
@@ -253,7 +254,7 @@ class BackstitchTool(BaseTool):
         if self._preview:
             entry = ctx.pattern.get_color_entry(self._preview.color_index)
             if entry:
-                color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+                color = to_qcolor(entry.thread.color)
             else:
                 color = QColor(110, 198, 160)
 

@@ -14,6 +14,7 @@ from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPen, QPolygon
 from PySide6.QtWidgets import QWidget
 
 from ...core.i18n import t
+from ...utils import clamp_int
 from ..styles import THEME
 
 
@@ -94,7 +95,7 @@ class RulerWidget(QWidget):
         painter = QPainter(self)
         painter.fillRect(self.rect(), self._bg_color)
 
-        font_size = min(10, max(7, self._cell_size // 3))
+        font_size = clamp_int(self._cell_size // 3, 7, 10)
         font = QFont("Segoe UI", font_size)
         painter.setFont(font)
 

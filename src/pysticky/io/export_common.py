@@ -219,6 +219,11 @@ def get_pixel_stitch_type(pattern: "Pattern", x: int, y: int) -> int:
 _DRILL_INSET = 0.08
 
 
+def css_rgb(rgb: tuple[int, int, int]) -> str:
+    """CSS-Farbstring "rgb(r,g,b)" für HTML/SVG-Export."""
+    return f"rgb({rgb[0]},{rgb[1]},{rgb[2]})"
+
+
 def _shade_rgb(rgb: tuple[int, int, int], factor: int) -> tuple[int, int, int]:
     """Heller (factor>100) oder dunkler (factor<100) Variante einer Farbe.
 
@@ -261,10 +266,10 @@ def svg_drill_shape(
     x1, y1 = x + cell_w - inset, y + cell_h - inset
     cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
 
-    c_top = "rgb({},{},{})".format(*_shade_rgb(color, 145))
-    c_right = "rgb({},{},{})".format(*_shade_rgb(color, 110))
-    c_left = "rgb({},{},{})".format(*_shade_rgb(color, 95))
-    c_bottom = "rgb({},{},{})".format(*_shade_rgb(color, 70))
+    c_top = css_rgb(_shade_rgb(color, 145))
+    c_right = css_rgb(_shade_rgb(color, 110))
+    c_left = css_rgb(_shade_rgb(color, 95))
+    c_bottom = css_rgb(_shade_rgb(color, 70))
 
     def poly(pts, fill):
         coords = " ".join(f"{px:.2f},{py:.2f}" for px, py in pts)
@@ -319,7 +324,7 @@ def svg_shape_for_stitch(
         normalized_partial_stitch_shape,
     )
 
-    fill = f"rgb({color[0]},{color[1]},{color[2]})"
+    fill = css_rgb(color)
 
     # DIAMOND-Stitch-Type ODER (FULL-Stitch im DP-Modus): facettierter Drill.
     # Stoff-Background unter dem Drill, damit der Inset sichtbar bleibt.

@@ -23,6 +23,8 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QWidget
 
 from ...core import ColorPath, Pattern
+from ...utils import clamp
+from ..color_utils import to_qcolor
 from .custom_tooltip import hide_custom_tooltip, show_custom_tooltip
 
 
@@ -120,7 +122,7 @@ class PathPreviewWidget(QWidget):
 
     def set_zoom(self, zoom_percent: int) -> None:
         old_zoom = self._zoom
-        self._zoom = max(self._min_zoom, min(self._max_zoom, zoom_percent / 100.0))
+        self._zoom = clamp(zoom_percent / 100.0, self._min_zoom, self._max_zoom)
 
         if old_zoom != self._zoom:
             center_x = self.width() / 2
@@ -291,7 +293,7 @@ class PathPreviewWidget(QWidget):
                 if not entry:
                     continue
                 tc = entry.thread.color
-                ctx_color = QColor(tc.r, tc.g, tc.b, 45)
+                ctx_color = to_qcolor(tc, 45)
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.setBrush(ctx_color)
                 for step in cp.steps:
@@ -302,11 +304,7 @@ class PathPreviewWidget(QWidget):
         # Aktiver Pfad
         if self._color_path:
             entry = self._pattern.get_color_entry(self._color_path.color_index)
-            color = (
-                QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
-                if entry
-                else QColor(200, 200, 200)
-            )
+            color = to_qcolor(entry.thread.color) if entry else QColor(200, 200, 200)
 
             # Gefüllte Zellen
             painter.setPen(Qt.PenStyle.NoPen)

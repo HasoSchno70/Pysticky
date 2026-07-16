@@ -43,6 +43,7 @@ SWAP_MIME = "application/x-pysticky-color-swap"
 
 from ...core import ColorEntry, Pattern, Thread, ThreadColor
 from ...core.i18n import t
+from ..color_utils import to_qcolor
 from ..styles import THEME
 
 
@@ -141,9 +142,7 @@ class ColorSwatch(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         rect = self.rect().adjusted(4, 4, -4, -18)
-        color = QColor(
-            self._entry.thread.color.r, self._entry.thread.color.g, self._entry.thread.color.b
-        )
+        color = to_qcolor(self._entry.thread.color)
         accent = QColor(THEME.accent_primary)
 
         # Glow-Effekt
@@ -329,9 +328,7 @@ class ColorSwatch(QWidget):
         preview.fill(Qt.GlobalColor.transparent)
         p = QPainter(preview)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        c = QColor(
-            self._entry.thread.color.r, self._entry.thread.color.g, self._entry.thread.color.b
-        )
+        c = to_qcolor(self._entry.thread.color)
         p.setBrush(c)
         p.setPen(QPen(QColor(0, 0, 0, 180), 2))
         p.drawRoundedRect(2, 2, 32, 32, 6, 6)

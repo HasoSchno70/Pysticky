@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
 
 from ...core import Pattern
 from ...core.i18n import t
+from ...utils import clamp_int
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -41,8 +43,8 @@ class TilePreviewWidget(QFrame):
         self.update()
 
     def set_tiles(self, x: int, y: int) -> None:
-        self._tiles_x = max(1, min(5, x))
-        self._tiles_y = max(1, min(5, y))
+        self._tiles_x = clamp_int(x, 1, 5)
+        self._tiles_y = clamp_int(y, 1, 5)
         self._calculate_cell_size()
         self.update()
 
@@ -160,9 +162,7 @@ class TilePreviewWidget(QFrame):
                     if color_idx is not None:
                         entry = self._pattern.get_color_entry(color_idx)
                         if entry:
-                            color = QColor(
-                                entry.thread.color.r, entry.thread.color.g, entry.thread.color.b
-                            )
+                            color = to_qcolor(entry.thread.color)
                             px = offset_x + x * cell_size
                             py = offset_y + y * cell_size
                             painter.fillRect(px, py, cell_size, cell_size, color)

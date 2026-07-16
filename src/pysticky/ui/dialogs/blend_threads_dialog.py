@@ -11,7 +11,7 @@ Die Mischfarbe wird perzeptuell im CIE-Lab-Raum berechnet — entspricht
 also dem, was der Stickerin am Ende auf dem Stoff begegnet.
 """
 
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 from ...core.i18n import t
 from ...core.palette import get_palette_manager
 from ...core.thread import Thread
+from ..color_utils import to_qcolor
 
 
 class BlendThreadsDialog(QDialog):
@@ -178,7 +179,7 @@ class BlendThreadsDialog(QDialog):
         pal = self.preview_swatch.palette()
         pal.setColor(
             QPalette.ColorRole.Window,
-            QColor(blend.color.r, blend.color.g, blend.color.b),
+            to_qcolor(blend.color),
         )
         self.preview_swatch.setPalette(pal)
 

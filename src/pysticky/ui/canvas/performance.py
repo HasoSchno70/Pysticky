@@ -24,6 +24,7 @@ from ...core.stitch_shapes import (
     is_french_knot,
     normalized_partial_stitch_shape,
 )
+from ..color_utils import to_qcolor
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -343,9 +344,7 @@ def render_chunk_to_pixmap(
                 )
 
                 if color_key not in color_cache:
-                    color_cache[color_key] = QColor(
-                        thread_color.r, thread_color.g, thread_color.b, alpha
-                    )
+                    color_cache[color_key] = to_qcolor(thread_color, alpha)
 
                 fill_color = color_cache[color_key]
 

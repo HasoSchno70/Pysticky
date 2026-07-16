@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 
 from ...core.constants import COMMON_FABRIC_COUNTS
 from ...core.i18n import t
+from ..color_utils import color_swatch_icon, to_qcolor
 from ..styles import THEME, Styles
 from ..widgets.statistics_widgets import StatCard
 from .dialog_sizing import auto_size_dialog
@@ -451,14 +452,12 @@ class PatternStatisticsDialog(QDialog):
         table.setColumnWidth(0, 28)
         table.setRowCount(len(items))
 
-        from .swap_colors_dialog import _color_icon
-
         total_to_buy = 0
         for row, item in enumerate(items):
             thread = item["thread"]
             c = thread.color
             icon = QTableWidgetItem("")
-            icon.setIcon(_color_icon(c.r, c.g, c.b, size=18))
+            icon.setIcon(color_swatch_icon(c, 18))
             table.setItem(row, 0, icon)
             table.setItem(row, 1, QTableWidgetItem(thread.name))
             table.setItem(row, 2, QTableWidgetItem(thread.catalog_number or ""))
@@ -708,7 +707,7 @@ class PatternStatisticsDialog(QDialog):
 
             if i < len(entries) and entry:
                 # Farbe setzen
-                color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+                color = to_qcolor(entry.thread.color)
                 color_widget.setStyleSheet(f"""
                     background: {color.name()};
                     border: 1px solid {THEME.border_light};
@@ -828,7 +827,7 @@ class PatternStatisticsDialog(QDialog):
 
         for row, entry in enumerate(entries):
             # Farbe
-            color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+            color = to_qcolor(entry.thread.color)
             color_item = QTableWidgetItem()
             color_item.setBackground(QBrush(color))
             self._colors_table.setItem(row, 0, color_item)
@@ -891,7 +890,7 @@ class PatternStatisticsDialog(QDialog):
 
         for row, entry in enumerate(entries):
             # Farbe
-            color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+            color = to_qcolor(entry.thread.color)
             color_item = QTableWidgetItem()
             color_item.setBackground(QBrush(color))
             self._thread_table.setItem(row, 0, color_item)
@@ -990,7 +989,7 @@ class PatternStatisticsDialog(QDialog):
 
         for row, entry in enumerate(entries_to_stitch):
             # Farbe
-            color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+            color = to_qcolor(entry.thread.color)
             color_item = QTableWidgetItem()
             color_item.setBackground(QBrush(color))
             self._time_table.setItem(row, 0, color_item)

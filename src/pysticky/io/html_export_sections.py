@@ -460,6 +460,8 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
     def _generate_legend(self) -> str:
         """Generiert die Legende."""
+        from .export_common import css_rgb
+
         cross_ref_palettes = getattr(self, "cross_ref_palettes", []) or []
         if cross_ref_palettes:
             from ..core.thread_cross_ref import find_equivalents
@@ -508,7 +510,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             rows.append(f"""<tr>
 <td>{i}</td>
 <td style='text-align:center;font-size:14px;'><b>{_html_encode(stat["symbol"])}</b></td>
-<td><div class='color-box' style='background:rgb({thread.color.r},{thread.color.g},{thread.color.b})'></div></td>
+<td><div class='color-box' style='background:{css_rgb(thread.color.to_tuple())}'></div></td>
 <td><b>{_html_encode(thread_label)}</b></td>
 <td>{_html_encode(thread.name)}</td>
 {cross_cells}<td style='text-align:right;'>{stat["count"]}</td>
@@ -530,7 +532,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
                 count = stat["count"]
                 total_beads += count
                 bead_rows.append(f"""<tr>
-<td><div class='color-box' style='background:rgb({thread.color.r},{thread.color.g},{thread.color.b});width:18px;height:18px;border-radius:50%;'></div></td>
+<td><div class='color-box' style='background:{css_rgb(thread.color.to_tuple())};width:18px;height:18px;border-radius:50%;'></div></td>
 <td>{_html_encode(stat["symbol"])}</td>
 <td>{_html_encode(thread.manufacturer or "")} {_html_encode(thread.catalog_number or "")}</td>
 <td>{_html_encode(thread.name)}</td>
@@ -565,7 +567,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
                 if entry:
                     thread = entry.thread
                     bs_rows.append(f"""<tr>
-<td><div class='color-box' style='background:rgb({thread.color.r},{thread.color.g},{thread.color.b});width:18px;height:18px;'></div></td>
+<td><div class='color-box' style='background:{css_rgb(thread.color.to_tuple())};width:18px;height:18px;'></div></td>
 <td>{_html_encode(entry.symbol)}</td>
 <td>{_html_encode(thread.manufacturer or "")} {_html_encode(thread.catalog_number or "")}</td>
 <td>{_html_encode(thread.name)}</td>

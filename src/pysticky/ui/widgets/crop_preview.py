@@ -6,6 +6,8 @@ from PySide6.QtCore import QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPaintEvent, QPen, QPixmap
 from PySide6.QtWidgets import QLabel
 
+from ...utils import clamp
+
 
 class CropPreviewWidget(QLabel):
     """
@@ -99,7 +101,7 @@ class CropPreviewWidget(QLabel):
         nx = (x - self._image_rect.x()) / self._image_rect.width()
         ny = (y - self._image_rect.y()) / self._image_rect.height()
 
-        return (max(0.0, min(1.0, nx)), max(0.0, min(1.0, ny)))
+        return (clamp(nx, 0.0, 1.0), clamp(ny, 0.0, 1.0))
 
     def _emit_crop_changed(self) -> None:
         """Sendet das crop_changed Signal."""

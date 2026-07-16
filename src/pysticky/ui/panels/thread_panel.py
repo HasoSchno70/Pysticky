@@ -3,7 +3,7 @@ Garn-Panel zur Farbverwaltung mit Paletten-Unterstützung.
 """
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QIcon, QPixmap
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QColorDialog,
     QComboBox,
@@ -18,8 +18,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...core import Thread, ThreadColor, get_palette_manager
+from ...core import Thread, get_palette_manager
 from ...core.i18n import t
+from ..color_utils import color_swatch_icon, from_qcolor, to_qcolor
 
 
 class ThreadPanel(QWidget):
@@ -172,7 +173,7 @@ class ThreadPanel(QWidget):
             if thread.catalog_number:
                 text += f" ({thread.catalog_number})"
             item.setText(text)
-            item.setIcon(self._create_color_icon(thread.color))
+            item.setIcon(color_swatch_icon(thread.color, 16, border=False))
             item.setToolTip(f"{thread.manufacturer or 'Unbekannt'}\n{thread.color.to_hex()}")
             self.list_widget.addItem(item)
 
@@ -218,7 +219,7 @@ class ThreadPanel(QWidget):
             if thread.catalog_number:
                 text = f"{thread.catalog_number} - {text}"
             item.setText(text)
-            item.setIcon(self._create_color_icon(thread.color))
+            item.setIcon(color_swatch_icon(thread.color, 16, border=False))
             item.setData(Qt.ItemDataRole.UserRole, thread)
             item.setToolTip(f"{pname}\n{thread.color.to_hex()}")
             self.palette_list.addItem(item)
@@ -228,12 +229,6 @@ class ThreadPanel(QWidget):
             self.palette_info.setText(f"{show_count} von {total} Farben (Filter verwenden)")
         else:
             self.palette_info.setText(f"{total} Farben")
-
-    def _create_color_icon(self, color: ThreadColor, size: int = 16) -> QIcon:
-        """Erstellt ein Farb-Icon."""
-        pixmap = QPixmap(size, size)
-        pixmap.fill(QColor(color.r, color.g, color.b))
-        return QIcon(pixmap)
 
     # === Event-Handler für Muster-Tab ===
 
@@ -251,7 +246,7 @@ class ThreadPanel(QWidget):
         if color.isValid():
             thread = Thread(
                 name=f"Farbe {len(self._threads) + 1}",
-                color=ThreadColor(color.red(), color.green(), color.blue()),
+                color=from_qcolor(color),
             )
             self._threads.append(thread)
             self._update_list()
@@ -288,14 +283,14 @@ class ThreadPanel(QWidget):
 
     def _edit_color(self, index: int) -> None:
         thread = self._threads[index]
-        current_color = QColor(thread.color.r, thread.color.g, thread.color.b)
+        current_color = to_qcolor(thread.color)
 
         color = QColorDialog.getColor(current_color, self, f"Farbe bearbeiten: {thread.name}")
 
         if color.isValid():
             self._threads[index] = Thread(
                 name=thread.name,
-                color=ThreadColor(color.red(), color.green(), color.blue()),
+                color=from_qcolor(color),
                 manufacturer=thread.manufacturer,
                 catalog_number=thread.catalog_number,
             )

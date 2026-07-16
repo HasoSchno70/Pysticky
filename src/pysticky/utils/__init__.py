@@ -24,8 +24,12 @@ from .logging import (
     setup_logging,
     warning,
 )
+from .numeric import clamp, clamp_int
 
 __all__ = [
+    # Numerik
+    "clamp",
+    "clamp_int",
     # Logging
     "setup_logging",
     "get_logger",

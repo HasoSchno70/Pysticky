@@ -30,6 +30,7 @@ from ...core.color_math import delta_e
 from ...core.i18n import t
 from ...core.palette import ThreadPalette, get_palette_manager
 from ...core.thread import Thread
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
@@ -175,7 +176,7 @@ class ColorSwatch(QFrame):
         self._thread = thread
         self._distance = distance
         if thread:
-            self._color = QColor(thread.color.r, thread.color.g, thread.color.b)
+            self._color = to_qcolor(thread.color)
         else:
             self._color = self._target_color
         self.update()
@@ -389,7 +390,7 @@ class SourceColorWidget(QFrame):
 
     def set_thread(self, thread: Thread) -> None:
         self._thread = thread
-        self._color = QColor(thread.color.r, thread.color.g, thread.color.b)
+        self._color = to_qcolor(thread.color)
         self.update()
 
     def paintEvent(self, event) -> None:

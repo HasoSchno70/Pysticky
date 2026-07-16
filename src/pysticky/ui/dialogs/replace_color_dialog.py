@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...core import Pattern
 from ...core.i18n import t
+from ..color_utils import color_swatch_icon
 from ..styles import THEME
 
 
@@ -118,13 +119,11 @@ class ReplaceColorDialog(QDialog):
         """Füllt eine ComboBox mit den Farben (inkl. Farbquadrat als Icon)."""
         from PySide6.QtCore import QSize
 
-        from .swap_colors_dialog import _color_icon
-
         combo.setIconSize(QSize(18, 18))
         for i, entry in enumerate(self.pattern.color_entries):
             thread = entry.thread
             text = f"{entry.symbol} - {thread.manufacturer} {thread.catalog_number or ''} ({thread.name})"
-            icon = _color_icon(thread.color.r, thread.color.g, thread.color.b)
+            icon = color_swatch_icon(thread.color, 18)
             combo.addItem(icon, text, i)
 
     def _on_source_changed(self, index: int) -> None:

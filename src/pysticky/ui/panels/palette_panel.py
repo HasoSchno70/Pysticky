@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from ...core import Pattern, Thread, can_change_palette, get_palette_manager
 from ...core.i18n import t
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -375,7 +376,7 @@ class PalettePanel(QWidget):
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        color = QColor(thread.color.r, thread.color.g, thread.color.b)
+        color = to_qcolor(thread.color)
         gradient = QLinearGradient(0, 0, size, size)
         gradient.setColorAt(0, color.lighter(115))
         gradient.setColorAt(0.5, color)

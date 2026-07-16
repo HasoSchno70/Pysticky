@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
+from ..color_utils import to_qcolor
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -185,7 +186,7 @@ class SymbolEditorDialog(QDialog):
         # Farbvorschau
         self._preview = ColorPreview()
         color = self._entry.thread.color
-        self._preview.set_color(QColor(color.r, color.g, color.b))
+        self._preview.set_color(to_qcolor(color))
         self._preview.set_symbol(self._selected_symbol)
         header.addWidget(self._preview)
 

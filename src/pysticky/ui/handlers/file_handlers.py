@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from ...core.i18n import t
 from ...utils import get_logger
+from ..color_utils import to_qcolor
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
@@ -437,7 +438,7 @@ class FileHandlersMixin:
                     if color_idx != NO_STITCH and 0 <= color_idx < len(pattern.color_entries):
                         entry = pattern.color_entries[color_idx]
                         c = entry.thread.color
-                        color = QColor(c.r, c.g, c.b)
+                        color = to_qcolor(c)
                         stype = int(type_grid[y, x])
 
                         if is_french_knot(stype):

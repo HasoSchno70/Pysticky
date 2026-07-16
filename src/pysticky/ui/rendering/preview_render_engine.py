@@ -23,6 +23,7 @@ from PySide6.QtGui import (
 )
 
 from ...core.layer import NO_STITCH
+from ..color_utils import to_qcolor
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -884,7 +885,7 @@ class PreviewRenderEngine:
 
             entry = self._pattern.get_color_entry(bs.color_index)
             if entry:
-                color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+                color = to_qcolor(entry.thread.color)
             else:
                 color = QColor(0, 0, 0)
 

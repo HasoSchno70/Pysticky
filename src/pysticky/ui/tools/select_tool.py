@@ -5,6 +5,7 @@ Auswahl-Werkzeug mit Kopieren, Einfügen, Drehen und Spiegeln.
 from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPen
 
+from ..color_utils import to_qcolor
 from ..styles import THEME
 from .base_tool import BaseTool, ToolContext
 
@@ -566,12 +567,7 @@ class SelectTool(BaseTool):
 
             color_entry = ctx.pattern.get_color_entry(color_idx)
             if color_entry:
-                color = QColor(
-                    color_entry.thread.color.r,
-                    color_entry.thread.color.g,
-                    color_entry.thread.color.b,
-                    180,
-                )
+                color = to_qcolor(color_entry.thread.color, 180)
             else:
                 color = QColor(150, 150, 150, 180)
 
@@ -604,12 +600,7 @@ class SelectTool(BaseTool):
 
             color_entry = ctx.pattern.get_color_entry(color_idx)
             if color_entry:
-                color = QColor(
-                    color_entry.thread.color.r,
-                    color_entry.thread.color.g,
-                    color_entry.thread.color.b,
-                    200,
-                )
+                color = to_qcolor(color_entry.thread.color, 200)
             else:
                 color = QColor(150, 150, 150, 200)
 

@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 
 from ...core.hoop_planner import HoopPlan, plan_hoops
 from ...core.i18n import t
+from ..color_utils import to_qcolor
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -78,7 +79,7 @@ class _HoopPreviewWidget(QFrame):
                 if idx == NO_STITCH or idx >= len(pattern.color_entries):
                     continue
                 c = pattern.color_entries[idx].thread.color
-                img.setPixelColor(x, y, QColor(c.r, c.g, c.b))
+                img.setPixelColor(x, y, to_qcolor(c))
         return img
 
     def paintEvent(self, event) -> None:

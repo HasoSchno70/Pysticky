@@ -235,6 +235,48 @@ class Styles:
         """
 
     @staticmethod
+    def button_danger() -> str:
+        """Roter Button-Style für destruktive Aktionen (Löschen etc.)."""
+        hover = QColor(THEME.error).lighter(115).name()
+        return f"""
+            QPushButton {{
+                background: {THEME.error};
+                color: white;
+                border: 1px solid {THEME.error};
+                border-radius: 4px;
+                padding: 6px 12px;
+            }}
+            QPushButton:hover {{
+                background: {hover};
+                border-color: {hover};
+            }}
+            QPushButton:disabled {{
+                background: {THEME.bg_medium};
+                color: {THEME.text_disabled};
+                border-color: {THEME.border_medium};
+            }}
+        """
+
+    @staticmethod
+    def button_neutral() -> str:
+        """Neutraler Button-Style (dezent, für Sekundär-Aktionen in Dialogen)."""
+        return f"""
+            QPushButton {{
+                background: {THEME.bg_medium};
+                color: {THEME.text_primary};
+                border: 1px solid {THEME.border_dark};
+                border-radius: 4px;
+                padding: 6px 12px;
+            }}
+            QPushButton:hover {{
+                background: {THEME.bg_light};
+            }}
+            QPushButton:disabled {{
+                color: {THEME.text_disabled};
+            }}
+        """
+
+    @staticmethod
     def input_field() -> str:
         """Standard-Input-Feld-Style."""
         return f"""

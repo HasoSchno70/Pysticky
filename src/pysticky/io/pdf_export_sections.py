@@ -772,8 +772,7 @@ class PDFSectionsMixin(_Base):
                         # weil DP-Drills keine Symbol-Konvention haben.
                         # Die Box wird via Hex-Color als kleiner ASCII-Block ■ in der
                         # Thread-Farbe simuliert.
-                        c = thread.color
-                        hex_color = f"#{c.r:02x}{c.g:02x}{c.b:02x}"
+                        hex_color = thread.color.to_hex()
                         legend_parts.append(
                             f'<font color="{hex_color}">■</font> <b>{code}</b> ({count})'
                         )

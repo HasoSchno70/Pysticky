@@ -3,7 +3,6 @@ Dialog zum Tauschen zweier Farben (A ⇄ B).
 """
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -16,21 +15,9 @@ from PySide6.QtWidgets import (
 
 from ...core import Pattern
 from ...core.i18n import t
+from ..color_utils import color_swatch_icon
 from ..styles import THEME
 from .replace_color_dialog import ColorBox
-
-
-def _color_icon(r: int, g: int, b: int, size: int = 18) -> QIcon:
-    """Liefert ein QIcon mit gefülltem Farbquadrat für Combobox-Items."""
-    pm = QPixmap(size, size)
-    pm.fill(QColor(0, 0, 0, 0))
-    painter = QPainter(pm)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-    painter.fillRect(1, 1, size - 2, size - 2, QColor(r, g, b))
-    painter.setPen(QColor(80, 80, 80))
-    painter.drawRect(0, 0, size - 1, size - 1)
-    painter.end()
-    return QIcon(pm)
 
 
 class SwapColorsDialog(QDialog):
@@ -109,7 +96,7 @@ class SwapColorsDialog(QDialog):
         for i, entry in enumerate(self.pattern.color_entries):
             thread = entry.thread
             text = f"{entry.symbol} - {thread.manufacturer} {thread.catalog_number or ''} ({thread.name})"
-            icon = _color_icon(thread.color.r, thread.color.g, thread.color.b)
+            icon = color_swatch_icon(thread.color, 18)
             combo.addItem(icon, text, i)
 
     def _on_first_changed(self, index: int) -> None:

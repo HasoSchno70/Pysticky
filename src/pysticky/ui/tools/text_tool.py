@@ -5,6 +5,8 @@ Text-Werkzeug zum Platzieren von Text als Stiche.
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QImage, QMouseEvent, QPainter, QPen
 
+from ...utils import clamp_int
+from ..color_utils import to_qcolor
 from ..styles import THEME
 from .base_tool import BaseTool, ToolContext
 
@@ -73,7 +75,7 @@ class TextTool(BaseTool):
 
     def set_font_size(self, size: int) -> None:
         """Setzt die Schriftgröße."""
-        self._font_size = max(6, min(72, size))
+        self._font_size = clamp_int(size, 6, 72)
         self._update_preview()
 
     def set_bold(self, bold: bool) -> None:
@@ -261,12 +263,7 @@ class TextTool(BaseTool):
         # Farbe für Vorschau
         color_entry = ctx.pattern.get_color_entry(ctx.current_color_index)
         if color_entry:
-            color = QColor(
-                color_entry.thread.color.r,
-                color_entry.thread.color.g,
-                color_entry.thread.color.b,
-                180,
-            )
+            color = to_qcolor(color_entry.thread.color, 180)
         else:
             color = QColor(100, 200, 150, 180)
 

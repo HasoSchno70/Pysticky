@@ -41,6 +41,7 @@ from ...core.constants import (
     MIN_COLORS,
 )
 from ...core.i18n import t
+from ...utils import clamp_int
 from ..styles import THEME, Styles
 from ..widgets.crop_preview import CropPreviewWidget
 from .dialog_sizing import auto_size_dialog
@@ -802,10 +803,10 @@ class ImageImportDialog(QDialog):
         max_stitches = 100
 
         if img_w >= img_h:
-            width = min(max_stitches, max(20, img_w // 10))
+            width = clamp_int(img_w // 10, 20, max_stitches)
             height = int(width * img_h / img_w)
         else:
-            height = min(max_stitches, max(20, img_h // 10))
+            height = clamp_int(img_h // 10, 20, max_stitches)
             width = int(height * img_w / img_h)
 
         return (max(10, width), max(10, height))

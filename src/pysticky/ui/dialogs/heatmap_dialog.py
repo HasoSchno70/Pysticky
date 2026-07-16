@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
 
 from ...core.i18n import t
 from ...core.layer import NO_STITCH
+from ...utils import clamp
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -103,7 +104,7 @@ def _intensity_to_rgb(t: float) -> tuple[int, int, int]:
     """Mapped t in [0,1] auf blau -> cyan -> grün -> gelb -> rot."""
     if t <= 0.0:
         return (20, 20, 60)  # fast schwarz für leere Blöcke
-    t = max(0.0, min(1.0, t))
+    t = clamp(t, 0.0, 1.0)
     # 4 Segmente
     if t < 0.25:
         u = t / 0.25

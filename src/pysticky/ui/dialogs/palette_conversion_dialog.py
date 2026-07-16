@@ -8,7 +8,7 @@ von einem Hersteller zu einem anderen (z.B. DMC → Anchor).
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -29,6 +29,7 @@ from ...core.color_math import delta_e
 from ...core.i18n import t
 from ...core.palette import ThreadPalette, get_palette_manager
 from ...core.thread import Thread, ThreadColor
+from ..color_utils import color_swatch_icon
 from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
@@ -38,19 +39,6 @@ if TYPE_CHECKING:
 def _color_distance(c1: ThreadColor, c2: ThreadColor) -> float:
     """Perzeptuelle Farbdistanz (CIE76 Delta-E in Lab)."""
     return delta_e((c1.r, c1.g, c1.b), (c2.r, c2.g, c2.b))
-
-
-def _make_color_icon(color: ThreadColor, size: int = 20) -> QIcon:
-    """Erstellt ein farbiges Icon."""
-    pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setBrush(QColor(color.r, color.g, color.b))
-    painter.setPen(QPen(QColor(THEME.border_light), 1))
-    painter.drawRoundedRect(1, 1, size - 2, size - 2, 3, 3)
-    painter.end()
-    return QIcon(pixmap)
 
 
 class _TargetThreadSelector(QDialog):
@@ -174,7 +162,7 @@ class _TargetThreadSelector(QDialog):
         for row, (thread, dist) in enumerate(data):
             # Farb-Icon
             icon_item = QTableWidgetItem()
-            icon_item.setIcon(_make_color_icon(thread.color))
+            icon_item.setIcon(color_swatch_icon(thread.color, 20, rounded=True))
             icon_item.setData(Qt.ItemDataRole.UserRole, row)
             self._table.setItem(row, 0, icon_item)
 
@@ -390,7 +378,7 @@ class PaletteConversionDialog(QDialog):
 
             # Quell-Icon
             src_icon_item = QTableWidgetItem()
-            src_icon_item.setIcon(_make_color_icon(entry.thread.color))
+            src_icon_item.setIcon(color_swatch_icon(entry.thread.color, 20, rounded=True))
             self._table.setItem(row, 0, src_icon_item)
 
             # Quellfarbe Name
@@ -403,7 +391,7 @@ class PaletteConversionDialog(QDialog):
             if target:
                 # Ziel-Icon
                 tgt_icon_item = QTableWidgetItem()
-                tgt_icon_item.setIcon(_make_color_icon(target.color))
+                tgt_icon_item.setIcon(color_swatch_icon(target.color, 20, rounded=True))
                 self._table.setItem(row, 3, tgt_icon_item)
 
                 # Zielfarbe Name

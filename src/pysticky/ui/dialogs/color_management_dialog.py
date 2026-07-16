@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
 
 from ...core.i18n import t
 from ...core.layer import NO_STITCH
+from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
@@ -312,22 +313,7 @@ class ColorManagementDialog(QDialog):
         self._delete_btn.setEnabled(False)
         # Roter Lösch-Button — bewusst abweichend vom Default-Stil, damit
         # destruktive Aktion klar erkennbar ist.
-        self._delete_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.error};
-                color: white;
-                border: 1px solid {THEME.error};
-            }}
-            QPushButton:hover {{
-                background: {QColor(THEME.error).lighter(115).name()};
-                border-color: {QColor(THEME.error).lighter(115).name()};
-            }}
-            QPushButton:disabled {{
-                background: {THEME.bg_medium};
-                color: {THEME.text_disabled};
-                border-color: {THEME.border_medium};
-            }}
-        """)
+        self._delete_btn.setStyleSheet(Styles.button_danger())
         actions_layout.addWidget(self._delete_btn)
 
         right_panel.addWidget(actions_group)
@@ -456,7 +442,7 @@ class ColorManagementDialog(QDialog):
             pixmap.fill(Qt.GlobalColor.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+            color = to_qcolor(entry.thread.color)
             painter.setBrush(color)
             painter.setPen(QPen(QColor(THEME.border_light), 1))
             painter.drawRoundedRect(2, 2, 16, 16, 3, 3)
@@ -519,7 +505,7 @@ class ColorManagementDialog(QDialog):
             item = selected[0]
             if isinstance(item, ColorListItem):
                 entry = item.entry
-                color = QColor(entry.thread.color.r, entry.thread.color.g, entry.thread.color.b)
+                color = to_qcolor(entry.thread.color)
                 self._preview_widget.set_color(color)
                 self._selected_info.setText(
                     f"<b>{entry.symbol}</b> {entry.thread.name}<br>"

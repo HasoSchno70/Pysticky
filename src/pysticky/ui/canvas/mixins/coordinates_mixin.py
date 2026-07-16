@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QRect
 
+from ....utils import clamp_int
+
 if TYPE_CHECKING:
     from ..canvas import CrossStitchCanvas
 
@@ -75,7 +77,7 @@ class CoordinatesMixin:
         snapped_y = round(y / interval) * interval
 
         if self._pattern:
-            snapped_x = max(0, min(snapped_x, self._pattern.width - 1))
-            snapped_y = max(0, min(snapped_y, self._pattern.height - 1))
+            snapped_x = clamp_int(snapped_x, 0, self._pattern.width - 1)
+            snapped_y = clamp_int(snapped_y, 0, self._pattern.height - 1)
 
         return (snapped_x, snapped_y)

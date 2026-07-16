@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from ...core.constants import DEFAULT_ZOOM_PERCENT, MAX_ZOOM_PERCENT, MIN_ZOOM_PERCENT
 from ...core.i18n import t
+from ...utils import clamp_int
 from ..styles import THEME
 
 
@@ -165,7 +166,7 @@ class ZoomSlider(QWidget):
         self._label.setText(f"{self._zoom}%")
 
     def set_zoom(self, percent: int) -> None:
-        percent = max(self.MIN_ZOOM, min(self.MAX_ZOOM, percent))
+        percent = clamp_int(percent, self.MIN_ZOOM, self.MAX_ZOOM)
         if percent != self._zoom:
             self._zoom = percent
             self._slider.blockSignals(True)
@@ -176,7 +177,7 @@ class ZoomSlider(QWidget):
 
     def set_zoom_from_factor(self, factor: float) -> None:
         percent = int(factor * 100)
-        percent = max(self.MIN_ZOOM, min(self.MAX_ZOOM, percent))
+        percent = clamp_int(percent, self.MIN_ZOOM, self.MAX_ZOOM)
         if percent != self._zoom:
             self._zoom = percent
             self._slider.blockSignals(True)

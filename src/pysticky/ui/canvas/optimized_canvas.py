@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QColor, QFont, QPainter
 
+from ...utils import clamp_int
 from .canvas import CrossStitchCanvas
 from .performance import (
     PerformanceManager,
@@ -287,6 +288,6 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         Größere Werte (128) für sehr große Muster,
         kleinere Werte (32) für häufige lokale Änderungen.
         """
-        self._perf_manager._chunk_size = max(16, min(256, size))
+        self._perf_manager._chunk_size = clamp_int(size, 16, 256)
         self._perf_manager.invalidate_all()
         self.update()
