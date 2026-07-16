@@ -57,9 +57,14 @@ class ColorListItem(QListWidgetItem):
 
     def _update_display(self) -> None:
         thread = self.entry.thread
-        self.setText(
-            f"  {self.entry.symbol}  │  {thread.name}  │  {thread.manufacturer or '-'}  │  {self.entry.stitch_count} Stiche"
-        )
+        # Feste Spaltenbreiten (per ljust/rjust) + Monospace-Font auf der Liste
+        # (siehe ColorListWidget) sorgen fuer echte Spalten statt nur durch
+        # "│" getrennten, unterschiedlich breiten Text.
+        symbol_col = f"{self.entry.symbol:<3}"
+        name_col = f"{thread.name:<24}"
+        mfr_col = f"{(thread.manufacturer or '-'):<12}"
+        stitch_col = f"{self.entry.stitch_count:>6} Stiche"
+        self.setText(f"{symbol_col}│ {name_col}│ {mfr_col}│ {stitch_col}")
         self.setToolTip(
             f"Symbol: {self.entry.symbol}\n"
             f"Name: {thread.name}\n"
@@ -103,6 +108,9 @@ class ColorListWidget(QListWidget):
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setAlternatingRowColors(True)
+        # Monospace-Font, damit die per ljust/rjust ausgerichteten Spalten in
+        # ColorListItem._update_display() auch tatsaechlich untereinander stehen.
+        self.setStyleSheet("QListWidget { font-family: Consolas, 'Courier New', monospace; }")
 
         self.model().rowsMoved.connect(lambda: self.order_changed.emit())
 
@@ -258,6 +266,19 @@ class ColorManagementDialog(QDialog):
         selection_layout.addLayout(strands_row)
 
         right_panel.addWidget(selection_group)
+
+        # Fadenstärke für alle Farben auf einmal setzen
+        bulk_strands_group = QGroupBox(t("Fäden für alle Farben"))
+        bulk_strands_layout = QHBoxLayout(bulk_strands_group)
+        self._bulk_strands_spin = QSpinBox()
+        self._bulk_strands_spin.setRange(1, 6)
+        self._bulk_strands_spin.setValue(2)
+        self._bulk_strands_spin.setToolTip(t("Anzahl Fäden (1-6)"))
+        bulk_strands_layout.addWidget(self._bulk_strands_spin)
+        self._bulk_strands_btn = QPushButton(t("Auf alle Farben anwenden"))
+        self._bulk_strands_btn.clicked.connect(self._on_apply_strands_to_all)
+        bulk_strands_layout.addWidget(self._bulk_strands_btn)
+        right_panel.addWidget(bulk_strands_group)
 
         # Aktionen für ausgewählte Farbe
         actions_group = QGroupBox(t("Aktionen"))
@@ -511,17 +532,45 @@ class ColorManagementDialog(QDialog):
         elif multi_selection:
             self._preview_widget.set_color(QColor(128, 128, 128))
             self._selected_info.setText(f"{len(selected)} Farben ausgewählt")
+            # Fäden bleiben bei Mehrfachauswahl editierbar — _on_strands_changed
+            # wendet den neuen Wert auf alle ausgewaehlten Farben an.
+            self._strands_spin.setEnabled(True)
+            first_entry = selected[0].entry if isinstance(selected[0], ColorListItem) else None
+            if first_entry is not None:
+                self._strands_spin.blockSignals(True)
+                self._strands_spin.setValue(first_entry.strands)
+                self._strands_spin.blockSignals(False)
         else:
             self._preview_widget.set_color(QColor(128, 128, 128))
             self._selected_info.setText("Keine Farbe ausgewählt")
             self._strands_spin.setEnabled(False)
 
     def _on_strands_changed(self, value: int) -> None:
-        """Fadenstärke geändert."""
+        """Fadenstärke geändert — gilt fuer alle aktuell ausgewaehlten Farben."""
         selected = self._color_list.selectedItems()
-        if len(selected) == 1 and isinstance(selected[0], ColorListItem):
-            selected[0].entry.strands = value
+        changed = False
+        for item in selected:
+            if isinstance(item, ColorListItem):
+                item.entry.strands = value
+                item._update_display()
+                changed = True
+        if changed:
             self._changes_made = True
+
+    def _on_apply_strands_to_all(self) -> None:
+        """Setzt die Fadenstaerke fuer alle Farben der Palette auf einmal."""
+        value = self._bulk_strands_spin.value()
+        for entry in self._pattern.color_entries:
+            entry.strands = value
+        for i in range(self._color_list.count()):
+            item = self._color_list.item(i)
+            if isinstance(item, ColorListItem):
+                item._update_display()
+        self._changes_made = True
+        if self._strands_spin.isEnabled():
+            self._strands_spin.blockSignals(True)
+            self._strands_spin.setValue(value)
+            self._strands_spin.blockSignals(False)
 
     def _on_sort_changed(self, index: int) -> None:
         """Sortierung geändert."""
