@@ -1303,5 +1303,16 @@
   "Keine seltenen Farben unter dieser Schwelle.": "No rarely used colors below this threshold.",
   "{colors} seltene Farbe(n) mit zusammen {stitches} Stichen würden auf {targets} häufige Farbe(n) verteilt.": "{colors} rare color(s) with {stitches} stitches in total would be merged into {targets} frequent color(s).",
   "{n} Farbe(n) werden ersetzt:": "{n} color(s) will be replaced:",
-  "{n} Stiche werden ersetzt": "{n} stitches will be replaced"
+  "{n} Stiche werden ersetzt": "{n} stitches will be replaced",
+  "Autosave gefunden": "Autosave found",
+  "Es wurde eine ungespeicherte Autosave-Datei gefunden.\nMöchten Sie diese wiederherstellen?": "An unsaved autosave file was found.\nDo you want to restore it?",
+  "Autosave wiederhergestellt": "Autosave restored",
+  "Gesamten Stickfortschritt zurücksetzen?\nDies kann nicht rückgängig gemacht werden.": "Reset all stitching progress?\nThis cannot be undone.",
+  "Palettenwechsel fehlgeschlagen.": "Palette conversion failed.",
+  "Datei-Logging aktivieren": "Enable file logging",
+  "Schreibt Programm-Meldungen und Fehler in eine Log-Datei\n(~/.pysticky/logs). Hilfreich, um Probleme nachträglich\nnachzuvollziehen. Wird sofort angewendet.": "Writes program messages and errors to a log file\n(~/.pysticky/logs). Helpful for diagnosing problems\nafter the fact. Applied immediately.",
+  "Tastenkürzel: {action}": "Shortcut: {action}",
+  "Neues Tastenkürzel für '{action}':": "New shortcut for '{action}':",
+  "Symbol bearbeiten - {name}": "Edit Symbol - {name}",
+  "Diagnose": "Diagnostics"
 }

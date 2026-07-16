@@ -27,6 +27,9 @@ def main_window(qtbot):
     qtbot.addWidget(w)
     # Verhindert den modalen "Änderungen speichern?"-Dialog im Teardown
     w._check_save_changes = lambda: True
+    # Autosave-Timer stoppen — sonst kann er waehrend langer Laeufe eine
+    # echte %TEMP%-Autosave-Datei schreiben (Recovery-Dialog-Falle).
+    w._autosave_timer.stop()
     return w
 
 

@@ -5,6 +5,10 @@ Preset-Verwaltung für den Bildimport-Dialog.
 import json
 from pathlib import Path
 
+from ...utils.logging import get_logger
+
+logger = get_logger(__name__)
+
 BUILTIN_PRESETS = [
     # Kreuzstich-Presets
     {
@@ -119,7 +123,7 @@ def load_user_presets() -> list[dict]:
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except (OSError, json.JSONDecodeError, ValueError):
-            pass
+            logger.warning("User-Presets konnten nicht geladen werden: %s", path)
     return []
 
 

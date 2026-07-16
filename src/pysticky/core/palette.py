@@ -5,16 +5,16 @@ Thread-sicherer Singleton für den globalen Zugriff auf Paletten.
 """
 
 import json
-import logging
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator
 
+from ..utils.logging import get_logger
 from .color_math import delta_e_sq, rgb_to_lab
 from .thread import Thread, ThreadColor
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

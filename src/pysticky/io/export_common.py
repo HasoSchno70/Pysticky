@@ -16,8 +16,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..utils.logging import get_logger
+
 if TYPE_CHECKING:
     from ..core.pattern import ColorEntry, Pattern
+
+logger = get_logger(__name__)
 
 
 # Modus-spezifische Begriffe für Export-Templates. Pro Mode ein Dict
@@ -402,7 +406,7 @@ def get_watermark(pattern: "Pattern") -> tuple[str, str]:
             if not copyright_:
                 copyright_ = settings.value("default_copyright", "", type=str)
         except Exception:  # noqa: BLE001 - QSettings darf in Test-Env fehlen
-            pass
+            logger.debug("QSettings nicht verfügbar — Wasserzeichen-Defaults übersprungen")
 
     return author.strip(), copyright_.strip()
 

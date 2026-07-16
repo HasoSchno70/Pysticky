@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QMessageBox
 
+from ...core.i18n import t
 from ...utils import get_logger
 
 if TYPE_CHECKING:
@@ -103,9 +104,11 @@ class AutosaveHandlersMixin:
 
         reply = QMessageBox.question(
             self,
-            "Autosave gefunden",
-            "Es wurde eine ungespeicherte Autosave-Datei gefunden.\n"
-            "Moechten Sie diese wiederherstellen?",
+            t("Autosave gefunden"),
+            t(
+                "Es wurde eine ungespeicherte Autosave-Datei gefunden.\n"
+                "Möchten Sie diese wiederherstellen?"
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -113,11 +116,12 @@ class AutosaveHandlersMixin:
                 pattern = load_pattern(str(temp_autosave))
                 self.set_pattern(pattern)
                 self._mark_unsaved()
-                self.status_bar.showMessage("Autosave wiederhergestellt", 5000)
+                self.status_bar.showMessage(t("Autosave wiederhergestellt"), 5000)
             except (OSError, ValueError) as e:
+                logger.exception("Autosave-Recovery fehlgeschlagen")
                 QMessageBox.warning(
                     self,
-                    "Fehler",
+                    t("Fehler"),
                     f"Autosave konnte nicht geladen werden:\n{e}",
                 )
         # Autosave-Datei nach Entscheidung aufräumen

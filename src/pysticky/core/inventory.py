@@ -12,8 +12,12 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
 
+from ..utils.logging import get_logger
+
 if TYPE_CHECKING:
     from .thread import Thread
+
+logger = get_logger(__name__)
 
 
 def get_inventory_path() -> Path:
@@ -80,7 +84,7 @@ class Inventory:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
         except OSError:
-            pass
+            logger.warning("Garn-Vorrat konnte nicht gespeichert werden: %s", self._path)
 
     # === Accessors ===
 

@@ -46,7 +46,12 @@ class PySticky:
         """
         logger.info("Initialisiere PySticky...")
 
-        setup_logging(file_logging=False)
+        # File-Logging laut gespeicherter Einstellung (Einstellungen → Diagnose)
+        from PySide6.QtCore import QSettings
+
+        settings = QSettings(self.ORG_NAME_CONST, self.APP_NAME_CONST)
+        file_logging = settings.value("file_logging_enabled", False, type=bool)
+        setup_logging(file_logging=file_logging)
 
         self.app = QApplication(self.args)
         self.app.setApplicationName(self.APP_NAME_CONST)

@@ -3,17 +3,15 @@
 Utility-Modul für PySticky.
 
 Enthält Hilfsfunktionen und -klassen.
+
+Die Dialog-Helfer aus .errors (show_error, confirm, ...) werden LAZY
+importiert (PEP 562): errors.py zieht PySide6 herein, und dieses Paket
+soll auch aus Qt-freien Schichten (core/, io/) importierbar sein —
+z.B. für get_logger und clamp.
 """
 
-from .errors import (
-    ErrorContext,
-    confirm,
-    handle_errors,
-    safe_call,
-    show_error,
-    show_info,
-    show_warning,
-)
+from typing import Any
+
 from .logging import (
     PyStickLogger,
     critical,
@@ -25,6 +23,27 @@ from .logging import (
     warning,
 )
 from .numeric import clamp, clamp_int
+
+_ERROR_HELPERS = frozenset(
+    (
+        "ErrorContext",
+        "confirm",
+        "handle_errors",
+        "safe_call",
+        "show_error",
+        "show_info",
+        "show_warning",
+    )
+)
+
+
+def __getattr__(name: str) -> Any:
+    if name in _ERROR_HELPERS:
+        from . import errors
+
+        return getattr(errors, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     # Numerik

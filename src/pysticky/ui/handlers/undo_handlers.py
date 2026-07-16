@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMessageBox
 
+from ...core.i18n import t
+
 if TYPE_CHECKING:
     from ..main_window import MainWindow
 
@@ -175,8 +177,11 @@ class UndoHandlersMixin:
         """Gesamten Fortschritt zurücksetzen."""
         reply = QMessageBox.question(
             self,
-            "Fortschritt zurücksetzen",
-            "Gesamten Stickfortschritt zurücksetzen?\nDies kann nicht rückgängig gemacht werden.",
+            t("Fortschritt zurücksetzen"),
+            t(
+                "Gesamten Stickfortschritt zurücksetzen?\n"
+                "Dies kann nicht rückgängig gemacht werden."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:

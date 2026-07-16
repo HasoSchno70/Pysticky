@@ -169,7 +169,7 @@ class SymbolEditorDialog(QDialog):
         self._selected_symbol = self._entry.symbol
         self._symbol_buttons: list[SymbolButton] = []
 
-        self.setWindowTitle(f"Symbol bearbeiten - {self._entry.thread.name}")
+        self.setWindowTitle(t("Symbol bearbeiten - {name}").format(name=self._entry.thread.name))
         self.setMinimumSize(580, 520)
 
         self._setup_ui()

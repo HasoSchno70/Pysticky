@@ -11,6 +11,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from ..utils.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 def get_project_list_path() -> Path:
     """Pfad zur globalen Projekt-Listen-JSON-Datei (plattform-konform)."""
@@ -65,7 +69,7 @@ class ProjectList:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, ensure_ascii=False, indent=2)
         except OSError:
-            pass
+            logger.warning("Projektliste konnte nicht gespeichert werden: %s", self._path)
 
     def add(self, path: str | Path) -> bool:
         """Fügt einen Pfad hinzu. Gibt False zurück, wenn schon vorhanden."""

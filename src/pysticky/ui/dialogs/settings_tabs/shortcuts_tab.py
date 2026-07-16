@@ -116,12 +116,12 @@ class ShortcutsTab(QWidget):
         action = current.data(Qt.ItemDataRole.UserRole)
 
         dialog = QDialog(self)
-        dialog.setWindowTitle(f"{t('Tastenkürzel:')} {t(action)}")
+        dialog.setWindowTitle(t("Tastenkürzel: {action}").format(action=t(action)))
         dialog.setFixedSize(300, 120)
 
         layout = QVBoxLayout(dialog)
 
-        label = QLabel(f"{t('Neues Tastenkürzel für')} '{t(action)}':")
+        label = QLabel(t("Neues Tastenkürzel für '{action}':").format(action=t(action)))
         layout.addWidget(label)
 
         key_edit = QKeySequenceEdit()

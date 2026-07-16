@@ -16,8 +16,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from ..utils.logging import get_logger
+
 if TYPE_CHECKING:
     from .pattern import Pattern
+
+logger = get_logger(__name__)
 
 
 MAX_SNAPSHOTS_PER_PATTERN = 20
@@ -149,7 +153,7 @@ def _cleanup_old_snapshots(pdir: Path, max_keep: int) -> None:
         try:
             old_path.unlink()
         except OSError:
-            pass
+            logger.warning("Alter Snapshot konnte nicht gelöscht werden: %s", old_path)
 
 
 def should_snapshot(

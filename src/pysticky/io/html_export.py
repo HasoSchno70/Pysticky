@@ -9,13 +9,13 @@ Erstellt druckbare HTML-Dateien mit:
 - Musterseiten (40x40 Stiche pro Seite)
 """
 
-import logging
 from datetime import datetime
 from html import escape as _html_escape
 from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ..utils.logging import get_logger
 from .export_cache import CompositeGridCache
 from .export_common import (
     count_page_colors,
@@ -25,7 +25,7 @@ from .export_common import (
     get_pixel_symbol,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ..core import Pattern

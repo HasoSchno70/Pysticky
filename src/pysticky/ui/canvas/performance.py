@@ -9,10 +9,11 @@ Verwendung:
     2. Oder: Automatisch aktiviert wenn Muster > LARGE_PATTERN_THRESHOLD
 """
 
-import logging
 from typing import TYPE_CHECKING
 
-logger = logging.getLogger(__name__)
+from ...utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 from PySide6.QtCore import QPointF, QRect
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPixmap, Qt

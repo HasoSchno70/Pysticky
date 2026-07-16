@@ -267,7 +267,8 @@ def import_image(
 
     # Stiche ins Layer schreiben und Stitch-Counts zählen
     layer = pattern.active_layer
-    assert layer is not None  # frisch erzeugtes Pattern hat immer ein aktives Layer
+    if layer is None:  # frisch erzeugtes Pattern hat immer ein aktives Layer
+        raise RuntimeError("Pattern ohne aktives Layer — Import-Invariante verletzt")
     for y in range(target_height):
         for x in range(target_width):
             color_index = int(index_grid[y, x])
@@ -747,7 +748,8 @@ def create_preview(
 
     # Grid als numpy-Array holen
     layer = pattern.active_layer
-    assert layer is not None  # Pattern hat hier immer ein aktives Layer
+    if layer is None:  # Pattern hat hier immer ein aktives Layer
+        raise RuntimeError("Pattern ohne aktives Layer — Import-Invariante verletzt")
     grid = layer.grid.copy()
 
     # Pixel-Array erstellen: Hintergrundfarbe als Default

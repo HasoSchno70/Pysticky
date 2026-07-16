@@ -17,7 +17,9 @@ from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-logger = logging.getLogger(__name__)
+from ..utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 from .export_cache import CompositeGridCache
 from .export_common import (

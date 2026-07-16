@@ -15,9 +15,12 @@ from PySide6.QtGui import QColor, QContextMenuEvent, QImage, QMouseEvent, QPaint
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
 from ...core.file_io import load_pattern
+from ...utils.logging import get_logger
 from ..color_utils import to_qcolor
 from ..styles import THEME
 from .pattern_library_data import LibraryEntry
+
+logger = get_logger(__name__)
 
 
 class ThumbnailWidget(QFrame):
@@ -133,7 +136,7 @@ class ThumbnailWidget(QFrame):
                 # Verzögert laden um UI nicht zu blockieren
                 QTimer.singleShot(50, self._generate_thumbnail)
             except (OSError, ValueError):
-                pass
+                logger.warning("Thumbnail-Generierung konnte nicht gestartet werden")
 
         # Placeholder
         self._thumb_label.setText(f"{self.entry.width}\u00d7{self.entry.height}")
@@ -190,7 +193,7 @@ class ThumbnailWidget(QFrame):
                 self.thumbnail_saved.emit()
 
         except (OSError, ValueError):
-            pass
+            logger.warning("Thumbnail-Cache konnte nicht geschrieben werden")
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Mausklick-Handler."""

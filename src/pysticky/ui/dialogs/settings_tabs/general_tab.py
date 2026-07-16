@@ -153,6 +153,19 @@ class GeneralTab(QWidget):
         self.edit_default_copyright.setToolTip(t("Erscheint als Footer in HTML/PDF-Exporten."))
         form.addRow(t("Copyright-Hinweis:"), self.edit_default_copyright)
         layout.addWidget(group_watermark)
+
+        # === Diagnose ===
+        group_diag, form = make_section_form("Diagnose", "🩺")
+        self.chk_file_logging = QCheckBox(t("Datei-Logging aktivieren"))
+        self.chk_file_logging.setToolTip(
+            t(
+                "Schreibt Programm-Meldungen und Fehler in eine Log-Datei\n"
+                "(~/.pysticky/logs). Hilfreich, um Probleme nachträglich\n"
+                "nachzuvollziehen. Wird sofort angewendet."
+            )
+        )
+        form.addRow(self.chk_file_logging)
+        layout.addWidget(group_diag)
         layout.addStretch()
 
     def load_settings(self, settings: QSettings) -> None:
@@ -180,6 +193,7 @@ class GeneralTab(QWidget):
         self.spin_status_timeout.setValue(settings.value("status_timeout", 3, type=int))
         self.edit_default_author.setText(settings.value("default_author", "", type=str))
         self.edit_default_copyright.setText(settings.value("default_copyright", "", type=str))
+        self.chk_file_logging.setChecked(settings.value("file_logging_enabled", False, type=bool))
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
@@ -198,6 +212,7 @@ class GeneralTab(QWidget):
         settings.setValue("default_author", self.edit_default_author.text().strip())
         settings.setValue("default_copyright", self.edit_default_copyright.text().strip())
         settings.setValue("ui_language", self.combo_language.currentData() or "auto")
+        settings.setValue("file_logging_enabled", self.chk_file_logging.isChecked())
 
     def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
@@ -215,6 +230,7 @@ class GeneralTab(QWidget):
         self.spin_status_timeout.setValue(3)
         self.edit_default_author.setText("")
         self.edit_default_copyright.setText("")
+        self.chk_file_logging.setChecked(False)
         # Sprache: Auto-Default
         for i in range(self.combo_language.count()):
             if self.combo_language.itemData(i) == "auto":

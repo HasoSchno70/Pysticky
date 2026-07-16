@@ -25,6 +25,10 @@ def main_window(qtbot):
     # closeEvent wuerde dann den modalen "Aenderungen speichern?"-Dialog oeffnen
     # und die Suite haengen lassen. Daher die Nachfrage auf der Instanz stilllegen.
     w._check_save_changes = lambda: True
+    # Autosave-Timer stoppen: feuert er waehrend eines laufenden Event-Loops
+    # (z.B. QMessageBox in einem anderen Test), schreibt er eine echte
+    # %TEMP%-Autosave-Datei und legt damit die Recovery-Dialog-Falle.
+    w._autosave_timer.stop()
     return w
 
 

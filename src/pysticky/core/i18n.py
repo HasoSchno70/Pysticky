@@ -29,12 +29,13 @@ Originalstring) zurück.
 from __future__ import annotations
 
 import json
-import logging
 import sys
 import threading
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from ..utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def _resolve_i18n_dir() -> Path:

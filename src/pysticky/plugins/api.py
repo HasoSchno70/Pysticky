@@ -10,16 +10,17 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
+from ..utils.logging import get_logger
+
 if TYPE_CHECKING:
     from ..core.pattern import Pattern
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PluginError(Exception):

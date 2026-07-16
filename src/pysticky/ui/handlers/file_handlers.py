@@ -125,14 +125,18 @@ class FileHandlersMixin:
             self.status_bar.showMessage(f"Geöffnet: {path}", 3000)
             return True
         except FileNotFoundError:
+            logger.warning("Datei nicht gefunden: %s", path)
             QMessageBox.critical(
                 self, t("Datei nicht gefunden"), f"Die Datei existiert nicht:\n{path}"
             )
         except PermissionError:
+            logger.warning("Zugriff verweigert: %s", path)
             QMessageBox.critical(self, t("Zugriff verweigert"), f"Keine Berechtigung:\n{path}")
         except json.JSONDecodeError as e:
+            logger.exception("Datei beschädigt: %s", path)
             QMessageBox.critical(self, t("Ungültige Datei"), f"Die Datei ist beschädigt:\n{e}")
         except Exception as e:  # catch-all for unexpected format errors
+            logger.exception("Datei konnte nicht geöffnet werden: %s", path)
             QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
         return False
 
@@ -190,6 +194,7 @@ class FileHandlersMixin:
             self.status_bar.showMessage(f"Importiert: {path.name}", 3000)
             return True
         except (OSError, ValueError) as e:
+            logger.exception("Externer Import fehlgeschlagen: %s", path)
             QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
             return False
 
@@ -378,6 +383,7 @@ class FileHandlersMixin:
                     )
 
             except (OSError, ValueError) as e:
+                logger.exception("Bibliotheks-Muster konnte nicht geöffnet werden")
                 QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
 
         dialog.pattern_selected.connect(open_from_library)

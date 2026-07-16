@@ -11,10 +11,14 @@ from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressDialog
 
 from ...core.i18n import t
+from ...utils import get_logger
 
 if TYPE_CHECKING:
     from ...core import Pattern
     from ..main_window import MainWindow
+
+
+logger = get_logger(__name__)
 
 
 class ExportWorker(QObject):
@@ -340,6 +344,7 @@ class ExportHandlersMixin:
             export_oxs(self.current_pattern, path)
             self.status_bar.showMessage(f"OXS exportiert: {path}", 5000)
         except OXSExportError as e:
+            logger.exception("OXS-Export fehlgeschlagen: %s", path)
             QMessageBox.critical(self, t("OXS-Export fehlgeschlagen"), str(e))
 
     def _on_export_bundle(self: "MainWindow") -> None:

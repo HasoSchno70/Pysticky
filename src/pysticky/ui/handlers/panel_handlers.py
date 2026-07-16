@@ -9,7 +9,11 @@ from PySide6.QtWidgets import QMessageBox
 if TYPE_CHECKING:
     from ..main_window import MainWindow
 
+from ...core.i18n import t
+from ...utils import get_logger
 from ..notify_scope import NotifyScope
+
+logger = get_logger(__name__)
 
 
 class PanelHandlersMixin:
@@ -226,9 +230,11 @@ class PanelHandlersMixin:
                     5000,
                 )
             else:
-                QMessageBox.warning(self, "Fehler", "Palettenwechsel fehlgeschlagen.")
+                logger.warning("Palettenwechsel lieferte kein Muster")
+                QMessageBox.critical(self, t("Fehler"), t("Palettenwechsel fehlgeschlagen."))
         except (ValueError, OSError) as e:
-            QMessageBox.critical(self, "Fehler", f"Palettenwechsel fehlgeschlagen:\n{e}")
+            logger.exception("Palettenwechsel fehlgeschlagen")
+            QMessageBox.critical(self, t("Fehler"), f"Palettenwechsel fehlgeschlagen:\n{e}")
 
     def _on_layer_selected(self: "MainWindow", index: int) -> None:
         """Ebene ausgewählt."""

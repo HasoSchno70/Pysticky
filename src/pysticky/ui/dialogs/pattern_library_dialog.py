@@ -6,7 +6,6 @@ mit Vorschaubildern, Kategorien und Suchfunktion.
 """
 
 import json
-import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -35,7 +34,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-logger = logging.getLogger(__name__)
+from ...utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 from ...core.file_io import load_pattern
 from ...core.i18n import t

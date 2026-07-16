@@ -13,6 +13,29 @@ project_root = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(project_root))
 
 
+@pytest.fixture(autouse=True)
+def _no_autosave_side_effects(monkeypatch):
+    """Neutralisiert Autosave-Interaktion in ALLEN Tests.
+
+    1. _check_autosave_recovery öffnet einen echten modalen QMessageBox.question,
+       wenn %TEMP%/pysticky_autosave.pxs existiert — hängt die Suite für immer.
+    2. _on_autosave schreibt bei Patterns ohne current_file genau diese Datei
+       nach %TEMP% — Autosave-Timer von Test-MainWindows können während langer
+       Tests (oder Hängern) feuern und so die Falle für den NÄCHSTEN Lauf legen.
+    Kein Test testet Recovery interaktiv; wer Autosave testen will, ruft
+    _on_autosave gezielt mit gesetztem current_file auf (siehe
+    test_save_error_handling.py).
+    """
+    try:
+        from pysticky.ui.handlers.autosave_handlers import AutosaveHandlersMixin
+    except ImportError:
+        yield
+        return
+
+    monkeypatch.setattr(AutosaveHandlersMixin, "_check_autosave_recovery", lambda self: None)
+    yield
+
+
 @pytest.fixture
 def empty_pattern():
     """Leeres 10x10 Muster."""

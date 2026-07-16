@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 
 from ...core.constants import MAX_PATTERN_SIZE
 from ...core.i18n import t
+from ...utils import get_logger
 from ..notify_scope import NotifyScope
+
+logger = get_logger(__name__)
 
 
 class EditHandlersMixin:
@@ -445,6 +448,7 @@ class EditHandlersMixin:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             self.status_bar.showMessage(f"Palette exportiert: {len(colors)} Farben → {path}", 5000)
         except OSError as e:
+            logger.exception("Paletten-Export fehlgeschlagen: %s", path)
             QMessageBox.critical(self, t("Fehler"), f"Palette konnte nicht exportiert werden:\n{e}")
 
     def _on_import_palette(self: "MainWindow") -> None:
@@ -466,6 +470,7 @@ class EditHandlersMixin:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
+            logger.exception("Paletten-Import fehlgeschlagen: %s", path)
             QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht gelesen werden:\n{e}")
             return
 

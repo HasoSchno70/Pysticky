@@ -12,9 +12,13 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
 from ...core.i18n import t
+from ...utils import get_logger
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
+
+
+logger = get_logger(__name__)
 
 
 class MiscHandlersMixin:
@@ -116,6 +120,7 @@ class MiscHandlersMixin:
             self._add_recent_file(path)
             self.status_bar.showMessage(f"Geöffnet: {path}", 3000)
         except (OSError, ValueError) as e:
+            logger.exception("Recent-Datei konnte nicht geöffnet werden: %s", path)
             QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
 
     def _clear_recent_files(self: "MainWindow") -> None:
@@ -687,6 +692,16 @@ class MiscHandlersMixin:
             if app:
                 reapply_theme(app)
             self._reapply_all_widget_styles()
+
+        # Datei-Logging (live umschaltbar)
+        from ...utils.logging import PyStickLogger
+
+        log_manager = PyStickLogger()
+        if self._settings.value("file_logging_enabled", False, type=bool):
+            log_file = log_manager.enable_file_logging()
+            logger.info("Datei-Logging aktiviert: %s", log_file)
+        else:
+            log_manager.disable_file_logging()
 
         # Autosave-Einstellungen
         self._autosave_enabled = self._settings.value("autosave_enabled", True, type=bool)
