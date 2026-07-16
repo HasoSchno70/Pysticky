@@ -1,15 +1,15 @@
 """
-Internationalisierung (i18n) fuer PySticky.
+Internationalisierung (i18n) für PySticky.
 
 Design-Entscheidung: Statt Qt Linguist (.ts/.qm) nutzen wir eine simple
 JSON-Dictionary-basierte Lookup-Funktion `t(key)`. Vorteile:
 
-- Live-reload moeglich (kein .qm-Kompilieren noetig)
+- Live-reload möglich (kein .qm-Kompilieren nötig)
 - Python-idiomatisch — JSON ist einfach zu editieren
-- Keine Build-Step-Abhaengigkeit
+- Keine Build-Step-Abhängigkeit
 - Identity-Fallback: Wenn ein Key in der Ziel-Sprache fehlt, wird der Key
-  selbst zurueckgegeben (= deutsche Originalstring), so dass die App auch
-  bei unvollstaendiger Uebersetzung lauffaehig bleibt.
+  selbst zurückgegeben (= deutsche Originalstring), so dass die App auch
+  bei unvollständiger Übersetzung lauffähig bleibt.
 
 Verwendung im UI-Code:
 
@@ -23,7 +23,7 @@ und der englische Text geliefert.
 
 Sprachen werden aus `resources/i18n/<lang>.json` geladen. Eine Datei muss
 NICHT alle Keys enthalten — fehlende Keys fallen auf den Key (deutscher
-Originalstring) zurueck.
+Originalstring) zurück.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def _resolve_i18n_dir() -> Path:
     """Findet das resources/i18n-Verzeichnis.
 
     Im Dev-Mode liegt es relativ zur Quelldatei. In einem PyInstaller-Build
-    werden Daten in einen temporaeren Pfad (sys._MEIPASS) entpackt.
+    werden Daten in einen temporären Pfad (sys._MEIPASS) entpackt.
     Wir probieren beide.
     """
     # Dev-Mode-Pfad: src/pysticky/resources/i18n
@@ -62,10 +62,10 @@ def _resolve_i18n_dir() -> Path:
 
 class TranslationManager:
     """
-    Singleton, der die aktive Sprache und alle geladenen Dictionaries haelt.
+    Singleton, der die aktive Sprache und alle geladenen Dictionaries hält.
 
     Thread-sicher per RLock — Sprachwechsel kann aus dem UI-Thread kommen,
-    waehrend Render-Threads `t()` aufrufen.
+    während Render-Threads `t()` aufrufen.
     """
 
     def __init__(self) -> None:
@@ -77,7 +77,7 @@ class TranslationManager:
         self._discovered = False
 
     def discover(self) -> list[str]:
-        """Findet verfuegbare Sprachen (eine pro .json-Datei in resources/i18n/)."""
+        """Findet verfügbare Sprachen (eine pro .json-Datei in resources/i18n/)."""
         with self._lock:
             if self._discovered:
                 return list(self._available_languages)
@@ -89,7 +89,7 @@ class TranslationManager:
             return list(self._available_languages)
 
     def set_language(self, lang: str) -> None:
-        """Schaltet die aktive Sprache um. Laedt das Dictionary lazy."""
+        """Schaltet die aktive Sprache um. Lädt das Dictionary lazy."""
         with self._lock:
             if lang == self._current_lang:
                 return
@@ -106,11 +106,11 @@ class TranslationManager:
 
     def translate(self, key: str) -> str:
         """
-        Liefert die Uebersetzung fuer `key` in der aktiven Sprache.
+        Liefert die Übersetzung für `key` in der aktiven Sprache.
 
         Falls die Sprache 'de' ist ODER kein Eintrag existiert, wird der
-        Key selbst zurueckgegeben. So bleibt die App auch ohne aktive
-        Uebersetzung lesbar.
+        Key selbst zurückgegeben. So bleibt die App auch ohne aktive
+        Übersetzung lesbar.
         """
         with self._lock:
             if self._current_lang == "de":
@@ -120,7 +120,7 @@ class TranslationManager:
             return dictionary.get(key, key)
 
     def _ensure_loaded(self, lang: str) -> None:
-        """Laedt die Sprache <lang> wenn noch nicht geladen."""
+        """Lädt die Sprache <lang> wenn noch nicht geladen."""
         if lang in self._translations:
             return
         path = self._i18n_dir / f"{lang}.json"
@@ -136,7 +136,7 @@ class TranslationManager:
             self._translations[lang] = {}
 
     def reload(self) -> None:
-        """Setzt alle geladenen Dictionaries zurueck (fuer Live-Reload bei Dev)."""
+        """Setzt alle geladenen Dictionaries zurück (für Live-Reload bei Dev)."""
         with self._lock:
             self._translations.clear()
             self._discovered = False
@@ -153,7 +153,7 @@ def get_translation_manager() -> TranslationManager:
 
 def t(key: str) -> str:
     """
-    Convenience-Wrapper: liefert die Uebersetzung fuer `key`.
+    Convenience-Wrapper: liefert die Übersetzung für `key`.
 
     Idiom:
         from pysticky.core.i18n import t
@@ -173,5 +173,5 @@ def current_language() -> str:
 
 
 def available_languages() -> list[str]:
-    """Convenience: liefert alle verfuegbaren Sprachen."""
+    """Convenience: liefert alle verfügbaren Sprachen."""
     return _manager.available_languages()

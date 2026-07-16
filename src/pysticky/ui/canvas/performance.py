@@ -37,7 +37,7 @@ LARGE_PATTERN_THRESHOLD = 200 * 200  # 40.000 Zellen
 def _fill_partial_stitch_perf(
     painter: "QPainter", x: int, y: int, size: int, stype: int, color: "QColor"
 ) -> None:
-    """Fuellt einen halben/Viertel-Stich oder French-Knot im Chunk-Cache-Pfad."""
+    """Füllt einen halben/Viertel-Stich oder French-Knot im Chunk-Cache-Pfad."""
     if is_french_knot(stype):
         radius = max(1, int(size * french_knot_radius_factor()))
         cx = x + size // 2
@@ -349,7 +349,7 @@ def render_chunk_to_pixmap(
 
                 fill_color = color_cache[color_key]
 
-                # Zelle füllen — voll (Rect) oder Polygon fuer halbe/Viertel
+                # Zelle füllen — voll (Rect) oder Polygon für halbe/Viertel
                 if show_colors:
                     stype = layer.get_stitch_type(gx, gy)
                     if stype == 0:

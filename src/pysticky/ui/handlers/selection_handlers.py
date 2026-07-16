@@ -1,5 +1,5 @@
 """
-Auswahl-bezogene Handler fuer MainWindow.
+Auswahl-bezogene Handler für MainWindow.
 """
 
 from typing import TYPE_CHECKING
@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 
 class SelectionHandlersMixin:
     """
-    Mixin-Klasse fuer Auswahl-Operationen.
+    Mixin-Klasse für Auswahl-Operationen.
 
     Die meisten Handler folgen demselben Pattern:
-    1) aktives Select-Tool holen, Auswahl pruefen
+    1) aktives Select-Tool holen, Auswahl prüfen
     2) Tool-Methode aufrufen, Change-Liste bekommen
     3) als Undo-Batch alle Changes emittieren
     4) Canvas neu zeichnen, Status melden
@@ -34,15 +34,15 @@ class SelectionHandlersMixin:
         **method_kwargs,
     ) -> None:
         """
-        Fuehrt eine Selection-Methode aus, die eine Change-Liste produziert.
+        Führt eine Selection-Methode aus, die eine Change-Liste produziert.
 
         Args:
             method_name: Name der Methode auf SelectTool/LassoSelectTool
                 (z.B. "delete_selection", "rotate_selection")
-            batch_message: Label fuer den Undo-Batch
-            status_template: Status-Text mit optionalem `{n}` fuer die
-                Change-Anzahl (z.B. "Auswahl gefuellt: {n} Stiche")
-            **method_kwargs: zusaetzliche Argumente fuer die Tool-Methode
+            batch_message: Label für den Undo-Batch
+            status_template: Status-Text mit optionalem `{n}` für die
+                Change-Anzahl (z.B. "Auswahl gefüllt: {n} Stiche")
+            **method_kwargs: zusätzliche Argumente für die Tool-Methode
         """
         select_tool = self.canvas._tool_manager.get_active_select_tool()
         if not select_tool or not select_tool.selection:
@@ -72,17 +72,17 @@ class SelectionHandlersMixin:
     # =========================================================================
 
     def _on_selection_delete(self: "MainWindow") -> None:
-        """Loescht den Inhalt der Auswahl."""
+        """Löscht den Inhalt der Auswahl."""
         self._run_selection_op(
-            "delete_selection", "Auswahl loeschen", "Auswahl geloescht: {n} Stiche"
+            "delete_selection", "Auswahl loeschen", "Auswahl gelöscht: {n} Stiche"
         )
 
     def _on_selection_fill(self: "MainWindow") -> None:
-        """Fuellt die Auswahl mit der aktuellen Farbe."""
-        self._run_selection_op("fill_selection", "Auswahl fuellen", "Auswahl gefuellt: {n} Stiche")
+        """Füllt die Auswahl mit der aktuellen Farbe."""
+        self._run_selection_op("fill_selection", "Auswahl füllen", "Auswahl gefüllt: {n} Stiche")
 
     def _on_selection_cut(self: "MainWindow") -> None:
-        """Schneidet die Auswahl aus (kopiert + loescht)."""
+        """Schneidet die Auswahl aus (kopiert + löscht)."""
         self._run_selection_op("cut_selection", "Ausschneiden", "Ausgeschnitten")
 
     def _on_selection_rotate_cw(self: "MainWindow") -> None:
@@ -131,7 +131,7 @@ class SelectionHandlersMixin:
             self.status_bar.showMessage(f"Kopiert: {w} × {h}", 3000)
 
     def _on_selection_paste(self: "MainWindow") -> None:
-        """Startet das Einfuegen — wechselt ggf. auf das Select-Tool."""
+        """Startet das Einfügen — wechselt ggf. auf das Select-Tool."""
         from ..tools.tool_enum import Tool
 
         # Sonst gibt's keine Paste-Vorschau und der Klick zeichnet stattdessen.
@@ -146,16 +146,16 @@ class SelectionHandlersMixin:
         if ctx:
             if select_tool.start_paste(ctx):
                 self.canvas.update()
-                self.status_bar.showMessage("Klicke zum Einfuegen...", 5000)
+                self.status_bar.showMessage("Klicke zum Einfügen...", 5000)
             else:
-                self.status_bar.showMessage("Nichts zum Einfuegen", 3000)
+                self.status_bar.showMessage("Nichts zum Einfügen", 3000)
 
     # =========================================================================
     # Spiegel-Aktionen (operieren auf gesamtem Muster, nicht Auswahl)
     # =========================================================================
 
     def _on_mirror_h(self: "MainWindow") -> None:
-        """Horizontal spiegeln (ueber `Canvas.mirror_selection_horizontal`)."""
+        """Horizontal spiegeln (über `Canvas.mirror_selection_horizontal`)."""
         if self.canvas.mirror_selection_horizontal():
             self._mark_unsaved()
             self.canvas.update()

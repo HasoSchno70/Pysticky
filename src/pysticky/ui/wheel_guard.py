@@ -1,13 +1,13 @@
 """
 Wheel-Guard: globaler EventFilter, der Mausrad-Events auf SpinBox /
-ComboBox / Slider nur durchlaesst, wenn das Widget Tastatur-Fokus hat.
+ComboBox / Slider nur durchlässt, wenn das Widget Tastatur-Fokus hat.
 
 Hintergrund: Qt's Default-Verhalten leitet jedes Wheel-Event an das Widget
 unter dem Mauszeiger weiter — auch wenn der User nur scrollen wollte und
-gar nicht das Eingabefeld aendern. In Settings-Dialogen mit ScrollArea
-fuehrt das zu versehentlichen Wert-Aenderungen.
+gar nicht das Eingabefeld ändern. In Settings-Dialogen mit ScrollArea
+führt das zu versehentlichen Wert-Änderungen.
 
-Loesung: WheelGuard wird als ApplicationEventFilter installiert. Bei jedem
+Lösung: WheelGuard wird als ApplicationEventFilter installiert. Bei jedem
 Wheel-Event auf einem SpinBox/ComboBox/Slider:
 - Wenn das Widget hasFocus(): normal verarbeiten.
 - Sonst: Event blockieren und an das Parent weitergeben (ScrollArea kann scrollen).
@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 
 
 class WheelGuard(QObject):
-    """ApplicationEventFilter gegen versehentliche Wheel-Aenderungen."""
+    """ApplicationEventFilter gegen versehentliche Wheel-Änderungen."""
 
     # Widget-Typen, die vom Guard betroffen sind. Andere Widgets (z.B. Canvas)
     # bekommen ihre Wheel-Events wie gewohnt.
@@ -42,7 +42,7 @@ class WheelGuard(QObject):
             return False
         # Nur akzeptieren wenn Tastatur-Fokus aktiv ist. Sonst blockieren —
         # Qt leitet das Event dann ans Parent (typischerweise ein
-        # ScrollArea, was den gewuenschten Scroll-Effekt liefert).
+        # ScrollArea, was den gewünschten Scroll-Effekt liefert).
         if isinstance(obj, QWidget) and obj.hasFocus():
             return False
         # Verarbeitet als "behandelt" markieren -> nicht weiter an das Widget,
@@ -59,7 +59,7 @@ def install_wheel_guard(app) -> WheelGuard:
 
     Idempotent — wiederholte Aufrufe registrieren den Guard nicht mehrfach.
     Returns:
-        Die WheelGuard-Instanz (z.B. fuer Teardown in Tests).
+        Die WheelGuard-Instanz (z.B. für Teardown in Tests).
     """
     global _guard_instance
     if _guard_instance is None:
@@ -71,7 +71,7 @@ def install_wheel_guard(app) -> WheelGuard:
 
 
 def uninstall_wheel_guard(app) -> None:
-    """Entfernt den globalen WheelGuard (vor allem fuer Tests)."""
+    """Entfernt den globalen WheelGuard (vor allem für Tests)."""
     global _guard_instance
     if _guard_instance is not None:
         app.removeEventFilter(_guard_instance)

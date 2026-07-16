@@ -20,7 +20,7 @@ Example:
 """
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
 
@@ -106,12 +106,12 @@ class ColorEntry:
     strands: int = 2
     is_bead: bool = False  # True wenn die Farbe aus einer Bead-Palette stammt
     # — Stiche dieser Farbe werden automatisch als BEAD
-    # platziert und in der Legende separat aufgefuehrt.
+    # platziert und in der Legende separat aufgeführt.
     is_diamond: bool = False  # True wenn die Farbe aus einer Diamond-Painting-
     # Palette stammt — Stiche werden als DIAMOND
     # platziert, in der DP-Ansicht als facettierter
     # Drill dargestellt und in der Legende mit Drill-
-    # Codes (statt Garn-Strang-Bedarf) gefuehrt.
+    # Codes (statt Garn-Strang-Bedarf) geführt.
 
     def __repr__(self) -> str:
         skip = " [SKIP]" if self.skip_stitching else ""
@@ -154,20 +154,20 @@ class Pattern:
     name: str = "Neues Muster"
     width: int = DEFAULT_PATTERN_WIDTH
     height: int = DEFAULT_PATTERN_HEIGHT
-    # layer_stack/backstitch_manager werden, wenn nicht uebergeben, in
+    # layer_stack/backstitch_manager werden, wenn nicht übergeben, in
     # __post_init__ aus width/height erzeugt. Sie sind danach IMMER gesetzt;
     # der None-Default ist nur ein Init-Sentinel. Typ daher non-Optional
     # (das `type: ignore` betrifft nur den Sentinel-Default), damit die
-    # vielen Zugriffe nicht ueberall ein None-Narrowing brauchen.
+    # vielen Zugriffe nicht überall ein None-Narrowing brauchen.
     layer_stack: LayerStack = None  # type: ignore[assignment]
     color_entries: list[ColorEntry] = field(default_factory=list)
     backstitch_manager: BackstitchManager = None  # type: ignore[assignment]
     fabric_count: int = DEFAULT_FABRIC_COUNT
     metadata: dict = field(default_factory=dict)
     # Für Palettenwechsel: Originalbild-Infos speichern
-    source_image_path: Optional[str] = None
+    source_image_path: str | None = None
     source_image_crop: tuple[float, float, float, float] = (0, 0, 1, 1)
-    source_palette_name: Optional[str] = None
+    source_palette_name: str | None = None
     # Pattern-Modus: "stitch" (Kreuzstich) oder "diamond" (Diamond Painting).
     # Bestimmt die Default-View-Optik und welche Werkzeuge / Labels / Zeit-
     # Berechnungen die UI anzeigt. Wird in .pxs persistiert, sodass jedes
@@ -175,20 +175,20 @@ class Pattern:
     mode: str = "stitch"
 
     def __post_init__(self) -> None:
-        """Initialisiert Defaults, die von width/height abhaengen."""
+        """Initialisiert Defaults, die von width/height abhängen."""
         if self.layer_stack is None:
             self.layer_stack = LayerStack(self.width, self.height)
         if self.backstitch_manager is None:
             self.backstitch_manager = BackstitchManager()
         if not self.color_entries:
-            # Standard-Startfarbe — entfaellt z.B. beim Laden aus Datei,
-            # wo color_entries direkt aus dem Konstruktor uebergeben wird.
+            # Standard-Startfarbe — entfällt z.B. beim Laden aus Datei,
+            # wo color_entries direkt aus dem Konstruktor übergeben wird.
             self.add_color(
                 Thread.from_hex("Schwarz", "#000000", manufacturer="DMC", catalog_number="310")
             )
 
     @property
-    def active_layer(self) -> Optional[Layer]:
+    def active_layer(self) -> Layer | None:
         """Das aktuell aktive Layer."""
         return self.layer_stack.active_layer
 
@@ -210,7 +210,7 @@ class Pattern:
         self.height = new_height
         self.layer_stack.resize(new_width, new_height)
 
-    def get_stitch(self, x: int, y: int) -> Optional[int]:
+    def get_stitch(self, x: int, y: int) -> int | None:
         """
         Gibt den sichtbaren Farbindex an Position (x, y) zurück.
 
@@ -218,14 +218,14 @@ class Pattern:
         """
         return self.layer_stack.get_composite_stitch(x, y)
 
-    def get_stitch_on_active_layer(self, x: int, y: int) -> Optional[int]:
+    def get_stitch_on_active_layer(self, x: int, y: int) -> int | None:
         """Gibt den Farbindex auf dem aktiven Layer zurück."""
         layer = self.active_layer
         if layer:
             return layer.get_stitch(x, y)
         return None
 
-    def set_stitch(self, x: int, y: int, color_index: Optional[int], stitch_type: int = 0) -> bool:
+    def set_stitch(self, x: int, y: int, color_index: int | None, stitch_type: int = 0) -> bool:
         """
         Setzt einen Stich auf dem aktiven Layer.
 
@@ -253,7 +253,7 @@ class Pattern:
             self.color_entries[old_index].stitch_count -= 1
 
         # Bead- und Diamond-Farben werden immer als BEAD- bzw. DIAMOND-Stitch-
-        # Type platziert, unabhaengig vom uebergebenen stitch_type. So muss
+        # Type platziert, unabhängig vom übergebenen stitch_type. So muss
         # kein Tool explizit wissen, was eine Bead/Drill-Farbe ist — die
         # Farbe entscheidet.
         if color_index is not None and stitch_type == 0:
@@ -283,22 +283,22 @@ class Pattern:
 
         Beim Wechsel von Sticken zu Diamond Painting (und umgekehrt) ergeben
         die Original-Garn-/Drill-Codes im neuen Modus keinen Sinn. Diese
-        Methode mapped jede Farbe via CIE-Lab-Distanz auf den naechsten
+        Methode mapped jede Farbe via CIE-Lab-Distanz auf den nächsten
         Code in der Default-Palette des Ziel-Modus:
 
         - `target_mode == "diamond"` → "DMC Diamond Painting"
         - `target_mode == "stitch"`  → "DMC"
 
-        **Reversibilitaet**: Vor jeder Konvertierung wird der aktuelle
+        **Reversibilität**: Vor jeder Konvertierung wird der aktuelle
         Thread-Stand pro Color-Entry als Snapshot in
         ``self.metadata["mode_backups"][<aktueller_mode>]`` abgelegt. Beim
-        Zurueckwechseln (oder einer spaeteren Konvertierung in denselben
+        Zurückwechseln (oder einer späteren Konvertierung in denselben
         Modus) wird der Snapshot bevorzugt — so trifft man nach
         Stick→Diamond→Stick wieder genau die Originalfarben, statt eines
         durch zweimaliges Nearest-Match leicht abgedrifteten Approximanten.
 
         **Bead- und Diamond-Farben** (``is_bead`` / ``is_diamond`` direkt
-        ueber Palette gesetzt) werden uebersprungen. Beads sind in beiden
+        über Palette gesetzt) werden übersprungen. Beads sind in beiden
         Modi sinnvoll als Akzent; eine bereits aus DMC-DP stammende
         Diamond-Farbe muss nicht erneut gemapped werden.
 
@@ -306,7 +306,7 @@ class Pattern:
             target_mode: "stitch" oder "diamond".
 
         Returns:
-            True wenn die Farben (oder der Mode) sich geaendert haben.
+            True wenn die Farben (oder der Mode) sich geändert haben.
         """
         if target_mode not in ("stitch", "diamond"):
             return False
@@ -317,7 +317,7 @@ class Pattern:
         # aktuelle Wert ein typischer Aida-Stick-Count ist. So passt das
         # Drill-Raster-Label (2.5 mm Square Standard = 10 ct equivalent)
         # automatisch beim Wechsel zu DP. Wenn der User vorher etwas
-        # untypisches gewaehlt hat, lassen wir es unangetastet.
+        # untypisches gewählt hat, lassen wir es unangetastet.
         TYPICAL_AIDA = {11, 14, 16, 18, 20, 22, 25}
         TYPICAL_DP = {8, 9, 10}
         if target_mode == "diamond" and self.fabric_count in TYPICAL_AIDA:
@@ -336,7 +336,7 @@ class Pattern:
         if self.color_entries:
             backups = self.metadata.setdefault("mode_backups", {})
 
-            # Aktuellen Stand fuer spaeteren Rueckweg merken.
+            # Aktuellen Stand für späteren Rückweg merken.
             backups[current_mode] = [
                 None
                 if e.is_bead
@@ -453,7 +453,7 @@ class Pattern:
 
         del self.color_entries[index]
 
-    def get_color_entry(self, index: int) -> Optional[ColorEntry]:
+    def get_color_entry(self, index: int) -> ColorEntry | None:
         """Gibt eine Farbe nach Index zurück."""
         if 0 <= index < len(self.color_entries):
             return self.color_entries[index]
@@ -576,8 +576,8 @@ class Pattern:
             1 for e in self.color_entries if e.skip_stitching and e.stitch_count > 0
         )
 
-        # Perlen separat zaehlen (Stitch-Type 10) — werden in Stueck verkauft,
-        # nicht in Garnstraengen.
+        # Perlen separat zählen (Stitch-Type 10) — werden in Stück verkauft,
+        # nicht in Garnsträngen.
         bead_count = self._count_beads()
 
         return {
@@ -598,7 +598,7 @@ class Pattern:
         }
 
     def _count_beads(self) -> int:
-        """Zaehlt alle sichtbaren Perlen (Stitch-Type 10) ueber alle Layer."""
+        """Zählt alle sichtbaren Perlen (Stitch-Type 10) über alle Layer."""
         count = 0
         for layer in self.layer_stack:
             if not layer.visible or layer.grid is None or layer.stitch_type_grid is None:

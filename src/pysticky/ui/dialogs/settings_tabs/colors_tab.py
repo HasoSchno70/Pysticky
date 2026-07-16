@@ -24,11 +24,11 @@ from ._helpers import make_section_form
 class ColorsTab(QWidget):
     """Tab: Farb- und Symbol-Einstellungen."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -120,7 +120,7 @@ class ColorsTab(QWidget):
         layout.addWidget(group_display)
         layout.addStretch()
 
-    def load_settings(self, settings: QSettings):
+    def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         palette_index = settings.value("default_palette", 0, type=int)
         if 0 <= palette_index < self.combo_default_palette.count():
@@ -136,7 +136,7 @@ class ColorsTab(QWidget):
         )
         self.spin_color_bar_size.setValue(settings.value("color_bar_size", 32, type=int))
 
-    def save_settings(self, settings: QSettings):
+    def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
         settings.setValue("default_palette", self.combo_default_palette.currentIndex())
         settings.setValue("show_catalog", self.chk_show_catalog.isChecked())
@@ -147,7 +147,7 @@ class ColorsTab(QWidget):
         settings.setValue("highlight_selected", self.chk_highlight_selected.isChecked())
         settings.setValue("color_bar_size", self.spin_color_bar_size.value())
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
         self.combo_default_palette.setCurrentIndex(0)
         self.chk_show_catalog.setChecked(True)

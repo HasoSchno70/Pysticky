@@ -1,8 +1,8 @@
 """
-Snapshot-System fuer .pxs-Pattern.
+Snapshot-System für .pxs-Pattern.
 
 Speichert versionierte Kopien eines Patterns in einem App-Data-Verzeichnis.
-Ergaenzt das normale Autosave: das Autosave ist ein einziger Recovery-Punkt,
+Ergänzt das normale Autosave: das Autosave ist ein einziger Recovery-Punkt,
 ein Snapshot ist Teil einer Versions-Timeline.
 
 Verzeichnis-Layout:
@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, cast
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from .pattern import Pattern
@@ -29,8 +29,8 @@ _FILENAME_FORMAT = "%Y-%m-%d_%H-%M-%S"
 def get_configured_interval_seconds() -> int:
     """Liest das Snapshot-Intervall aus QSettings, sonst Default.
 
-    QSettings-Schluessel: `snapshot_interval_minutes` (int, in Minuten).
-    Faellt bei fehlendem Qt (Test-Env) auf den Default-Wert zurueck.
+    QSettings-Schlüssel: `snapshot_interval_minutes` (int, in Minuten).
+    Fällt bei fehlendem Qt (Test-Env) auf den Default-Wert zurück.
     """
     try:
         from PySide6.QtCore import QSettings
@@ -73,7 +73,7 @@ def get_snapshots_root() -> Path:
 
 
 def get_pattern_dir(pattern_key: str) -> Path:
-    """Liefert das Snapshot-Verzeichnis fuer einen Pattern-Key."""
+    """Liefert das Snapshot-Verzeichnis für einen Pattern-Key."""
     pdir = get_snapshots_root() / _safe_key(pattern_key)
     pdir.mkdir(parents=True, exist_ok=True)
     return pdir
@@ -113,7 +113,7 @@ def create_snapshot(
     *,
     max_keep: int = MAX_SNAPSHOTS_PER_PATTERN,
 ) -> Path:
-    """Erzeugt einen neuen Snapshot, raeumt alte ueber `max_keep` auf.
+    """Erzeugt einen neuen Snapshot, räumt alte über `max_keep` auf.
 
     Returns:
         Pfad zur neu angelegten Snapshot-Datei.
@@ -123,7 +123,7 @@ def create_snapshot(
     pdir = get_pattern_dir(pattern_key)
     filename = _snapshot_filename()
     target = pdir / filename
-    # Falls innerhalb derselben Sekunde mehrere Snapshots — Suffix anhaengen
+    # Falls innerhalb derselben Sekunde mehrere Snapshots — Suffix anhängen
     if target.exists():
         i = 1
         while target.exists():
@@ -136,7 +136,7 @@ def create_snapshot(
 
 
 def _cleanup_old_snapshots(pdir: Path, max_keep: int) -> None:
-    """Behaelt nur die `max_keep` neuesten Snapshots, loescht den Rest."""
+    """Behält nur die `max_keep` neuesten Snapshots, löscht den Rest."""
     snapshots: list[tuple[datetime, Path]] = []
     for p in pdir.glob("v_*.pxs"):
         ts = parse_snapshot_timestamp(p)
@@ -155,7 +155,7 @@ def _cleanup_old_snapshots(pdir: Path, max_keep: int) -> None:
 def should_snapshot(
     pattern_key: str,
     *,
-    interval_seconds: Optional[int] = None,
+    interval_seconds: int | None = None,
 ) -> bool:
     """True, wenn seit dem letzten Snapshot mehr als `interval_seconds` her sind.
 
@@ -174,7 +174,7 @@ def should_snapshot(
 
 
 def delete_snapshot(path: Path) -> bool:
-    """Loescht einen einzelnen Snapshot. Returns True bei Erfolg."""
+    """Löscht einen einzelnen Snapshot. Returns True bei Erfolg."""
     try:
         path.unlink()
         return True
@@ -182,11 +182,11 @@ def delete_snapshot(path: Path) -> bool:
         return False
 
 
-def pattern_key_for(pattern: "Pattern", file_path: Optional[Path] = None) -> str:
-    """Liefert den Snapshot-Key fuer ein Pattern.
+def pattern_key_for(pattern: "Pattern", file_path: Path | None = None) -> str:
+    """Liefert den Snapshot-Key für ein Pattern.
 
     Vorrang: aktueller Dateiname (stem) — sonst der Pattern-Name.
-    So bleiben Snapshots stabil ueber Pattern-Umbenennungen.
+    So bleiben Snapshots stabil über Pattern-Umbenennungen.
     """
     if file_path is not None:
         return file_path.stem

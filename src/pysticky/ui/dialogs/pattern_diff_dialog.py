@@ -34,8 +34,8 @@ from ...core.pattern_diff import (
 )
 from ..styles import THEME
 
-# Farben fuer die Diff-Visualisierung
-COLOR_ADDED = QColor(60, 200, 60, 220)  # gruen
+# Farben für die Diff-Visualisierung
+COLOR_ADDED = QColor(60, 200, 60, 220)  # grün
 COLOR_REMOVED = QColor(220, 70, 70, 220)  # rot
 COLOR_CHANGED = QColor(240, 180, 50, 220)  # gelb
 
@@ -76,12 +76,12 @@ class PatternDiffDialog(QDialog):
             f"<b>Vergleich:</b> "
             f"<span style='color:#3c8;'>+{s.added} hinzugefuegt</span> &middot; "
             f"<span style='color:#d44;'>-{s.removed} entfernt</span> &middot; "
-            f"<span style='color:#dba;'>~{s.changed} geaendert</span> &middot; "
-            f"{s.same} unveraendert"
+            f"<span style='color:#dba;'>~{s.changed} geändert</span> &middot; "
+            f"{s.same} unverändert"
         )
         if s.size_changed:
             stats_text += (
-                f" &middot; <span style='color:#888;'>Groesse: alt "
+                f" &middot; <span style='color:#888;'>Größe: alt "
                 f"{self._old.width}×{self._old.height} → neu "
                 f"{self._new.width}×{self._new.height}</span>"
             )
@@ -151,7 +151,7 @@ class PatternDiffDialog(QDialog):
         )
 
     def _render_diff(self) -> QPixmap:
-        """Rendert die Diff-Maske als farbiges Overlay ueber dem neuen Pattern."""
+        """Rendert die Diff-Maske als farbiges Overlay über dem neuen Pattern."""
         # Basis: Neues Pattern hell ausgrauen, dann Diff-Farben dramurber
         new = self._new
         w = self._diff.stats.width
@@ -168,9 +168,9 @@ class PatternDiffDialog(QDialog):
             if mask is None or mask.shape != new_grid.shape:
                 continue
             if new.height <= h and new.width <= w:
-                # Im Bounding-Bereich einfaerben (etwas heller)
+                # Im Bounding-Bereich einfärben (etwas heller)
                 c = entry.thread.color
-                # Mischung: 50% color + 50% hellgrau, damit Diff drueber besser sichtbar wird
+                # Mischung: 50% color + 50% hellgrau, damit Diff drüber besser sichtbar wird
                 gray_mix = np.array(
                     [
                         (c.r + 235) // 2,

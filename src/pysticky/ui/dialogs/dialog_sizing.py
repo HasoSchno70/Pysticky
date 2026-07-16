@@ -1,15 +1,15 @@
 """
-Gemeinsame Auto-Groessen-Logik fuer Dialoge mit variabel grossem Inhalt
+Gemeinsame Auto-Größen-Logik für Dialoge mit variabel grossem Inhalt
 (Tabs, Sektionen, ...).
 
-Ohne dies muessten Dialoge auf eine feste Default-Groesse geraten, die fuer
-den groessten Inhalt (laengste Tab-Seite, meiste Sektionen, ...) oft zu klein
+Ohne dies müssten Dialoge auf eine feste Default-Größe geraten, die für
+den größten Inhalt (längste Tab-Seite, meiste Sektionen, ...) oft zu klein
 ist -- der Inhalt landet dann in einer internen QScrollArea, obwohl der
-Dialog selbst noch reichlich Bildschirmplatz haette. `auto_size_dialog`
-bemisst die Dialoggroesse stattdessen am tatsaechlichen `sizeHint()` des
-Inhalts, begrenzt auf einen Anteil der verfuegbaren Bildschirmflaeche (damit
-der Dialog auf kleinen/anderen Monitoren nicht ueber den Rand waechst -- eine
-QScrollArea um den Inhalt bleibt dafuer als Fallback sinnvoll).
+Dialog selbst noch reichlich Bildschirmplatz hätte. `auto_size_dialog`
+bemisst die Dialoggröße stattdessen am tatsächlichen `sizeHint()` des
+Inhalts, begrenzt auf einen Anteil der verfügbaren Bildschirmfläche (damit
+der Dialog auf kleinen/anderen Monitoren nicht über den Rand wächst -- eine
+QScrollArea um den Inhalt bleibt dafür als Fallback sinnvoll).
 """
 
 from PySide6.QtWidgets import QApplication, QDialog, QWidget
@@ -26,28 +26,28 @@ def auto_size_dialog(
     max_height_frac: float = 0.92,
     content_size: tuple[int, int] | None = None,
 ) -> None:
-    """Passt `dialog` an den tatsaechlichen Platzbedarf seines Inhalts an.
+    """Passt `dialog` an den tatsächlichen Platzbedarf seines Inhalts an.
 
     Args:
-        dialog: der zu vergroessernde Dialog.
+        dialog: der zu vergrößernde Dialog.
         content_widgets: Widgets, deren sizeHint() den Platzbedarf bestimmt
             (z.B. alle Tab-Seiten eines QTabWidget, oder eine Liste mit nur
             dem einen Hauptinhalts-Widget bei tabelosen Dialogen). Es wird
-            jeweils das Maximum ueber Breite/Hoehe genommen — passend fuer
+            jeweils das Maximum über Breite/Höhe genommen — passend für
             Tabs, von denen immer nur einer sichtbar ist. Wird ignoriert,
             wenn `content_size` gesetzt ist.
-        min_width: zusaetzliche Mindestbreite, die unabhaengig vom Inhalt
+        min_width: zusätzliche Mindestbreite, die unabhängig vom Inhalt
             erreicht werden soll (z.B. die Breite einer Tab-Leiste, die
-            schmaler Inhalt sonst unterschreiten wuerde).
-        chrome_w/chrome_h: Platz fuer Rahmen, Buttons, Abstaende etc., der
+            schmaler Inhalt sonst unterschreiten würde).
+        chrome_w/chrome_h: Platz für Rahmen, Buttons, Abstände etc., der
             zum reinen Inhalts-sizeHint hinzukommt.
         max_width_frac/max_height_frac: Obergrenze als Anteil der
-            verfuegbaren Bildschirmflaeche.
-        content_size: (Breite, Hoehe) direkt vorgeben statt aus
-            `content_widgets` per max() abzuleiten — noetig, wenn mehrere
+            verfügbaren Bildschirmfläche.
+        content_size: (Breite, Höhe) direkt vorgeben statt aus
+            `content_widgets` per max() abzuleiten — nötig, wenn mehrere
             Bereiche gleichzeitig sichtbar sind (z.B. nebeneinander- oder
-            untereinandergestapelte Sektionen), wo sich die Groessen
-            addieren statt dass nur die groesste zaehlt.
+            untereinandergestapelte Sektionen), wo sich die Größen
+            addieren statt dass nur die größte zählt.
     """
     if content_size is not None:
         content_w, content_h = content_size

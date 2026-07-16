@@ -22,7 +22,7 @@ from .core.constants import (
 
 # === Anwendungs-Metadaten ===
 # APP_VERSION ist die EINZIGE Versionsquelle: pyproject.toml liest sie via
-# [tool.setuptools.dynamic] aus dieser Konstante. Hier hochzaehlen genuegt.
+# [tool.setuptools.dynamic] aus dieser Konstante. Hier hochzählen genügt.
 APP_NAME: Final[str] = "PySticky"
 APP_VERSION: Final[str] = "0.8.2"
 ORG_NAME: Final[str] = "PySticky"
@@ -30,7 +30,7 @@ ORG_NAME: Final[str] = "PySticky"
 
 @dataclass(frozen=True)
 class CanvasConfig:
-    """Konfiguration fuer das Canvas."""
+    """Konfiguration für das Canvas."""
 
     min_cell_size: int = MIN_CELL_SIZE
     max_cell_size: int = MAX_CELL_SIZE
@@ -49,7 +49,7 @@ class CanvasConfig:
 
 @dataclass(frozen=True)
 class UndoConfig:
-    """Konfiguration fuer Undo/Redo."""
+    """Konfiguration für Undo/Redo."""
 
     max_history: int = DEFAULT_UNDO_HISTORY
     batch_timeout_ms: int = 500  # Zeit bis Batch automatisch geschlossen wird
@@ -57,7 +57,7 @@ class UndoConfig:
 
 @dataclass(frozen=True)
 class FileConfig:
-    """Konfiguration fuer Dateioperationen."""
+    """Konfiguration für Dateioperationen."""
 
     pattern_extension: str = ".pxs"
     pattern_filter: str = "PySticky Muster (*.pxs)"
@@ -75,10 +75,10 @@ class FileConfig:
 @dataclass(frozen=True)
 class UIConfig:
     """
-    Konfiguration fuer die Benutzeroberflaeche.
+    Konfiguration für die Benutzeroberfläche.
 
-    Hinweis Dialog-Mindestgroessen: Die `dialog_min_*`-Tupel sind nur
-    Standardgroessen-Klassen fuer neue Dialoge. Bestehende Dialoge mit
+    Hinweis Dialog-Mindestgrößen: Die `dialog_min_*`-Tupel sind nur
+    Standardgrößen-Klassen für neue Dialoge. Bestehende Dialoge mit
     individuellen Werten (z.B. Settings 750x820, Stitch Path 1000x700)
     bleiben bewusst individuell — das sind pro-Dialog-Design-Entscheidungen.
     """
@@ -93,7 +93,7 @@ class UIConfig:
 
     status_message_timeout_ms: int = 3000
 
-    # Standard-Mindestgroessen fuer Dialoge (Breite, Hoehe in Pixel)
+    # Standard-Mindestgrößen für Dialoge (Breite, Höhe in Pixel)
     dialog_min_small: tuple[int, int] = (400, 300)
     dialog_min_medium: tuple[int, int] = (600, 500)
     dialog_min_large: tuple[int, int] = (800, 600)

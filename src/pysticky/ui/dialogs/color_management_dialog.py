@@ -59,7 +59,7 @@ class ColorListItem(QListWidgetItem):
     def _update_display(self) -> None:
         thread = self.entry.thread
         # Feste Spaltenbreiten (per ljust/rjust) + Monospace-Font auf der Liste
-        # (siehe ColorListWidget) sorgen fuer echte Spalten statt nur durch
+        # (siehe ColorListWidget) sorgen für echte Spalten statt nur durch
         # "│" getrennten, unterschiedlich breiten Text.
         symbol_col = f"{self.entry.symbol:<3}"
         name_col = f"{thread.name:<24}"
@@ -110,7 +110,7 @@ class ColorListWidget(QListWidget):
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setAlternatingRowColors(True)
         # Monospace-Font, damit die per ljust/rjust ausgerichteten Spalten in
-        # ColorListItem._update_display() auch tatsaechlich untereinander stehen.
+        # ColorListItem._update_display() auch tatsächlich untereinander stehen.
         self.setStyleSheet("QListWidget { font-family: Consolas, 'Courier New', monospace; }")
 
         self.model().rowsMoved.connect(lambda: self.order_changed.emit())
@@ -369,7 +369,7 @@ class ColorManagementDialog(QDialog):
         self._apply_btn.setDefault(True)
         self._apply_btn.clicked.connect(self.accept)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         self._apply_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._apply_btn, QDialogButtonBox.ButtonRole.AcceptRole)
 
@@ -377,8 +377,8 @@ class ColorManagementDialog(QDialog):
 
         layout.addLayout(footer)
 
-        # Alle anderen Buttons im Dialog haben autoDefault=True und koennten
-        # sonst den Default-Status (Enter-Taste) von "Übernehmen" uebernehmen.
+        # Alle anderen Buttons im Dialog haben autoDefault=True und könnten
+        # sonst den Default-Status (Enter-Taste) von "Übernehmen" übernehmen.
         for btn in self.findChildren(QPushButton):
             if btn is not self._apply_btn and button_box.buttonRole(btn) == (
                 QDialogButtonBox.ButtonRole.InvalidRole
@@ -534,7 +534,7 @@ class ColorManagementDialog(QDialog):
             self._preview_widget.set_color(QColor(128, 128, 128))
             self._selected_info.setText(f"{len(selected)} Farben ausgewählt")
             # Fäden bleiben bei Mehrfachauswahl editierbar — _on_strands_changed
-            # wendet den neuen Wert auf alle ausgewaehlten Farben an.
+            # wendet den neuen Wert auf alle ausgewählten Farben an.
             self._strands_spin.setEnabled(True)
             first_entry = selected[0].entry if isinstance(selected[0], ColorListItem) else None
             if first_entry is not None:
@@ -547,7 +547,7 @@ class ColorManagementDialog(QDialog):
             self._strands_spin.setEnabled(False)
 
     def _on_strands_changed(self, value: int) -> None:
-        """Fadenstärke geändert — gilt fuer alle aktuell ausgewaehlten Farben."""
+        """Fadenstärke geändert — gilt für alle aktuell ausgewählten Farben."""
         selected = self._color_list.selectedItems()
         changed = False
         for item in selected:
@@ -559,7 +559,7 @@ class ColorManagementDialog(QDialog):
             self._changes_made = True
 
     def _on_apply_strands_to_all(self) -> None:
-        """Setzt die Fadenstaerke fuer alle Farben der Palette auf einmal."""
+        """Setzt die Fadenstärke für alle Farben der Palette auf einmal."""
         value = self._bulk_strands_spin.value()
         for entry in self._pattern.color_entries:
             entry.strands = value
@@ -749,14 +749,14 @@ class ColorManagementDialog(QDialog):
 
     def _remove_color_at_index(self, idx: int) -> None:
         """Entfernt eine Farbe und aktualisiert alle Referenzen."""
-        # Stiche mit dieser Farbe komplett entfernen, hoehere Farbindizes
-        # um 1 nach unten verschieben (vektorisiert ueber numpy statt
-        # Pixel-fuer-Pixel-Python-Schleife).
+        # Stiche mit dieser Farbe komplett entfernen, höhere Farbindizes
+        # um 1 nach unten verschieben (vektorisiert über numpy statt
+        # Pixel-für-Pixel-Python-Schleife).
         for layer in self._pattern.layer_stack:
             layer.replace_color(idx, NO_STITCH)
             layer.shift_color_indices(idx + 1, -1)
 
-        # Rueckstiche mit dieser Farbe entfernen, hoehere Indizes anpassen
+        # Rückstiche mit dieser Farbe entfernen, höhere Indizes anpassen
         self._pattern.backstitch_manager.update_color_indices(idx)
 
         # Farbe entfernen
@@ -764,7 +764,7 @@ class ColorManagementDialog(QDialog):
 
         # Stichzahlen neu berechnen -- set_stitch()-Aufrufe in _on_merge_colors()
         # aktualisieren entry.stitch_count nicht selbst, daher hier zentral
-        # aus dem tatsaechlichen Grid-Inhalt neu ableiten.
+        # aus dem tatsächlichen Grid-Inhalt neu ableiten.
         self._pattern.recalculate_stitch_counts()
 
     def _on_merge_colors(self) -> None:

@@ -1,15 +1,14 @@
 """
-Datenklassen fuer die Muster-Bibliothek.
+Datenklassen für die Muster-Bibliothek.
 
-Enthaelt die Datenstrukturen LibraryEntry und LibraryData
-fuer die Verwaltung von Kreuzstich-Mustern in der Bibliothek.
+Enthält die Datenstrukturen LibraryEntry und LibraryData
+für die Verwaltung von Kreuzstich-Mustern in der Bibliothek.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -24,7 +23,7 @@ class LibraryEntry:
     stitch_count: int
     categories: list[str] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
-    thumbnail_path: Optional[str] = None
+    thumbnail_path: str | None = None
     added_date: str = ""
     last_opened: str = ""
     favorite: bool = False

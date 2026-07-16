@@ -20,7 +20,7 @@ Nicht unterstützt:
 import struct
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Optional
+from typing import BinaryIO
 
 from ...core.constants import DEFAULT_FABRIC_COUNT
 from ...core.layer import Layer
@@ -89,7 +89,7 @@ class PATImporter:
         except OSError:
             return False
 
-    def import_file(self, filepath: Path | str) -> Optional[Pattern]:
+    def import_file(self, filepath: Path | str) -> Pattern | None:
         """
         Importiert eine PAT-Datei.
 
@@ -439,7 +439,7 @@ class PATImporter:
             self.warnings.append(f"Fehler beim Lesen der Backstitch-Daten: {e}")
 
 
-def import_pat(filepath: Path | str) -> tuple[Optional[Pattern], list[str], list[str]]:
+def import_pat(filepath: Path | str) -> tuple[Pattern | None, list[str], list[str]]:
     """
     Convenience-Funktion zum Importieren einer PAT-Datei.
 

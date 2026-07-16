@@ -109,8 +109,8 @@ _TOOL_BATCH_DESCRIPTIONS: dict["Tool", str] = {
 }
 
 # Tastenkürzel — Single Source of Truth.
-# Diese Werte muessen mit den Shortcuts in widgets/tool_bar.py uebereinstimmen,
-# damit die Settings/Shortcuts-Tab die Realitaet zeigt.
+# Diese Werte müssen mit den Shortcuts in widgets/tool_bar.py übereinstimmen,
+# damit die Settings/Shortcuts-Tab die Realität zeigt.
 _TOOL_SHORTCUTS: dict["Tool", str] = {
     Tool.PENCIL: "P",
     Tool.ERASER: "E",

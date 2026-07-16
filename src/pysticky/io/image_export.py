@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 def _fill_partial_stitch(
     painter: QPainter, stype: int, x: float, y: float, size: float, color: QColor
 ) -> None:
-    """Fuellt die Polygon-Form eines halben/Viertel-Stichs mit `color`."""
+    """Füllt die Polygon-Form eines halben/Viertel-Stichs mit `color`."""
     pts = partial_stitch_points(stype, x, y, size)
     if not pts:
         return
@@ -44,7 +44,7 @@ def _fill_partial_stitch(
 
 
 def _fill_french_knot(painter: QPainter, x: float, y: float, size: float, color: QColor) -> None:
-    """Zeichnet einen Franzoesischen Knoten als gefuellten Kreis in der Zellmitte."""
+    """Zeichnet einen Französischen Knoten als gefüllten Kreis in der Zellmitte."""
     radius = max(1.0, size * french_knot_radius_factor())
     cx = x + size / 2.0
     cy = y + size / 2.0
@@ -56,7 +56,7 @@ def _fill_french_knot(painter: QPainter, x: float, y: float, size: float, color:
 
 
 def _fill_bead(painter: QPainter, x: float, y: float, size: float, color: QColor) -> None:
-    """Zeichnet eine Perle: groessere Kugel mit Glanzpunkt."""
+    """Zeichnet eine Perle: größere Kugel mit Glanzpunkt."""
     radius = max(1.5, size * bead_radius_factor())
     cx = x + size / 2.0
     cy = y + size / 2.0
@@ -135,14 +135,14 @@ class ImageExporter:
             if is_french_knot(sti) or is_bead(sti) or is_partial_stitch(sti):
                 special |= type_grid == st
 
-        # Basisbild (1 Pixel/Stich): Hintergrund, dann Vollstiche einfaerben.
-        # Sonder-Stich-Zellen bleiben Hintergrund (sie werden ueberzeichnet).
+        # Basisbild (1 Pixel/Stich): Hintergrund, dann Vollstiche einfärben.
+        # Sonder-Stich-Zellen bleiben Hintergrund (sie werden überzeichnet).
         base = np.empty((h, w, 3), dtype=np.uint8)
         base[:] = bg
         full = valid & ~special
         base[full] = palette[composite[full]]
 
-        # Auf Zellgroesse hochskalieren (nearest -> harte Bloecke).
+        # Auf Zellgröße hochskalieren (nearest -> harte Blöcke).
         base = np.ascontiguousarray(base)
         src = QImage(base.data, w, h, w * 3, QImage.Format.Format_RGB888)
         image = src.scaled(
@@ -160,7 +160,7 @@ class ImageExporter:
             )
 
         try:
-            # Sonder-Stiche einzeln zeichnen (nur gueltige Farb-Zellen).
+            # Sonder-Stiche einzeln zeichnen (nur gültige Farb-Zellen).
             for y, x in np.argwhere(special & valid):
                 color_idx = int(composite[y, x])
                 col = pattern.color_entries[color_idx].thread.color
@@ -175,7 +175,7 @@ class ImageExporter:
                 elif is_partial_stitch(stype):
                     _fill_partial_stitch(painter, stype, px, py, cell_size, color)
 
-            # Symbole (optional, zwangslaeufig pro Zelle).
+            # Symbole (optional, zwangsläufig pro Zelle).
             if show_symbols and cell_size >= 8:
                 painter.setFont(QFont("Segoe UI", max(4, int(cell_size * 0.6))))
                 for y, x in np.argwhere(valid):

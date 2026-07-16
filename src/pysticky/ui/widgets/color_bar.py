@@ -263,7 +263,7 @@ class ColorSwatch(QWidget):
 
         if self._mode == "diamond":
             label_text = self._entry.thread.catalog_number or self._entry.symbol
-            # Drill-Nummern koennen 3-stellig sein -> kleinere Schrift
+            # Drill-Nummern können 3-stellig sein -> kleinere Schrift
             size = 8 if self._selected else 7
         else:
             label_text = self._entry.symbol
@@ -294,7 +294,7 @@ class ColorSwatch(QWidget):
         elif event.button() == Qt.MouseButton.RightButton:
             self.context_menu_requested.emit(self._index, event.globalPosition().toPoint())
 
-    # Schwelle, ab der ein Drag fuer Color-Swap startet. Default-Qt sind ~10
+    # Schwelle, ab der ein Drag für Color-Swap startet. Default-Qt sind ~10
     # px — viel zu wenig: jede minimale Mausbewegung beim Klick startet
     # einen Drag, dabei wollte der User nur die Farbe selektieren. Mit 25 px
     # muss der Drag bewusst sein.
@@ -318,7 +318,7 @@ class ColorSwatch(QWidget):
         threshold = max(self._SWAP_DRAG_THRESHOLD, QApplication.startDragDistance() * 2)
         if distance < threshold:
             return
-        self._press_pos = None  # Drag laeuft — keine weiteren Triggers
+        self._press_pos = None  # Drag läuft — keine weiteren Triggers
 
         drag = QDrag(self)
         mime = QMimeData()
@@ -467,7 +467,7 @@ class ColorBar(QWidget):
     def set_isolated_index(self, index: int | None) -> None:
         """Setzt den Index der isolierten Farbe (None = keine).
 
-        Aktualisiert die Swatch-Marker, ohne die Selektion zu veraendern.
+        Aktualisiert die Swatch-Marker, ohne die Selektion zu verändern.
         """
         self._isolated_index = index
         for i, swatch in enumerate(self._swatches):
@@ -564,7 +564,7 @@ class ColorBar(QWidget):
             self._current_color_label.setText("")
 
     def _rebuild_swatches(self) -> None:
-        # Bulk-Update: Repaint waehrend des Rebuilds aussetzen, damit beim
+        # Bulk-Update: Repaint während des Rebuilds aussetzen, damit beim
         # Pattern-Laden kein leeres Phantom-Fenster aufflackert. Qt rendert
         # frisch-konstruierte Widgets sonst kurz top-level bevor sie ins
         # Layout einsortiert sind.

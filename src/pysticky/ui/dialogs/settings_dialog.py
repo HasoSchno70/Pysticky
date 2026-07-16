@@ -5,6 +5,8 @@ Fasst alle Anwendungseinstellungen in einem übersichtlichen Dialog zusammen.
 Die einzelnen Tabs sind in separate Widgets ausgelagert.
 """
 
+from typing import Any
+
 from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtWidgets import (
     QDialog,
@@ -15,6 +17,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QTabWidget,
     QVBoxLayout,
+    QWidget,
 )
 
 from ...core.i18n import t
@@ -38,7 +41,7 @@ class SettingsDialog(QDialog):
 
     settings_changed = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._settings = QSettings()
 
@@ -51,13 +54,13 @@ class SettingsDialog(QDialog):
         self._auto_size_to_content()
 
     def _auto_size_to_content(self) -> None:
-        """Groesse so waehlen, dass moeglichst alle Tabs ohne Scrollen passen.
+        """Größe so wählen, dass möglichst alle Tabs ohne Scrollen passen.
 
-        Die Tabs unterscheiden sich stark in ihrer natuerlichen Hoehe (z.B.
-        "Allgemein" ist viel hoeher als "Tastenkuerzel") — bei fixer
-        Default-Groesse musste man staendig scrollen. Begrenzt auf einen
-        Anteil der verfuegbaren Bildschirmflaeche, damit der Dialog auf
-        kleineren/anderen Monitoren nicht ueber den Rand waechst (dafuer
+        Die Tabs unterscheiden sich stark in ihrer natürlichen Höhe (z.B.
+        "Allgemein" ist viel höher als "Tastenkürzel") — bei fixer
+        Default-Größe musste man ständig scrollen. Begrenzt auf einen
+        Anteil der verfügbaren Bildschirmfläche, damit der Dialog auf
+        kleineren/anderen Monitoren nicht über den Rand wächst (dafür
         bleibt die QScrollArea pro Tab als Fallback erhalten).
         """
         tabs = [
@@ -70,11 +73,11 @@ class SettingsDialog(QDialog):
         ]
         # Tab-Leiste selbst braucht bei 6 Tabs (Emoji + Label) oft mehr
         # Breite als die schmalste Tab-Seite — sonst zeigt Qt Scroll-Pfeile
-        # an der Tab-Leiste, obwohl der Dialog laengst breit genug waere.
+        # an der Tab-Leiste, obwohl der Dialog längst breit genug wäre.
         tabbar_w = self.tabs.tabBar().sizeHint().width() + 40
         auto_size_dialog(self, tabs, min_width=tabbar_w)
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Erstellt die UI-Struktur."""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -133,7 +136,7 @@ class SettingsDialog(QDialog):
 
         layout.addLayout(button_layout)
 
-    def _load_settings(self):
+    def _load_settings(self) -> None:
         """Lädt alle Einstellungen in die Tab-Widgets."""
         self.general_tab.load_settings(self._settings)
         self.canvas_tab.load_settings(self._settings)
@@ -142,7 +145,7 @@ class SettingsDialog(QDialog):
         self.files_tab.load_settings(self._settings)
         self.shortcuts_tab.load_settings(self._settings)
 
-    def _save_settings(self):
+    def _save_settings(self) -> None:
         """Speichert alle Einstellungen aus den Tab-Widgets."""
         self.general_tab.save_settings(self._settings)
         self.canvas_tab.save_settings(self._settings)
@@ -151,18 +154,18 @@ class SettingsDialog(QDialog):
         self.files_tab.save_settings(self._settings)
         self.shortcuts_tab.save_settings(self._settings)
 
-    def _apply_settings(self):
+    def _apply_settings(self) -> None:
         """Wendet Einstellungen an ohne den Dialog zu schließen."""
         self._save_settings()
         self.settings_changed.emit()
 
-    def _on_accept(self):
+    def _on_accept(self) -> None:
         """Speichert und schließt den Dialog."""
         self._save_settings()
         self.settings_changed.emit()
         self.accept()
 
-    def _reset_to_defaults(self):
+    def _reset_to_defaults(self) -> None:
         """Setzt alle Einstellungen auf Standardwerte zurück."""
         reply = QMessageBox.question(
             self,
@@ -186,7 +189,7 @@ class SettingsDialog(QDialog):
         """Erneuert das Stylesheet nach einem Live-Theme-Wechsel."""
         self._apply_styles()
 
-    def _apply_styles(self):
+    def _apply_styles(self) -> None:
         """Wendet das zentrale Styling an."""
         self.setStyleSheet(f"""
             QDialog {{
@@ -225,7 +228,7 @@ class SettingsDialog(QDialog):
             }}
             /* GroupBox: Title sitzt sauber oben, Inhalts-Padding kommt
                aus dem Layout (siehe make_section_form), nicht aus dem
-               Stylesheet — sonst kollidiert beides und Felder ueberlappen. */
+               Stylesheet — sonst kollidiert beides und Felder überlappen. */
             QGroupBox {{
                 font-weight: 700;
                 color: {THEME.accent_primary};
@@ -436,7 +439,7 @@ class SettingsDialog(QDialog):
             }}
         """)
 
-    def get_setting(self, key: str, default=None):
+    def get_setting(self, key: str, default: Any = None) -> Any:
         """Hilfsmethode zum Abrufen einer Einstellung."""
         return self._settings.value(key, default)
 

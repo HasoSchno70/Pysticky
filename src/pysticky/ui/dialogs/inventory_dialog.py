@@ -1,14 +1,14 @@
 """
 Garn-Vorratsliste-Dialog: User kann pro Hersteller-Farbe hinterlegen,
-wieviele Straenge er noch im Schrank hat.
+wieviele Stränge er noch im Schrank hat.
 
 Datenquelle / -ziel: core.inventory.Inventory (JSON in App-Daten).
 
 Drei Tabs:
 1. "Im Muster" — nur die Farben des aktuellen Musters (schneller Einstieg)
-2. "Alle Eintraege" — komplette Vorratsliste mit Suchfeld, ohne Pattern-Bezug
+2. "Alle Einträge" — komplette Vorratsliste mit Suchfeld, ohne Pattern-Bezug
 3. "Mehrere Projekte" — registrierte .pxs-Dateien + kombinierte Einkaufsliste
-   ueber alle registrierten Projekte hinweg (core.project_list.ProjectList)
+   über alle registrierten Projekte hinweg (core.project_list.ProjectList)
 """
 
 from __future__ import annotations
@@ -160,7 +160,7 @@ class InventoryDialog(QDialog):
         pl.addWidget(self._pattern_table)
         self._tabs.addTab(pattern_tab, "🧵 " + t("Im Muster"))
 
-        # === Tab 2: Alle Eintraege ===
+        # === Tab 2: Alle Einträge ===
         all_tab = QWidget()
         al = QVBoxLayout(all_tab)
         al.setContentsMargins(0, 8, 0, 0)
@@ -205,7 +205,7 @@ class InventoryDialog(QDialog):
         bottom = QHBoxLayout()
         btn_add_entry = QPushButton(t("➕ Farbe hinzufügen…"))
         btn_add_entry.setToolTip(
-            t("Vorrat fuer eine Farbe eintragen, die noch in keinem Muster vorkommt.")
+            t("Vorrat für eine Farbe eintragen, die noch in keinem Muster vorkommt.")
         )
         btn_add_entry.setStyleSheet(f"""
             QPushButton {{
@@ -220,7 +220,7 @@ class InventoryDialog(QDialog):
         btn_add_entry.clicked.connect(self._add_manual_entry)
         bottom.addWidget(btn_add_entry)
         btn_remove_zero = QPushButton(t("🗑 Leere Einträge entfernen"))
-        btn_remove_zero.setToolTip(t("Eintraege mit 0 Straengen aus der Liste loeschen."))
+        btn_remove_zero.setToolTip(t("Einträge mit 0 Strängen aus der Liste loeschen."))
         btn_remove_zero.clicked.connect(self._remove_zero_entries)
         bottom.addWidget(btn_remove_zero)
         bottom.addStretch(1)
@@ -374,7 +374,7 @@ class InventoryDialog(QDialog):
     def _on_pattern_value_changed(self, thread, value: int) -> None:
         self._inventory.set(thread.manufacturer, thread.catalog_number, value)
         self._dirty = True
-        # "Zu kaufen"-Spalte fuer diese Zeile neu einfaerben, ohne die
+        # "Zu kaufen"-Spalte für diese Zeile neu einfärben, ohne die
         # komplette Einkaufsliste neu zu berechnen.
         for row in range(self._pattern_table.rowCount()):
             if self._pattern_table.item(row, 2).text() == (
@@ -479,7 +479,7 @@ class InventoryDialog(QDialog):
                     spin.setValue(value)
                     spin.blockSignals(False)
                 return
-        # Nicht gefunden — neue Zeile anhaengen (nur wenn value > 0)
+        # Nicht gefunden — neue Zeile anhängen (nur wenn value > 0)
         if value > 0:
             row = self._all_table.rowCount()
             self._all_table.insertRow(row)
@@ -511,17 +511,17 @@ class InventoryDialog(QDialog):
             self._all_table.setRowHidden(row, not visible)
 
     def _add_manual_entry(self) -> None:
-        """Traegt Vorrat fuer eine Farbe ein, die noch in keinem Muster vorkommt.
+        """Trägt Vorrat für eine Farbe ein, die noch in keinem Muster vorkommt.
 
-        Ohne dies waere "Alle Eintraege" reiner Lesemodus: Eintraege
-        entstehen sonst nur indirekt ueber den "Im Muster"-Tab, wenn ein
+        Ohne dies wäre "Alle Einträge" reiner Lesemodus: Einträge
+        entstehen sonst nur indirekt über den "Im Muster"-Tab, wenn ein
         Bestand > 0 gesetzt wird.
 
         Hersteller ist eine Auswahlliste aus den geladenen Paletten (DMC,
         Anchor, ...) — Garn von anderen Herstellern ist selten, daher bleibt
-        das Feld editierbar fuer den Ausnahmefall. Ist der Hersteller
-        erkannt, kann die Farbe direkt aus der Palette gewaehlt werden statt
-        die Katalognummer selbst nachschlagen zu muessen.
+        das Feld editierbar für den Ausnahmefall. Ist der Hersteller
+        erkannt, kann die Farbe direkt aus der Palette gewählt werden statt
+        die Katalognummer selbst nachschlagen zu müssen.
         """
         from ...core.palette import get_palette_manager
 
@@ -548,14 +548,14 @@ class InventoryDialog(QDialog):
         color_row.addWidget(QLabel(t("Farbe:")))
         color_combo = QComboBox()
         color_combo.setEnabled(False)
-        color_combo.setToolTip(t("Verfuegbar, sobald ein bekannter Hersteller gewaehlt ist."))
+        color_combo.setToolTip(t("Verfuegbar, sobald ein bekannter Hersteller gewählt ist."))
         color_row.addWidget(color_combo, 1)
         form.addLayout(color_row)
 
         num_row = QHBoxLayout()
         num_row.addWidget(QLabel(t("Nr.:")))
         num_edit = QLineEdit()
-        num_edit.setToolTip(t("Wird beim Waehlen einer Farbe automatisch ausgefuellt."))
+        num_edit.setToolTip(t("Wird beim Waehlen einer Farbe automatisch ausgefüllt."))
         num_row.addWidget(num_edit, 1)
         form.addLayout(num_row)
 
@@ -670,9 +670,9 @@ class InventoryDialog(QDialog):
         self._populate_projects_tab()
 
     def _refresh_multi_shopping(self) -> None:
-        """Laedt alle registrierten Projekte und berechnet die kombinierte
-        Einkaufsliste. Dateien, die nicht geladen werden koennen (geloescht,
-        verschoben, beschaedigt), werden uebersprungen und aufgelistet."""
+        """Lädt alle registrierten Projekte und berechnet die kombinierte
+        Einkaufsliste. Dateien, die nicht geladen werden können (gelöscht,
+        verschoben, beschädigt), werden übersprungen und aufgelistet."""
         from ...core import load_pattern
         from .statistics_dialog import PatternStatisticsDialog
 

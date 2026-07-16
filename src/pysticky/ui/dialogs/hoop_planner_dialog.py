@@ -2,8 +2,8 @@
 Rahmenaufteilung-Dialog: zeigt wie ein grosses Muster in mehrere
 Stickrahmen-Sektoren aufgeteilt werden kann.
 
-User stellt Rahmen-Groesse + Ueberlappung ein, sieht eine grafische
-Vorschau mit nummerierten Sektoren und eine tabellarische Uebersicht.
+User stellt Rahmen-Größe + Überlappung ein, sieht eine grafische
+Vorschau mit nummerierten Sektoren und eine tabellarische Übersicht.
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ class _HoopPreviewWidget(QFrame):
         self.update()
 
     def _render_pattern_thumb(self, pattern: "Pattern") -> QImage:
-        """Erzeugt ein kleines Pixel-Bild des Musters fuer die Vorschau."""
+        """Erzeugt ein kleines Pixel-Bild des Musters für die Vorschau."""
         from ...core.layer import NO_STITCH
 
         w, h = pattern.width, pattern.height
@@ -88,7 +88,7 @@ class _HoopPreviewWidget(QFrame):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
-        # Verfuegbarer Bereich mit Rand
+        # Verfügbarer Bereich mit Rand
         margin = 16
         avail_w = self.width() - 2 * margin
         avail_h = self.height() - 2 * margin
@@ -118,7 +118,7 @@ class _HoopPreviewWidget(QFrame):
 
         # Sektoren-Overlay
         if self._plan is None or self._plan.fits_single_hoop:
-            # Keine Aufteilung noetig — Hinweis
+            # Keine Aufteilung nötig — Hinweis
             painter.setPen(QColor(THEME.success))
             font = QFont("Segoe UI", 10, QFont.Weight.Bold)
             painter.setFont(font)
@@ -136,7 +136,7 @@ class _HoopPreviewWidget(QFrame):
             sy = offset_y + int(sector.y_start * scale)
             sw = int(sector.width * scale)
             sh = int(sector.height * scale)
-            # Halbtransparenter Fuell
+            # Halbtransparenter Füll
             fill = QColor(accent)
             fill.setAlpha(40 + (sector.index % 2) * 20)
             painter.setBrush(fill)
@@ -149,7 +149,7 @@ class _HoopPreviewWidget(QFrame):
             font = QFont("Segoe UI", 11, QFont.Weight.Bold)
             painter.setFont(font)
             text_rect = painter.fontMetrics().boundingRect(label)
-            # Hintergrund-Kreis fuer Lesbarkeit
+            # Hintergrund-Kreis für Lesbarkeit
             cx = sx + sw // 2
             cy = sy + sh // 2
             r = max(text_rect.width(), text_rect.height()) // 2 + 6
@@ -170,7 +170,7 @@ class _HoopPreviewWidget(QFrame):
 class HoopPlannerDialog(QDialog):
     """Dialog zum Aufteilen grosser Muster auf mehrere Stickrahmen."""
 
-    # Gaengige Hoop-Groessen — Aida 14 ct: ~5.5 Stiche/cm
+    # Gängige Hoop-Größen — Aida 14 ct: ~5.5 Stiche/cm
     COMMON_HOOPS = [
         ("4 Zoll (10 cm)", 55, 55),
         ("5 Zoll (13 cm)", 71, 71),
@@ -329,7 +329,7 @@ class HoopPlannerDialog(QDialog):
         hw = self.spin_w.value()
         hh = self.spin_h.value()
         ov = self.spin_overlap.value()
-        # Overlap darf nicht >= Hoop-Groesse — auto-clampen
+        # Overlap darf nicht >= Hoop-Größe — auto-clampen
         max_ov = min(hw, hh) - 1
         if ov > max_ov:
             self.spin_overlap.blockSignals(True)

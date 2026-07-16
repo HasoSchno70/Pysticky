@@ -65,7 +65,7 @@ class ToolManager:
             # Auswahl
             Tool.SELECT: SelectTool(),
             Tool.SELECT_LASSO: LassoSelectTool(),
-            # Navigation (no-op fuer Klicks, Pan via Mittelmaus)
+            # Navigation (no-op für Klicks, Pan via Mittelmaus)
             Tool.MOVE: MoveTool(),
             # Fortschritt
             Tool.PROGRESS: ProgressTool(),

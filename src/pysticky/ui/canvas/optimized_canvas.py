@@ -100,7 +100,7 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         # Bei aktiver Farb-Isolation den Chunk-Cache umgehen — der gecachte
         # Pfad in render_chunk_to_pixmap kennt die Per-Cell-Alpha-Logik nicht.
         # Bei grossen Mustern verlieren wir dann den Caching-Vorteil; das ist
-        # akzeptabel weil Isolation ein temporaerer View-Modus ist.
+        # akzeptabel weil Isolation ein temporärer View-Modus ist.
         use_chunk_cache = (
             self._perf_manager.enabled and not use_simplified and self._isolate_color_index is None
         )
@@ -150,10 +150,10 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         if self._cursor_pos and not self._tool_manager.is_tool_active():
             self._draw_cursor(painter)
 
-        # Sticken-Cursor (Pfeiltasten-Navigation, ueber dem normalen Cursor)
+        # Sticken-Cursor (Pfeiltasten-Navigation, über dem normalen Cursor)
         # Wichtig: muss hier mitgepflegt werden, weil OptimizedCanvas seine
-        # eigene _paint-Implementation hat und nicht ueber RenderingMixin._paint
-        # laeuft. Synchron halten mit RenderingMixin._paint.
+        # eigene _paint-Implementation hat und nicht über RenderingMixin._paint
+        # läuft. Synchron halten mit RenderingMixin._paint.
         if self._stitch_cursor is not None:
             self._draw_stitch_cursor(painter)
 

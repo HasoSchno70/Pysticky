@@ -146,11 +146,11 @@ class EditHandlersMixin:
             self.status_bar.showMessage(t("Farbpalette aktualisiert"), 3000)
 
     def _on_screen_eyedropper(self: "MainWindow") -> None:
-        """Oeffnet den Vollbild-Screen-Eyedropper."""
+        """Öffnet den Vollbild-Screen-Eyedropper."""
         from ..dialogs import ScreenEyedropperDialog
 
-        # Match auf die aktuell im Palette-Panel gewaehlte Palette
-        # einschraenken, statt ueber alle Hersteller zu suchen -- sonst
+        # Match auf die aktuell im Palette-Panel gewählte Palette
+        # einschränken, statt über alle Hersteller zu suchen -- sonst
         # landet leicht eine Farbe eines fremden Herstellers im Muster.
         current_palette = self.palette_panel.current_palette_name()
         palette_names = [current_palette] if current_palette else None
@@ -192,7 +192,7 @@ class EditHandlersMixin:
             self.canvas.update()
             self._update_status()
             self._mark_unsaved()
-            self.status_bar.showMessage(t("Plugin ausgefuehrt"), 3000)
+            self.status_bar.showMessage(t("Plugin ausgeführt"), 3000)
 
     def _on_blend_threads(self: "MainWindow") -> None:
         """Zeigt den Dialog zur Erzeugung eines Tweed-Blends."""
@@ -296,7 +296,7 @@ class EditHandlersMixin:
         chk_smart.setToolTip(
             t(
                 "Aktiv: Pattern wird wie ein Pixelbild bilinear skaliert,\n"
-                "Stiche neu auf die Zellgroesse verteilt. Ideal beim Hochskalieren.\n\n"
+                "Stiche neu auf die Zellgröße verteilt. Ideal beim Hochskalieren.\n\n"
                 "Aus: klassisches Croppen/Padding mit leeren Zellen am Rand."
             )
         )

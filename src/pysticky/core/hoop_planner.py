@@ -1,6 +1,6 @@
 """
 Rahmenaufteilung: teilt ein grosses Muster in mehrere Stickrahmen-Sektoren
-mit konfigurierbarer Ueberlappung.
+mit konfigurierbarer Überlappung.
 
 Pure Funktionen — kein Qt, keine UI.
 """
@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 class HoopSector:
     """Ein einzelner Stickrahmen-Sektor des Musters.
 
-    Koordinaten in Stichen. Der Sektor enthaelt sowohl den Hauptbereich
-    als auch ggf. die Ueberlappungs-Zone zum naechsten Sektor.
+    Koordinaten in Stichen. Der Sektor enthält sowohl den Hauptbereich
+    als auch ggf. die Überlappungs-Zone zum nächsten Sektor.
     """
 
     index: int  # 0-basierter laufender Index
@@ -48,8 +48,8 @@ class HoopPlan:
     pattern_width: int
     pattern_height: int
     hoop_width: int  # Innen-Breite des Stickrahmens in Stichen
-    hoop_height: int  # Innen-Hoehe des Stickrahmens in Stichen
-    overlap: int  # Ueberlappungs-Breite in Stichen
+    hoop_height: int  # Innen-Höhe des Stickrahmens in Stichen
+    overlap: int  # Überlappungs-Breite in Stichen
     rows: int
     cols: int
     sectors: list[HoopSector]
@@ -74,19 +74,19 @@ def plan_hoops(
     Args:
         pattern: das Muster
         hoop_width: Innen-Breite des Rahmens in Stichen (z.B. 40)
-        hoop_height: Innen-Hoehe des Rahmens in Stichen
+        hoop_height: Innen-Höhe des Rahmens in Stichen
         overlap: Anzahl Stiche die zwei benachbarte Sektoren teilen (Default 0).
-            Empfohlen: 2-4 fuer nahtlose Uebergaenge.
+            Empfohlen: 2-4 für nahtlose Übergänge.
 
     Returns:
         HoopPlan mit Liste aller Sektoren.
     """
     if hoop_width <= 0 or hoop_height <= 0:
-        raise ValueError("hoop_width und hoop_height muessen > 0 sein")
+        raise ValueError("hoop_width und hoop_height müssen > 0 sein")
     if overlap < 0:
         raise ValueError("overlap muss >= 0 sein")
     if overlap >= hoop_width or overlap >= hoop_height:
-        raise ValueError("overlap muss kleiner als Hoop-Groesse sein")
+        raise ValueError("overlap muss kleiner als Hoop-Größe sein")
 
     pw = pattern.width
     ph = pattern.height
@@ -106,8 +106,8 @@ def plan_hoops(
             y_start = r * step_y
             x_end = min(x_start + hoop_width, pw)
             y_end = min(y_start + hoop_height, ph)
-            # Bei letzten Sektoren in Zeile/Spalte zurueckschieben, damit die
-            # volle Hoop-Groesse genutzt wird (sofern Pattern breit/hoch genug).
+            # Bei letzten Sektoren in Zeile/Spalte zurückschieben, damit die
+            # volle Hoop-Größe genutzt wird (sofern Pattern breit/hoch genug).
             if c == cols - 1 and x_end - x_start < hoop_width and pw >= hoop_width:
                 x_start = pw - hoop_width
                 x_end = pw
@@ -150,7 +150,7 @@ def _count_stitches_in_region(
     x1: int,
     y1: int,
 ) -> int:
-    """Zaehlt sichtbare Stiche im Rechteck [x0,y0) bis [x1,y1) — exklusiv x1/y1."""
+    """Zählt sichtbare Stiche im Rechteck [x0,y0) bis [x1,y1) — exklusiv x1/y1."""
     try:
         import numpy as np
 

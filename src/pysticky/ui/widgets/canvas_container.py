@@ -334,7 +334,7 @@ class CanvasContainer(QWidget):
             if recent_files is not None:
                 self._welcome.set_recent_files(recent_files)
             self._stack.setCurrentIndex(1)
-            # Lineale und Scrollbars sind im Welcome-Modus ueberfluessig
+            # Lineale und Scrollbars sind im Welcome-Modus überflüssig
             self._h_ruler.setVisible(False)
             self._v_ruler.setVisible(False)
             self._h_scrollbar.setVisible(False)

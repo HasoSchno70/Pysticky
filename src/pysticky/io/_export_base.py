@@ -1,18 +1,18 @@
 """
-Typing-Basen fuer die Export-Mixins — NUR fuer die statische Pruefung.
+Typing-Basen für die Export-Mixins — NUR für die statische Prüfung.
 
 Die HTML-/PDF-Exporter sind aus Mixins zusammengesetzt; die Mixins greifen
 auf Attribute und Methoden zu, die erst die konkrete Exporter-Klasse setzt
 bzw. definiert (z.B. `self.pattern`, `self._get_pixel_color(...)`). mypy
-prueft jedes Mixin isoliert und sieht diese nicht — daher frueher ~216
+prüft jedes Mixin isoliert und sieht diese nicht — daher früher ~216
 [attr-defined]-Fehler.
 
 Diese Basen deklarieren das geteilte Interface. Sie werden NUR unter
-`TYPE_CHECKING` als Mixin-Basisklasse eingehaengt (siehe `_export_typing`
+`TYPE_CHECKING` als Mixin-Basisklasse eingehängt (siehe `_export_typing`
 in den Mixin-Modulen); zur Laufzeit erben die Mixins weiter `object` —
 es gibt also KEINEN Verhaltensunterschied.
 
-Attribut-/Methodentypen sind bewusst grosszuegig (`Any`), wo sie nur als
+Attribut-/Methodentypen sind bewusst großzügig (`Any`), wo sie nur als
 Existenz-Nachweis dienen; die konkreten Exporter liefern die echten
 Signaturen, ihre Overrides sind gegen `Any` immer kompatibel.
 """

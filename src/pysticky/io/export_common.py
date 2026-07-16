@@ -1,12 +1,12 @@
 """
-Gemeinsame Hilfsfunktionen fuer HTML- und PDF-Export.
+Gemeinsame Hilfsfunktionen für HTML- und PDF-Export.
 
 Die Funktionen kapseln die "Top-Visible-Layer"-Logik, die in beiden
 Exporter-Varianten identisch gebraucht wird: pro Pattern-Position wird
 das oberste sichtbare Layer befragt, das einen Stitch eingetragen hat.
 
-Zusaetzlich exportiert dieses Modul die modus-spezifische Terminologie
-fuer HTML- und PDF-Export. Statt im Template-Code "Stiche" oder "Drills"
+Zusätzlich exportiert dieses Modul die modus-spezifische Terminologie
+für HTML- und PDF-Export. Statt im Template-Code "Stiche" oder "Drills"
 hartcodieren, holt sich der Renderer die passenden Begriffe aus
 ``terms_for(pattern)`` und kann denselben Template-Code in beiden Modi
 nutzen.
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from ..core.pattern import ColorEntry, Pattern
 
 
-# Modus-spezifische Begriffe fuer Export-Templates. Pro Mode ein Dict
+# Modus-spezifische Begriffe für Export-Templates. Pro Mode ein Dict
 # mit derselben Key-Struktur, damit der Template-Code modus-blind ist.
 _MODE_TERMS: dict[str, dict[str, str]] = {
     "stitch": {
@@ -51,7 +51,7 @@ _MODE_TERMS: dict[str, dict[str, str]] = {
         "supply_unit_short": "Dr.",
         "supply_icon": "&#128142;",  # 💎
         "fabric_label": "Drill-Raster",
-        "fabric_format": "{count}",  # wird im Renderer mit fertigem Label gefuellt
+        "fabric_format": "{count}",  # wird im Renderer mit fertigem Label gefüllt
         "fabric_count_label": "Drill-Pitch",
         "legend_title": "Drill-Legende",
         "code_header": "Drill-Code",
@@ -65,11 +65,11 @@ _MODE_TERMS: dict[str, dict[str, str]] = {
 
 
 def terms_for(pattern: "Pattern") -> dict[str, str]:
-    """Liefert die modus-spezifischen Begriffe fuer den Export.
+    """Liefert die modus-spezifischen Begriffe für den Export.
 
-    Uebersetzt bei JEDEM Aufruf frisch in der aktuell aktiven UI-Sprache
+    Übersetzt bei JEDEM Aufruf frisch in der aktuell aktiven UI-Sprache
     (statt einmalig zur Modul-Importzeit), damit ein Sprachwechsel zur
-    Laufzeit auch fuer PDF-/HTML-Exports sofort wirkt.
+    Laufzeit auch für PDF-/HTML-Exports sofort wirkt.
     """
     from ..core.i18n import t
 
@@ -79,12 +79,12 @@ def terms_for(pattern: "Pattern") -> dict[str, str]:
 
 
 def is_diamond_mode(pattern: "Pattern") -> bool:
-    """Convenience-Predicate fuer Templates."""
+    """Convenience-Predicate für Templates."""
     return getattr(pattern, "mode", "stitch") == "diamond"
 
 
 def fabric_label_for(pattern: "Pattern") -> str:
-    """Stoff/Drill-Raster-Bezeichnung. Im DP-Modus haengt der Text vom
+    """Stoff/Drill-Raster-Bezeichnung. Im DP-Modus hängt der Text vom
     fabric_count ab (siehe info_panel: 10≈2.5mm, 9≈2.8mm, 8≈3.0mm)."""
     from ..core.i18n import t
 
@@ -102,25 +102,25 @@ _DRILL_PITCH_MM: dict[int, float] = {10: 2.5, 9: 2.8, 8: 3.0}
 
 
 def drill_pitch_mm(pattern: "Pattern") -> float:
-    """Drill-Kanten-Laenge in Millimetern (nur im DP-Modus sinnvoll).
+    """Drill-Kanten-Länge in Millimetern (nur im DP-Modus sinnvoll).
 
     Wird beim 1:1-Druck als physische Cell-Size benutzt: ein Drill auf
-    der ausgedruckten Vorlage muss exakt diese Kanten-Laenge haben, sonst
+    der ausgedruckten Vorlage muss exakt diese Kanten-Länge haben, sonst
     passt der physische Drill nicht in die Klebezelle. Ein DP-Pattern bei
     200x200 Drills mit 2.5mm Pitch ergibt 500x500mm = 50x50cm fertige
     Klebefolie.
 
-    Fallback: 2.5mm fuer unbekannte fabric_count-Werte (Standard-Drill).
+    Fallback: 2.5mm für unbekannte fabric_count-Werte (Standard-Drill).
     """
     return _DRILL_PITCH_MM.get(pattern.fabric_count, 2.5)
 
 
-# Papier-Formate fuer die DP-Format-Empfehlung. Reihenfolge: klein -> gross.
+# Papier-Formate für die DP-Format-Empfehlung. Reihenfolge: klein -> gross.
 # Werte sind die NUTZBAREN Innenmasse (Papier minus typischer Margin), in
-# Millimetern. Das ist die Flaeche, in die das Drill-Raster wirklich rein
+# Millimetern. Das ist die Fläche, in die das Drill-Raster wirklich rein
 # muss — sonst gibt's reportlab-LayoutErrors.
 _PAPER_USABLE_MM = (
-    # (Name, nutzbare Breite mm, nutzbare Hoehe mm)
+    # (Name, nutzbare Breite mm, nutzbare Höhe mm)
     ("A4", 180.0, 247.0),  # 210x297 minus 15mm Margin + ~50mm Header/Footer-Reserve
     ("A3", 267.0, 354.0),  # 297x420 - 15mm Margin - 50mm Reserve
     ("A2", 380.0, 504.0),  # 420x594 - 20mm Margin - 50mm Reserve
@@ -140,11 +140,11 @@ def recommend_paper_format_for_dp(pattern: "Pattern", max_pages: int = 2) -> str
     Args:
         pattern: Das DP-Pattern (mode='diamond').
         max_pages: Wie viele Seiten der Druck maximal haben darf, damit
-            ein Format als "passend" gilt. Default 2 — bei groesseren
+            ein Format als "passend" gilt. Default 2 — bei größeren
             Patterns wird A0 empfohlen, weil mehr Seiten unhandlich sind.
 
     Returns:
-        Format-Name aus PAGE_FORMATS, oder "A4" fuer Nicht-DP-Pattern.
+        Format-Name aus PAGE_FORMATS, oder "A4" für Nicht-DP-Pattern.
     """
     if not is_diamond_mode(pattern):
         return "A4"
@@ -160,7 +160,7 @@ def recommend_paper_format_for_dp(pattern: "Pattern", max_pages: int = 2) -> str
         pages_y = math.ceil(pattern_h_mm / usable_h)
         if pages_x * pages_y <= max_pages:
             return name
-    # Wenn nichts in max_pages passt → groesstes Format als Default.
+    # Wenn nichts in max_pages passt → größtes Format als Default.
     return _PAPER_USABLE_MM[-1][0]
 
 
@@ -194,7 +194,7 @@ def get_pixel_stitch_type(pattern: "Pattern", x: int, y: int) -> int:
     """
     Stitch-Type des obersten sichtbaren Stitches an (x, y).
 
-    0 = FULL (oder leere Zelle — der Aufrufer prueft `get_pixel_color`
+    0 = FULL (oder leere Zelle — der Aufrufer prüft `get_pixel_color`
     separat). 1-7 = Halbe/Viertel-Stiche. 8/9 = Backstitch/French-Knot.
     """
     for layer in reversed(pattern.layer_stack.layers):
@@ -209,7 +209,7 @@ def get_pixel_stitch_type(pattern: "Pattern", x: int, y: int) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Drill-Optik fuer Diamond-Painting-Export
+# Drill-Optik für Diamond-Painting-Export
 # ---------------------------------------------------------------------------
 
 # Inset des Drills relativ zur Zelle. Der Rand zur Nachbarzelle macht die
@@ -222,7 +222,7 @@ _DRILL_INSET = 0.08
 def _shade_rgb(rgb: tuple[int, int, int], factor: int) -> tuple[int, int, int]:
     """Heller (factor>100) oder dunkler (factor<100) Variante einer Farbe.
 
-    Analog zu QColor.lighter()/darker() — factor=100 ist Identitaet,
+    Analog zu QColor.lighter()/darker() — factor=100 ist Identität,
     factor=150 ist 50% heller, factor=70 ist 30% dunkler.
     """
     r, g, b = rgb
@@ -244,13 +244,13 @@ def svg_drill_shape(
     cell_h: float,
     color: tuple[int, int, int],
 ) -> str:
-    """Liefert einen SVG-Snippet fuer einen Diamond-Painting-Drill.
+    """Liefert einen SVG-Snippet für einen Diamond-Painting-Drill.
 
     Vier dreieckige Facetten: oben hell (Glanz), unten dunkel (Schatten),
-    seitlich mittel. Bei kleiner Zelle (<12) entfaellt der Inset, damit
-    benachbarte Drills sich nahtlos beruehren — sonst wirkt die Vorlage
-    in der Cover-/Mini-Vorschau ausgewaschen weiss. Bei groesserer Zelle
-    zusaetzlich ein dunkler Kantenrand fuer Trennschaerfe. Konsistent zur
+    seitlich mittel. Bei kleiner Zelle (<12) entfällt der Inset, damit
+    benachbarte Drills sich nahtlos berühren — sonst wirkt die Vorlage
+    in der Cover-/Mini-Vorschau ausgewaschen weiss. Bei größerer Zelle
+    zusätzlich ein dunkler Kantenrand für Trennschärfe. Konsistent zur
     Canvas-Drill-Optik (siehe rendering_mixin._draw_diamond_drill).
     """
     from ..core.stitch_shapes import diamond_inset_pixels, diamond_should_draw_edge
@@ -297,14 +297,14 @@ def svg_shape_for_stitch(
     as_diamond: bool = False,
 ) -> str:
     """
-    Liefert ein SVG-Snippet (rect oder polygon) fuer einen Stich.
+    Liefert ein SVG-Snippet (rect oder polygon) für einen Stich.
 
     Args:
         stitch_type: 0 = voll (Rechteck), 1-7 = Polygon
         x, y: linke obere Ecke der Zelle in SVG-Pixeln
-        cell_w, cell_h: Zellgroesse
+        cell_w, cell_h: Zellgröße
         color: (R, G, B) 0-255
-        overdraw: Pixel-Ueberlappung, damit keine Luecken zwischen Zellen sichtbar werden
+        overdraw: Pixel-Überlappung, damit keine Lücken zwischen Zellen sichtbar werden
 
     Returns:
         SVG-String mit dem entsprechenden Element.
@@ -343,7 +343,7 @@ def svg_shape_for_stitch(
         )
 
     if is_bead(stitch_type):
-        # Perle: Stoff-Hintergrund + grosse Kugel mit Glanzpunkt fuer 3D-Effekt
+        # Perle: Stoff-Hintergrund + grosse Kugel mit Glanzpunkt für 3D-Effekt
         radius = max(1.0, min(cell_w, cell_h) * bead_radius_factor())
         cx = x + cell_w / 2.0
         cy = y + cell_h / 2.0
@@ -377,7 +377,7 @@ def svg_shape_for_stitch(
 
 def get_watermark(pattern: "Pattern") -> tuple[str, str]:
     """
-    Liefert (author, copyright) fuer Export-Footer.
+    Liefert (author, copyright) für Export-Footer.
 
     Reihenfolge der Quellen:
     1. `pattern.metadata['author' / 'copyright']` — pattern-spezifisch
@@ -410,10 +410,10 @@ def count_page_colors(
     end_y: int,
 ) -> dict[int, int]:
     """
-    Zaehlt Farb-Indizes auf einem rechteckigen Seitenausschnitt.
+    Zählt Farb-Indizes auf einem rechteckigen Seitenausschnitt.
 
-    Out-of-bounds-Koordinaten werden uebersprungen. Pro Zelle wird nur das
-    oberste sichtbare Layer gezaehlt.
+    Out-of-bounds-Koordinaten werden übersprungen. Pro Zelle wird nur das
+    oberste sichtbare Layer gezählt.
     """
     counts: dict[int, int] = {}
     width = pattern.width

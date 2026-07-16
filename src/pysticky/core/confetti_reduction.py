@@ -1,31 +1,31 @@
 """
-Confetti-Reduction fuer den Bild-Import.
+Confetti-Reduction für den Bild-Import.
 
 "Confetti" sind isolierte Einzelpixel- oder Mini-Cluster im quantisierten
-Pattern, die beim Sticken unverhaeltnismaessig viele Garn-Wechsel erzeugen
+Pattern, die beim Sticken unverhältnismäßig viele Garn-Wechsel erzeugen
 und kaum sichtbar sind. Die typische Profi-Quantisierung filtert sie nach
-der Quantisierung heraus, indem kleine zusammenhaengende Komponenten der
+der Quantisierung heraus, indem kleine zusammenhängende Komponenten der
 naheliegendsten dominanten Nachbarfarbe zugeordnet werden.
 
 Algorithmus:
 1. Connected-Component-Labeling auf dem Farbindex-Grid (4-Nachbarschaft).
-   Jeder Cluster hat eine Farbe und eine Groesse.
+   Jeder Cluster hat eine Farbe und eine Größe.
 2. Cluster mit `size < min_run_size` werden zur dominanten Nachbarfarbe
-   reassigned. "Dominante Nachbarfarbe" = haeufigste Farbe in den 8
+   reassigned. "Dominante Nachbarfarbe" = häufigste Farbe in den 8
    Nachbarn der Cluster-Pixel, die NICHT die eigene Farbe ist.
-3. Wiederhole bis nichts mehr geaendert wird oder Max-Iter erreicht.
+3. Wiederhole bis nichts mehr geändert wird oder Max-Iter erreicht.
 
 Iterativ, weil das Reassignen kleiner Cluster zwei vorher getrennte
-Cluster zu einem groesseren mergen kann, der dann wieder unter dem
+Cluster zu einem größeren mergen kann, der dann wieder unter dem
 Threshold liegen kann. In der Praxis konvergiert das in 2-3 Iterationen.
 
-Komplexitaet pro Iteration: O(N) wo N = width*height.
+Komplexität pro Iteration: O(N) wo N = width*height.
 
-Hinweis zur Performance: Das Connected-Component-Labeling laeuft als
+Hinweis zur Performance: Das Connected-Component-Labeling läuft als
 Python-BFS. Eine numpy-Union-Find-Variante wurde evaluiert, brachte aber
 nur ~1.1x (der Flaschenhals ist die Python-Traversierung, nicht die
 Kantenerkennung). Ein echter Speedup ginge nur mit scipy.ndimage.label —
-bewusst nicht als Dependency aufgenommen. Confetti laeuft ohnehin nur
+bewusst nicht als Dependency aufgenommen. Confetti läuft ohnehin nur
 einmalig beim Import, nicht interaktiv.
 """
 
@@ -45,13 +45,13 @@ def reduce_confetti(
     Reduziert Confetti im Farbindex-Grid.
 
     Args:
-        grid: 2D-int16-Array mit Farbindizes; NO_STITCH (-1) fuer leere Zellen.
-        min_run_size: Minimale Cluster-Groesse. Cluster mit size < min_run_size
+        grid: 2D-int16-Array mit Farbindizes; NO_STITCH (-1) für leere Zellen.
+        min_run_size: Minimale Cluster-Größe. Cluster mit size < min_run_size
                       werden absorbiert. min_run_size <= 1 ist No-Op.
         max_iterations: Max. Anzahl Iterationen. Default 5 reicht in der Praxis.
 
     Returns:
-        Neues Grid (Kopie) mit reduziertem Confetti. Original bleibt unveraendert.
+        Neues Grid (Kopie) mit reduziertem Confetti. Original bleibt unverändert.
     """
     if min_run_size <= 1:
         return grid.copy()
@@ -73,7 +73,7 @@ def _reduce_once(
 ) -> tuple[np.ndarray, bool]:
     """Eine Iteration der Confetti-Reduktion. Liefert (neues_grid, changed)."""
     labels, sizes = _connected_components(grid)
-    # labels[y,x] = Cluster-ID (>=0) oder -1 fuer NO_STITCH
+    # labels[y,x] = Cluster-ID (>=0) oder -1 für NO_STITCH
     # sizes[i] = Anzahl Pixel im Cluster i
 
     if labels.max() < 0:
@@ -115,7 +115,7 @@ def _reduce_once(
             # Kein Nachbar mit anderer Farbe -> Cluster bleibt
             continue
 
-        # Haeufigste Nachbarfarbe (ties brechen durch kleineren Index)
+        # Häufigste Nachbarfarbe (ties brechen durch kleineren Index)
         best_color = max(neighbor_counts.items(), key=lambda kv: (kv[1], -kv[0]))[0]
         for py, px in pixels:
             new_grid[py, px] = best_color
@@ -130,8 +130,8 @@ def _connected_components(grid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
     Returns:
         labels: int32-Array, gleiche Shape wie grid.
-                labels[y,x] = Cluster-ID (>=0) oder -1 fuer NO_STITCH.
-        sizes:  int32-Array mit sizes[i] = Pixel-Count fuer Cluster i.
+                labels[y,x] = Cluster-ID (>=0) oder -1 für NO_STITCH.
+        sizes:  int32-Array mit sizes[i] = Pixel-Count für Cluster i.
     """
     h, w = grid.shape
     labels = np.full((h, w), -1, dtype=np.int32)

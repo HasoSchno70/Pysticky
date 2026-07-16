@@ -47,7 +47,7 @@ FILE_FORMAT_NAME = "pysticky"
 # (zusammen mit der Versionshistorie) — hier nicht duplizieren.
 
 # UI- und Autosave-Defaults wohnen in pysticky.config (UI_CONFIG, FILE_CONFIG).
-# Wer hier Fenstergroessen erwartet hat: nutze UI_CONFIG.default_window_*.
+# Wer hier Fenstergrößen erwartet hat: nutze UI_CONFIG.default_window_*.
 
 # === Bildimport ===
 SUPPORTED_IMAGE_FORMATS = [

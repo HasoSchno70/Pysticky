@@ -21,7 +21,7 @@ from .replace_color_dialog import ColorBox
 
 
 def _color_icon(r: int, g: int, b: int, size: int = 18) -> QIcon:
-    """Liefert ein QIcon mit gefuelltem Farbquadrat fuer Combobox-Items."""
+    """Liefert ein QIcon mit gefülltem Farbquadrat für Combobox-Items."""
     pm = QPixmap(size, size)
     pm.fill(QColor(0, 0, 0, 0))
     painter = QPainter(pm)

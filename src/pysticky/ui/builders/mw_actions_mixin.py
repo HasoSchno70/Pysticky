@@ -178,7 +178,7 @@ class ActionsBuilderMixin:
         self.action_screen_eyedropper = QAction(t("Farbe vom &Bildschirm picken..."), self)
         self.action_screen_eyedropper.setToolTip(
             t(
-                "Erfasst den Bildschirm und laesst dich eine Farbe von ueberall "
+                "Erfasst den Bildschirm und lässt dich eine Farbe von überall "
                 "(Browser, Foto-Viewer, anderer Editor) picken. Die nahe gelegene "
                 "Garn-Entsprechung wird automatisch zur Pattern-Palette hinzugefuegt."
             )
@@ -188,7 +188,7 @@ class ActionsBuilderMixin:
         self.action_plugins = QAction(t("&Plugins..."), self)
         self.action_plugins.setToolTip(
             t(
-                "Plugins durchsuchen und ausfuehren — eigene Python-Skripte, "
+                "Plugins durchsuchen und ausführen — eigene Python-Skripte, "
                 "die das Pattern manipulieren (Rahmen, Schachbrett, Symmetrie, ...)."
             )
         )
@@ -198,7 +198,7 @@ class ActionsBuilderMixin:
         self.action_blend_threads.setToolTip(
             t(
                 "Zwei Garne kombinieren (z.B. 1 Strang DMC 310 + 1 Strang DMC 745) "
-                "fuer Salt&Pepper-/Tweed-Effekte. Perzeptueller Mix in CIE-Lab."
+                "für Salt&Pepper-/Tweed-Effekte. Perzeptueller Mix in CIE-Lab."
             )
         )
         self.action_blend_threads.triggered.connect(self._on_blend_threads)
@@ -285,9 +285,9 @@ class ActionsBuilderMixin:
         self.action_flip_v.triggered.connect(self._on_flip_vertical)
 
         # Auswahl-Operationen (Handler in SelectionHandlersMixin).
-        # Die Handler pruefen selbst, ob eine Auswahl existiert — fehlt sie,
+        # Die Handler prüfen selbst, ob eine Auswahl existiert — fehlt sie,
         # ist die Aktion ein No-Op. Shortcuts sind als QAction registriert,
-        # damit sie unabhaengig vom aktiven Tool und Canvas-Fokus funktionieren.
+        # damit sie unabhängig vom aktiven Tool und Canvas-Fokus funktionieren.
         self.action_selection_copy = QAction(t("&Kopieren"), self)
         self.action_selection_copy.setShortcut(QKeySequence.StandardKey.Copy)
         self.action_selection_copy.setToolTip(t("Auswahl kopieren (Ctrl+C)"))

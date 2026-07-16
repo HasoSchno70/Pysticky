@@ -2,7 +2,7 @@
 Stick-Session-Timer.
 
 Misst die Zeit, die der User im Sticken-Modus verbringt, und schreibt
-sie in `pattern.metadata` — pro Pattern persistent ueber die .pxs-Datei.
+sie in `pattern.metadata` — pro Pattern persistent über die .pxs-Datei.
 
 Konvention auf `Pattern.metadata`:
     total_stitch_seconds: int  — kumulierte Stick-Zeit in Sekunden
@@ -16,7 +16,7 @@ trivial benutzbar (siehe `tests/`).
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .pattern import Pattern
@@ -32,18 +32,18 @@ def get_total_seconds(pattern: "Pattern") -> int:
 
 
 def is_session_active(pattern: "Pattern") -> bool:
-    """True, wenn eine Session laeuft (start gesetzt, noch nicht gestoppt)."""
+    """True, wenn eine Session läuft (start gesetzt, noch nicht gestoppt)."""
     return META_START in pattern.metadata
 
 
-def start_session(pattern: "Pattern", now: Optional[float] = None) -> None:
+def start_session(pattern: "Pattern", now: float | None = None) -> None:
     """Startet eine Session. No-op wenn bereits aktiv."""
     if is_session_active(pattern):
         return
     pattern.metadata[META_START] = float(now if now is not None else time.time())
 
 
-def stop_session(pattern: "Pattern", now: Optional[float] = None) -> int:
+def stop_session(pattern: "Pattern", now: float | None = None) -> int:
     """Beendet die Session und addiert die Dauer zur Gesamt-Zeit.
 
     Returns:

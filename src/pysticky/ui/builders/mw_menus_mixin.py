@@ -188,8 +188,8 @@ class MenuBuilderMixin:
         extras_menu.addSeparator()
         extras_menu.addAction(self.action_settings)
 
-    # Stichtyp-Konfiguration. Reihenfolge bestimmt Menue + Status-Label.
-    # (stitch_type_id, Glyphe fuer Status, Menue-Label, Alt-Nummer)
+    # Stichtyp-Konfiguration. Reihenfolge bestimmt Menü + Status-Label.
+    # (stitch_type_id, Glyphe für Status, Menü-Label, Alt-Nummer)
     STITCH_TYPE_ENTRIES = (
         (0, "✕", "Voller Kreuzstich (X)", "1"),
         (1, "◤", "Halber Stich / (oben-links)", "2"),
@@ -239,7 +239,7 @@ class MenuBuilderMixin:
         if hasattr(self, "label_stitch_type"):
             self.label_stitch_type.setText(f"{glyph} {label}")
 
-        # Menue-Action checked-State synchronisieren
+        # Menü-Action checked-State synchronisieren
         if hasattr(self, "actions_stitch_type"):
             action = self.actions_stitch_type.get(stype)
             if action and not action.isChecked():

@@ -1,15 +1,13 @@
 """
 Plugin-Picker- und -Runner-Dialog.
 
-Zeigt eine Liste aller entdeckten Plugins und laesst den User eines
-auswaehlen und ausfuehren. Der Dialog ist gleichzeitig der `PluginContext`
-fuer die Plugin-Laufzeit — er beantwortet `prompt_int`/`prompt_str` via
+Zeigt eine Liste aller entdeckten Plugins und lässt den User eines
+auswählen und ausführen. Der Dialog ist gleichzeitig der `PluginContext`
+für die Plugin-Laufzeit — er beantwortet `prompt_int`/`prompt_str` via
 Qt-Input-Dialoge und zeigt `show_message`/`show_error` als Toast.
 """
 
 from __future__ import annotations
-
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -31,11 +29,11 @@ from ...plugins import Plugin, PluginError, discover_plugins, run_plugin
 
 
 class PluginDialog(QDialog):
-    """Dialog zur Auswahl und Ausfuehrung eines Plugins."""
+    """Dialog zur Auswahl und Ausführung eines Plugins."""
 
     def __init__(self, pattern, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle(t("Plugin ausfuehren"))
+        self.setWindowTitle(t("Plugin ausführen"))
         self.setMinimumSize(560, 420)
         self._pattern = pattern
         self._plugins: list[Plugin] = []
@@ -75,7 +73,7 @@ class PluginDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self.btn_run = QPushButton(t("Plugin ausfuehren"))
+        self.btn_run = QPushButton(t("Plugin ausführen"))
         self.btn_run.setEnabled(False)
         self.btn_run.clicked.connect(self._on_run)
         btn_row.addWidget(self.btn_run)
@@ -137,7 +135,7 @@ class PluginDialog(QDialog):
 
         QMessageBox.information(
             self,
-            t("Plugin ausgefuehrt"),
+            t("Plugin ausgeführt"),
             t("Plugin: %s") % plugin.name,
         )
         self.accept()
@@ -156,16 +154,16 @@ class PluginDialog(QDialog):
         default: int = 0,
         minimum: int = 0,
         maximum: int = 1_000_000,
-    ) -> Optional[int]:
+    ) -> int | None:
         value, ok = QInputDialog.getInt(self, question, question, default, minimum, maximum)
         return value if ok else None
 
-    def prompt_str(self, question: str, default: str = "") -> Optional[str]:
+    def prompt_str(self, question: str, default: str = "") -> str | None:
         value, ok = QInputDialog.getText(self, question, question, text=default)
         return value if ok else None
 
     def progress(self, value: float, text: str = "") -> None:
         # Aktuell keine Progress-Bar im Dialog — Hook offen halten.
-        # Wenn Plugins lange laufen, kann man das spaeter mit QProgressBar fuellen.
+        # Wenn Plugins lange laufen, kann man das später mit QProgressBar füllen.
         _ = value
         _ = text

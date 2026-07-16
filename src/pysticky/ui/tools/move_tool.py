@@ -4,9 +4,9 @@ Bewegen-Werkzeug (Hand-Tool / Pan).
 Reines Navigations-Tool im Photoshop-Stil:
 - Linksklick + Drag pannt die Ansicht.
 - Klick allein setzt keinen Stich — der Tool-Code gibt leere Change-Listen
-  zurueck; die Pan-Logik selbst sitzt im Canvas-MouseEventsMixin und wird
-  aktiviert, sobald das MOVE-Tool ausgewaehlt ist.
-- Mittelmaus-Pan bleibt unabhaengig vom aktiven Werkzeug verfuegbar.
+  zurück; die Pan-Logik selbst sitzt im Canvas-MouseEventsMixin und wird
+  aktiviert, sobald das MOVE-Tool ausgewählt ist.
+- Mittelmaus-Pan bleibt unabhängig vom aktiven Werkzeug verfügbar.
 """
 
 from PySide6.QtCore import Qt
@@ -16,7 +16,7 @@ from .base_tool import BaseTool, ToolContext
 
 
 class MoveTool(BaseTool):
-    """No-op-Werkzeug fuer Pan-Navigation."""
+    """No-op-Werkzeug für Pan-Navigation."""
 
     def get_cursor(self) -> Qt.CursorShape:
         return Qt.CursorShape.OpenHandCursor

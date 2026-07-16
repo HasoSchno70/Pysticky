@@ -9,7 +9,7 @@ import logging
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Iterator
 
 from .color_math import delta_e_sq, rgb_to_lab
 from .thread import Thread, ThreadColor
@@ -50,7 +50,7 @@ class ThreadPalette:
     def __getitem__(self, index: int) -> Thread:
         return self.threads[index]
 
-    def find_by_number(self, number: str) -> Optional[Thread]:
+    def find_by_number(self, number: str) -> Thread | None:
         """Findet ein Garn nach Katalognummer."""
         for thread in self.threads:
             if thread.catalog_number == number:
@@ -68,7 +68,7 @@ class ThreadPalette:
 
         Nutzt Delta-E (CIE76) statt RGB-Euklid — konsistent mit der
         Cross-Reference-Suche (thread_cross_ref.find_equivalent) und
-        wahrnehmungsmaessig korrekter.
+        wahrnehmungsmäßig korrekter.
 
         Args:
             color: Zielfarbe
@@ -149,9 +149,9 @@ class PaletteManager:
         # "DMC_Diamond_Painting_Farben" -> "DMC Diamond Painting" (is_diamond=True)
         parts = filename.replace("_Farben", "").replace("_Stickgarn", "").replace("_Stick", "")
         manufacturer = parts.replace("_", " ").strip()
-        # Bead-Erkennung: Manufacturer-Name enthaelt "Bead" (case-insensitive)
+        # Bead-Erkennung: Manufacturer-Name enthält "Bead" (case-insensitive)
         is_beads = "bead" in manufacturer.lower()
-        # Diamond-Painting-Erkennung: Manufacturer-Name enthaelt "Diamond"
+        # Diamond-Painting-Erkennung: Manufacturer-Name enthält "Diamond"
         # (case-insensitive). Beads und Diamond schliessen sich aus —
         # ein Drill ist keine Perle.
         is_diamond = (not is_beads) and ("diamond" in manufacturer.lower())
@@ -192,7 +192,7 @@ class PaletteManager:
         self._palettes[manufacturer] = palette
         logger.debug(f"Palette geladen: {manufacturer} ({len(threads)} Farben)")
 
-    def get_palette(self, name: str) -> Optional[ThreadPalette]:
+    def get_palette(self, name: str) -> ThreadPalette | None:
         """Gibt eine Palette nach Name zurück (thread-sicher)."""
         with self._lock:
             return self._palettes.get(name)
@@ -237,7 +237,7 @@ class PaletteManager:
 
 
 # Thread-sichere Singleton-Implementierung
-_palette_manager: Optional[PaletteManager] = None
+_palette_manager: PaletteManager | None = None
 _singleton_lock = threading.Lock()
 
 

@@ -3,12 +3,12 @@ Smart-Resize: skaliert ein Pattern mit Stitch-Redistribution.
 
 Im Gegensatz zum normalen `Pattern.resize` (croppt oder padded mit leeren
 Zellen), interpretiert smart-resize das Pattern als Pixel-Bild, skaliert
-es bilinear hoch/runter, und mappt jeden Pixel zurueck auf die naheste
+es bilinear hoch/runter, und mappt jeden Pixel zurück auf die naheste
 existierende Farbe der Palette (Lab-Distance).
 
 Anwendungsfall: User hat ein 50×50-Pattern und will es als 100×100 stricken
 — smart-resize zeichnet die Stiche neu, statt einfach 50% leere Zellen
-am Rand zu ergaenzen.
+am Rand zu ergänzen.
 """
 
 from __future__ import annotations
@@ -27,22 +27,22 @@ def smart_resize(pattern: "Pattern", new_width: int, new_height: int) -> None:
     """
     Skaliert das Pattern auf (new_width, new_height) mit Stitch-Redistribution.
 
-    Aenderungen werden direkt auf das Pattern angewendet:
+    Änderungen werden direkt auf das Pattern angewendet:
     - Alle Layer werden bilinear hochskaliert
     - Pro Pixel wird zur naheliegendsten existierenden Farbe gesnappt
-    - Stitch-Type-Grid wird mit nearest-neighbor uebernommen
+    - Stitch-Type-Grid wird mit nearest-neighbor übernommen
     - Backstitches werden proportional skaliert (in halben Stichen)
 
     Args:
         pattern: Das zu skalierende Pattern (wird mutiert).
         new_width: Neue Breite in Stichen (min. 1).
-        new_height: Neue Hoehe in Stichen (min. 1).
+        new_height: Neue Höhe in Stichen (min. 1).
 
     Raises:
-        ValueError: bei ungueltigen Dimensionen.
+        ValueError: bei ungültigen Dimensionen.
     """
     if new_width < 1 or new_height < 1:
-        raise ValueError(f"Ungueltige Groesse: {new_width}x{new_height}")
+        raise ValueError(f"Ungueltige Größe: {new_width}x{new_height}")
 
     old_w = pattern.width
     old_h = pattern.height

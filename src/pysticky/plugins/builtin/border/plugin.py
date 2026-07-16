@@ -1,7 +1,7 @@
 """
 Plugin: Rahmen generieren.
 
-Fragt nach Abstand vom Rand und Linienstaerke und zeichnet einen rechteckigen
+Fragt nach Abstand vom Rand und Linienstärke und zeichnet einen rechteckigen
 Rahmen in der aktuell aktiven Farbe (color_index 0 wenn keine aktive Farbe).
 """
 
@@ -19,7 +19,7 @@ def run(pattern, ctx) -> None:
         return
 
     thickness = ctx.prompt_int(
-        "Linienstaerke (in Stichen)?",
+        "Linienstärke (in Stichen)?",
         default=1,
         minimum=1,
         maximum=10,
@@ -28,7 +28,7 @@ def run(pattern, ctx) -> None:
         return
 
     if not pattern.color_entries:
-        ctx.show_error("Pattern hat keine Farben — bitte erst eine Farbe hinzufuegen.")
+        ctx.show_error("Pattern hat keine Farben — bitte erst eine Farbe hinzufügen.")
         return
 
     color_index = 0  # Erste Farbe — Plugins haben keinen Zugriff auf

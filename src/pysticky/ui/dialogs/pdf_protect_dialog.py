@@ -2,10 +2,8 @@
 PDF-Schutz-Dialog.
 
 Konfiguriert Passwort, Wasserzeichen und Druck-/Kopier-Berechtigungen
-fuer den PDF-Export. Erscheint optional vor dem eigentlichen Export.
+für den PDF-Export. Erscheint optional vor dem eigentlichen Export.
 """
-
-from typing import Optional
 
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -71,11 +69,11 @@ class PdfProtectDialog(QDialog):
         layout.addWidget(buttons)
 
     @property
-    def password(self) -> Optional[str]:
+    def password(self) -> str | None:
         return self.edit_password.text() or None
 
     @property
-    def watermark(self) -> Optional[str]:
+    def watermark(self) -> str | None:
         return self.edit_watermark.text().strip() or None
 
     @property

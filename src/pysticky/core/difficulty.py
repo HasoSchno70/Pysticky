@@ -1,15 +1,15 @@
 """
-Schwierigkeits-Heuristik fuer ein Muster.
+Schwierigkeits-Heuristik für ein Muster.
 
 Gewichteter Score, der vier Dimensionen zusammenfasst:
-- Anzahl verwendeter Farben (mehr Farben = haeufigere Fadenwechsel)
+- Anzahl verwendeter Farben (mehr Farben = häufigere Fadenwechsel)
 - Anteil Spezial-Stiche (Halb-/Viertel-Stiche, French Knots, Beads)
-- Anzahl Backstitch-Linien (Konturen brauchen Praezision)
+- Anzahl Backstitch-Linien (Konturen brauchen Präzision)
 - Gesamt-Stichanzahl (Geduld)
 
-Output ist ein dict mit `level` (Anfaenger / Mittel / Fortgeschritten / Profi),
-einem numerischen `score` und der `factors`-Aufschluesselung. Die Funktion ist
-pur (keine Side-Effects, keine Qt-Abhaengigkeit) und damit gut testbar.
+Output ist ein dict mit `level` (Anfänger / Mittel / Fortgeschritten / Profi),
+einem numerischen `score` und der `factors`-Aufschlüsselung. Die Funktion ist
+pur (keine Side-Effects, keine Qt-Abhängigkeit) und damit gut testbar.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ def _color_score(used_colors: int) -> int:
 
 
 def _size_score(stitches_to_do: int) -> int:
-    """0–3 Punkte fuer Geduld — basiert auf Anzahl zu stickender Stiche."""
+    """0–3 Punkte für Geduld — basiert auf Anzahl zu stickender Stiche."""
     if stitches_to_do <= 1_000:
         return 0
     if stitches_to_do <= 5_000:
@@ -46,7 +46,7 @@ def _size_score(stitches_to_do: int) -> int:
 
 
 def _special_stitch_score(special_ratio: float) -> int:
-    """0–3 Punkte fuer Anteil Sonder-Stiche (0.0 - 1.0)."""
+    """0–3 Punkte für Anteil Sonder-Stiche (0.0 - 1.0)."""
     if special_ratio < 0.02:
         return 0
     if special_ratio < 0.10:
@@ -57,7 +57,7 @@ def _special_stitch_score(special_ratio: float) -> int:
 
 
 def _backstitch_score(backstitches: int) -> int:
-    """0–3 Punkte fuer die Anzahl Backstitch-Linien."""
+    """0–3 Punkte für die Anzahl Backstitch-Linien."""
     if backstitches == 0:
         return 0
     if backstitches <= 30:
@@ -90,7 +90,7 @@ def compute_difficulty(pattern: "Pattern") -> dict:
     """
     import numpy as np
 
-    # Verwendete Farben (skip_stitching nicht zaehlen)
+    # Verwendete Farben (skip_stitching nicht zählen)
     used_colors = sum(
         1 for e in pattern.color_entries if e.stitch_count > 0 and not e.skip_stitching
     )
@@ -98,7 +98,7 @@ def compute_difficulty(pattern: "Pattern") -> dict:
     # Stiche zum Sticken
     stitches_to_do = sum(e.stitch_count for e in pattern.color_entries if not e.skip_stitching)
 
-    # Spezial-Stich-Anteil ueber alle sichtbaren Layer
+    # Spezial-Stich-Anteil über alle sichtbaren Layer
     total_stitch_cells = 0
     special_cells = 0
     for layer in pattern.layer_stack:

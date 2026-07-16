@@ -195,9 +195,9 @@ class PropertiesMixin:
 
         In diesem Modus werden FULL-Stiche als facettierte Drills gerendert
         (statt als einfarbige Quadrate), Symbole werden durch DMC-Nummern
-        ersetzt, und die Stoff-Textur wird durch ein DP-Grid abgeloest. Es
+        ersetzt, und die Stoff-Textur wird durch ein DP-Grid abgelöst. Es
         ist ein reines Rendering-Override — die Daten im Pattern bleiben
-        unveraendert.
+        unverändert.
         """
         return getattr(self, "_diamond_view", False)
 

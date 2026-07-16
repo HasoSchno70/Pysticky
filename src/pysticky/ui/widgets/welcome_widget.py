@@ -113,11 +113,11 @@ class _ActionTile(QFrame):
 class WelcomeWidget(QWidget):
     """Welcome-Screen mit Quick-Start-Aktionen.
 
-    Emittiert Signale fuer:
+    Emittiert Signale für:
     - new_clicked  — neues leeres Muster
-    - open_clicked — Datei-Oeffnen-Dialog
+    - open_clicked — Datei-Öffnen-Dialog
     - import_image_clicked — Bild importieren
-    - open_recent  — bestimmten Recent-Pfad oeffnen (str)
+    - open_recent  — bestimmten Recent-Pfad öffnen (str)
     """
 
     new_clicked = Signal()
@@ -215,7 +215,7 @@ class WelcomeWidget(QWidget):
         self._recent_list.setMaximumHeight(240)
         self._recent_list.setMinimumWidth(640)
         self._recent_list.setMaximumWidth(1100)
-        # Pfad-Elision: lange Pfade werden in der Mitte mit "…" gekuerzt
+        # Pfad-Elision: lange Pfade werden in der Mitte mit "…" gekürzt
         self._recent_list.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         self._recent_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._recent_list.setUniformItemSizes(True)
@@ -300,7 +300,7 @@ class WelcomeWidget(QWidget):
 
         Jedes Eintrag besteht aus zwei Zeilen:
         - Dateiname in fett (gut lesbar)
-        - Vollstaendiger Pfad in muted-Farbe (Elision via QListWidget)
+        - Vollständiger Pfad in muted-Farbe (Elision via QListWidget)
         """
         self._recent_files = list(files)
         self._recent_list.clear()
@@ -326,7 +326,7 @@ class WelcomeWidget(QWidget):
             )
             v_layout.addWidget(name_label)
 
-            # Pfad mittig mit "…" kuerzen, damit selbst sehr lange Pfade
+            # Pfad mittig mit "…" kürzen, damit selbst sehr lange Pfade
             # in eine Zeile passen. fontMetrics liefert die Pixel-Breite.
             from PySide6.QtGui import QFontMetrics
 
@@ -342,7 +342,7 @@ class WelcomeWidget(QWidget):
             v_layout.addWidget(path_label)
 
             item = QListWidgetItem()
-            # Groesse pro Item: gross genug fuer 2 Zeilen
+            # Größe pro Item: gross genug für 2 Zeilen
             item.setSizeHint(QSize(0, 44))
             item.setData(Qt.ItemDataRole.UserRole, path)
             item.setToolTip(path)

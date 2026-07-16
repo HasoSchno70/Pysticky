@@ -43,7 +43,7 @@ BUILTIN_PRESETS = [
         "quantization_method": "median_cut",
         "auto_backstitches": True,
     },
-    # Diamond-Painting-Presets: Groessen passen bei 2.5mm-Drill-Pitch
+    # Diamond-Painting-Presets: Größen passen bei 2.5mm-Drill-Pitch
     # 1:1 auf das jeweilige DIN-Format. "palette" springt automatisch auf
     # DMC Diamond Painting, "dp_mode" markiert das Pattern als DP.
     {

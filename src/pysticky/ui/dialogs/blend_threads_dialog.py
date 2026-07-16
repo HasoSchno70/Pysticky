@@ -3,15 +3,13 @@ Dialog zum Erzeugen von Tweed-Blends aus zwei Threads.
 
 Profis kombinieren z.B. 1 Strang DMC 310 + 1 Strang DMC 745 in einer
 Nadel, um "Salt&Pepper"- oder "Tweed"-Effekte zu erzeugen. Dieser Dialog
-laesst den User zwei Threads aus seinen geladenen Paletten auswaehlen,
-ein Strang-Verhaeltnis festlegen, und das Ergebnis als neuen Eintrag in
-die Pattern-Palette einfuegen.
+lässt den User zwei Threads aus seinen geladenen Paletten auswählen,
+ein Strang-Verhältnis festlegen, und das Ergebnis als neuen Eintrag in
+die Pattern-Palette einfügen.
 
 Die Mischfarbe wird perzeptuell im CIE-Lab-Raum berechnet — entspricht
 also dem, was der Stickerin am Ende auf dem Stoff begegnet.
 """
-
-from typing import Optional
 
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
@@ -38,7 +36,7 @@ class BlendThreadsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(t("Tweed-Blend erzeugen"))
         self.setMinimumWidth(440)
-        self._result_thread: Optional[Thread] = None
+        self._result_thread: Thread | None = None
 
         self._setup_ui()
         self._populate_palettes()
@@ -70,7 +68,7 @@ class BlendThreadsDialog(QDialog):
 
         form.addRow(t("Palette A:"), self.combo_palette_a)
         form.addRow(t("Garn A:"), self.combo_thread_a)
-        form.addRow(t("Straenge A:"), self.spin_strands_a)
+        form.addRow(t("Stränge A:"), self.spin_strands_a)
 
         # Komponente 2
         self.combo_palette_b = QComboBox()
@@ -82,7 +80,7 @@ class BlendThreadsDialog(QDialog):
 
         form.addRow(t("Palette B:"), self.combo_palette_b)
         form.addRow(t("Garn B:"), self.combo_thread_b)
-        form.addRow(t("Straenge B:"), self.spin_strands_b)
+        form.addRow(t("Stränge B:"), self.spin_strands_b)
 
         layout.addLayout(form)
 
@@ -104,7 +102,7 @@ class BlendThreadsDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("Zum Pattern hinzufuegen"))
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("Zum Pattern hinzufügen"))
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -136,7 +134,7 @@ class BlendThreadsDialog(QDialog):
         for combo in (self.combo_palette_a, self.combo_palette_b):
             combo.clear()
             combo.addItems(names)
-        # Default: beide auf DMC wenn vorhanden, sonst erste verfuegbare
+        # Default: beide auf DMC wenn vorhanden, sonst erste verfügbare
         if "DMC" in names:
             self.combo_palette_a.setCurrentText("DMC")
             self.combo_palette_b.setCurrentText("DMC")
@@ -154,7 +152,7 @@ class BlendThreadsDialog(QDialog):
             combo.addItem(label, userData=thread)
         self._update_preview()
 
-    def _selected_thread(self, combo: QComboBox) -> Optional[Thread]:
+    def _selected_thread(self, combo: QComboBox) -> Thread | None:
         idx = combo.currentIndex()
         if idx < 0:
             return None
@@ -164,7 +162,7 @@ class BlendThreadsDialog(QDialog):
         ta = self._selected_thread(self.combo_thread_a)
         tb = self._selected_thread(self.combo_thread_b)
         if ta is None or tb is None:
-            self.preview_text.setText(t("(Beide Garne waehlen)"))
+            self.preview_text.setText(t("(Beide Garne wählen)"))
             return
 
         try:
@@ -176,7 +174,7 @@ class BlendThreadsDialog(QDialog):
             self.preview_text.setText(f"Fehler: {e}")
             return
 
-        # Swatch einfaerben
+        # Swatch einfärben
         pal = self.preview_swatch.palette()
         pal.setColor(
             QPalette.ColorRole.Window,
@@ -204,6 +202,6 @@ class BlendThreadsDialog(QDialog):
         self.accept()
 
     @property
-    def result_thread(self) -> Optional[Thread]:
+    def result_thread(self) -> Thread | None:
         """Liefert den erzeugten Blend-Thread oder None wenn abgebrochen."""
         return self._result_thread

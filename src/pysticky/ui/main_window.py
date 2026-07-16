@@ -199,8 +199,8 @@ class MainWindow(
         central_layout.setSpacing(0)
 
         # Obere Icon-Leiste (self._toolbar) wurde bereits in _create_toolbar()
-        # gebaut — hier nur einhaengen, da sie kein natives QToolBar mehr ist
-        # und daher nicht ueber self.addToolBar() geht.
+        # gebaut — hier nur einhängen, da sie kein natives QToolBar mehr ist
+        # und daher nicht über self.addToolBar() geht.
         central_layout.addWidget(self._toolbar)
 
         body = QWidget()
@@ -349,7 +349,7 @@ class MainWindow(
         """
         from .styles import THEME
 
-        # Helper fuer Pill-Style mit Tint
+        # Helper für Pill-Style mit Tint
         def pill(bg_tint: str, fg: str) -> str:
             return (
                 f"QLabel {{ "
@@ -362,7 +362,7 @@ class MainWindow(
                 f"}}"
             )
 
-        # Tints: leicht transparent-ueber-bg, damit die Pill nicht zu kraeftig wirkt
+        # Tints: leicht transparent-über-bg, damit die Pill nicht zu kräftig wirkt
         primary_bg = QColor(THEME.accent_primary)
         primary_bg.setAlpha(50)
         secondary_bg = QColor(THEME.accent_secondary)
@@ -499,12 +499,12 @@ class MainWindow(
 
         p = self.current_pattern
         if scope == "full":
-            # Bulk-Update: Repaint waehrend des kompletten Pattern-Rebuilds
-            # aussetzen. Beim Laden eines Patterns ueber "Zuletzt geoeffnet"
+            # Bulk-Update: Repaint während des kompletten Pattern-Rebuilds
+            # aussetzen. Beim Laden eines Patterns über "Zuletzt geöffnet"
             # poppte sonst gelegentlich ein leeres Top-Level-Phantomfenster
             # auf — Qt rendert frisch konstruierte Widgets (ColorListItems,
             # Swatches, Tile-Previews) kurz unparented vor dem Layout-Einbau.
-            # setUpdatesEnabled(False) auf das MainWindow unterdrueckt all
+            # setUpdatesEnabled(False) auf das MainWindow unterdrückt all
             # diese Zwischen-Repaints und triggert einen einzelnen sauberen
             # Paint am Ende.
             self.setUpdatesEnabled(False)
@@ -512,7 +512,7 @@ class MainWindow(
                 self.canvas_container.set_pattern(p)
                 self.color_bar.set_pattern(p)
                 self.layer_panel.set_layer_stack(p.layer_stack)
-                # Pattern-Modus auf UI uebertragen — VOR update_info, damit das
+                # Pattern-Modus auf UI übertragen — VOR update_info, damit das
                 # Info-Panel direkt die richtigen Labels rendert.
                 self._apply_pattern_mode(
                     p is not None and getattr(p, "mode", "stitch") == "diamond",
@@ -606,7 +606,7 @@ class MainWindow(
         self._notify_panels(NotifyScope.FULL)
         self._update_title()
         # Pattern wurde explizit gesetzt — Welcome-Screen verschwindet,
-        # und _perform_start_action darf ihn nicht spaeter wieder zeigen
+        # und _perform_start_action darf ihn nicht später wieder zeigen
         # (relevant beim Start mit Demo-Pattern oder via Recovery).
         self._pattern_explicitly_set = True
         if hasattr(self, "canvas_container"):
@@ -622,7 +622,7 @@ class MainWindow(
         self._on_new()
 
     def _on_welcome_open(self) -> None:
-        """Welcome -> Datei oeffnen."""
+        """Welcome -> Datei öffnen."""
         self.canvas_container.show_welcome(False)
         self._on_open()
 
@@ -632,15 +632,15 @@ class MainWindow(
         self._on_import_image()
 
     def _on_welcome_open_recent(self, path: str) -> None:
-        """Welcome -> Recent-Datei oeffnen."""
+        """Welcome -> Recent-Datei öffnen."""
         self.canvas_container.show_welcome(False)
         self._open_recent_file(path)
 
     def _on_open_demo(self) -> None:
-        """Laedt das mitgelieferte Demo-Muster aus
+        """Lädt das mitgelieferte Demo-Muster aus
         `resources/examples/demo_kreuzstich.pxs` in eine User-schreibbare
-        Kopie. So kann der User das Demo speichern/aendern, ohne die
-        Bundled-Datei zu beruehren.
+        Kopie. So kann der User das Demo speichern/ändern, ohne die
+        Bundled-Datei zu berühren.
         """
         from ..core import load_pattern
         from ..core.i18n import t
@@ -649,7 +649,7 @@ class MainWindow(
         if not bundled.exists():
             QMessageBox.warning(
                 self,
-                t("Demo nicht verfuegbar"),
+                t("Demo nicht verfügbar"),
                 f"Demo-Datei nicht gefunden:\n{bundled}",
             )
             return
@@ -692,7 +692,7 @@ class MainWindow(
                 and entry.thread.manufacturer == thread.manufacturer
             ):
                 return i
-        # Pruefen ob Thread aus einer Bead- oder Diamond-Painting-Palette stammt
+        # Prüfen ob Thread aus einer Bead- oder Diamond-Painting-Palette stammt
         from ..core.palette import get_palette_manager
 
         pm = get_palette_manager()

@@ -1,8 +1,8 @@
 """
-Plugin: Linke Haelfte horizontal spiegeln.
+Plugin: Linke Hälfte horizontal spiegeln.
 
-Kopiert die linke Haelfte des Patterns (Spalten 0 .. width/2 - 1) gespiegelt
-auf die rechte Haelfte (Spalten width/2 .. width - 1). Stitch-Type wird
+Kopiert die linke Hälfte des Patterns (Spalten 0 .. width/2 - 1) gespiegelt
+auf die rechte Hälfte (Spalten width/2 .. width - 1). Stitch-Type wird
 mitgespiegelt (HALF_TL_BR -> HALF_TR_BL etc., entsprechend `stitch.FLIP_H_MAP`).
 """
 
@@ -21,7 +21,7 @@ def run(pattern, ctx) -> None:
     width = pattern.width
     height = pattern.height
     if width < 2:
-        ctx.show_error("Pattern zu schmal (mindestens 2 Spalten noetig).")
+        ctx.show_error("Pattern zu schmal (mindestens 2 Spalten nötig).")
         return
 
     half = width // 2

@@ -1,5 +1,5 @@
 """
-Thumbnail-Widget fuer die Muster-Bibliothek.
+Thumbnail-Widget für die Muster-Bibliothek.
 
 Stellt ein einzelnes Muster als anklickbares Vorschaubild
 mit Name und Favoriten-Markierung dar.
@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PySide6.QtGui import QColor, QContextMenuEvent, QImage, QMouseEvent, QPainter, QPixmap
+from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
 from ...core.file_io import load_pattern
 from ..styles import THEME
@@ -21,14 +20,19 @@ from .pattern_library_data import LibraryEntry
 
 
 class ThumbnailWidget(QFrame):
-    """Widget fuer ein einzelnes Muster-Thumbnail."""
+    """Widget für ein einzelnes Muster-Thumbnail."""
 
     clicked = Signal(object)  # Sendet LibraryEntry
     double_clicked = Signal(object)
     context_menu_requested = Signal(object, object)  # Entry, QPoint
     thumbnail_saved = Signal()  # Thumbnail wurde im Cache gespeichert
 
-    def __init__(self, entry: LibraryEntry, thumbnails_dir: Optional[Path] = None, parent=None):
+    def __init__(
+        self,
+        entry: LibraryEntry,
+        thumbnails_dir: Path | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
         self.entry = entry
         self._thumbnails_dir = thumbnails_dir
@@ -75,7 +79,7 @@ class ThumbnailWidget(QFrame):
         # Thumbnail laden oder generieren
         self._load_thumbnail()
 
-    def _update_style(self):
+    def _update_style(self) -> None:
         """Aktualisiert den Style basierend auf Selektion."""
         if self._selected:
             self.setStyleSheet(f"""
@@ -98,13 +102,13 @@ class ThumbnailWidget(QFrame):
                 }}
             """)
 
-    def set_selected(self, selected: bool):
+    def set_selected(self, selected: bool) -> None:
         """Setzt den Selektionszustand."""
         self._selected = selected
         self._update_style()
 
-    def _load_thumbnail(self):
-        """Laedt oder generiert das Thumbnail."""
+    def _load_thumbnail(self) -> None:
+        """Lädt oder generiert das Thumbnail."""
         # Versuche gespeichertes Thumbnail zu laden
         if self.entry.thumbnail_path:
             thumb_path = Path(self.entry.thumbnail_path)
@@ -125,7 +129,7 @@ class ThumbnailWidget(QFrame):
         pattern_path = Path(self.entry.filepath)
         if pattern_path.exists():
             try:
-                # Verzoegert laden um UI nicht zu blockieren
+                # Verzögert laden um UI nicht zu blockieren
                 QTimer.singleShot(50, self._generate_thumbnail)
             except (OSError, ValueError):
                 pass
@@ -140,7 +144,7 @@ class ThumbnailWidget(QFrame):
             font-size: 10px;
         """)
 
-    def _generate_thumbnail(self):
+    def _generate_thumbnail(self) -> None:
         """Generiert ein Thumbnail aus dem Pattern und speichert es im Cache."""
         try:
             pattern = load_pattern(self.entry.filepath)
@@ -187,18 +191,18 @@ class ThumbnailWidget(QFrame):
         except (OSError, ValueError):
             pass
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """Mausklick-Handler."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.entry)
         super().mousePressEvent(event)
 
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         """Doppelklick-Handler."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.double_clicked.emit(self.entry)
         super().mouseDoubleClickEvent(event)
 
-    def contextMenuEvent(self, event):
-        """Kontextmenue-Handler."""
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        """Kontextmenü-Handler."""
         self.context_menu_requested.emit(self.entry, event.globalPos())

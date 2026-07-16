@@ -24,7 +24,7 @@ class HTMLPagesMixin(_Base):
     def _build_page_mini_index(self, pages_x: int, pages_y: int, cur_x: int, cur_y: int) -> str:
         """DEPRECATED: durch _build_page_navigator ersetzt.
 
-        Bleibt als no-op fuer eventuelle externe Aufrufer — die kombinierte
+        Bleibt als no-op für eventuelle externe Aufrufer — die kombinierte
         Navigator-Box rendert jetzt Index + Pfeile zusammen.
         """
         return ""
@@ -45,7 +45,7 @@ class HTMLPagesMixin(_Base):
             .            [↓ L]                  .
 
         Die Pfeile zeigen, welche Seite an der jeweiligen Druck-Kante
-        anschliesst — hilfreich beim Aneinanderlegen ausgedruckter Blaetter.
+        anschliesst — hilfreich beim Aneinanderlegen ausgedruckter Blätter.
         Das Index-Grid in der Mitte hebt die aktuelle Seite hervor.
 
         Bei 1x1-Patterns (eine einzige Seite) komplett leerer Output.
@@ -140,8 +140,8 @@ class HTMLPagesMixin(_Base):
 
         # Zellgröße für Musterseiten. Im DP-Modus auf den Drill-Pitch in
         # Pixeln umgerechnet (~96 DPI Annahme), damit die Bildschirm-
-        # Anzeige in etwa die echte Drill-Groesse zeigt. Plus separate
-        # @media-print-CSS-Regel mit mm-Einheiten fuer den exakten Druck —
+        # Anzeige in etwa die echte Drill-Größe zeigt. Plus separate
+        # @media-print-CSS-Regel mit mm-Einheiten für den exakten Druck —
         # siehe _build_dp_print_css() im HTML-Header.
         dp_cell_mm = getattr(self, "_dp_cell_mm", None)
         if dp_cell_mm:
@@ -150,7 +150,7 @@ class HTMLPagesMixin(_Base):
         else:
             cell_size = 16
 
-        # Working-Chart-Overlap: jede Seite zeigt zusaetzlich die ersten
+        # Working-Chart-Overlap: jede Seite zeigt zusätzlich die ersten
         # N Stiche der Nachbarseite zur Orientierung beim Aneinanderlegen.
         overlap = getattr(self, "page_overlap_stitches", 0) or 0
 
@@ -158,7 +158,7 @@ class HTMLPagesMixin(_Base):
             for page_x in range(pages_x):
                 start_x = page_x * self.STITCHES_PER_PAGE_X
                 start_y = page_y * self.STITCHES_PER_PAGE_Y
-                # Effektives Page-End ist Page-Size + Overlap, aber nicht ueber
+                # Effektives Page-End ist Page-Size + Overlap, aber nicht über
                 # Pattern-Grenze hinaus. Auf der letzten Seite gibt es nichts
                 # zum Overlappen, also begrenzt die Pattern-Width das.
                 core_end_x = start_x + self.STITCHES_PER_PAGE_X - 1
@@ -249,7 +249,7 @@ class HTMLPagesMixin(_Base):
 
                         if is_dp_cells:
                             # DP: farbiges Cell mit Drill-Farbe als Hintergrund.
-                            # Die echte Drill-Facetten-Optik kommt ueber das
+                            # Die echte Drill-Facetten-Optik kommt über das
                             # SVG-Overlay; hier reicht die solide Farbe als
                             # Klebevorlage.
                             rgb = self._get_pixel_color(mx, my)
@@ -281,8 +281,8 @@ class HTMLPagesMixin(_Base):
                     end_stitch_y=end_y + 1,
                 )
 
-                # Halbstiche/Viertel/Dreiviertel-SVG fuer diese Seite —
-                # zeigt Form + Farbe, das Symbol kommt aus der Tabelle drueber.
+                # Halbstiche/Viertel/Dreiviertel-SVG für diese Seite —
+                # zeigt Form + Farbe, das Symbol kommt aus der Tabelle drüber.
                 partial_svg = self._generate_partial_stitches_svg(
                     cell_size,
                     offset_x=cell_size + 2,
@@ -310,7 +310,7 @@ class HTMLPagesMixin(_Base):
                     threads_needed = count * 3  # Einzelfäden
 
                     code = _html_encode(thread.catalog_number or "")
-                    # Im DP-Modus: kein Symbol, dafuer Code prominent.
+                    # Im DP-Modus: kein Symbol, dafür Code prominent.
                     from .export_common import is_diamond_mode
 
                     if is_diamond_mode(self.pattern):

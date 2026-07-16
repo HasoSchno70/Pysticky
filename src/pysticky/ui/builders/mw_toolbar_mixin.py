@@ -26,8 +26,8 @@ class ToolbarBuilderMixin:
 
         Eigenes ``IconToolBar``-Widget statt nativer ``QToolBar`` — dadurch
         scrollt die Leiste bei schmalen Fenstern per Hover genauso wie die
-        linke Werkzeugleiste, statt Qt's ">>"-Ueberlaufmenue zu zeigen.
-        Eingehaengt wird sie in ``_create_central_widget`` (MainWindow).
+        linke Werkzeugleiste, statt Qt's ">>"-Überlaufmenü zu zeigen.
+        Eingehängt wird sie in ``_create_central_widget`` (MainWindow).
         """
         self._emoji_actions: list[tuple[QAction, str, int]] = []
         self._emoji_buttons: list[tuple[QToolButton, str, int]] = []
@@ -36,7 +36,7 @@ class ToolbarBuilderMixin:
         toolbar = IconToolBar()
         self._toolbar = toolbar
 
-        # === DATEI === (gruen)
+        # === DATEI === (grün)
         self._add_toolbar_action(toolbar, self.action_new, "📄", t("Neu"), section="file")
         self._add_toolbar_action(toolbar, self.action_open, "📂", t("Öffnen"), section="file")
         self._add_toolbar_action(toolbar, self.action_save, "💾", t("Speichern"), section="file")
@@ -82,7 +82,7 @@ class ToolbarBuilderMixin:
 
         # === EINSTELLUNGEN ===
         # Garn-Vorrat bekommt einen eigenen Toolbar-Button — vorher nur tief
-        # im Bearbeiten-Menue versteckt (schwer zu finden, siehe User-Feedback).
+        # im Bearbeiten-Menü versteckt (schwer zu finden, siehe User-Feedback).
         self._add_toolbar_action(
             toolbar, self.action_inventory, "🧶", t("Garn-Vorrat"), section="misc"
         )
@@ -102,7 +102,7 @@ class ToolbarBuilderMixin:
         Top-Level-Widgets und Qt zeigt sie beim ersten Show-Event als
         14×15-Phantomfenster im Tab-Bar-Bereich. Das war besonders beim
         DP→Stick-Wechsel sichtbar, weil dort die Toolbar-Repaints durch
-        die ``setUpdatesEnabled``-Rueckkehr getriggert wurden.
+        die ``setUpdatesEnabled``-Rückkehr getriggert wurden.
         """
         wrapper = QWidget(toolbar)
         wrapper.setFixedWidth(14)
@@ -123,7 +123,7 @@ class ToolbarBuilderMixin:
         toolbar.addWidget(wrapper)
 
     def _add_stitch_type_picker(self: "MainWindow", toolbar: IconToolBar) -> None:
-        """Fuegt einen kompakten Stichtyp-Picker (QComboBox mit Glyphen) hinzu."""
+        """Fügt einen kompakten Stichtyp-Picker (QComboBox mit Glyphen) hinzu."""
         # parent=toolbar verhindert Top-Level-Phantom beim ersten Show.
         self.combo_stitch_type_label = QLabel(t("Stich:"), toolbar)
         self.combo_stitch_type_label.setStyleSheet(
@@ -134,12 +134,12 @@ class ToolbarBuilderMixin:
         self.combo_stitch_type = QComboBox()
         self.combo_stitch_type.setToolTip(
             t(
-                "Stichtyp fuer neue Stiche.\n"
+                "Stichtyp für neue Stiche.\n"
                 "Voll, halb (/), halb (\\), oder einer von vier Viertelstichen."
             )
         )
         for stype, glyph, text_label, _shortcut in self.STITCH_TYPE_ENTRIES:
-            # Glyph + verkuerzter Label-Teil, damit Combobox kompakt bleibt
+            # Glyph + verkürzter Label-Teil, damit Combobox kompakt bleibt
             translated = t(text_label)
             short = (
                 translated.split("(")[0]
@@ -155,7 +155,7 @@ class ToolbarBuilderMixin:
         toolbar.addWidget(self.combo_stitch_type)
 
     def _on_stitch_type_picker_changed(self: "MainWindow", index: int) -> None:
-        """Toolbar-Dropdown geaendert -> normalen Handler triggern."""
+        """Toolbar-Dropdown geändert -> normalen Handler triggern."""
         stype = self.combo_stitch_type.itemData(index)
         if stype is None:
             return
@@ -215,7 +215,7 @@ class ToolbarBuilderMixin:
 
             /* Modus-Umschalter: bewusst auffaelliger als die uebrigen
                Toggle-Buttons — zeigt den AKTUELLEN Modus, nicht das Ziel,
-               und hebt sich per Farbe/Groesse klar vom Rest der Toolbar ab. */
+               und hebt sich per Farbe/Größe klar vom Rest der Toolbar ab. */
             QToolButton#modeSwitchBtn {{
                 font-size: 13px;
                 font-weight: 800;
@@ -242,11 +242,11 @@ class ToolbarBuilderMixin:
         """
 
     def _add_mode_switch(self: "MainWindow", toolbar: IconToolBar) -> None:
-        """Fuegt den Stitch/Diamond-Mode-Switch in die Toolbar ein.
+        """Fügt den Stitch/Diamond-Mode-Switch in die Toolbar ein.
 
         Zeigt IMMER den AKTUELLEN Modus (nicht das Wechselziel) — Text,
         Icon und Hintergrundfarbe machen auf einen Blick klar, in welchem
-        Modus man gerade arbeitet. Eigene, kraeftigere Styling-Klasse
+        Modus man gerade arbeitet. Eigene, kräftigere Styling-Klasse
         (#modeSwitchBtn, siehe _get_toolbar_stylesheet) statt der
         generischen Toggle-Button-Tints, damit sich der Schalter deutlich
         vom Rest der Toolbar abhebt.
@@ -264,7 +264,7 @@ class ToolbarBuilderMixin:
             t(
                 "Aktueller Modus: Kreuzstich.\n"
                 "Klicken, um zu Diamond-Painting zu wechseln "
-                "(laedt automatisch die DMC-Diamond-Painting-Palette)."
+                "(lädt automatisch die DMC-Diamond-Painting-Palette)."
             ),
             section="mode",
         )
@@ -293,10 +293,10 @@ class ToolbarBuilderMixin:
                 t(
                     "Aktueller Modus: Kreuzstich.\n"
                     "Klicken, um zu Diamond-Painting zu wechseln "
-                    "(laedt automatisch die DMC-Diamond-Painting-Palette)."
+                    "(lädt automatisch die DMC-Diamond-Painting-Palette)."
                 )
             )
-        # Dynamic-Property fuer die #modeSwitchBtn-QSS-Selektoren — Qt
+        # Dynamic-Property für die #modeSwitchBtn-QSS-Selektoren — Qt
         # wertet Property-Selektoren nur nach explizitem Re-Polish neu aus.
         btn.setProperty("stitchMode", "false" if is_diamond else "true")
         btn.style().unpolish(btn)
@@ -433,8 +433,8 @@ class ToolbarBuilderMixin:
         pixmap = self._create_emoji_icon(icon_text, 20)
         btn.setIcon(QIcon(pixmap))
         btn.setText(label)
-        # Breite an der tatsaechlichen Label-Breite ausrichten, sonst elidet
-        # Qt laengere Uebersetzungen (z.B. "Backstitches") mit "...".
+        # Breite an der tatsächlichen Label-Breite ausrichten, sonst elidet
+        # Qt längere Übersetzungen (z.B. "Backstitches") mit "...".
         text_width = btn.fontMetrics().horizontalAdvance(label)
         btn.setMinimumWidth(max(60, text_width + 16))
         self._emoji_buttons.append((btn, icon_text, 20))

@@ -1,18 +1,18 @@
 """
 Custom-Tooltip: ersetzt Qt's natives QToolTip app-weit.
 
-Hintergrund: Qt's eingebautes QToolTip rendert auf Windows fuer Widgets
+Hintergrund: Qt's eingebautes QToolTip rendert auf Windows für Widgets
 innerhalb von QDockWidgets nachweislich mit schwarzem statt dem Theme-
-Hintergrund — ein Qt/Windows-Rendering-Bug, der sich weder ueber QSS noch
+Hintergrund — ein Qt/Windows-Rendering-Bug, der sich weder über QSS noch
 QPalette, DWM-Backdrop/Immersive-Dark-Mode-APIs, WS_EX_LAYERED-Stripping
 noch Deaktivieren der Tooltip-Fade-Animation beheben liess. Ein ganz
-gewoehnlicher QWidget-Popup (statt Qt's interner QToolTip-Singleton-Klasse)
-durchlaeuft denselben QSS-Rendering-Pfad wie jedes andere Widget in der App
+gewöhnlicher QWidget-Popup (statt Qt's interner QToolTip-Singleton-Klasse)
+durchläuft denselben QSS-Rendering-Pfad wie jedes andere Widget in der App
 und zeigt das Problem nicht.
 
-`install_custom_tooltips()` haengt einen App-weiten Event-Filter ein, der
-jedes QEvent.ToolTip abfaengt und stattdessen dieses Popup zeigt — bestehende
-`setToolTip(...)`-Aufrufe im ganzen Code muessen dafuer NICHT angepasst
+`install_custom_tooltips()` hängt einen App-weiten Event-Filter ein, der
+jedes QEvent.ToolTip abfängt und stattdessen dieses Popup zeigt — bestehende
+`setToolTip(...)`-Aufrufe im ganzen Code müssen dafür NICHT angepasst
 werden.
 """
 
@@ -109,12 +109,12 @@ def _get_instance() -> _CustomTooltip:
 
 
 def show_custom_tooltip(text: str, global_pos: QPoint, widget: QWidget | None = None) -> None:
-    """Zeigt den Custom-Tooltip an — fuer manuelle Aufrufe (statt QToolTip.showText)."""
+    """Zeigt den Custom-Tooltip an — für manuelle Aufrufe (statt QToolTip.showText)."""
     _get_instance().show_at(text, global_pos, widget)
 
 
 def hide_custom_tooltip() -> None:
-    """Versteckt den Custom-Tooltip — fuer manuelle Aufrufe (statt QToolTip.hideText)."""
+    """Versteckt den Custom-Tooltip — für manuelle Aufrufe (statt QToolTip.hideText)."""
     if _instance is not None:
         _instance.hide()
 
@@ -126,7 +126,7 @@ def reapply_custom_tooltip_theme() -> None:
 
 
 class _TooltipEventFilter(QObject):
-    """Faengt QEvent.ToolTip app-weit ab und zeigt den Custom-Tooltip statt Qt's nativem."""
+    """Fängt QEvent.ToolTip app-weit ab und zeigt den Custom-Tooltip statt Qt's nativem."""
 
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         event_type = event.type()

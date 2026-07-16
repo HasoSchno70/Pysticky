@@ -3,13 +3,11 @@ Settings-Tab-Helpers.
 
 Zentralisiert Layout/Spacing-Konventionen, damit alle Tabs gleich aussehen
 und keine Überlappungen mehr passieren. Die Tabs verwenden weiterhin
-QGroupBox + QFormLayout, aber ueber `make_section_form()` werden Margins/
+QGroupBox + QFormLayout, aber über `make_section_form()` werden Margins/
 Spacing immer konsistent gesetzt.
 """
 
 from __future__ import annotations
-
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -24,7 +22,7 @@ from ...styles import THEME
 
 def make_section_form(
     title: str,
-    icon: Optional[str] = None,
+    icon: str | None = None,
 ) -> tuple[QGroupBox, QFormLayout]:
     """Erzeugt eine Settings-Section (GroupBox + sauber konfiguriertes Form-Layout).
 
@@ -34,16 +32,16 @@ def make_section_form(
 
     Returns:
         Tuple aus (group_box, form_layout). `group_box` direkt ins Tab-Layout
-        einfuegen; `form_layout` zum Hinzufuegen von Feldern via `addRow()`
+        einfügen; `form_layout` zum Hinzufügen von Feldern via `addRow()`
         oder `addRow(label, widget)`.
 
     Konsistente Werte (alle in Pixel):
-        - GroupBox-Padding-Top: 26 (Platz fuer den Title)
+        - GroupBox-Padding-Top: 26 (Platz für den Title)
         - Form-Margins: links/rechts 14, oben 8 (zus. zu Title-Padding), unten 12
-        - VerticalSpacing: 10  → keine Ueberlappung mehr
+        - VerticalSpacing: 10  → keine Überlappung mehr
         - HorizontalSpacing: 14
         - LabelAlignment: rechts (saubere Ausrichtung mit Inputs)
-        - FieldGrowthPolicy: AllNonFixedFieldsGrow (Felder fuellen die Spalte)
+        - FieldGrowthPolicy: AllNonFixedFieldsGrow (Felder füllen die Spalte)
     """
     translated = t(title)
     full_title = f"{icon}  {translated}" if icon else translated

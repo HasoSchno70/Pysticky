@@ -5,7 +5,7 @@ Ermöglicht die Konvertierung aller Farben eines Musters
 von einem Hersteller zu einem anderen (z.B. DMC → Anchor).
 """
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPen, QPixmap
@@ -65,7 +65,7 @@ class _TargetThreadSelector(QDialog):
         super().__init__(parent)
         self._source = source_thread
         self._palette = target_palette
-        self._selected_thread: Optional[Thread] = None
+        self._selected_thread: Thread | None = None
 
         self.setWindowTitle(t("Ziel-Garn wählen"))
         self.setMinimumSize(550, 500)
@@ -120,7 +120,7 @@ class _TargetThreadSelector(QDialog):
         self._select_btn.setEnabled(False)
         self._select_btn.clicked.connect(self._on_select)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         self._select_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._select_btn, QDialogButtonBox.ButtonRole.AcceptRole)
         btn_layout.addWidget(button_box)
@@ -222,7 +222,7 @@ class _TargetThreadSelector(QDialog):
         self._on_select()
 
     @property
-    def selected_thread(self) -> Optional[Thread]:
+    def selected_thread(self) -> Thread | None:
         return self._selected_thread
 
 
@@ -314,7 +314,7 @@ class PaletteConversionDialog(QDialog):
         self._apply_btn = QPushButton(t("Alle konvertieren"))
         self._apply_btn.clicked.connect(self._on_apply)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         self._apply_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._apply_btn, QDialogButtonBox.ButtonRole.AcceptRole)
         footer.addStretch()
@@ -385,7 +385,7 @@ class PaletteConversionDialog(QDialog):
 
         for row, m in enumerate(self._mapping):
             entry = m["entry"]
-            target: Optional[Thread] = m["target_thread"]
+            target: Thread | None = m["target_thread"]
             dist: float = m["distance"]
 
             # Quell-Icon

@@ -1,13 +1,13 @@
 """
 Pattern-Eigenschaften-Dialog.
 
-Editor fuer pattern.metadata-Felder die heute schon im Daten-Modell existieren,
+Editor für pattern.metadata-Felder die heute schon im Daten-Modell existieren,
 aber bisher kein UI hatten:
 - author, copyright
 - started_date (neu)
 - notes (neu, persistent)
 
-Werte landen direkt in `pattern.metadata`. PDF/HTML-Export liest sie ueber
+Werte landen direkt in `pattern.metadata`. PDF/HTML-Export liest sie über
 `get_watermark()` und `metadata.get("notes")`.
 """
 
@@ -102,7 +102,7 @@ class PatternPropertiesDialog(QDialog):
         self._edit_copyright.setPlaceholderText(t("z.B. © 2026 Anna Schmidt"))
         form.addRow(t("Copyright:"), self._edit_copyright)
 
-        # Stickdatum: Checkbox + Date-Picker, damit "kein Datum" moeglich ist
+        # Stickdatum: Checkbox + Date-Picker, damit "kein Datum" möglich ist
         date_row = QHBoxLayout()
         self._chk_started = QCheckBox(t("Begonnen am:"))
         self._chk_started.toggled.connect(self._on_started_toggled)
@@ -149,7 +149,7 @@ class PatternPropertiesDialog(QDialog):
         self._edit_author.setText(md.get("author", ""))
         self._edit_copyright.setText(md.get("copyright", ""))
         notes = md.get("notes", "")
-        # Fallback: alte pdf_notes uebernehmen, wenn keine `notes` existieren
+        # Fallback: alte pdf_notes übernehmen, wenn keine `notes` existieren
         if not notes and md.get("pdf_notes"):
             notes = md["pdf_notes"]
         self._txt_notes.setPlainText(notes)
@@ -163,7 +163,7 @@ class PatternPropertiesDialog(QDialog):
                 self._date_started.setDate(qd)
 
     def apply_to_pattern(self) -> bool:
-        """Schreibt die Felder in pattern.metadata. Liefert True bei Aenderungen."""
+        """Schreibt die Felder in pattern.metadata. Liefert True bei Änderungen."""
         md = self._pattern.metadata
 
         new_author = self._edit_author.text().strip()

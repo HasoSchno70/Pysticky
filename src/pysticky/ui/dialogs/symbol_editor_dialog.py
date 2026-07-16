@@ -266,7 +266,7 @@ class SymbolEditorDialog(QDialog):
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setMinimumHeight(220)
 
-        # Container fuer die Reihen — V-Box mit Stretch unten, damit gefilterte
+        # Container für die Reihen — V-Box mit Stretch unten, damit gefilterte
         # Restmenge oben klebt statt sich vertikal zu verteilen.
         symbols_widget = QWidget()
         symbols_widget.setStyleSheet("background: transparent;")
@@ -306,14 +306,14 @@ class SymbolEditorDialog(QDialog):
 
         layout.addLayout(btn_layout)
 
-        # Spezifisches Symbol-Font fuer das Custom-Symbol-Feld — alles andere
-        # uebernimmt das globale Theme.
+        # Spezifisches Symbol-Font für das Custom-Symbol-Feld — alles andere
+        # übernimmt das globale Theme.
         self._custom_input.setStyleSheet(
             "QLineEdit { font-size: 20px; font-family: 'Segoe UI Symbol'; }"
         )
 
     def _repack_grid(self, buttons: list["SymbolButton"]) -> None:
-        """Baut die Reihen neu auf: je 12 Buttons pro QHBoxLayout, oben-buendig."""
+        """Baut die Reihen neu auf: je 12 Buttons pro QHBoxLayout, oben-bündig."""
         # Bestehende Reihen-Layouts leeren und entfernen
         while self._rows_container.count() > 0:
             item = self._rows_container.takeAt(0)
@@ -341,7 +341,7 @@ class SymbolEditorDialog(QDialog):
             self._row_layouts[-1].addWidget(btn)
             btn.setVisible(True)
 
-        # Letzte (unvollstaendige) Reihe nach links pushen
+        # Letzte (unvollständige) Reihe nach links pushen
         if self._row_layouts:
             self._row_layouts[-1].addStretch(1)
 

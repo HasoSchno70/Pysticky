@@ -14,7 +14,6 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # Standard Log-Format
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
@@ -57,7 +56,7 @@ class PyStickLogger:
     - Konfigurierbare Log-Level
     """
 
-    _instance: Optional["PyStickLogger"] = None
+    _instance: "PyStickLogger | None" = None
     _initialized: bool = False
 
     def __new__(cls) -> "PyStickLogger":
@@ -72,7 +71,7 @@ class PyStickLogger:
         self._initialized = True
         self._root_logger = logging.getLogger("pysticky")
         self._root_logger.setLevel(logging.DEBUG)
-        self._file_handler: Optional[logging.FileHandler] = None
+        self._file_handler: logging.FileHandler | None = None
 
         # Console Handler (immer aktiv)
         self._setup_console_handler()
@@ -88,9 +87,7 @@ class PyStickLogger:
 
         self._root_logger.addHandler(console_handler)
 
-    def enable_file_logging(
-        self, log_dir: Optional[Path] = None, level: int = logging.DEBUG
-    ) -> Path:
+    def enable_file_logging(self, log_dir: Path | None = None, level: int = logging.DEBUG) -> Path:
         """
         Aktiviert Datei-Logging.
 
@@ -146,11 +143,11 @@ class PyStickLogger:
 
 
 # Globale Instanz
-_logger_manager: Optional[PyStickLogger] = None
+_logger_manager: PyStickLogger | None = None
 
 
 def setup_logging(
-    console_level: int = logging.INFO, file_logging: bool = False, log_dir: Optional[Path] = None
+    console_level: int = logging.INFO, file_logging: bool = False, log_dir: Path | None = None
 ) -> PyStickLogger:
     """
     Initialisiert das Logging-System.

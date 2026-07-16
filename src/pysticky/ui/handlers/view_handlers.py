@@ -17,9 +17,9 @@ class ViewHandlersMixin:
         """Sticken-Modus an/aus.
 
         Beim Aktivieren:
-        - Werkzeug auf Progress-Tool umschalten (Klick = Stich erledigt/zurueck)
+        - Werkzeug auf Progress-Tool umschalten (Klick = Stich erledigt/zurück)
         - Side-Dock-Panels ausser dem Fortschritt-Panel verstecken
-        - Stoff-aehnliches Rendering (Symbole + Backstitches dimmen)
+        - Stoff-ähnliches Rendering (Symbole + Backstitches dimmen)
         - Statusbar-Indikator
         - Optional: Session-Timer starten (Setting `stitch_timer_enabled`)
         Beim Deaktivieren: vorherigen Zustand wiederherstellen + Timer stoppen.
@@ -33,7 +33,7 @@ class ViewHandlersMixin:
         timer_enabled = QSettings().value("stitch_timer_enabled", True, type=bool)
 
         if on:
-            # 1. Aktuellen Zustand fuer spaetere Wiederherstellung speichern
+            # 1. Aktuellen Zustand für spätere Wiederherstellung speichern
             self._stitch_mode_saved_state = {
                 "tool": getattr(self.tool_bar, "_current_tool", Tool.PENCIL),
                 "show_symbols": self.canvas.show_symbols,
@@ -83,7 +83,7 @@ class ViewHandlersMixin:
                         dock.hide()
                 self._stitch_mode_saved_state = None
 
-            # Sticken-Cursor (Pfeiltasten-Navigation) zuruecksetzen
+            # Sticken-Cursor (Pfeiltasten-Navigation) zurücksetzen
             self.canvas.set_stitch_cursor(None)
 
             # Session-Timer stoppen + Toast in der Statusbar
@@ -92,8 +92,8 @@ class ViewHandlersMixin:
                 self.current_pattern
             ):
                 elapsed = session_timer.stop_session(self.current_pattern)
-                # Stop-Event markiert das Pattern als veraendert (Metadata
-                # gehoert mitgespeichert), aber nur wenn Zeit > 0 vergangen.
+                # Stop-Event markiert das Pattern als verändert (Metadata
+                # gehört mitgespeichert), aber nur wenn Zeit > 0 vergangen.
                 if elapsed > 0 and hasattr(self, "_mark_unsaved"):
                     self._mark_unsaved()
 
@@ -151,18 +151,18 @@ class ViewHandlersMixin:
     def _on_toggle_diamond_view(self: "MainWindow", checked: bool) -> None:
         """Diamond-Painting-Ansicht ein-/ausschalten (User-getriggert).
 
-        Loest den vollen Modus-Wechsel aus inkl. Palette-Auto-Switch,
+        Löst den vollen Modus-Wechsel aus inkl. Palette-Auto-Switch,
         Pattern.mode-Update und automatischer Farb-Konvertierung. Beim
         Laden eines Patterns aus Datei wird stattdessen
-        ``_apply_pattern_mode`` benutzt — der schreibt nicht zurueck ins
+        ``_apply_pattern_mode`` benutzt — der schreibt nicht zurück ins
         Pattern und konvertiert auch keine Farben.
 
-        WICHTIG: Der ganze Mode-Switch laeuft in einem MainWindow-weiten
+        WICHTIG: Der ganze Mode-Switch läuft in einem MainWindow-weiten
         setUpdatesEnabled(False)-Block, weil der Palette-Auto-Switch das
         Palette-Panel ein ``_refresh_color_list`` triggert (450 QListWidget-
         Items bei DMC Diamond Painting) und das Info-Panel die ganze
         ColorList neu baut (Symbol-Spalten-Wechsel) — beides zusammen
-        koennte sonst ein leeres Phantom-Top-Level-Fenster flackern lassen.
+        könnte sonst ein leeres Phantom-Top-Level-Fenster flackern lassen.
         """
         pattern = self.current_pattern
         target_mode = "diamond" if checked else "stitch"
@@ -172,7 +172,7 @@ class ViewHandlersMixin:
             colors_changed = False
             if pattern is not None:
                 # convert_to_mode() schreibt sowohl pattern.mode als auch (bei
-                # Bedarf) die thread/is_diamond-Flags. Snapshot-Backup laeuft
+                # Bedarf) die thread/is_diamond-Flags. Snapshot-Backup läuft
                 # darin transparent — sodass Stick→DP→Stick die Original-Codes
                 # wiederherstellt statt sie durch doppeltes Lab-Match driften
                 # zu lassen.
@@ -181,8 +181,8 @@ class ViewHandlersMixin:
             self._apply_pattern_mode(checked, palette_auto_switch=True)
 
             # Wenn Farben gewechselt wurden: ColorBar und Info-Panel sehen die
-            # neuen Threads erst nach einem Refresh. update_info() laeuft
-            # bereits in _apply_pattern_mode — wir muessen nur noch die
+            # neuen Threads erst nach einem Refresh. update_info() läuft
+            # bereits in _apply_pattern_mode — wir müssen nur noch die
             # ColorBar-Swatches re-rendern (gleiche Anzahl Entries, andere
             # Thread-Daten -> update_swatches reicht).
             if colors_changed and pattern is not None:
@@ -197,7 +197,7 @@ class ViewHandlersMixin:
     def _apply_pattern_mode(
         self: "MainWindow", diamond: bool, palette_auto_switch: bool = False
     ) -> None:
-        """Setzt alle UI-Komponenten auf den gewuenschten Modus.
+        """Setzt alle UI-Komponenten auf den gewünschten Modus.
 
         Args:
             diamond: True = Diamond-Painting, False = Kreuzstich.
@@ -210,7 +210,7 @@ class ViewHandlersMixin:
         """
         self.canvas.diamond_view = diamond
 
-        # Menue-Action und Toolbar-Button syncen (ohne Signal-Loops).
+        # Menü-Action und Toolbar-Button syncen (ohne Signal-Loops).
         for widget_attr in ("action_diamond_view", "btn_mode_switch"):
             w = getattr(self, widget_attr, None)
             if w is None:
@@ -285,7 +285,7 @@ class ViewHandlersMixin:
             if combo is not None and panel is not None:
                 if diamond:
                     # Aktueller (Garn-)Name aus userData (Icon-Prefix
-                    # ueberspringen — `current_palette_name()` macht das).
+                    # überspringen — `current_palette_name()` macht das).
                     current = (
                         panel.current_palette_name()
                         if hasattr(panel, "current_palette_name")
@@ -303,8 +303,8 @@ class ViewHandlersMixin:
                     combo.setCurrentIndex(idx)
 
     def _apply_tool_availability_for_mode(self: "MainWindow", diamond: bool) -> None:
-        # Repaint waehrend der Visibility-Wechsel aussetzen, damit die
-        # mehreren Show/Hide-Aenderungen (Stitch-Picker, Backstitch-Toggle,
+        # Repaint während der Visibility-Wechsel aussetzen, damit die
+        # mehreren Show/Hide-Änderungen (Stitch-Picker, Backstitch-Toggle,
         # Backstitch-Tool-Button) nicht einzeln flackern.
         toolbar = getattr(self, "_toolbar", None)
         if toolbar is not None:
@@ -324,19 +324,19 @@ class ViewHandlersMixin:
         """Versteckt stick-spezifische Werkzeuge im DP-Modus (und umgekehrt).
 
         Im DP-Modus gibt's nur einen Drill-Typ — Halb-, Viertel-, Dreiviertel-
-        Stiche und Franzoesischer Knoten ergeben dort keinen Sinn. Rueckstich-
+        Stiche und Französischer Knoten ergeben dort keinen Sinn. Rückstich-
         Werkzeug ebenfalls weg (DP hat keine Konturen).
 
         Strategie: **Ausblenden statt Disablen**. Disabled Items im QComboBox-
         Dropdown sind in PySide6 visuell schwer zu erkennen — sieht aus als
-        waeren sie weiter waehlbar. Ausblenden ist eindeutig.
+        wären sie weiter wählbar. Ausblenden ist eindeutig.
         """
-        # Stick-only-Typen: halbe/Viertel/Dreiviertelstiche + Franzoesischer Knoten.
+        # Stick-only-Typen: halbe/Viertel/Dreiviertelstiche + Französischer Knoten.
         # 0 (FULL) und 10 (BEAD) bleiben in beiden Modi nutzbar — BEAD ist
         # ein valider Akzent auch in DP-Patterns.
         STITCH_ONLY_TYPES = (1, 2, 3, 4, 5, 6, 7, 9)
 
-        # Stitch-Type-Menue-Actions: im DP-Modus ausblenden.
+        # Stitch-Type-Menü-Actions: im DP-Modus ausblenden.
         actions = getattr(self, "actions_stitch_type", {})
         for stype, action in actions.items():
             if stype in STITCH_ONLY_TYPES:
@@ -359,13 +359,13 @@ class ViewHandlersMixin:
             if widget is not None:
                 widget.setVisible(not diamond)
 
-        # Rueckstich-View-Toggle im Toolbar.
+        # Rückstich-View-Toggle im Toolbar.
         bs_toggle = getattr(self, "chk_backstitches", None)
         if bs_toggle is not None:
             bs_toggle.setVisible(not diamond)
         # Wenn die View-Backstitch-Anzeige aktiv war, im DP-Modus auch
-        # ausschalten — sonst rendert der Canvas weiter Rueckstich-Linien
-        # die da nicht hingehoeren.
+        # ausschalten — sonst rendert der Canvas weiter Rückstich-Linien
+        # die da nicht hingehören.
         if diamond and getattr(self.canvas, "show_backstitches", False):
             self.canvas.show_backstitches = False
             chk_bs = getattr(self, "chk_backstitches", None)
@@ -379,7 +379,7 @@ class ViewHandlersMixin:
                 act.setChecked(False)
                 act.blockSignals(False)
 
-        # Rueckstich-Werkzeug im linken Tool-Bar-Panel: das ist ein direktes
+        # Rückstich-Werkzeug im linken Tool-Bar-Panel: das ist ein direktes
         # QWidget, kein QToolBar-Member, also klappt setVisible darauf.
         tool_bar = getattr(self, "tool_bar", None)
         if tool_bar is not None:

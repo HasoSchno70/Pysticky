@@ -1,7 +1,7 @@
 """
-Plugin: Schachbrett fuellen.
+Plugin: Schachbrett füllen.
 
-Fuellt das gesamte Pattern mit einem zweifarbigen Schachbrettmuster.
+Füllt das gesamte Pattern mit einem zweifarbigen Schachbrettmuster.
 Die ersten beiden Farben der Pattern-Palette werden verwendet.
 """
 

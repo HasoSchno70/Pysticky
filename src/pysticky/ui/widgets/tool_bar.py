@@ -292,9 +292,9 @@ class SymmetryToggle(BaseToolButton):
 class ToolBar(QWidget):
     """Vertikale Werkzeugleiste.
 
-    Bei niedrigen Fenstern reicht die Hoehe oft nicht fuer alle Werkzeuge —
+    Bei niedrigen Fenstern reicht die Höhe oft nicht für alle Werkzeuge —
     statt eines klassischen Scrollbalkens scrollt der Inhalt automatisch,
-    sobald die Maus oben/unten in eine schmale Hover-Zone kommt (aehnlich
+    sobald die Maus oben/unten in eine schmale Hover-Zone kommt (ähnlich
     Drag&Drop-Auto-Scroll). Kleine ▲/▼-Hinweise am Rand zeigen an, wenn in
     dieser Richtung noch mehr Werkzeuge folgen.
     """
@@ -319,8 +319,8 @@ class ToolBar(QWidget):
         self._button_group.setExclusive(True)
 
         # Pollt die Cursor-Position statt auf Mouse-Move-Events zu warten:
-        # die Tool-Buttons fuellen fast die komplette Breite/Hoehe des
-        # Scroll-Bereichs, ein Event-Filter auf dem Viewport wuerde also
+        # die Tool-Buttons füllen fast die komplette Breite/Höhe des
+        # Scroll-Bereichs, ein Event-Filter auf dem Viewport würde also
         # kaum je feuern (Mouse-Move-Events gehen an das Button-Widget
         # unter dem Cursor, nicht an den Viewport dahinter).
         self._scroll_timer = QTimer(self)
@@ -345,8 +345,8 @@ class ToolBar(QWidget):
         content = QWidget()
         self._scroll_area.setWidget(content)
 
-        # ▲/▼-Scroll-Hinweise: eigene Overlay-Labels ueber dem Scroll-Bereich,
-        # transparent fuer Maus-Events, damit die Hover-Auto-Scroll-Zone
+        # ▲/▼-Scroll-Hinweise: eigene Overlay-Labels über dem Scroll-Bereich,
+        # transparent für Maus-Events, damit die Hover-Auto-Scroll-Zone
         # darunter weiter funktioniert.
         self._scroll_hint_top = self._create_scroll_hint("▲")
         self._scroll_hint_bottom = self._create_scroll_hint("▼")
@@ -459,9 +459,9 @@ class ToolBar(QWidget):
         self._scroll_hint_bottom.setVisible(bar.value() < bar.maximum())
 
     def _poll_auto_scroll(self) -> None:
-        """Scrollt automatisch, wenn der Cursor (global) ueber der oberen/
+        """Scrollt automatisch, wenn der Cursor (global) über der oberen/
         unteren Hover-Zone des Viewports steht — per Polling statt Events,
-        da die Tool-Buttons fast den ganzen Viewport ausfuellen und Mouse-
+        da die Tool-Buttons fast den ganzen Viewport ausfüllen und Mouse-
         Move-Events so direkt an die Buttons gehen, nicht an den Viewport.
         """
         bar = self._scroll_area.verticalScrollBar()

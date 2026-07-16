@@ -8,7 +8,7 @@ Erzeugt QImage-Bilder in verschiedenen Darstellungsmodi:
 """
 
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from PySide6.QtCore import QRect, QRectF, Qt
@@ -64,9 +64,9 @@ class PreviewRenderEngine:
         self._show_completion = False
 
         # Cache
-        self._composite_grid: Optional[np.ndarray] = None
-        self._composite_stitch_types: Optional[np.ndarray] = None
-        self._color_lut: Optional[list[tuple[int, int, int]]] = None
+        self._composite_grid: np.ndarray | None = None
+        self._composite_stitch_types: np.ndarray | None = None
+        self._color_lut: list[tuple[int, int, int]] | None = None
         self._rebuild_cache()
 
     # =========================================================================
@@ -110,7 +110,7 @@ class PreviewRenderEngine:
     # Haupt-Render-Methoden
     # =========================================================================
 
-    def render(self, cell_size: int, viewport: Optional[QRect] = None) -> QImage:
+    def render(self, cell_size: int, viewport: QRect | None = None) -> QImage:
         """
         Rendert das Muster als QImage.
 
@@ -172,7 +172,7 @@ class PreviewRenderEngine:
         y_offset = 0
 
         sub_grid = grid[y_start:y_end, x_start:x_end]
-        # Stitch-Type-Slice parallel zum Color-Grid — fuer halbe/Viertel-Rendering
+        # Stitch-Type-Slice parallel zum Color-Grid — für halbe/Viertel-Rendering
         if self._composite_stitch_types is not None:
             sub_types = self._composite_stitch_types[y_start:y_end, x_start:x_end]
         else:
@@ -280,10 +280,10 @@ class PreviewRenderEngine:
                 # French Knot: kleiner Kreis in der Mitte
                 self._draw_french_knot_fabric(painter, px, py, cell_size, base_color)
             elif stype == 10:
-                # Perle (Bead): groesserer Kreis mit Glanz
+                # Perle (Bead): größerer Kreis mit Glanz
                 self._draw_bead_fabric(painter, px, py, cell_size, base_color)
             else:
-                # Halbe / Viertel: gefuelltes Dreieck
+                # Halbe / Viertel: gefülltes Dreieck
                 self._draw_partial_stitch_fabric(painter, px, py, cell_size, stype, base_color)
 
     @staticmethod
@@ -294,7 +294,7 @@ class PreviewRenderEngine:
 
         Vier dreieckige Facetten mit Glanzlicht oben (hell), Schatten unten
         (dunkel), seitlich mittel. Adaptiver Inset: bei kleiner Zelle (<12px)
-        beruehren sich die Drills nahtlos, damit die Vorlage nicht ausgewaschen
+        berühren sich die Drills nahtlos, damit die Vorlage nicht ausgewaschen
         weiss wirkt. Konsistent zur Canvas-Drill-Darstellung.
         """
         from PySide6.QtCore import Qt
@@ -348,14 +348,14 @@ class PreviewRenderEngine:
     def _draw_french_knot_fabric(
         self, painter: QPainter, x: int, y: int, size: int, color: QColor
     ) -> None:
-        """French Knot in der Stoff-Vorschau: gefuellter Kreis mit Schatten."""
+        """French Knot in der Stoff-Vorschau: gefüllter Kreis mit Schatten."""
         from ...core.stitch_shapes import french_knot_radius_factor
 
         radius = max(1, int(size * french_knot_radius_factor()))
         cx = x + size // 2
         cy = y + size // 2
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        # Schatten fuer 3D-Wirkung
+        # Schatten für 3D-Wirkung
         if size >= 8:
             shadow = color.darker(150)
             painter.setBrush(shadow)
@@ -368,7 +368,7 @@ class PreviewRenderEngine:
     def _draw_bead_fabric(
         self, painter: QPainter, x: int, y: int, size: int, color: QColor
     ) -> None:
-        """Perle in der Stoff-Vorschau: groessere Kugel mit Schatten + Glanz."""
+        """Perle in der Stoff-Vorschau: größere Kugel mit Schatten + Glanz."""
         from ...core.stitch_shapes import bead_radius_factor
 
         radius = max(2, int(size * bead_radius_factor()))
@@ -487,8 +487,8 @@ class PreviewRenderEngine:
         """
         Zeichnet halben/Viertel/Dreiviertel-Stich in der Stoff-Vorschau.
 
-        Statt geometrisch perfekter gefuellter Dreiecke (wirkt wie Symbol)
-        zeichnen wir echte diagonale Stick-Faeden — naeher am echten Sticken.
+        Statt geometrisch perfekter gefüllter Dreiecke (wirkt wie Symbol)
+        zeichnen wir echte diagonale Stick-Fäden — näher am echten Sticken.
 
         - Halbstich (1, 2): EIN Diagonalstrang in der entsprechenden Richtung
         - Viertel (3-6): kurzer Strang von Center in die Eck-Quadranten
@@ -515,7 +515,7 @@ class PreviewRenderEngine:
         tr = (x + size - margin, y + margin)
         bl = (x + margin, y + size - margin)
         br = (x + size - margin, y + size - margin)
-        # Mittelpunkte (fuer Viertel-Stiche)
+        # Mittelpunkte (für Viertel-Stiche)
         mid = (x + size // 2, y + size // 2)
 
         # WICHTIG: Konvention im Projekt (siehe stitch.py):
@@ -555,7 +555,7 @@ class PreviewRenderEngine:
     def _draw_partial_stitch_pixel(
         self, painter: QPainter, x: int, y: int, size: int, stype: int, color: QColor
     ) -> None:
-        """Halb/Viertel-Stich im Pixel-Modus: gefuelltes Dreieck ohne Schatten."""
+        """Halb/Viertel-Stich im Pixel-Modus: gefülltes Dreieck ohne Schatten."""
         path = QPainterPath()
         fx = float(x)
         fy = float(y)
@@ -640,7 +640,7 @@ class PreviewRenderEngine:
             stype = int(sub_types[sy, sx])
             is_dp_mode = getattr(self._pattern, "mode", "stitch") == "diamond"
             if stype == 11 or (is_dp_mode and stype == 0):
-                # Drill statt einfachem Rechteck — gilt fuer DIAMOND-Type
+                # Drill statt einfachem Rechteck — gilt für DIAMOND-Type
                 # ODER FULL im DP-Pattern (Auto-Mapping).
                 self._draw_diamond_drill_preview(
                     painter,
@@ -666,7 +666,7 @@ class PreviewRenderEngine:
                 painter.drawEllipse(cx - radius, cy - radius, 2 * radius, 2 * radius)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
             else:
-                # Pixel-Modus: gefuelltes Dreieck ohne Schatten-Akzent
+                # Pixel-Modus: gefülltes Dreieck ohne Schatten-Akzent
                 self._draw_partial_stitch_pixel(
                     painter, px, py, cell_size, stype, color_cache[color_idx]
                 )
@@ -807,13 +807,13 @@ class PreviewRenderEngine:
             painter.setFont(font_full)
             painter.drawText(full_rect, Qt.AlignmentFlag.AlignCenter, symbol)
         elif stype == 9:
-            # French Knot: ausgefuellter Punkt
+            # French Knot: ausgefüllter Punkt
             painter.setBrush(ink)
             painter.setPen(Qt.PenStyle.NoPen)
             r = max(2, cs // 5)
             painter.drawEllipse(int(px + cs // 2 - r), int(py + cs // 2 - r), 2 * r, 2 * r)
         elif stype == 10:
-            # Bead: groesserer Punkt mit Glanz
+            # Bead: größerer Punkt mit Glanz
             painter.setBrush(ink)
             painter.setPen(Qt.PenStyle.NoPen)
             r = max(3, cs // 4)

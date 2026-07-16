@@ -2,17 +2,15 @@
 Screen-EyeDropper.
 
 Erfasst einen Screenshot des gesamten Bildschirms, zeigt ihn als
-Vollbild-Overlay an, und laesst den User per Klick eine Farbe picken.
+Vollbild-Overlay an, und lässt den User per Klick eine Farbe picken.
 Die gepickte Farbe wird gegen alle geladenen Garn-Paletten gematcht und
-liefert den nahesten Thread (CIE-Lab Delta-E) zurueck.
+liefert den nahesten Thread (CIE-Lab Delta-E) zurück.
 
 Headless-testbar: Die Pixel-Pick-Logik (`pick_color_at` und
 `find_nearest_thread`) ist separat exposed.
 """
 
 from __future__ import annotations
-
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QCursor, QMouseEvent, QPainter, QPixmap
@@ -24,7 +22,7 @@ from ...core.palette import get_palette_manager
 from ...core.thread import Thread
 
 
-def pick_color_at(pixmap: QPixmap, x: int, y: int) -> Optional[QColor]:
+def pick_color_at(pixmap: QPixmap, x: int, y: int) -> QColor | None:
     """Liest die Farbe an Pixel (x, y) im gegebenen Pixmap aus.
 
     Liefert None, wenn (x, y) ausserhalb der Pixmap liegt.
@@ -39,9 +37,9 @@ def pick_color_at(pixmap: QPixmap, x: int, y: int) -> Optional[QColor]:
 
 def find_nearest_thread(
     color: QColor,
-    palette_names: Optional[list[str]] = None,
-) -> Optional[Thread]:
-    """Findet den naehesten Thread in den angegebenen (oder allen) Paletten.
+    palette_names: list[str] | None = None,
+) -> Thread | None:
+    """Findet den nähesten Thread in den angegebenen (oder allen) Paletten.
 
     Matching per CIE-Lab Delta-E. Wenn `palette_names=None`, werden alle
     geladenen Paletten durchsucht, Bead-Paletten ausgeschlossen.
@@ -76,7 +74,7 @@ def find_nearest_thread(
 class ScreenEyedropperDialog(QDialog):
     """Vollbild-Overlay mit Screenshot, das einen Klick zur Farbe konvertiert."""
 
-    def __init__(self, parent=None, palette_names: Optional[list[str]] = None) -> None:
+    def __init__(self, parent=None, palette_names: list[str] | None = None) -> None:
         super().__init__(parent)
         self.setWindowFlags(
             Qt.WindowType.Window
@@ -86,17 +84,17 @@ class ScreenEyedropperDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
         self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
 
-        # Ohne Einschraenkung wurde die gepickte Farbe gegen ALLE geladenen
+        # Ohne Einschränkung wurde die gepickte Farbe gegen ALLE geladenen
         # Garnpaletten gematcht -- das konnte eine Farbe eines ganz anderen
-        # Herstellers als den im aktuellen Muster verwendeten zurueckliefern.
-        # Der Aufrufer kann hier die aktuell verwendete Palette uebergeben,
+        # Herstellers als den im aktuellen Muster verwendeten zurückliefern.
+        # Der Aufrufer kann hier die aktuell verwendete Palette übergeben,
         # damit das Ergebnis konsistent beim selben Hersteller bleibt.
         self._palette_names = palette_names
 
-        self._picked_color: Optional[QColor] = None
-        self._picked_thread: Optional[Thread] = None
+        self._picked_color: QColor | None = None
+        self._picked_thread: Thread | None = None
 
-        # Screenshot des Primaerbildschirms aufnehmen
+        # Screenshot des Primärbildschirms aufnehmen
         screen = QApplication.primaryScreen()
         if screen is None:
             # Headless-Fallback: leeres Pixmap
@@ -104,7 +102,7 @@ class ScreenEyedropperDialog(QDialog):
         else:
             self._screenshot = screen.grabWindow(0)
 
-        # Vollbild ueber dem Screenshot
+        # Vollbild über dem Screenshot
         if not self._screenshot.isNull():
             self.resize(self._screenshot.size())
             self.move(0, 0)
@@ -112,11 +110,11 @@ class ScreenEyedropperDialog(QDialog):
         self._setup_ui()
 
     @property
-    def picked_color(self) -> Optional[QColor]:
+    def picked_color(self) -> QColor | None:
         return self._picked_color
 
     @property
-    def picked_thread(self) -> Optional[Thread]:
+    def picked_thread(self) -> Thread | None:
         return self._picked_thread
 
     def _setup_ui(self) -> None:
@@ -153,8 +151,8 @@ class ScreenEyedropperDialog(QDialog):
             self.reject()
             return
         self._picked_color = color
-        # Naechsten Thread suchen (auf die uebergebene Palette eingeschraenkt,
-        # falls gesetzt -- sonst ueber alle geladenen Paletten).
+        # Nächsten Thread suchen (auf die übergebene Palette eingeschränkt,
+        # falls gesetzt -- sonst über alle geladenen Paletten).
         self._picked_thread = find_nearest_thread(color, self._palette_names)
         self.accept()
 

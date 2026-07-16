@@ -3,7 +3,6 @@ Dialog zum Importieren von XSD/PAT/OXS-Dateien.
 """
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 from ...config import UI_CONFIG
@@ -74,17 +74,17 @@ class PatternImportDialog(QDialog):
     und Open Cross Stitch (OXS) Dateien.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(t("Muster importieren (XSD/PAT/OXS)"))
         self.setMinimumSize(*UI_CONFIG.dialog_min_medium)
 
-        self._pattern: Optional[Pattern] = None
-        self._filepath: Optional[Path] = None
+        self._pattern: Pattern | None = None
+        self._filepath: Path | None = None
 
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Erstellt die UI-Elemente."""
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
@@ -226,7 +226,7 @@ class PatternImportDialog(QDialog):
 
         layout.addLayout(btn_layout)
 
-    def _browse_file(self):
+    def _browse_file(self) -> None:
         """Öffnet den Datei-Dialog."""
         path, _ = QFileDialog.getOpenFileName(
             self,
@@ -240,7 +240,7 @@ class PatternImportDialog(QDialog):
         if path:
             self._load_file(Path(path))
 
-    def _load_file(self, filepath: Path):
+    def _load_file(self, filepath: Path) -> None:
         """Lädt und analysiert die Datei im Hintergrund-Thread."""
         self._filepath = filepath
         self._file_label.setText(filepath.name)
@@ -274,7 +274,13 @@ class PatternImportDialog(QDialog):
 
         self._load_thread.start()
 
-    def _on_load_finished(self, pattern, errors, warnings, format_name):
+    def _on_load_finished(
+        self,
+        pattern: Pattern | None,
+        errors: list[str],
+        warnings: list[str],
+        format_name: str,
+    ) -> None:
         """Callback wenn Import erfolgreich."""
         self._load_progress.close()
         self._pattern = pattern
@@ -289,14 +295,14 @@ class PatternImportDialog(QDialog):
 
         self._show_messages(errors, warnings)
 
-    def _on_load_error(self, error_msg):
+    def _on_load_error(self, error_msg: str) -> None:
         """Callback wenn Import fehlschlägt."""
         self._load_progress.close()
         self._clear_info()
         self._import_btn.setEnabled(False)
         self._show_messages([f"Import-Fehler: {error_msg}"], [])
 
-    def _update_info(self, format_name: str):
+    def _update_info(self, format_name: str) -> None:
         """Aktualisiert die Muster-Informationen."""
         if not self._pattern:
             return
@@ -312,7 +318,7 @@ class PatternImportDialog(QDialog):
         self._info_labels["stitches"].setText(str(p.total_stitches))
         self._info_labels["format"].setText(format_name)
 
-    def _clear_info(self):
+    def _clear_info(self) -> None:
         """Leert die Informationsanzeige."""
         for label in self._info_labels.values():
             label.setText("-")
@@ -320,7 +326,7 @@ class PatternImportDialog(QDialog):
         self._preview_label.setPixmap(QPixmap())
         self._preview_label.setText(t("Keine Vorschau verfügbar"))
 
-    def _update_preview(self):
+    def _update_preview(self) -> None:
         """Erstellt eine Vorschau des Musters."""
         if not self._pattern:
             return
@@ -363,7 +369,7 @@ class PatternImportDialog(QDialog):
         self._preview_label.setPixmap(pixmap)
         self._preview_label.setText("")
 
-    def _show_messages(self, errors: list[str], warnings: list[str]):
+    def _show_messages(self, errors: list[str], warnings: list[str]) -> None:
         """Zeigt Fehler und Warnungen an."""
         if not errors and not warnings:
             self._messages_edit.hide()
@@ -380,6 +386,6 @@ class PatternImportDialog(QDialog):
         self._messages_edit.setText("\n".join(messages))
         self._messages_edit.show()
 
-    def get_pattern(self) -> Optional[Pattern]:
+    def get_pattern(self) -> Pattern | None:
         """Gibt das importierte Muster zurück."""
         return self._pattern

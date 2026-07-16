@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 def _make_dot_icon(color_hex: str, size: int = 14) -> QIcon:
-    """Erstellt ein kleines farbiges Kreis-Icon (fuer Dock-Tab-Markierungen)."""
+    """Erstellt ein kleines farbiges Kreis-Icon (für Dock-Tab-Markierungen)."""
     pixmap = QPixmap(size, size)
     pixmap.fill(QColor(0, 0, 0, 0))
     painter = QPainter(pixmap)
@@ -87,8 +87,8 @@ class DockBuilderMixin:
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, tile_dock)
         self.tabifyDockWidget(info_dock, tile_dock)
 
-        # Hinweis: Stoff-Vorschau-Panel entfernt — die Funktionalitaet steckt
-        # vollstaendig im Mustervorschau-Dialog (Ansicht → Mustervorschau).
+        # Hinweis: Stoff-Vorschau-Panel entfernt — die Funktionalität steckt
+        # vollständig im Mustervorschau-Dialog (Ansicht → Mustervorschau).
 
         # Fortschritts-Panel (rechts, getabbed) — im DP-Modus ausgeblendet,
         # weil Diamond-Painting keinen etablierten "schon-erledigt"-Workflow

@@ -14,7 +14,7 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from ..core.pattern import Pattern
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class PluginError(Exception):
-    """Fehler beim Laden oder Ausfuehren eines Plugins."""
+    """Fehler beim Laden oder Ausführen eines Plugins."""
 
 
 @dataclass(frozen=True)
@@ -54,7 +54,7 @@ class PluginManifest:
 
 @dataclass
 class Plugin:
-    """Ein entdecktes Plugin (noch nicht ausgefuehrt)."""
+    """Ein entdecktes Plugin (noch nicht ausgeführt)."""
 
     manifest: PluginManifest
     directory: Path
@@ -74,9 +74,9 @@ class Plugin:
 
 class PluginContext(Protocol):
     """
-    Protocol fuer den UI-Adapter, den Plugins bekommen.
+    Protocol für den UI-Adapter, den Plugins bekommen.
 
-    Die UI-Schicht (Qt) implementiert das. Headless-Tests koennen einen
+    Die UI-Schicht (Qt) implementiert das. Headless-Tests können einen
     eigenen Mock-Context bauen.
     """
 
@@ -88,8 +88,8 @@ class PluginContext(Protocol):
         default: int = 0,
         minimum: int = 0,
         maximum: int = 1_000_000,
-    ) -> Optional[int]: ...
-    def prompt_str(self, question: str, default: str = "") -> Optional[str]: ...
+    ) -> int | None: ...
+    def prompt_str(self, question: str, default: str = "") -> str | None: ...
     def progress(self, value: float, text: str = "") -> None: ...
 
 
@@ -113,17 +113,17 @@ def _user_plugins_dir() -> Path:
     return Path.home() / ".pysticky" / "plugins"
 
 
-def discover_plugins(extra_dirs: Optional[list[Path]] = None) -> list[Plugin]:
+def discover_plugins(extra_dirs: list[Path] | None = None) -> list[Plugin]:
     """
     Findet alle Plugins in Built-in- und User-Verzeichnissen.
 
     Args:
-        extra_dirs: Optionale zusaetzliche Verzeichnisse zum Durchsuchen
-                    (vor allem fuer Tests).
+        extra_dirs: Optionale zusätzliche Verzeichnisse zum Durchsuchen
+                    (vor allem für Tests).
 
     Returns:
         Sortierte Liste der gefundenen Plugins. Bei Manifest-Fehlern
-        wird das Plugin uebersprungen (mit Warning-Log).
+        wird das Plugin übersprungen (mit Warning-Log).
     """
     dirs = [_builtin_plugins_dir(), _user_plugins_dir()]
     if extra_dirs:
@@ -146,7 +146,7 @@ def discover_plugins(extra_dirs: Optional[list[Path]] = None) -> list[Plugin]:
                     data = json.load(f)
                 manifest = PluginManifest.from_dict(data)
             except (OSError, json.JSONDecodeError, PluginError) as e:
-                logger.warning(f"Plugin in {child} uebersprungen: {e}")
+                logger.warning(f"Plugin in {child} übersprungen: {e}")
                 continue
             if manifest.id in seen_ids:
                 logger.info(f"Plugin {manifest.id} bereits geladen, ueberspringe {child}")
@@ -167,7 +167,7 @@ def run_plugin(
     ctx: PluginContext,
 ) -> Any:
     """
-    Laedt das Entry-Modul, holt die Run-Function und ruft sie auf.
+    Lädt das Entry-Modul, holt die Run-Function und ruft sie auf.
 
     Args:
         plugin:   Der zu startende Plugin.
@@ -175,7 +175,7 @@ def run_plugin(
         ctx:      Der UI-Adapter.
 
     Returns:
-        Der Rueckgabewert der Plugin-Funktion (typischerweise None).
+        Der Rückgabewert der Plugin-Funktion (typischerweise None).
 
     Raises:
         PluginError: wenn das Modul oder die Funktion nicht ladbar/aufrufbar ist.

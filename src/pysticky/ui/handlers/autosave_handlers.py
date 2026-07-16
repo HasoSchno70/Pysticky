@@ -1,5 +1,5 @@
 """
-Autosave-Handler fuer MainWindow.
+Autosave-Handler für MainWindow.
 
 Ausgelagert aus file_handlers.py, damit File-I/O- und Autosave-Logik
 nicht in derselben Datei wohnen.
@@ -19,18 +19,18 @@ logger = get_logger(__name__)
 
 
 class AutosaveHandlersMixin:
-    """Mixin fuer Autosave und Recovery."""
+    """Mixin für Autosave und Recovery."""
 
     def _on_autosave(self: "MainWindow") -> None:
         """
         Automatisches Speichern mit sicherer Schreibstrategie.
 
-        Schreibt zuerst in eine temporaere .autosave-Datei,
+        Schreibt zuerst in eine temporäre .autosave-Datei,
         dann wird die alte Backup-Datei erst ersetzt wenn der
         Schreibvorgang erfolgreich war.
 
-        Erzeugt zusaetzlich periodisch versionierte Snapshots
-        (Datei → Versionen…) — unabhaengig vom Autosave-Recovery-Punkt.
+        Erzeugt zusätzlich periodisch versionierte Snapshots
+        (Datei → Versionen…) — unabhängig vom Autosave-Recovery-Punkt.
         """
         from ...core import save_pattern
 
@@ -65,7 +65,7 @@ class AutosaveHandlersMixin:
                 logger.warning("Autosave-Tempdatei konnte nicht entfernt werden: %s", temp_path)
             self.status_bar.showMessage(f"Autosave fehlgeschlagen: {e}", 5000)
 
-        # Snapshot wenn ueberfaellig (rate-limited via should_snapshot)
+        # Snapshot wenn überfällig (rate-limited via should_snapshot)
         self._maybe_create_snapshot()
 
     def _maybe_create_snapshot(self: "MainWindow") -> None:
@@ -88,7 +88,7 @@ class AutosaveHandlersMixin:
 
     def _check_autosave_recovery(self: "MainWindow") -> None:
         """
-        Prueft beim Start ob eine Autosave-Datei existiert und bietet Recovery an.
+        Prüft beim Start ob eine Autosave-Datei existiert und bietet Recovery an.
 
         Wird von _perform_start_action aufgerufen.
         """
@@ -120,7 +120,7 @@ class AutosaveHandlersMixin:
                     "Fehler",
                     f"Autosave konnte nicht geladen werden:\n{e}",
                 )
-        # Autosave-Datei nach Entscheidung aufraeumen
+        # Autosave-Datei nach Entscheidung aufräumen
         try:
             temp_autosave.unlink()
         except OSError:

@@ -74,9 +74,9 @@ class CrossStitchCanvas(
     zoom_changed = Signal(float)
     offset_changed = Signal(int, int)
 
-    # Auswahl-Signale fuer Tool-spezifische Tasten (F/R/H/V im keyPressEvent).
-    # Copy/Cut/Paste/Delete laufen ueber QActions im Bearbeiten-Menue —
-    # daher hier nicht mehr noetig.
+    # Auswahl-Signale für Tool-spezifische Tasten (F/R/H/V im keyPressEvent).
+    # Copy/Cut/Paste/Delete laufen über QActions im Bearbeiten-Menü —
+    # daher hier nicht mehr nötig.
     selection_fill = Signal()
     selection_rotate_cw = Signal()
     selection_rotate_ccw = Signal()
@@ -139,15 +139,15 @@ class CrossStitchCanvas(
         self._dim_other_layers: bool = False
         self._show_center_crosshair: bool = False
         self._show_completion: bool = True
-        self._show_fabric_texture: bool = True  # Aida-Optik fuer leere Zellen
+        self._show_fabric_texture: bool = True  # Aida-Optik für leere Zellen
         self._colorblind_mode = None  # ColorBlindType.NONE
         self._active_stitch_type: int = 0  # StitchType.FULL
         # Diamond-Painting-Ansicht: FULL-Stiche werden als facettierte Drills
-        # gerendert, Symbole werden zu DMC-Nummern. Daten bleiben unveraendert
+        # gerendert, Symbole werden zu DMC-Nummern. Daten bleiben unverändert
         # — reines Rendering-Override (analog show_symbols).
         self._diamond_view: bool = False
 
-        # Stoff-Textur-Pixmap (lazy generiert, abhaengig von cell_size)
+        # Stoff-Textur-Pixmap (lazy generiert, abhängig von cell_size)
         self._fabric_pixmap: QPixmap | None = None
         self._fabric_pixmap_cell_size: int = 0
 
@@ -178,22 +178,22 @@ class CrossStitchCanvas(
         self._batch_active: bool = False
 
         # Farb-Isolation (None = aus). Andere Farben werden in _draw_layer_cells
-        # mit reduzierter Alpha gezeichnet — Cache-Key haengt schon an Alpha,
-        # also keine zusaetzliche Cache-Invalidierung noetig.
+        # mit reduzierter Alpha gezeichnet — Cache-Key hängt schon an Alpha,
+        # also keine zusätzliche Cache-Invalidierung nötig.
         self._isolate_color_index: int | None = None
 
         # Sticken-Modus-Cursor: separate Zelle (Grid-Koordinaten), die durch
-        # Pfeiltasten-Navigation gesteuert wird. Unabhaengig vom Hover-Cursor.
+        # Pfeiltasten-Navigation gesteuert wird. Unabhängig vom Hover-Cursor.
         self._stitch_cursor: tuple[int, int] | None = None
 
         # Auswahl
         self._selection: QRect | None = None
 
-        # Tablet-Pressure: aktuelle Stiftstaerke (0.0-1.0). 0.0 bedeutet
+        # Tablet-Pressure: aktuelle Stiftstärke (0.0-1.0). 0.0 bedeutet
         # entweder kein Stift verwendet oder Pen-Up. Wird vom tabletEvent
         # gesetzt und vom Pencil-Tool gelesen.
         self._tablet_pressure: float = 0.0
-        self._tablet_in_use: bool = False  # True waehrend der Stift Kontakt hat
+        self._tablet_in_use: bool = False  # True während der Stift Kontakt hat
 
         # Deferred Update Timer (~60 FPS)
         self._update_timer = QTimer(self)
@@ -212,19 +212,19 @@ class CrossStitchCanvas(
         # Doppelpufferung für bessere Performance
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)
         # Kein Default-Kontextmenu — sonst flackert beim Rechtsklick-Drag
-        # ein leeres Menue auf, weil Qt unconditionally ContextMenuEvent
-        # feuert. Wir nutzen Rechtsklick selbst (Loeschen).
+        # ein leeres Menü auf, weil Qt unconditionally ContextMenuEvent
+        # feuert. Wir nutzen Rechtsklick selbst (Löschen).
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
-        # Touch-Events / Gestures abhaengig vom Setting aktivieren
+        # Touch-Events / Gestures abhängig vom Setting aktivieren
         self._apply_touch_setting()
-        # Pinch-Gesture Status fuer differenz-basiertes Zoomen
+        # Pinch-Gesture Status für differenz-basiertes Zoomen
         self._gesture_last_scale: float = 1.0
 
     def _apply_touch_setting(self) -> None:
         """Aktiviert/deaktiviert Touch-Events und Pinch-Gesture.
 
         Aus den Settings (`touch/gestures_enabled`, Default False).
-        Standardmaessig AUS, weil Windows auf manchen Geraeten einen
+        Standardmäßig AUS, weil Windows auf manchen Geräten einen
         Tablet/Touch-Indicator-Toast beim langen Drag zeigt, wenn Touch
         akzeptiert wird (auch ohne Touchscreen).
         """
@@ -246,7 +246,7 @@ class CrossStitchCanvas(
         """
         Liefert eine Tile-Pixmap mit Aida-Stoff-Optik.
 
-        Wird beim Render fuer die leeren Zellen als Brush benutzt. Gecacht
+        Wird beim Render für die leeren Zellen als Brush benutzt. Gecacht
         pro `cell_size`, damit Zoom-Wechsel nicht jeden Frame neu rendert.
         """
         cs = self._cell_size
@@ -258,7 +258,7 @@ class CrossStitchCanvas(
         pixmap = QPixmap(cs, cs)
         pixmap.fill(self._empty_color)
 
-        # Subtile Punkt-Textur — nur bei groesseren Zellen sichtbar
+        # Subtile Punkt-Textur — nur bei größeren Zellen sichtbar
         if cs >= 8:
             p = _QP(pixmap)
             try:
@@ -290,7 +290,7 @@ class CrossStitchCanvas(
     def set_pattern(self, pattern: Pattern) -> None:
         """Setzt das anzuzeigende Pattern."""
         self._pattern = pattern
-        # Per-Pattern-State zuruecksetzen
+        # Per-Pattern-State zurücksetzen
         self._isolate_color_index = None
         self._stitch_cursor = None
         self._center_pattern()
@@ -314,7 +314,7 @@ class CrossStitchCanvas(
         if index == self._isolate_color_index:
             return
         self._isolate_color_index = index
-        # Stitch-Cursor zuruecksetzen, damit er nicht auf einer gedimmten Zelle
+        # Stitch-Cursor zurücksetzen, damit er nicht auf einer gedimmten Zelle
         # einer anderen Farbe stehen bleibt (verwirrend).
         if index is not None:
             self._stitch_cursor = None
@@ -332,7 +332,7 @@ class CrossStitchCanvas(
         self.update()
 
     def jump_to_next_stitch(self, forward: bool = True) -> bool:
-        """Springt zum naechsten/vorherigen ungehakten Stich der aktiven Farbe.
+        """Springt zum nächsten/vorherigen ungehakten Stich der aktiven Farbe.
 
         Reading-Order (links-rechts, oben-unten). Wickelt am Ende um.
 
@@ -351,7 +351,7 @@ class CrossStitchCanvas(
         # Completion-Mask aus dem oberen sichtbaren Layer pro Cell.
         # Vereinfachung: wir nehmen das "irgendein Layer hat completion auf
         # dieser Cell"-Pattern — gleicher Layer-Stack-Composite-Logik wie
-        # Rendering. Praezise: composite-Layer mit Match-Color.
+        # Rendering. Präzise: composite-Layer mit Match-Color.
         completion = np.zeros_like(composite, dtype=bool)
         for layer in self._pattern.layer_stack:
             if not layer.visible:

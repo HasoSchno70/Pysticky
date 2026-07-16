@@ -498,18 +498,18 @@ class NewProjectDialog(QDialog):
         size_layout = QGridLayout(size_group)
 
         # Diamond-Painting-Preset: liefert direkt eine sinnvolle Drill-Zahl
-        # fuer ein bestimmtes DIN-Format bei 2.5mm Pitch. Wer den Eintrag
-        # waehlt, bekommt automatisch DP-Modus + die passende Drill-Anzahl.
+        # für ein bestimmtes DIN-Format bei 2.5mm Pitch. Wer den Eintrag
+        # wählt, bekommt automatisch DP-Modus + die passende Drill-Anzahl.
         size_layout.addWidget(QLabel(t("DP-Preset:")), 0, 0)
         self._dp_preset_combo = QComboBox()
         self._dp_preset_combo.setToolTip(
             t(
-                "Vorgefertigte Diamond-Painting-Groessen, die 1:1 auf das "
+                "Vorgefertigte Diamond-Painting-Größen, die 1:1 auf das "
                 "jeweilige DIN-Format passen (bei 2.5mm Drill-Pitch)."
             )
         )
         # (Label, width, height, ist_dp)
-        # None-Eintrag fuer "Stick-Modus / freie Wahl" — Default.
+        # None-Eintrag für "Stick-Modus / freie Wahl" — Default.
         self._DP_PRESETS = [
             ("— Keine Auswahl (eigene Werte) —", None, None, False),
             ("DP A4 quadratisch (60×60 = 15×15 cm)", 60, 60, True),
@@ -595,7 +595,7 @@ class NewProjectDialog(QDialog):
         self._create_btn.setDefault(True)
         self._create_btn.clicked.connect(self.accept)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         self._create_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._create_btn, QDialogButtonBox.ButtonRole.AcceptRole)
 
@@ -820,7 +820,7 @@ class NewProjectDialog(QDialog):
         )
 
     def _on_dp_preset_changed(self, index: int) -> None:
-        """DP-Preset gewaehlt → Breite/Hoehe setzen + Modus markieren."""
+        """DP-Preset gewählt → Breite/Höhe setzen + Modus markieren."""
         if index < 0 or index >= len(self._DP_PRESETS):
             return
         label, w, h, is_dp = self._DP_PRESETS[index]
@@ -828,7 +828,7 @@ class NewProjectDialog(QDialog):
             # "Keine Auswahl" — Spinner-Werte unangetastet lassen
             self._dp_mode_selected = False
             return
-        # Verhindere, dass valueChanged das Preset zuruecksetzt waehrend wir
+        # Verhindere, dass valueChanged das Preset zurücksetzt während wir
         # setzen — kurz die Signale blockieren.
         self._width_spin.blockSignals(True)
         self._height_spin.blockSignals(True)
@@ -850,7 +850,7 @@ class NewProjectDialog(QDialog):
             "height": self._height_spin.value(),
             "fabric_count": fabric_counts[self._fabric_combo.currentIndex()],
             "template_name": self._selected_template["name"] if self._selected_template else None,
-            # True wenn ein DP-Preset gewaehlt wurde — der File-Handler
+            # True wenn ein DP-Preset gewählt wurde — der File-Handler
             # setzt entsprechend Pattern.mode='diamond' und fabric_count=10
             # (Standard 2.5mm Drill-Pitch).
             "dp_mode": getattr(self, "_dp_mode_selected", False),

@@ -6,7 +6,6 @@ Stickgarnen und deren Farben.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .color_math import lab_to_rgb, rgb_to_lab
 
@@ -19,16 +18,16 @@ def _blend_colors_lab(
     Perzeptueller Farbmix in CIE-Lab.
 
     sRGB-Pixel werden zu Lab konvertiert, gewichtetes Mittel im Lab-Raum
-    berechnet, dann zurueck zu sRGB. So entspricht der Mix dem, was das
+    berechnet, dann zurück zu sRGB. So entspricht der Mix dem, was das
     Auge erwartet — anders als ein plain RGB-Mittel.
 
-    Implementation: Inline, ohne numpy-Abhaengigkeit (Thread-Klasse ist
+    Implementation: Inline, ohne numpy-Abhängigkeit (Thread-Klasse ist
     "core lite"). Bei <= 4 Komponenten ist Python schnell genug.
     """
     if not colors:
-        raise ValueError("Mindestens eine Farbe noetig")
+        raise ValueError("Mindestens eine Farbe nötig")
     if len(weights) != len(colors):
-        raise ValueError("colors und weights muessen gleich lang sein")
+        raise ValueError("colors und weights müssen gleich lang sein")
 
     total_weight = sum(weights)
     if total_weight <= 0:
@@ -196,11 +195,11 @@ class Thread:
 
     name: str
     color: ThreadColor
-    manufacturer: Optional[str] = None
-    catalog_number: Optional[str] = None
-    weight: Optional[int] = 40  # Standard: 40 wt
-    blend_components: Optional[list["Thread"]] = None
-    strand_ratios: Optional[list[int]] = None
+    manufacturer: str | None = None
+    catalog_number: str | None = None
+    weight: int | None = 40  # Standard: 40 wt
+    blend_components: list["Thread"] | None = None
+    strand_ratios: list[int] | None = None
 
     @property
     def is_blend(self) -> bool:
@@ -211,14 +210,14 @@ class Thread:
     def blend(
         cls,
         components: list["Thread"],
-        ratios: Optional[list[int]] = None,
-        name: Optional[str] = None,
+        ratios: list[int] | None = None,
+        name: str | None = None,
     ) -> "Thread":
         """
         Erstellt einen Tweed-Blend aus mehreren Komponenten-Threads.
 
         Mischfarbe wird perzeptuell in CIE-Lab berechnet (gewichtet nach
-        Strang-Verhaeltnissen). Plain RGB-Mix waere wahrnehmungsmaessig
+        Strang-Verhältnissen). Plain RGB-Mix wäre wahrnehmungsmäßig
         falsch — Lab-Mix erzeugt das, was der Stickerin am ehesten
         entspricht.
 
@@ -226,7 +225,7 @@ class Thread:
             components: Liste der Komponenten-Threads (mind. 2).
             ratios:     Stranganzahl pro Komponente. Default: 1 pro Komponente.
                         Bei [1, 2] kommt z.B. 1 Strang vom ersten Thread und
-                        2 Straenge vom zweiten in jede Nadel.
+                        2 Stränge vom zweiten in jede Nadel.
             name:       Anzeigename. Default: "MfrA Nr / MfrB Nr (1+1)".
 
         Returns:
@@ -239,7 +238,7 @@ class Thread:
         if len(ratios) != len(components):
             raise ValueError("Anzahl Ratios muss Anzahl Komponenten entsprechen")
         if any(r < 1 for r in ratios):
-            raise ValueError("Ratios muessen >= 1 sein")
+            raise ValueError("Ratios müssen >= 1 sein")
 
         mixed_color = _blend_colors_lab([c.color for c in components], ratios)
 

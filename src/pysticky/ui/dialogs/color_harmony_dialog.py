@@ -208,8 +208,8 @@ class ColorSwatch(QFrame):
             self.update()
 
     def _distance_label(self) -> tuple[str, str, int]:
-        """Liefert (Symbol, Text, Punkte) fuer den Distanz-Indikator."""
-        # CIE76 Delta-E statt RGB-Euklid (frueher 25/60/120).
+        """Liefert (Symbol, Text, Punkte) für den Distanz-Indikator."""
+        # CIE76 Delta-E statt RGB-Euklid (früher 25/60/120).
         d = self._distance
         if d < 5:
             return ("●●●●", "Perfekt", 4)
@@ -228,7 +228,7 @@ class ColorSwatch(QFrame):
 
         # Hintergrund + Rahmen
         if self._selected:
-            # Selected: kraeftiger Akzent-Hintergrund + dicker Border
+            # Selected: kräftiger Akzent-Hintergrund + dicker Border
             bg = QColor(THEME.accent_primary)
             bg.setAlpha(40)
             painter.setBrush(bg)
@@ -252,7 +252,7 @@ class ColorSwatch(QFrame):
             self._harmony_name,
         )
 
-        # === Farbflaechen (Wunsch vs. Garn) ===
+        # === Farbflächen (Wunsch vs. Garn) ===
         colors_top = 32
         colors_h = 56
         gap = 4
@@ -308,7 +308,7 @@ class ColorSwatch(QFrame):
                 f"{mfr} {num}",
             )
 
-            # Name (eine Zeile, gekuerzt)
+            # Name (eine Zeile, gekürzt)
             name = self._thread.name
             if len(name) > 24:
                 name = name[:23] + "…"
@@ -322,7 +322,7 @@ class ColorSwatch(QFrame):
 
             # Distanz-Indikator: Dots + Text
             dots, dlabel, _n = self._distance_label()
-            # Punkte in Akzent-Farbe (Anzahl je nach Naehe)
+            # Punkte in Akzent-Farbe (Anzahl je nach Nähe)
             dist_color = QColor(THEME.accent_primary) if _n >= 3 else QColor(THEME.text_muted)
             painter.setPen(dist_color)
             painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
@@ -368,7 +368,7 @@ class ColorSwatch(QFrame):
             painter.drawLine(bx + 6, by + 11, bx + 10, by + 16)
             painter.drawLine(bx + 10, by + 16, bx + 17, by + 7)
         elif self._hovered and self._thread:
-            # Hover-Hint: kleines "+ Klick zum Auswaehlen" rechts oben
+            # Hover-Hint: kleines "+ Klick zum Auswählen" rechts oben
             painter.setPen(QColor(THEME.accent_primary))
             painter.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
             painter.drawText(
@@ -582,7 +582,7 @@ class ColorHarmonyDialog(QDialog):
         self._add_btn.setEnabled(False)
         self._add_btn.clicked.connect(self._on_add)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         self._add_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._add_btn, QDialogButtonBox.ButtonRole.AcceptRole)
 
@@ -689,8 +689,8 @@ class ColorHarmonyDialog(QDialog):
     def _update_harmonies(self) -> None:
         """Berechnet und zeigt die harmonischen Farben."""
         # Alte Swatches entfernen — wichtig: erst aus dem Layout, dann
-        # deleteLater. Sonst bleiben sie sichtbar (deleteLater haengt nur
-        # die Lebensdauer ab, nicht das Parent-Verhaeltnis).
+        # deleteLater. Sonst bleiben sie sichtbar (deleteLater hängt nur
+        # die Lebensdauer ab, nicht das Parent-Verhältnis).
         for swatch in self._harmony_swatches:
             self._harmonies_layout.removeWidget(swatch)
             swatch.setParent(None)

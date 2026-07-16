@@ -20,7 +20,7 @@ Nicht unterstützt:
 import struct
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Optional
+from typing import BinaryIO
 
 from ...core.layer import Layer
 from ...core.pattern import ColorEntry, Pattern
@@ -92,7 +92,7 @@ class XSDImporter:
         except OSError:
             return False
 
-    def import_file(self, filepath: Path | str) -> Optional[Pattern]:
+    def import_file(self, filepath: Path | str) -> Pattern | None:
         """
         Importiert eine XSD-Datei.
 
@@ -401,7 +401,7 @@ class XSDImporter:
             self.warnings.append(f"Fehler beim Lesen der Backstitch-Daten: {e}")
 
 
-def import_xsd(filepath: Path | str) -> tuple[Optional[Pattern], list[str], list[str]]:
+def import_xsd(filepath: Path | str) -> tuple[Pattern | None, list[str], list[str]]:
     """
     Convenience-Funktion zum Importieren einer XSD-Datei.
 

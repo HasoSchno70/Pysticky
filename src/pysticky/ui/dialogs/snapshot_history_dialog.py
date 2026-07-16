@@ -1,6 +1,6 @@
 """
 Versionen-Dialog: zeigt alle Snapshots eines Patterns mit Datum,
-Stich-Anzahl + Restore-/Loesch-Buttons.
+Stich-Anzahl + Restore-/Lösch-Buttons.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 class SnapshotHistoryDialog(QDialog):
     """Dialog zur Anzeige + Wiederherstellung versionierter Snapshots."""
 
-    # Wird mit dem ausgewaehlten Snapshot-Pfad emittiert, wenn der User
+    # Wird mit dem ausgewählten Snapshot-Pfad emittiert, wenn der User
     # "Wiederherstellen" klickt.
     restore_requested = Signal(Path)
 
@@ -72,7 +72,7 @@ class SnapshotHistoryDialog(QDialog):
             t(
                 "Automatische Versionen werden alle 30 Minuten angelegt, sobald "
                 "ungespeicherte Änderungen vorhanden sind. Doppelklick zeigt "
-                "Details, der Button 'Wiederherstellen' laedt diese Version "
+                "Details, der Button 'Wiederherstellen' lädt diese Version "
                 "wieder als aktives Muster."
             )
         )
@@ -111,7 +111,7 @@ class SnapshotHistoryDialog(QDialog):
         self._btn_restore.clicked.connect(self._on_restore)
         self._btn_restore.setEnabled(False)
         # Verhindert, dass dieser Button den Default-Status (Enter-Taste)
-        # des Close-Buttons unten uebernimmt.
+        # des Close-Buttons unten übernimmt.
         self._btn_restore.setAutoDefault(False)
         btn_row.addWidget(self._btn_restore)
 
@@ -127,7 +127,7 @@ class SnapshotHistoryDialog(QDialog):
         self._btn_diff.setAutoDefault(False)
         self._btn_diff.setToolTip(
             t(
-                "Vergleicht den ausgewaehlten Snapshot visuell mit dem aktuell "
+                "Vergleicht den ausgewählten Snapshot visuell mit dem aktuell "
                 "geoeffneten Pattern — markiert hinzugefuegte, entfernte und "
                 "geaenderte Stiche."
             )
@@ -141,9 +141,9 @@ class SnapshotHistoryDialog(QDialog):
         btn_close.clicked.connect(self.accept)
         btn_close.setDefault(True)
         # Andere Buttons im Dialog sind QPushButtons mit autoDefault=True und
-        # koennen den Default-Status trotz setDefault(True) uebernehmen,
+        # können den Default-Status trotz setDefault(True) übernehmen,
         # sobald sie in einer QDialogButtonBox verdrahtet werden — daher hier
-        # den sanktionierten Primary-Button-Stil unabhaengig von isDefault() setzen.
+        # den sanktionierten Primary-Button-Stil unabhängig von isDefault() setzen.
         btn_close.setStyleSheet(Styles.button_primary())
         btn_row.addWidget(button_box)
 
@@ -165,7 +165,7 @@ class SnapshotHistoryDialog(QDialog):
             empty = QListWidgetItem(
                 t(
                     "Noch keine Versionen vorhanden.\n"
-                    "Speichern oder warten bis die naechste Auto-Version erstellt wird."
+                    "Speichern oder warten bis die nächste Auto-Version erstellt wird."
                 )
             )
             empty.setFlags(Qt.ItemFlag.NoItemFlags)
@@ -207,7 +207,7 @@ class SnapshotHistoryDialog(QDialog):
             n_stitches = p.total_stitches
             n_colors = len(p.color_entries)
             size = f"{p.width} × {p.height}"
-        except Exception:  # noqa: BLE001 — Snapshot kann beschaedigt sein
+        except Exception:  # noqa: BLE001 — Snapshot kann beschädigt sein
             self._detail_label.setText(
                 f"⚠ Diese Version konnte nicht gelesen werden ({path.name})."
             )
@@ -218,7 +218,7 @@ class SnapshotHistoryDialog(QDialog):
         )
 
     def _on_double_clicked(self, item: QListWidgetItem) -> None:
-        # Detail-Update reicht — Restore explizit ueber Button
+        # Detail-Update reicht — Restore explizit über Button
         path = item.data(Qt.ItemDataRole.UserRole)
         if isinstance(path, Path):
             self._update_detail(path)
@@ -241,7 +241,7 @@ class SnapshotHistoryDialog(QDialog):
             self.accept()
 
     def _on_diff(self) -> None:
-        """Oeffnet den Diff-Dialog mit ausgewaehltem Snapshot vs. aktuellem Pattern."""
+        """Öffnet den Diff-Dialog mit ausgewähltem Snapshot vs. aktuellem Pattern."""
         path = self._selected_path()
         if path is None:
             return

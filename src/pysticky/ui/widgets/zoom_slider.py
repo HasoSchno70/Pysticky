@@ -83,8 +83,8 @@ class ZoomSlider(QWidget):
         self._apply_theme()
 
     def _apply_theme(self) -> None:
-        """Aktualisiert alle Stylesheets fuer aktuellen Theme — sonst bleiben
-        die Buttons im Light-Mode unleserlich (war frueher: color: white)."""
+        """Aktualisiert alle Stylesheets für aktuellen Theme — sonst bleiben
+        die Buttons im Light-Mode unleserlich (war früher: color: white)."""
         btn_style = f"""
             QPushButton {{
                 background: {THEME.bg_lighter};

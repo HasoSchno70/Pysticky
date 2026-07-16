@@ -61,7 +61,7 @@ class FileHandlersMixin:
         if dialog.exec():
             settings = dialog.get_settings()
 
-            # Wer ein DP-Preset gewaehlt hat: Pattern direkt im DP-Modus
+            # Wer ein DP-Preset gewählt hat: Pattern direkt im DP-Modus
             # anlegen mit Standard-Drill-Pitch 2.5mm (fabric_count=10).
             is_dp = settings.get("dp_mode", False)
             fabric_count = 10 if is_dp else settings["fabric_count"]
@@ -140,8 +140,8 @@ class FileHandlersMixin:
         Lädt eine externe Pattern-Datei (XSD, PAT, OXS) per Drag&Drop.
 
         Im Gegensatz zu `_load_pattern_file` wird `current_file` nicht gesetzt,
-        weil das Original-Format nicht in das interne .pxs zurueckgespeichert
-        werden kann — der naechste Save geht in eine .pxs-Datei.
+        weil das Original-Format nicht in das interne .pxs zurückgespeichert
+        werden kann — der nächste Save geht in eine .pxs-Datei.
         """
         path = Path(path)
         suffix = path.suffix.lower()
@@ -162,8 +162,8 @@ class FileHandlersMixin:
             else:
                 QMessageBox.warning(
                     self,
-                    t("Nicht unterstuetzt"),
-                    f"Dateiformat '{suffix}' wird nicht unterstuetzt.",
+                    t("Nicht unterstützt"),
+                    f"Dateiformat '{suffix}' wird nicht unterstützt.",
                 )
                 return False
 
@@ -189,7 +189,7 @@ class FileHandlersMixin:
             self.status_bar.showMessage(f"Importiert: {path.name}", 3000)
             return True
         except (OSError, ValueError) as e:
-            QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geoeffnet werden:\n{e}")
+            QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
             return False
 
     def _on_pattern_properties(self: "MainWindow") -> None:
@@ -424,7 +424,7 @@ class FileHandlersMixin:
 
             composite = pattern.layer_stack.get_composite_grid()
             type_grid = pattern.layer_stack.get_composite_stitch_type_grid()
-            # Lokaler Import — sonst Top-Level-Import-Schmerz fuer non-print Pfade
+            # Lokaler Import — sonst Top-Level-Import-Schmerz für non-print Pfade
             from ...core.stitch_shapes import is_bead, is_french_knot, is_partial_stitch
             from ...io.image_export import _fill_bead, _fill_french_knot, _fill_partial_stitch
 

@@ -1,14 +1,14 @@
 """
-Composite-Grid-Cache fuer HTML- und PDF-Export.
+Composite-Grid-Cache für HTML- und PDF-Export.
 
 Die Per-Zelle-Funktionen `get_pixel_color` / `get_pixel_stitch_type` /
 `get_pixel_symbol` in `export_common.py` iterieren bei jedem Aufruf den
 Layer-Stack. Bei grossen Vorschaubildern (Deckblatt, Preview) wird das
-ganze Pattern abgegrast — das skaliert mit `breite * hoehe * layers`.
+ganze Pattern abgegrast — das skaliert mit `breite * höhe * layers`.
 
 Dieses Modul bildet einmal pro Export die Layer-Komposition als
 numpy-Arrays ab und liefert die O(1)-Lookup-API, die HTML- und
-PDF-Exporter teilen koennen.
+PDF-Exporter teilen können.
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ class CompositeGridCache:
     def count_page_colors(
         self, start_x: int, start_y: int, end_x: int, end_y: int
     ) -> dict[int, int]:
-        """Zaehlt Farb-Indizes auf einem rechteckigen Seitenausschnitt."""
+        """Zählt Farb-Indizes auf einem rechteckigen Seitenausschnitt."""
         x0 = max(0, start_x)
         y0 = max(0, start_y)
         x1 = min(self.width - 1, end_x)

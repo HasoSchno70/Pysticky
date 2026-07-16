@@ -8,7 +8,6 @@ Templates werden als JSON im Benutzerverzeichnis gespeichert.
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QPainter
@@ -135,7 +134,7 @@ class SaveTemplateDialog(QDialog):
         self, width: int = 50, height: int = 50, fabric_count: int = 14, parent=None
     ) -> None:
         super().__init__(parent)
-        self._template: Optional[UserTemplate] = None
+        self._template: UserTemplate | None = None
 
         self.setWindowTitle(t("Template speichern"))
         self.setMinimumWidth(400)
@@ -216,7 +215,7 @@ class SaveTemplateDialog(QDialog):
         save_btn.setDefault(True)
         save_btn.clicked.connect(self._on_save)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         save_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(save_btn, QDialogButtonBox.ButtonRole.AcceptRole)
 
@@ -269,7 +268,7 @@ class SaveTemplateDialog(QDialog):
         self.accept()
 
     @property
-    def template(self) -> Optional[UserTemplate]:
+    def template(self) -> UserTemplate | None:
         return self._template
 
 

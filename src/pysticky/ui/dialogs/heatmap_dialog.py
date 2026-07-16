@@ -100,9 +100,9 @@ def _color_variety_heatmap(composite: np.ndarray, block_size: int) -> np.ndarray
 
 
 def _intensity_to_rgb(t: float) -> tuple[int, int, int]:
-    """Mapped t in [0,1] auf blau -> cyan -> gruen -> gelb -> rot."""
+    """Mapped t in [0,1] auf blau -> cyan -> grün -> gelb -> rot."""
     if t <= 0.0:
-        return (20, 20, 60)  # fast schwarz fuer leere Bloecke
+        return (20, 20, 60)  # fast schwarz für leere Blöcke
     t = max(0.0, min(1.0, t))
     # 4 Segmente
     if t < 0.25:
@@ -172,8 +172,8 @@ class HeatmapDialog(QDialog):
         controls.setSpacing(8)
 
         self._axis_combo = QComboBox()
-        # Farbenvielfalt zuerst: zeigt beim ersten Blick eine bunte, aussagekraeftige
-        # Heatmap. Stichdichte ist bei vollflaechig gestickten Mustern meist
+        # Farbenvielfalt zuerst: zeigt beim ersten Blick eine bunte, aussagekräftige
+        # Heatmap. Stichdichte ist bei vollflächig gestickten Mustern meist
         # durchgehend rot (ein einziger roter Kasten) und damit als Default weniger
         # anschaulich.
         self._axis_combo.addItem(
@@ -181,14 +181,14 @@ class HeatmapDialog(QDialog):
         )
         self._axis_combo.addItem(t("Stichdichte (Anzahl Stiche pro Block)"), self.AXIS_DENSITY)
         self._axis_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        # Popup-Breite explizit an den laengsten Item-Text anpassen — sonst kann
+        # Popup-Breite explizit an den längsten Item-Text anpassen — sonst kann
         # das Dropdown schmaler als der Text sein und diesen abschneiden.
         self._axis_combo.view().setMinimumWidth(self._axis_combo.minimumSizeHint().width())
-        # Popup-Hoehe explizit setzen: Qt's automatische Popup-Groesse basiert
+        # Popup-Höhe explizit setzen: Qt's automatische Popup-Größe basiert
         # auf sizeHintForRow(), das den globalen QSS-Padding auf
         # "QComboBox QAbstractItemView" nicht mit einrechnet — das Ergebnis
         # ist ein Dropdown, das knapp zu niedrig ist und die letzte Zeile
-        # abschneidet. Grosszuegiger Puffer pro Zeile umgeht das zuverlaessig.
+        # abschneidet. Großzügiger Puffer pro Zeile umgeht das zuverläßig.
         row_height = self._axis_combo.fontMetrics().height() + 14
         self._axis_combo.view().setMinimumHeight(row_height * self._axis_combo.count() + 8)
         self._axis_combo.currentIndexChanged.connect(self._on_axis_changed)
@@ -206,7 +206,7 @@ class HeatmapDialog(QDialog):
         self._block_label = QLabel(f"{self._block_size} px")
         self._block_label.setMinimumWidth(48)
         slider_row.addWidget(self._block_label)
-        controls.addRow(t("Block-Groesse:"), slider_row)
+        controls.addRow(t("Block-Größe:"), slider_row)
 
         layout.addLayout(controls)
 
@@ -267,8 +267,8 @@ class HeatmapDialog(QDialog):
             label = t("Stichdichte")
 
         # Cell-Pixel berechnen: heatmap soll im Scroll-Bereich nicht winzig sein.
-        # Kein harter Cap — bei wenigen, grossen Bloecken darf die Heatmap auch
-        # gross werden, damit der Dialog ausgefuellt wirkt.
+        # Kein harter Cap — bei wenigen, grossen Blöcken darf die Heatmap auch
+        # gross werden, damit der Dialog ausgefüllt wirkt.
         bh, bw = values.shape
         target_w = max(400, self._scroll.viewport().width() - 20)
         target_h = max(400, self._scroll.viewport().height() - 20)
@@ -281,12 +281,12 @@ class HeatmapDialog(QDialog):
         bh, bw = values.shape
         nz = int((values > 0).sum())
         self._summary_label.setText(
-            f"{label}: {bw}×{bh} Bloecke à {self._block_size} Stich(e), {nz} aktive Bloecke"
+            f"{label}: {bw}×{bh} Blöcke à {self._block_size} Stich(e), {nz} aktive Blöcke"
         )
 
     def _render_legend(self) -> None:
         # Legende skaliert mit Dialog-Breite — wir rendern intern in 480px
-        # Aufloesung und lassen Qt auf die finale Label-Breite skalieren.
+        # Auflösung und lassen Qt auf die finale Label-Breite skalieren.
         w = 480
         h = 14
         img = QImage(w, h, QImage.Format.Format_RGB32)

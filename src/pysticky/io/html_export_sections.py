@@ -183,18 +183,18 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         return get_watermark(self.pattern)
 
     def _dp_print_css(self) -> str:
-        """Zusaetzliche Print-CSS-Regeln fuer 1:1-Drill-Druck im DP-Modus.
+        """Zusätzliche Print-CSS-Regeln für 1:1-Drill-Druck im DP-Modus.
 
-        Setzt die Cell-Groesse beim Drucken auf den exakten Drill-Pitch in
+        Setzt die Cell-Größe beim Drucken auf den exakten Drill-Pitch in
         Millimetern (2.5/2.8/3.0 mm). So passt der echte Drill genau auf
         die ausgedruckte Klebefolien-Zelle. Auf dem Bildschirm bleibt die
-        Pixel-Anzeige (~9 px) — wer auf dem Bildschirm groesser sehen will,
+        Pixel-Anzeige (~9 px) — wer auf dem Bildschirm größer sehen will,
         nutzt Strg++.
         """
         pitch = getattr(self, "_dp_cell_mm", None)
         if not pitch:
             return ""
-        # !important damit unsere DP-Regel die globalen 14px ueberschreibt.
+        # !important damit unsere DP-Regel die globalen 14px überschreibt.
         # `padding:0` weil Symbole/Drill-Nummern in der 1:1-Cell keinen
         # Platz haben — wer Nummern sieht, muss die Bildschirm-Anzeige nutzen.
         return (
@@ -274,7 +274,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         fabric_name = fabric_label_for(self.pattern)
 
-        # Wasserzeichen — author + copyright fuer Cover
+        # Wasserzeichen — author + copyright für Cover
         author, copyright_ = self._watermark()
         author_html = (
             f"<p class='cover-date'>{t('von {author}').format(author=_html_encode(author))}</p>"
@@ -403,7 +403,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         total_height = self.pattern.height * cell_size
 
         # SVG-basierte Vorschau (statt <table>), damit halbe + Viertel-Stiche
-        # als Polygone gerendert werden koennen. Im DP-Modus zusaetzlich
+        # als Polygone gerendert werden können. Im DP-Modus zusätzlich
         # facettierte Drills statt einfachen Quadraten.
         from .export_common import is_diamond_mode, svg_shape_for_stitch
 
@@ -491,34 +491,34 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
             is_dp_legend = is_diamond_mode(self.pattern)
             if thread.is_blend:
-                garn_label = " + ".join(
+                thread_label = " + ".join(
                     f"{c.manufacturer or ''} {c.catalog_number or ''}".strip()
                     for c in thread.blend_components
                 )
                 if thread.strand_ratios:
-                    garn_label += f" ({'+'.join(str(r) for r in thread.strand_ratios)})"
+                    thread_label += f" ({'+'.join(str(r) for r in thread.strand_ratios)})"
             elif is_dp_legend:
-                # Im DP nur die Drill-Nummer — der Manufacturer wuerde
+                # Im DP nur die Drill-Nummer — der Manufacturer würde
                 # "DMC Diamond Painting 169" daraus machen und die Spalte
-                # sprengen / mit der Name-Spalte ueberlappen.
-                garn_label = thread.catalog_number or ""
+                # sprengen / mit der Name-Spalte überlappen.
+                thread_label = thread.catalog_number or ""
             else:
-                garn_label = f"{thread.manufacturer or ''} {thread.catalog_number or ''}".strip()
+                thread_label = f"{thread.manufacturer or ''} {thread.catalog_number or ''}".strip()
 
             rows.append(f"""<tr>
 <td>{i}</td>
 <td style='text-align:center;font-size:14px;'><b>{_html_encode(stat["symbol"])}</b></td>
 <td><div class='color-box' style='background:rgb({thread.color.r},{thread.color.g},{thread.color.b})'></div></td>
-<td><b>{_html_encode(garn_label)}</b></td>
+<td><b>{_html_encode(thread_label)}</b></td>
 <td>{_html_encode(thread.name)}</td>
 {cross_cells}<td style='text-align:right;'>{stat["count"]}</td>
 <td style='text-align:right;'>{percent:.1f}%</td>
 <td style='text-align:center;font-weight:bold;'>{stat["skeins"]}</td>
 </tr>""")
 
-        # Summenzeile wird unten modus-spezifisch separat angehaengt
+        # Summenzeile wird unten modus-spezifisch separat angehängt
         # (siehe summary_row), damit das colspan stimmt — im DP-Modus
-        # entfaellt die Symbol-Spalte.
+        # entfällt die Symbol-Spalte.
 
         # Bead-Sektion (analog zur Backstitch-Sektion)
         bead_section = ""
@@ -539,7 +539,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
             bead_section = f"""
 <h2 style='margin-top:30px;'>&#9679; {t("Perlen (Beads)")}</h2>
-<p style='text-align:center;color:#666;font-size:12px;'>{t("Perlen werden ueber dem Stoff angenaeht und kommen meist am Ende der Stickarbeit dran.")}</p>
+<p style='text-align:center;color:#666;font-size:12px;'>{t("Perlen werden über dem Stoff angenaeht und kommen meist am Ende der Stickarbeit dran.")}</p>
 <table class='legend-table' style='max-width:600px;'>
 <tr><th>{t("Farbe")}</th><th>{t("Symbol")}</th><th>{t("Perlen-Nr.")}</th><th>{t("Farbname")}</th><th>{t("Anzahl")}</th></tr>
 {"".join(bead_rows)}
@@ -550,7 +550,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </table>"""
 
         # Backstitch-Info in der Legende — im DP-Modus weglassen (DP hat
-        # keine Rueckstich-Linien als Konzept).
+        # keine Rückstich-Linien als Konzept).
         backstitch_section = ""
         is_dp_mode = getattr(self.pattern, "mode", "stitch") == "diamond"
         if self.pattern.backstitches and not is_dp_mode:
@@ -584,10 +584,10 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 </tr>
 </table>"""
 
-        # Header — falls Cross-Ref aktiv, zusaetzliche Spalten einbauen
+        # Header — falls Cross-Ref aktiv, zusätzliche Spalten einbauen
         cross_ref_headers = "".join(f"<th>{_html_encode(name)}</th>" for name in cross_ref_palettes)
 
-        # Modus-spezifische Spaltenkoepfe und Section-Header.
+        # Modus-spezifische Spaltenköpfe und Section-Header.
         from .export_common import is_diamond_mode, terms_for
 
         terms = terms_for(self.pattern)
@@ -596,19 +596,19 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         unit_col = terms["unit_plural"]  # Stiche / Drills
         supply_col = terms["supply_unit"]  # Stränge / Drills
         code_col = terms["code_header"]  # Garnnummer / Drill-Code
-        # Im DP-Modus entfaellt die Symbol-Spalte (Drills tragen ihre
-        # Identitaet ueber den Code, nicht ueber Unicode-Symbole).
+        # Im DP-Modus entfällt die Symbol-Spalte (Drills tragen ihre
+        # Identität über den Code, nicht über Unicode-Symbole).
         if is_dp:
             symbol_header = ""
         else:
             symbol_header = f"<th>{t('Symbol')}</th>"
 
-        # Zur Vereinfachung: im DP-Modus zusaetzlich die Symbol-Spalte
+        # Zur Vereinfachung: im DP-Modus zusätzlich die Symbol-Spalte
         # aus den Rows herausfiltern (sie steht im Format "<td...>Symbol</td>").
         if is_dp:
             filtered_rows = []
             for row in rows:
-                # zweites <td> ueberspringen (Symbol-Zelle)
+                # zweites <td> überspringen (Symbol-Zelle)
                 start = row.find("<td", row.find("<td") + 1)  # zweites <td
                 end = row.find("</td>", start) + len("</td>")
                 filtered_rows.append(row[:start] + row[end:])

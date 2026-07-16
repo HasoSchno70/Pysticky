@@ -96,7 +96,7 @@ class UndoHandlersMixin:
         """Stich als erledigt markiert.
 
         Sucht automatisch die oberste sichtbare Ebene mit einem Stich an (x, y).
-        Vorher war nur die aktive Ebene moeglich — verwirrend wenn der User auf
+        Vorher war nur die aktive Ebene möglich — verwirrend wenn der User auf
         einen Stich klickt der auf einer anderen Ebene liegt.
         """
         from ...core import MarkStitchCompletedCommand

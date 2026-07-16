@@ -1,7 +1,7 @@
 """
 Projekt-Liste — verwaltet eine Liste von .pxs-Dateipfaden, die der User als
 "aktive Projekte" markiert hat. Wird genutzt, um eine kombinierte
-Einkaufsliste ueber mehrere Muster hinweg zu berechnen (core.inventory).
+Einkaufsliste über mehrere Muster hinweg zu berechnen (core.inventory).
 
 Persistenz: JSON-Datei im App-Daten-Verzeichnis (wie core.inventory).
 """
@@ -31,8 +31,8 @@ def get_project_list_path() -> Path:
 class ProjectList:
     """Verwaltet die Liste registrierter Projekt-Dateien (.pxs-Pfade).
 
-    Reine Pfad-Liste ohne Duplikate; Reihenfolge = Einfuege-Reihenfolge.
-    Bei Aenderungen muss `save()` explizit aufgerufen werden.
+    Reine Pfad-Liste ohne Duplikate; Reihenfolge = Einfüge-Reihenfolge.
+    Bei Änderungen muss `save()` explizit aufgerufen werden.
     """
 
     def __init__(self, path: Path | None = None) -> None:
@@ -59,7 +59,7 @@ class ProjectList:
                 self._paths = [str(p) for p in projects]
 
     def save(self) -> None:
-        """Schreibt die Projekt-Liste zurueck auf die Platte."""
+        """Schreibt die Projekt-Liste zurück auf die Platte."""
         payload = {"version": 1, "projects": self._paths}
         try:
             with open(self._path, "w", encoding="utf-8") as f:
@@ -68,7 +68,7 @@ class ProjectList:
             pass
 
     def add(self, path: str | Path) -> bool:
-        """Fuegt einen Pfad hinzu. Gibt False zurueck, wenn schon vorhanden."""
+        """Fügt einen Pfad hinzu. Gibt False zurück, wenn schon vorhanden."""
         p = str(Path(path))
         if p in self._paths:
             return False
@@ -82,7 +82,7 @@ class ProjectList:
             self._paths.remove(p)
 
     def items(self) -> list[str]:
-        """Liste aller registrierten Pfade (Einfuege-Reihenfolge)."""
+        """Liste aller registrierten Pfade (Einfüge-Reihenfolge)."""
         return list(self._paths)
 
     def __len__(self) -> int:

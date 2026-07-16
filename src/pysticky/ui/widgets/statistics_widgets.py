@@ -1,8 +1,8 @@
 """
-Hilfs-Widgets fuer den Statistik-Dialog.
+Hilfs-Widgets für den Statistik-Dialog.
 
-Enthaelt wiederverwendbare Widgets wie Farbvorschau-Delegates
-und Statistik-Karten fuer die Muster-Statistiken.
+Enthält wiederverwendbare Widgets wie Farbvorschau-Delegates
+und Statistik-Karten für die Muster-Statistiken.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from ..styles import THEME
 
 
 class ColorPreviewDelegate(QWidget):
-    """Kleine Farbvorschau fuer Tabellen."""
+    """Kleine Farbvorschau für Tabellen."""
 
     def __init__(self, color: QColor, parent=None) -> None:
         super().__init__(parent)
@@ -30,7 +30,7 @@ class ColorPreviewDelegate(QWidget):
 
 
 class StatCard(QFrame):
-    """Statistik-Karte fuer Uebersicht."""
+    """Statistik-Karte für Übersicht."""
 
     def __init__(self, title: str, value: str, icon: str = "", parent=None) -> None:
         super().__init__(parent)

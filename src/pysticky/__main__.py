@@ -1,5 +1,5 @@
 """
-Ermoeglicht den Start mit: python -m pysticky
+Ermöglicht den Start mit: python -m pysticky
 """
 
 import sys

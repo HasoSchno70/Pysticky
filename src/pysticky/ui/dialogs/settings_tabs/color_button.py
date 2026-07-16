@@ -4,7 +4,7 @@ Gemeinsame Widgets für Settings-Dialog.
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QColorDialog, QPushButton
+from PySide6.QtWidgets import QColorDialog, QPushButton, QWidget
 
 from ...styles import THEME
 
@@ -14,7 +14,7 @@ class ColorButton(QPushButton):
 
     color_changed = Signal(str)
 
-    def __init__(self, color: str = "#ffffff", parent=None):
+    def __init__(self, color: str = "#ffffff", parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._color = color
         self.setFixedSize(100, 28)
@@ -27,11 +27,11 @@ class ColorButton(QPushButton):
         return self._color
 
     @color.setter
-    def color(self, value: str):
+    def color(self, value: str) -> None:
         self._color = value
         self._update_style()
 
-    def _update_style(self):
+    def _update_style(self) -> None:
         """Aktualisiert das Button-Styling mit Farbquadrat."""
         self.setStyleSheet(f"""
             QPushButton {{
@@ -54,7 +54,7 @@ class ColorButton(QPushButton):
         """)
         self.setText(self._color.upper())
 
-    def _pick_color(self):
+    def _pick_color(self) -> None:
         color = QColorDialog.getColor(QColor(self._color), self, "Farbe wählen")
         if color.isValid():
             self._color = color.name()

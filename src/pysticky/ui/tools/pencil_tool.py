@@ -1,9 +1,9 @@
 """
 Stift-Werkzeug zum Zeichnen einzelner Stiche.
 
-Unterstuetzt Tablet-Pressure: Wenn ein Stift mit Druck aktiv ist, wird die
-Brush-Groesse proportional zum Druck moduliert (0..max_brush_size, kreis-
-foermig). Bei Maus-Eingabe (Pressure = 0) wird ein einzelner Stich gesetzt.
+Unterstützt Tablet-Pressure: Wenn ein Stift mit Druck aktiv ist, wird die
+Brush-Größe proportional zum Druck moduliert (0..max_brush_size, kreis-
+förmig). Bei Maus-Eingabe (Pressure = 0) wird ein einzelner Stich gesetzt.
 """
 
 from PySide6.QtCore import QSettings, Qt
@@ -18,14 +18,14 @@ class PencilTool(BaseTool):
 
     - Linke Maustaste: Stiche setzen
     - Zeichnet kontinuierlich beim Ziehen (mit Linien-Interpolation)
-    - Mit Tablet-Stift: Brush-Groesse via Druckstaerke
+    - Mit Tablet-Stift: Brush-Größe via Druckstärke
     """
 
     def __init__(self) -> None:
         super().__init__()
         self._last_pos: tuple[int, int] | None = None
         # Cached pro Press-Event: max-brush und ob Pressure aktiv ist.
-        # So muessen wir QSettings nicht pro Move-Event neu lesen.
+        # So müssen wir QSettings nicht pro Move-Event neu lesen.
         self._brush_max_size: int = 1
         self._pressure_enabled: bool = False
 
@@ -45,7 +45,7 @@ class PencilTool(BaseTool):
         auf der aktuellen Tablet-Pressure.
 
         Bei Pressure=0 oder deaktiviertem Pressure: nur die Zentrumszelle.
-        Bei Pressure>0: kreisfoermiger Brush mit Radius = round(pressure * (max_size - 1)).
+        Bei Pressure>0: kreisförmiger Brush mit Radius = round(pressure * (max_size - 1)).
         """
         if not self._pressure_enabled or self._brush_max_size <= 1:
             return [(cx, cy)]
@@ -112,7 +112,7 @@ class PencilTool(BaseTool):
     def _collect_changes(
         self, ctx: ToolContext, cx: int, cy: int
     ) -> list[tuple[int, int, int | None]]:
-        """Erzeugt Aenderungen fuer alle Brush-Zellen rund um (cx, cy)."""
+        """Erzeugt Änderungen für alle Brush-Zellen rund um (cx, cy)."""
         result: list[tuple[int, int, int | None]] = []
         for x, y in self._brush_cells(ctx, cx, cy):
             if self._is_valid_pos(ctx, x, y):

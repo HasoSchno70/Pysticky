@@ -4,7 +4,7 @@ Horizontale Icon-Werkzeugleiste (oberer Rand des Hauptfensters).
 Ersetzt eine native ``QToolBar`` durch ein eigenes Widget, damit bei
 schmalen Fenstern das gleiche Hover-Auto-Scroll-Verhalten wie bei der
 linken Werkzeugleiste (``widgets/tool_bar.py``) greift, statt Qt's
-Standard-Ueberlauf-Pfeil (">>"-Menue).
+Standard-Überlauf-Pfeil (">>"-Menü).
 """
 
 from PySide6.QtCore import Qt, QTimer
@@ -46,7 +46,7 @@ class IconToolBar(QWidget):
         self._content_layout.setContentsMargins(6, 2, 6, 2)
         self._content_layout.setSpacing(2)
 
-        # ◀/▶-Scroll-Hinweise: eigene Overlay-Labels, transparent fuer
+        # ◀/▶-Scroll-Hinweise: eigene Overlay-Labels, transparent für
         # Maus-Events, damit die Hover-Auto-Scroll-Zone darunter weiter
         # funktioniert (gleiches Prinzip wie bei der vertikalen ToolBar).
         self._scroll_hint_left = self._create_scroll_hint("◀")
@@ -56,8 +56,8 @@ class IconToolBar(QWidget):
         bar.rangeChanged.connect(self._update_scroll_hints)
 
         # Pollt die Cursor-Position statt auf Mouse-Move-Events zu warten
-        # (Begruendung siehe ``ToolBar._poll_auto_scroll``: die Buttons
-        # fuellen fast den ganzen Viewport aus, Move-Events landen also
+        # (Begründung siehe ``ToolBar._poll_auto_scroll``: die Buttons
+        # füllen fast den ganzen Viewport aus, Move-Events landen also
         # auf den Buttons, nicht auf dem Viewport dahinter).
         self._scroll_timer = QTimer(self)
         self._scroll_timer.setInterval(self.SCROLL_INTERVAL_MS)
@@ -65,11 +65,11 @@ class IconToolBar(QWidget):
         self._scroll_timer.start()
 
     def addWidget(self, widget: QWidget) -> None:
-        """Fuegt ein Widget rechts an die Leiste an (API-kompatibel zu QToolBar.addWidget)."""
+        """Fügt ein Widget rechts an die Leiste an (API-kompatibel zu QToolBar.addWidget)."""
         self._content_layout.addWidget(widget)
 
     def finalize(self) -> None:
-        """Nach dem letzten ``addWidget``-Aufruf: Stretch + Hoehe fixieren."""
+        """Nach dem letzten ``addWidget``-Aufruf: Stretch + Höhe fixieren."""
         self._content_layout.addStretch()
         content_height = self._scroll_area.widget().sizeHint().height()
         self.setFixedHeight(content_height)

@@ -1,7 +1,7 @@
 """
-Worker-Klasse fuer die Hintergrund-Optimierung von Stickpfaden.
+Worker-Klasse für die Hintergrund-Optimierung von Stickpfaden.
 
-Fuehrt die Optimierung und den Strategievergleich in einem
+Führt die Optimierung und den Strategievergleich in einem
 separaten Thread durch, um die GUI nicht zu blockieren.
 """
 
@@ -18,7 +18,7 @@ from ...core import (
 
 
 class OptimizationWorker(QObject):
-    """Worker fuer Hintergrund-Optimierung."""
+    """Worker für Hintergrund-Optimierung."""
 
     progress = Signal(int, int, str)  # current, total, message
     finished = Signal(object)  # OptimizationResult oder None
@@ -38,7 +38,7 @@ class OptimizationWorker(QObject):
         self._cancelled = True
 
     def _is_cancelled(self) -> bool:
-        """Prueft ob abgebrochen wurde."""
+        """Prüft ob abgebrochen wurde."""
         return self._cancelled
 
     def _report_progress(self, current: int, total: int, message: str) -> None:
@@ -46,7 +46,7 @@ class OptimizationWorker(QObject):
         self.progress.emit(current, total, message)
 
     def _run_optimization(self, strategy: OptimizationStrategy, fabric_count: int) -> None:
-        """Fuehrt einzelne Optimierung durch."""
+        """Führt einzelne Optimierung durch."""
         self._cancelled = False
 
         optimizer = StitchPathOptimizer(

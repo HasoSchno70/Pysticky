@@ -50,10 +50,10 @@ DARK_THEME = ThemeColors()
 LIGHT_THEME = ThemeColors(
     # Hintergrundfarben — leicht warm-tonig statt rein weiss, klare Hierarchie
     bg_dark="#fbfbfd",  # Haupt-Hintergrund (Canvas-Container, Inputs)
-    bg_medium="#ecedf3",  # Sekundaer (Statusbar, Tabs unselected)
+    bg_medium="#ecedf3",  # Sekundär (Statusbar, Tabs unselected)
     bg_light="#dde0eb",  # Panel-Header, Hover
     bg_lighter="#c8cee0",  # Selektion / Tabbar-Track
-    # Akzentfarben — kraeftiger fuer hellen Hintergrund
+    # Akzentfarben — kräftiger für hellen Hintergrund
     accent_primary="#2e9e6e",
     accent_secondary="#c07820",
     accent_blue="#4060a0",
@@ -136,7 +136,7 @@ def reapply_theme(app) -> None:
     for widget in app.topLevelWidgets():
         _restyle_widget_tree(widget)
 
-    # Custom-Tooltip-Popup (ersetzt Qt's natives QToolTip) neu einfaerben
+    # Custom-Tooltip-Popup (ersetzt Qt's natives QToolTip) neu einfärben
     from .widgets.custom_tooltip import reapply_custom_tooltip_theme
 
     reapply_custom_tooltip_theme()
@@ -458,12 +458,12 @@ def get_qcolor(hex_color: str) -> QColor:
 
 def apply_theme_to_app(app) -> None:
     """Wendet das Theme auf die gesamte Anwendung an."""
-    # Windows 11 laesst native Popups (Context-Menues, Datei-Dialoge) je
-    # nach OS-weitem Dark/Light-Modus einfaerben — unabhaengig von unserer
+    # Windows 11 lässt native Popups (Context-Menüs, Datei-Dialoge) je
+    # nach OS-weitem Dark/Light-Modus einfärben — unabhängig von unserer
     # eigenen QSS/Palette, sobald das App-Theme vom System-Theme abweicht.
     # Qt 6.5+ erlaubt, das explizit zu fixieren, statt dem OS zu folgen.
-    # (Tooltips selbst laufen seit custom_tooltip.py nicht mehr ueber Qt's
-    # natives QToolTip, das auf Windows fuer Dock-Widget-Inhalte nachweislich
+    # (Tooltips selbst laufen seit custom_tooltip.py nicht mehr über Qt's
+    # natives QToolTip, das auf Windows für Dock-Widget-Inhalte nachweislich
     # falsch rendert — siehe dort.)
     from PySide6.QtCore import Qt as _Qt
     from PySide6.QtGui import QGuiApplication
@@ -634,7 +634,7 @@ def apply_theme_to_app(app) -> None:
             color: {THEME.accent_primary};
         }}
 
-        /* === Push-Buttons (Default Look fuer alle Dialoge) === */
+        /* === Push-Buttons (Default Look für alle Dialoge) === */
         QPushButton {{
             background: {THEME.bg_lighter};
             color: {THEME.text_primary};

@@ -1,11 +1,11 @@
 """
-HTML-Export fuer Kreuzstich-Muster.
+HTML-Export für Kreuzstich-Muster.
 
 Erstellt druckbare HTML-Dateien mit:
 - Deckblatt mit Vorschau und Statistiken
-- Farbvorschau des fertigen Musters (inkl. Rueckstiche)
+- Farbvorschau des fertigen Musters (inkl. Rückstiche)
 - Legende mit Garnbedarf
-- Uebersichtskarte der Seiten
+- Übersichtskarte der Seiten
 - Musterseiten (40x40 Stiche pro Seite)
 """
 
@@ -32,12 +32,12 @@ if TYPE_CHECKING:
 
 def _html_encode(text: str) -> str:
     """
-    Escapt HTML-Sonderzeichen (<, >, &) fuer Body-Text.
+    Escapt HTML-Sonderzeichen (<, >, &) für Body-Text.
 
     Umlaute bleiben als UTF-8 erhalten, weil das erzeugte HTML
     <meta charset='UTF-8'> deklariert. Falls der Input bereits Entity-
-    Versionen einzelner Sonderzeichen enthaelt (`&times;`, `&amp;`),
-    werden die zuerst auf das Klartext-Zeichen zurueckgesetzt, damit
+    Versionen einzelner Sonderzeichen enthält (`&times;`, `&amp;`),
+    werden die zuerst auf das Klartext-Zeichen zurückgesetzt, damit
     `escape()` sie nicht doppel-escapt.
     """
     if not text:
@@ -79,25 +79,25 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
         self._total_stitches = 0
         self._total_skeins = 0
         self._cache: CompositeGridCache | None = None
-        # Optionale Hersteller-Cross-Reference fuer die Legende.
+        # Optionale Hersteller-Cross-Reference für die Legende.
         # Wenn gesetzt (z.B. ["Anchor", "Madeira"]), erscheinen entsprechende
-        # Spalten mit der naehesten Garn-Entsprechung.
+        # Spalten mit der nähesten Garn-Entsprechung.
         self.cross_ref_palettes: list[str] = cross_ref_palettes or []
-        # Working-Chart-Pages mit Overlap: jede Seite zeigt zusaetzlich die
+        # Working-Chart-Pages mit Overlap: jede Seite zeigt zusätzlich die
         # ersten N Stiche der Nachbarseite (rechts/unten). 0 = kein Overlap
         # (Standard, ist genau das bisherige Verhalten).
         self.page_overlap_stitches: int = max(0, int(page_overlap_stitches))
 
         # DP-Modus: 1:1-Druck-Massstab. Wir berechnen pro Seite, wie viele
         # Drills bei Drill-Pitch (2.5/2.8/3.0 mm) und A4-nutzbarer-Breite
-        # passen. So passt der ausgedruckte Klebegrund Drill-fuer-Drill zur
-        # echten Drill-Groesse.
+        # passen. So passt der ausgedruckte Klebegrund Drill-für-Drill zur
+        # echten Drill-Größe.
         from .export_common import drill_pitch_mm, is_diamond_mode
 
         self._dp_cell_mm: float | None = None
         if is_diamond_mode(self.pattern):
             self._dp_cell_mm = drill_pitch_mm(self.pattern)
-            # A4 mit 15mm Margin -> 180mm Breite/267mm Hoehe (Hochformat).
+            # A4 mit 15mm Margin -> 180mm Breite/267mm Höhe (Hochformat).
             # Header-Spalte links + Spalten-Header oben kosten ~8mm.
             available_mm_w = 180.0 - 8.0
             available_mm_h = 267.0 - 8.0
@@ -114,7 +114,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
         self._calculate_statistics()
 
         # Komposit-Grid einmalig pre-computen — alle Per-Pixel-Lookups
-        # gehen anschliessend ueber den Cache statt durch den Layer-Stack.
+        # gehen anschliessend über den Cache statt durch den Layer-Stack.
         self._cache = CompositeGridCache(self.pattern)
 
         # Seitenaufteilung
@@ -210,9 +210,9 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
                 continue
 
             if is_dp:
-                # Drill-Bedarf = Stiche * 1.10 (10% Reserve fuer Verluste).
+                # Drill-Bedarf = Stiche * 1.10 (10% Reserve für Verluste).
                 # Wir nutzen weiterhin das `skeins`-Feld, damit die HTML/PDF-
-                # Templates nicht mit zwei Datenmodellen rechnen muessen —
+                # Templates nicht mit zwei Datenmodellen rechnen müssen —
                 # die Templates beschriften es modus-spezifisch.
                 skeins = int(count * 1.10) if count > 0 else 0
             else:
@@ -359,7 +359,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
 
                 stype = self._get_pixel_stitch_type(sx, sy)
                 if stype == 0:
-                    continue  # Voller Kreuzstich → nur Symbol genuegt
+                    continue  # Voller Kreuzstich → nur Symbol genügt
 
                 color_rgb = self._get_pixel_color(sx, sy)
                 if color_rgb is None:
@@ -371,7 +371,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
                 cx_left = (sx - start_stitch_x) * cell_size + offset_x
                 cy_top = (sy - start_stitch_y) * cell_size + offset_y
 
-                # WICHTIG: SVG liegt im DOM ueber der Tabelle, deshalb
+                # WICHTIG: SVG liegt im DOM über der Tabelle, deshalb
                 # fill-opacity: das Symbol in der Tabelle scheint durch und
                 # bleibt lesbar. ~0.55 ist Erfahrungswert (Symbol kontrastiert
                 # noch klar, Farbe ist trotzdem deutlich erkennbar).

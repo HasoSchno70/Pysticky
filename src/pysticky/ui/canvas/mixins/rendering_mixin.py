@@ -70,7 +70,7 @@ class RenderingMixin:
         if self._cursor_pos and not self._tool_manager.is_tool_active():
             self._draw_cursor(painter)
 
-        # Sticken-Cursor (Pfeiltasten-Navigation, ueber dem normalen Cursor)
+        # Sticken-Cursor (Pfeiltasten-Navigation, über dem normalen Cursor)
         if self._stitch_cursor is not None:
             self._draw_stitch_cursor(painter)
 
@@ -162,7 +162,7 @@ class RenderingMixin:
         alpha = int(opacity * 255)
 
         # Farb-Isolation: andere Farben werden stark gedimmt. Cache-Key
-        # `(r,g,b,a)` ist alpha-aware, also kein Cache-Refresh noetig.
+        # `(r,g,b,a)` ist alpha-aware, also kein Cache-Refresh nötig.
         isolate_idx = self._isolate_color_index
         dim_alpha = max(20, alpha // 5)
 
@@ -215,18 +215,18 @@ class RenderingMixin:
                     # FRENCH_KNOT: Kreis in der Zellmitte
                     self._draw_french_knot(painter, screen_x, row_y, cell_size, fill_color)
                 elif stype == 10:
-                    # BEAD: groessere Kugel mit Glanzpunkt
+                    # BEAD: größere Kugel mit Glanzpunkt
                     self._draw_bead(painter, screen_x, row_y, cell_size, fill_color)
                 else:
                     self._draw_partial_stitch(
                         painter, screen_x, row_y, cell_size, stype, fill_color
                     )
 
-                # Symbol/Drill-Nummer zeichnen — beide haengen am gleichen
+                # Symbol/Drill-Nummer zeichnen — beide hängen am gleichen
                 # show_symbols-Toggle, damit der User sie ein/aus knipsen
                 # kann ohne Mode-Wechsel. Im DP-Modus: DMC-Nummer statt
                 # Unicode-Symbol, plus tighter Threshold (Drills sind
-                # groesser als Symbole).
+                # größer als Symbole).
                 show_label_common = (
                     self._show_symbols
                     and opacity >= 0.5
@@ -312,7 +312,7 @@ class RenderingMixin:
 
     @staticmethod
     def _draw_french_knot(painter: QPainter, x: int, y: int, size: int, color: QColor) -> None:
-        """Zeichnet einen Franzoesischen Knoten als gefuellten Kreis."""
+        """Zeichnet einen Französischen Knoten als gefüllten Kreis."""
         from ....core.stitch_shapes import french_knot_radius_factor
 
         radius = max(1, int(size * french_knot_radius_factor()))
@@ -333,7 +333,7 @@ class RenderingMixin:
         (Glanzlicht), die untere die dunkelste (Schatten), links/rechts mittel.
         Zusammen ergibt das die typische DP-Optik.
 
-        Inset ist adaptiv: bei kleiner Zelle (<12px) beruehren sich die
+        Inset ist adaptiv: bei kleiner Zelle (<12px) berühren sich die
         Drills nahtlos, damit das Pattern bei rausgezoomter Ansicht nicht
         ausgewaschen weiss wirkt.
         """
@@ -373,7 +373,7 @@ class RenderingMixin:
         left.closeSubpath()
 
         # Helligkeits-Varianten mit Alpha-Erhalt (lighter/darker normieren auf
-        # 255 Alpha — wir muessen die Original-Alpha aus `color` zurueckschreiben,
+        # 255 Alpha — wir müssen die Original-Alpha aus `color` zurückschreiben,
         # sonst frisst der Effekt die Layer-Deckkraft).
         alpha = color.alpha()
 
@@ -394,7 +394,7 @@ class RenderingMixin:
         painter.fillPath(bottom, c_bottom)
         painter.fillPath(left, c_left)
 
-        # Duenner Kantenrand fuer Trennschaerfe zwischen Nachbar-Drills.
+        # Dünner Kantenrand für Trennschärfe zwischen Nachbar-Drills.
         # Bei kleinem Zoom weglassen, sonst frisst der Rand den Drill auf.
         from ....core.stitch_shapes import diamond_should_draw_edge
 
@@ -417,7 +417,7 @@ class RenderingMixin:
     ) -> None:
         """Zeichnet die DMC-Nummer in der Mitte eines Drills."""
         # Kleinere Schrift als Symbol-Font, damit auch 3-stellige Nummern
-        # in eine Zelle passen. Heuristik: Schriftgroesse = size // 4.
+        # in eine Zelle passen. Heuristik: Schriftgröße = size // 4.
         from PySide6.QtGui import QFont
 
         font = QFont(painter.font())
@@ -433,7 +433,7 @@ class RenderingMixin:
 
     @staticmethod
     def _draw_bead(painter: QPainter, x: int, y: int, size: int, color: QColor) -> None:
-        """Zeichnet eine Perle: groesserer Kreis mit Glanzpunkt."""
+        """Zeichnet eine Perle: größerer Kreis mit Glanzpunkt."""
         from ....core.stitch_shapes import bead_radius_factor
 
         radius = max(2, int(size * bead_radius_factor()))
@@ -448,7 +448,7 @@ class RenderingMixin:
         # Perle in Farbe
         painter.setBrush(color)
         painter.drawEllipse(cx - radius, cy - radius, 2 * radius, 2 * radius)
-        # Glanzpunkt fuer Plastizitaet
+        # Glanzpunkt für Plastizität
         highlight = color.lighter(150)
         highlight.setAlphaF(0.85)
         painter.setBrush(highlight)
@@ -643,7 +643,7 @@ class RenderingMixin:
                 painter.drawRect(sx, sy, self._cell_size, self._cell_size)
 
     def _draw_stitch_cursor(self: "CrossStitchCanvas", painter: QPainter) -> None:
-        """Markiert die durch Pfeiltasten gewaehlte Ziel-Zelle im Sticken-Modus."""
+        """Markiert die durch Pfeiltasten gewählte Ziel-Zelle im Sticken-Modus."""
         if not self._stitch_cursor or not self._pattern:
             return
         x, y = self._stitch_cursor
@@ -651,7 +651,7 @@ class RenderingMixin:
             return
         sx, sy = self._grid_to_screen(x, y)
         cs = self._cell_size
-        # Auffaelliger oranger Rahmen, doppelt — sticht auch auf bunten Cells raus.
+        # Auffälliger oranger Rahmen, doppelt — sticht auch auf bunten Cells raus.
         outer = QColor(THEME.warning)
         inner = QColor(THEME.warning)
         outer.setAlpha(220)
@@ -819,8 +819,8 @@ class RenderingMixin:
             else [l for l in self._pattern.layer_stack if l.visible]
         )
 
-        # Pass 1: Gruenes Overlay pro Layer. Positions werden gecached fuer
-        # den optionalen Haekchen-Pass — frueher zweimal np.argwhere pro Layer.
+        # Pass 1: Grünes Overlay pro Layer. Positions werden gecached für
+        # den optionalen Häkchen-Pass — früher zweimal np.argwhere pro Layer.
         cached_positions: list = []
         for layer in layers_to_check:
             sub_completion = layer.completion_grid[vy1:vy2, vx1:vx2]
@@ -838,7 +838,7 @@ class RenderingMixin:
                 sy = (rel_y + vy1) * cell_size + offset_y
                 painter.fillRect(sx, sy, cell_size, cell_size, overlay_color)
 
-        # Pass 2: Haekchen nur bei groesserem Zoom — wiederverwenden der gecachten Positions
+        # Pass 2: Häkchen nur bei größerem Zoom — wiederverwenden der gecachten Positions
         if cached_positions and cell_size >= 16:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
             pen_width = max(1, cell_size // 8)

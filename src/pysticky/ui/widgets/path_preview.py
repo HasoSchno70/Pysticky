@@ -1,8 +1,8 @@
 """
-Vorschau-Widget fuer die Stickpfad-Visualisierung.
+Vorschau-Widget für die Stickpfad-Visualisierung.
 
 Zeigt den optimierten Stickpfad mit Zoom, Pan und
-verschiedenen Anzeigeoptionen (Nummern, Spruenge, Gitter).
+verschiedenen Anzeigeoptionen (Nummern, Sprünge, Gitter).
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ class PathPreviewWidget(QWidget):
         self._panning: bool = False
         self._last_mouse_pos: QPointF | None = None
 
-        # Aktuelle Farbhelligkeit fuer dynamischen Hintergrund
+        # Aktuelle Farbhelligkeit für dynamischen Hintergrund
         self._current_color_luminance: float = 0.5
 
         self.setMinimumSize(200, 200)
@@ -77,7 +77,7 @@ class PathPreviewWidget(QWidget):
         self.update()
 
     def set_all_color_paths(self, color_paths: list[ColorPath]) -> None:
-        """Setzt alle Farbpfade fuer die Kontext-Darstellung."""
+        """Setzt alle Farbpfade für die Kontext-Darstellung."""
         self._all_color_paths = color_paths
 
     def set_show_numbers(self, show: bool) -> None:
@@ -256,7 +256,7 @@ class PathPreviewWidget(QWidget):
     def _paint_content(
         self, painter: QPainter, ox: float, oy: float, cell: float, show_info: bool = True
     ) -> None:
-        """Zeichnet den Inhalt - wird auch fuer Export verwendet."""
+        """Zeichnet den Inhalt - wird auch für Export verwendet."""
         if not self._pattern:
             return
 
@@ -308,7 +308,7 @@ class PathPreviewWidget(QWidget):
                 else QColor(200, 200, 200)
             )
 
-            # Gefuellte Zellen
+            # Gefüllte Zellen
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(color)
             for step in self._color_path.steps:
@@ -369,7 +369,7 @@ class PathPreviewWidget(QWidget):
                 marker_size = max(cell * 0.8, 10)
                 pen_width = max(2, int(cell / 5))
 
-                # Start (gruen)
+                # Start (grün)
                 start = self._color_path.steps[0]
                 sx = ox + start.x * cell + cell / 2
                 sy = oy + start.y * cell + cell / 2
@@ -455,11 +455,11 @@ class PathPreviewWidget(QWidget):
         painter.drawPolygon(QPolygonF([p1, p2, p3]))
 
     def render_to_image(self, cell_size: int = 15, margin: int = 30) -> QImage | None:
-        """Rendert den aktuellen Pfad als Bild fuer Export."""
+        """Rendert den aktuellen Pfad als Bild für Export."""
         if not self._pattern or not self._color_path:
             return None
 
-        # Bildgroesse berechnen
+        # Bildgröße berechnen
         width = self._pattern.width * cell_size + margin * 2
         height = self._pattern.height * cell_size + margin * 2 + 60
 
@@ -472,7 +472,7 @@ class PathPreviewWidget(QWidget):
         # Inhalt zeichnen
         self._paint_content(painter, margin, margin, cell_size, show_info=False)
 
-        # Legende hinzufuegen
+        # Legende hinzufügen
         entry = self._pattern.get_color_entry(self._color_path.color_index)
         color_name = entry.thread.name if entry else f"Farbe {self._color_path.color_index}"
 
@@ -493,11 +493,11 @@ class PathPreviewWidget(QWidget):
             margin,
             legend_y + 18,
             f"Stiche: {self._color_path.stitch_count}  |  "
-            f"Spruenge: {self._color_path.jump_count}  |  "
+            f"Sprünge: {self._color_path.jump_count}  |  "
             f"Distanz: {self._color_path.total_distance:.1f}",
         )
 
-        # Legende fuer Marker
+        # Legende für Marker
         painter.drawText(
             margin, legend_y + 36, "\u25cb S = Start  |  \u25a1 E = Ende  |  - - - = Sprung"
         )

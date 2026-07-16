@@ -19,13 +19,13 @@ class TabletGestureMixin:
     """Mixin für Tablet- und Touch-Gesten-Events."""
 
     def event(self: "CrossStitchCanvas", event: QEvent) -> bool:
-        """Override fuer Gesture-Events. Maus/Tastatur lassen wir Qt durchreichen."""
+        """Override für Gesture-Events. Maus/Tastatur lassen wir Qt durchreichen."""
         if event.type() == QEvent.Type.Gesture:
             return self._handle_gesture(event)
         return super().event(event)
 
     def _handle_gesture(self: "CrossStitchCanvas", event: QGestureEvent) -> bool:
-        """Verarbeitet Pinch-Gesture fuer Touch-Zoom."""
+        """Verarbeitet Pinch-Gesture für Touch-Zoom."""
         pinch = event.gesture(Qt.GestureType.PinchGesture)
         if pinch is None or not isinstance(pinch, QPinchGesture):
             return False
@@ -55,7 +55,7 @@ class TabletGestureMixin:
         Qt sendet bei aktivem Tablet auch synthetische Maus-Events, die
         durch unsere bestehende `mousePressEvent`/`mouseMoveEvent`-Logik
         laufen. Wir speichern hier nur den Pressure-Wert, den das
-        Pencil-Tool dann fuer die Brush-Groesse nutzt.
+        Pencil-Tool dann für die Brush-Größe nutzt.
         """
         try:
             pressure = float(event.pressure())
@@ -71,5 +71,5 @@ class TabletGestureMixin:
             self._tablet_pressure = 0.0
 
         # NICHT accept() — Qt soll die synthetischen Mouse-Events weiter
-        # generieren. Ohne ignore() wuerde die Maus-Pipeline ausbleiben.
+        # generieren. Ohne ignore() würde die Maus-Pipeline ausbleiben.
         event.ignore()

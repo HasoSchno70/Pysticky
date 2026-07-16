@@ -15,7 +15,7 @@ Format-Versionen:
     - 1.2: Fortschritts-Tracking (completed_stitches pro Layer)
     - 1.3: Stichtypen pro Layer (stitch_types)
     - 1.4: Layer-Notizen (note); Pattern-Metadaten total_stitch_seconds
-           und last_session_start fuer Sticken-Modus-Sessions
+           und last_session_start für Sticken-Modus-Sessions
 
 Example:
     >>> from pysticky.core import save_pattern, load_pattern, Pattern
@@ -195,7 +195,7 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
         source_image_path=data.get("source_image_path"),
         source_image_crop=tuple(data.get("source_image_crop", [0, 0, 1, 1])),
         source_palette_name=data.get("source_palette_name"),
-        # Mode: Default "stitch" fuer aeltere Dateien ohne mode-Feld.
+        # Mode: Default "stitch" für ältere Dateien ohne mode-Feld.
         # Unbekannte Werte werden ebenfalls auf "stitch" gemappt.
         mode=data.get("mode", "stitch") if data.get("mode") in ("stitch", "diamond") else "stitch",
     )
@@ -218,7 +218,7 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
         bs = _dict_to_backstitch(bs_data)
         pattern.backstitch_manager.add(bs.x1, bs.y1, bs.x2, bs.y2, bs.color_index)
 
-    # Stich-Zaehlungen pro Farbe aus den tatsaechlichen Grids neu berechnen.
+    # Stich-Zählungen pro Farbe aus den tatsächlichen Grids neu berechnen.
     # So bleiben die Werte konsistent, auch wenn die gespeicherte
     # stitch_count-Angabe veraltet ist.
     pattern.recalculate_stitch_counts()
@@ -249,7 +249,7 @@ def _color_entry_to_dict(entry: ColorEntry) -> dict[str, Any]:
         "is_bead": entry.is_bead,
         "is_diamond": entry.is_diamond,
     }
-    # Tweed-Blends: Komponenten und Strang-Verhaeltnisse mitspeichern
+    # Tweed-Blends: Komponenten und Strang-Verhältnisse mitspeichern
     if thread.is_blend:
         result["blend_components"] = [
             {
@@ -365,7 +365,7 @@ def _layer_to_dict(layer: Layer) -> dict[str, Any]:
     }
     if stitch_types:
         result["stitch_types"] = stitch_types
-    # Notiz nur schreiben wenn nicht-leer (haelt Datei kompakt, seit v1.4)
+    # Notiz nur schreiben wenn nicht-leer (hält Datei kompakt, seit v1.4)
     if layer.note:
         result["note"] = layer.note
     return result
@@ -430,7 +430,7 @@ def _dict_to_layer(data: dict[str, Any], width: int, height: int) -> Layer:
         except (ValueError, TypeError):
             continue
 
-    # Locked-Flag erst NACH dem Laden setzen — sonst wuerden alle set_stitch-
+    # Locked-Flag erst NACH dem Laden setzen — sonst würden alle set_stitch-
     # Aufrufe oben silent fehlschlagen und der Layer landet leer.
     layer.locked = saved_locked
 

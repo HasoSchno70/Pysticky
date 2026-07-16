@@ -19,11 +19,11 @@ from ._helpers import make_section_form
 class ToolsTab(QWidget):
     """Tab: Werkzeug-Einstellungen."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -122,8 +122,8 @@ class ToolsTab(QWidget):
         self.chk_tablet_pressure.setToolTip(
             t(
                 "Wenn aktiv und ein Stift erkannt wird:\n"
-                "Brush-Groesse des Stifts skaliert mit dem Stift-Druck.\n"
-                "Maus-Eingabe bleibt 1 Stich pro Click (unveraendert)."
+                "Brush-Größe des Stifts skaliert mit dem Stift-Druck.\n"
+                "Maus-Eingabe bleibt 1 Stich pro Click (unverändert)."
             )
         )
         form.addRow(self.chk_tablet_pressure)
@@ -133,20 +133,20 @@ class ToolsTab(QWidget):
         self.spin_tablet_max_brush.setSuffix(" " + t("Stiche").lower())
         self.spin_tablet_max_brush.setToolTip(
             t(
-                "Maximale Brush-Groesse bei 100 % Stift-Druck (Radius).\n"
+                "Maximale Brush-Größe bei 100 % Stift-Druck (Radius).\n"
                 "1 = kein Brush (immer einzelner Stich), 5 = Standard, "
                 "10+ = sehr dick."
             )
         )
-        form.addRow(t("Max. Brush-Groesse:"), self.spin_tablet_max_brush)
+        form.addRow(t("Max. Brush-Größe:"), self.spin_tablet_max_brush)
 
         self.chk_touch_gestures = QCheckBox(t("Touch-Gesten (Pinch-Zoom)"))
         self.chk_touch_gestures.setToolTip(
             t(
                 "Aktiviert Pinch-Zoom auf Touchscreens (Surface, iPad mit Apple Pencil, ...).\n"
-                "Standardmaessig AUS, weil Windows auf manchen Geraeten einen "
+                "Standardmäßig AUS, weil Windows auf manchen Geräten einen "
                 "Toast-Hinweis beim langen Drag zeigt, wenn Touch akzeptiert wird.\n"
-                "Aenderung wird sofort uebernommen."
+                "Änderung wird sofort übernommen."
             )
         )
         form.addRow(self.chk_touch_gestures)
@@ -154,7 +154,7 @@ class ToolsTab(QWidget):
         layout.addWidget(group_tablet)
         layout.addStretch()
 
-    def load_settings(self, settings: QSettings):
+    def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         tool_index = settings.value("default_tool", 0, type=int)
         if 0 <= tool_index < self.combo_default_tool.count():
@@ -176,7 +176,7 @@ class ToolsTab(QWidget):
             settings.value("touch/gestures_enabled", False, type=bool)
         )
 
-    def save_settings(self, settings: QSettings):
+    def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
         settings.setValue("default_tool", self.combo_default_tool.currentIndex())
         settings.setValue("remember_tool", self.chk_remember_tool.isChecked())
@@ -192,7 +192,7 @@ class ToolsTab(QWidget):
         settings.setValue("tablet/max_brush_size", self.spin_tablet_max_brush.value())
         settings.setValue("touch/gestures_enabled", self.chk_touch_gestures.isChecked())
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
         self.combo_default_tool.setCurrentIndex(0)
         self.chk_remember_tool.setChecked(False)

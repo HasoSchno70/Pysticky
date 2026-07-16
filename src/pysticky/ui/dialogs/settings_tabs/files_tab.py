@@ -27,11 +27,11 @@ from ._helpers import make_section_form
 class FilesTab(QWidget):
     """Tab: Datei-Einstellungen."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -98,27 +98,27 @@ class FilesTab(QWidget):
         self.chk_html_inline_css.setToolTip(t("Bettet CSS direkt in die HTML-Datei ein"))
         form.addRow(self.chk_html_inline_css)
 
-        # Working-Chart-Page-Overlap fuer HTML/PDF (0 = aus)
+        # Working-Chart-Page-Overlap für HTML/PDF (0 = aus)
         self.spin_page_overlap = QSpinBox()
         self.spin_page_overlap.setRange(0, 20)
         self.spin_page_overlap.setValue(0)
         self.spin_page_overlap.setSpecialValueText(t("aus"))
         self.spin_page_overlap.setToolTip(
             t(
-                "Working-Chart-Konvention: jede Seite zeigt zusaetzlich die "
+                "Working-Chart-Konvention: jede Seite zeigt zusätzlich die "
                 "ersten N Stiche der Nachbarseite (rechts/unten). Erleichtert "
                 "das Aneinanderlegen ausgedruckter Seiten.\n\n"
-                "0 = aus, 5-10 = Standard fuer kommerzielle Patterns."
+                "0 = aus, 5-10 = Standard für kommerzielle Patterns."
             )
         )
         form.addRow(t("Seiten-Overlap:"), self.spin_page_overlap)
 
-        # Hersteller-Cross-Reference fuer HTML/PDF-Legende
+        # Hersteller-Cross-Reference für HTML/PDF-Legende
         self.list_cross_ref = QListWidget()
         self.list_cross_ref.setSelectionMode(QListWidget.SelectionMode.NoSelection)
         self.list_cross_ref.setToolTip(
             t(
-                "Zusaetzliche Spalten in der Legende mit den jeweils naehesten\n"
+                "Zusätzliche Spalten in der Legende mit den jeweils nähesten\n"
                 "Garn-Entsprechungen in anderen Hersteller-Paletten.\n"
                 "Match per CIE-Lab-Delta-E — kein offizielles 1:1-Mapping."
             )
@@ -148,8 +148,8 @@ class FilesTab(QWidget):
         layout.addWidget(group_import)
         layout.addStretch()
 
-    def _populate_cross_ref_list(self):
-        """Fuellt die Cross-Reference-Liste mit den verfuegbaren Paletten."""
+    def _populate_cross_ref_list(self) -> None:
+        """Füllt die Cross-Reference-Liste mit den verfügbaren Paletten."""
         from ....core.palette import get_palette_manager
 
         pm = get_palette_manager()
@@ -169,7 +169,7 @@ class FilesTab(QWidget):
                 result.append(item.text())
         return result
 
-    def _set_cross_ref_selection(self, names: list[str]):
+    def _set_cross_ref_selection(self, names: list[str]) -> None:
         """Setzt die Cross-Reference-Auswahl aus einer Namensliste."""
         names_set = set(names)
         for i in range(self.list_cross_ref.count()):
@@ -178,7 +178,7 @@ class FilesTab(QWidget):
                 Qt.CheckState.Checked if item.text() in names_set else Qt.CheckState.Unchecked
             )
 
-    def _browse_folder(self, line_edit: QLineEdit):
+    def _browse_folder(self, line_edit: QLineEdit) -> None:
         """Öffnet einen Ordner-Auswahl-Dialog."""
         folder = QFileDialog.getExistingDirectory(
             self, t("Ordner wählen"), line_edit.text() or str(Path.home())
@@ -186,7 +186,7 @@ class FilesTab(QWidget):
         if folder:
             line_edit.setText(folder)
 
-    def load_settings(self, settings: QSettings):
+    def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         self.edit_default_path.setText(
             settings.value("default_path", str(Path.home() / "Documents"))
@@ -205,7 +205,7 @@ class FilesTab(QWidget):
         self._set_cross_ref_selection([p.strip() for p in cross_ref_csv.split(",") if p.strip()])
         self.spin_page_overlap.setValue(settings.value("export/page_overlap_stitches", 0, type=int))
 
-    def save_settings(self, settings: QSettings):
+    def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
         settings.setValue("default_path", self.edit_default_path.text())
         settings.setValue("library_path", self.edit_library_path.text())
@@ -221,7 +221,7 @@ class FilesTab(QWidget):
         )
         settings.setValue("export/page_overlap_stitches", self.spin_page_overlap.value())
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
         self.edit_default_path.setText(str(Path.home() / "Documents"))
         self.edit_library_path.setText("")

@@ -91,12 +91,12 @@ class ImageImportDialog(QDialog):
         self._auto_size_to_content()
 
     def _auto_size_to_content(self) -> None:
-        """Groesse so waehlen, dass die linke Einstellungs-Spalte nicht
-        gestaucht wird -- bei fixer Default-Groesse wirkte v.a. die
+        """Größe so wählen, dass die linke Einstellungs-Spalte nicht
+        gestaucht wird -- bei fixer Default-Größe wirkte v.a. die
         "Farben"-Sektion (5 Zeilen Combos/Spinner) gedrungen und schwer
         lesbar/bedienbar, weil 6 Gruppen (Voreinstellung, Bilddatei,
-        Mustergroesse, Farben, Bild-Anpassung, Konturen) untereinander in
-        die feste Hoehe von 650px gequetscht wurden.
+        Mustergröße, Farben, Bild-Anpassung, Konturen) untereinander in
+        die feste Höhe von 650px gequetscht wurden.
         """
         left_hint = self._left_layout.sizeHint()
         content_w = left_hint.width() + self._right_panel.minimumWidth() + 20
@@ -416,7 +416,7 @@ class ImageImportDialog(QDialog):
         color_layout.addWidget(self.combo_dithering, 3, 1)
 
         # Confetti-Reduction: kleine Cluster der Nachbarfarbe zuordnen.
-        # Wert = minimale Cluster-Groesse. 1 = aus, 2-5 = aktiv.
+        # Wert = minimale Cluster-Größe. 1 = aus, 2-5 = aktiv.
         lbl_confetti = QLabel(t("Confetti reduzieren:"))
         lbl_confetti.setToolTip(
             t(
@@ -473,7 +473,7 @@ class ImageImportDialog(QDialog):
         self.lbl_contrast.setStyleSheet(f"color: {THEME.text_muted};")
         adjust_layout.addWidget(self.lbl_contrast, 1, 2)
 
-        # Saettigung
+        # Sättigung
         adjust_layout.addWidget(QLabel(t("Sättigung:")), 2, 0)
         self.slider_saturation = QSlider(Qt.Orientation.Horizontal)
         self.slider_saturation.setRange(0, 200)  # 0.0 = Graustufen
@@ -687,7 +687,7 @@ class ImageImportDialog(QDialog):
         self._on_settings_changed()
 
     def _on_reset_adjust(self) -> None:
-        """Setzt alle drei Slider auf 100 % zurueck."""
+        """Setzt alle drei Slider auf 100 % zurück."""
         for slider in (self.slider_brightness, self.slider_contrast, self.slider_saturation):
             slider.setValue(100)
 

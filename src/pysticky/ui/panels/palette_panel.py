@@ -203,19 +203,19 @@ class PalettePanel(QWidget):
         )
 
     def _load_palettes(self) -> None:
-        """Befuellt das Palette-Dropdown.
+        """Befüllt das Palette-Dropdown.
 
         Gruppiert visuell: Garn-Paletten (🧵) zuerst, dann Diamond-Painting
-        (💎), dann Beads (🔮). Jede Palette traegt ihr Typ-Icon im
+        (💎), dann Beads (🔮). Jede Palette trägt ihr Typ-Icon im
         Anzeigetext, damit man auf einen Blick weiss, was sie liefert.
         Der DATA-Wert des Items ist der reine Palette-Name (ohne Icon),
         damit existierende Lookups via `findText` / `currentText` weiter
-        funktionieren — der View-Code prueft daher zusaetzlich currentData.
+        funktionieren — der View-Code prüft daher zusätzlich currentData.
         """
         self._palette_manager.load_all()
         self.combo_palette.clear()
 
-        # Drei Buckets fuer die visuelle Gruppierung
+        # Drei Buckets für die visuelle Gruppierung
         thread_palettes: list[str] = []
         diamond_palettes: list[str] = []
         bead_palettes: list[str] = []
@@ -232,9 +232,9 @@ class PalettePanel(QWidget):
 
         def _add_group(palettes: list[str], icon: str) -> None:
             for name in palettes:
-                # Anzeigetext mit Icon; userData = reiner Name fuer Lookup-
-                # Kompatibilitaet (findText sucht den AnzeigeText, deshalb
-                # speichern wir die Text-zu-Name-Map zusaetzlich).
+                # Anzeigetext mit Icon; userData = reiner Name für Lookup-
+                # Kompatibilität (findText sucht den AnzeigeText, deshalb
+                # speichern wir die Text-zu-Name-Map zusätzlich).
                 self.combo_palette.addItem(f"{icon}  {name}", userData=name)
 
         _add_group(thread_palettes, "🧵")
@@ -242,7 +242,7 @@ class PalettePanel(QWidget):
         _add_group(bead_palettes, "🔮")
 
         # Default-Auswahl: Anchor (Garn). Suche via userData, nicht Text,
-        # weil Text jetzt das Icon enthaelt.
+        # weil Text jetzt das Icon enthält.
         for i in range(self.combo_palette.count()):
             if self.combo_palette.itemData(i) == "Anchor":
                 self.combo_palette.setCurrentIndex(i)
@@ -280,7 +280,7 @@ class PalettePanel(QWidget):
         (ohne Icon-Prefix). Liefert -1 wenn nicht gefunden.
 
         Wird benutzt statt ``findText``, weil der angezeigte Text seit der
-        Gruppierung ein Typ-Icon enthaelt.
+        Gruppierung ein Typ-Icon enthält.
         """
         for i in range(self.combo_palette.count()):
             if self.combo_palette.itemData(i) == name:
@@ -288,7 +288,7 @@ class PalettePanel(QWidget):
         return -1
 
     def current_palette_name(self) -> str:
-        """Aktuell gewaehlter Palette-Name (ohne Icon-Prefix)."""
+        """Aktuell gewählter Palette-Name (ohne Icon-Prefix)."""
         data = self.combo_palette.currentData()
         if isinstance(data, str):
             return data
@@ -296,7 +296,7 @@ class PalettePanel(QWidget):
         return self.combo_palette.currentText().split("  ", 1)[-1].strip()
 
     def set_mode(self, mode: str) -> None:
-        """Modus-spezifisches Header-Label fuer das Palette-Panel."""
+        """Modus-spezifisches Header-Label für das Palette-Panel."""
         if mode == "diamond":
             self.palette_icon.setText("💎")
             self.palette_label.setText(t("DIAMOND-PALETTE"))
@@ -336,11 +336,11 @@ class PalettePanel(QWidget):
             self.btn_apply_palette.setVisible(False)
 
     def _on_palette_changed(self, display_text: str) -> None:
-        """Slot fuer ``currentTextChanged``. Der display_text enthaelt jetzt
+        """Slot für ``currentTextChanged``. Der display_text enthält jetzt
         einen Icon-Prefix ("🧵  Anchor") — wir extrahieren den reinen Namen
         aus userData, um Pattern-Logik nicht zu brechen.
         """
-        # userData enthaelt den reinen Namen (siehe _load_palettes).
+        # userData enthält den reinen Namen (siehe _load_palettes).
         idx = self.combo_palette.currentIndex()
         name = self.combo_palette.itemData(idx) if idx >= 0 else display_text
         if not isinstance(name, str):
@@ -410,7 +410,7 @@ class PalettePanel(QWidget):
         return pixmap
 
     def _refresh_color_list(self) -> None:
-        # Bulk-Update: Repaint waehrend der bis zu 450 addItem-Calls (DMC
+        # Bulk-Update: Repaint während der bis zu 450 addItem-Calls (DMC
         # Diamond Painting) aussetzen. Verhindert das kurze Phantom-Top-
         # Level-Fenster, das beim Palette-Wechsel sonst aufflackert.
         self.list_colors.setUpdatesEnabled(False)

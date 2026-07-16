@@ -1,7 +1,7 @@
 """
 Bundle-Export: ZIP mit allen relevanten Dateien zum Teilen oder Backup.
 
-Das Bundle enthaelt:
+Das Bundle enthält:
 - `<name>.pxs`             — Original-Muster
 - `<name>.html`            — HTML-Anleitung
 - `<name>.png`             — Bild-Export
@@ -20,14 +20,14 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..core import Pattern
 
 
 def _safe_basename(pattern: "Pattern") -> str:
-    """Datei-sicherer Name fuer das Bundle (ohne Leer-/Sonderzeichen)."""
+    """Datei-sicherer Name für das Bundle (ohne Leer-/Sonderzeichen)."""
     import re
 
     name = pattern.name or "muster"
@@ -35,11 +35,11 @@ def _safe_basename(pattern: "Pattern") -> str:
     return cleaned or "muster"
 
 
-def _write_garn_csv(pattern: "Pattern", path: Path) -> None:
+def _write_thread_csv(pattern: "Pattern", path: Path) -> None:
     """Schreibt eine kompakte Garn-Bedarfsliste als CSV (kein UI-Code)."""
     import math
 
-    # 14ct als Default-Annahme — Bundle dient als Share-Format, fuer
+    # 14ct als Default-Annahme — Bundle dient als Share-Format, für
     # genaue Zahlen sollen User den Statistik-Dialog im UI nutzen.
     stitches_per_skein = {
         11: 780,
@@ -76,7 +76,7 @@ def _write_readme(pattern: "Pattern", path: Path, contents: list[str]) -> None:
     lines = [
         f"PySticky-Bundle: {pattern.name}",
         "=" * 60,
-        f"Groesse: {pattern.width} x {pattern.height} Stiche",
+        f"Größe: {pattern.width} x {pattern.height} Stiche",
         f"Stoffzaehlung: {pattern.fabric_count} ct",
         f"Farben: {len(pattern.color_entries)}",
         "",
@@ -84,7 +84,7 @@ def _write_readme(pattern: "Pattern", path: Path, contents: list[str]) -> None:
     ]
     lines.extend(f"  - {name}" for name in contents)
     lines.append("")
-    lines.append("Geoeffnet werden kann das .pxs in PySticky.")
+    lines.append("Geöffnet werden kann das .pxs in PySticky.")
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -95,13 +95,13 @@ def export_bundle(
     include_pdf: bool = True,
     pdf_page_format: str = "A4",
 ) -> dict:
-    """Packt ein vollstaendiges Bundle als ZIP.
+    """Packt ein vollständiges Bundle als ZIP.
 
     Args:
         pattern: Das Muster.
         zip_path: Ziel-ZIP-Datei.
         include_pdf: Wenn True und reportlab vorhanden, PDF mit ins Bundle.
-        pdf_page_format: Papierformat-Key fuer den PDF-Export (siehe
+        pdf_page_format: Papierformat-Key für den PDF-Export (siehe
             PDFExporter.PAGE_FORMATS). Default A4.
 
     Returns:
@@ -161,11 +161,11 @@ def export_bundle(
 
         # 5. Garnliste
         csv_path = tmp / "garnliste.csv"
-        _write_garn_csv(pattern, csv_path)
+        _write_thread_csv(pattern, csv_path)
         files_in_zip.append(csv_path.name)
 
         # 6. Originalbild — falls vorhanden
-        source_dir_relative: Optional[str] = None
+        source_dir_relative: str | None = None
         if pattern.source_image_path:
             src = Path(pattern.source_image_path)
             if src.exists():

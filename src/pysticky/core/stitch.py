@@ -26,7 +26,7 @@ class StitchType(Enum):
     THREE_QUARTER = 7  # Dreiviertelstich
     BACKSTITCH = 8  # Rückstich (Kontur)
     FRENCH_KNOT = 9  # Französischer Knoten
-    BEAD = 10  # Perle (Bead) — glaenzende Kugel in der Zellmitte
+    BEAD = 10  # Perle (Bead) — glänzende Kugel in der Zellmitte
     DIAMOND = 11  # Diamond-Painting-Drill — facettiertes Quadrat
 
 

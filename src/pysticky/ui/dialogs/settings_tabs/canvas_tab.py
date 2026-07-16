@@ -27,11 +27,11 @@ from .color_button import ColorButton
 class CanvasTab(QWidget):
     """Tab: Canvas-Einstellungen."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -141,7 +141,7 @@ class CanvasTab(QWidget):
         layout.addWidget(group_bg)
         layout.addStretch()
 
-    def load_settings(self, settings: QSettings):
+    def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         self.chk_show_grid.setChecked(settings.value("show_grid", True, type=bool))
         self.spin_major_grid.setValue(
@@ -162,7 +162,7 @@ class CanvasTab(QWidget):
         self.btn_empty_cell.color = settings.value("empty_cell_color", "#2a2a4a")
         self.chk_fabric_texture.setChecked(settings.value("fabric_texture", True, type=bool))
 
-    def save_settings(self, settings: QSettings):
+    def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
         settings.setValue("show_grid", self.chk_show_grid.isChecked())
         settings.setValue("major_grid_interval", self.spin_major_grid.value())
@@ -179,7 +179,7 @@ class CanvasTab(QWidget):
         settings.setValue("empty_cell_color", self.btn_empty_cell.color)
         settings.setValue("fabric_texture", self.chk_fabric_texture.isChecked())
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
         self.chk_show_grid.setChecked(True)
         self.spin_major_grid.setValue(MAJOR_GRID_INTERVAL)

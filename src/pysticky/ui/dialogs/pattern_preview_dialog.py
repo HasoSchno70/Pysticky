@@ -211,8 +211,8 @@ class PreviewCanvas(QWidget):
         """Zoom per Mausrad, zentriert auf Mausposition.
 
         Zoom-Schritt: multiplikativ (15% pro Tick) MIT absolutem Mindest-
-        Schritt von 5 Prozentpunkten. Sonst waere der Zoom im kleinen
-        Bereich traege (20% → 23% → 26% bei reinem *1.15). Plus: angleDelta
+        Schritt von 5 Prozentpunkten. Sonst wäre der Zoom im kleinen
+        Bereich träge (20% → 23% → 26% bei reinem *1.15). Plus: angleDelta
         wird durch 120 (Standard-Tick) geteilt, damit schnelle Wheel-Bursts
         oder Touchpad-Pinch (kontinuierliche Werte) mehrere Stufen auf
         einmal anwenden — Strg+Wheel zoomt feiner (nur multiplikativ).
@@ -224,7 +224,7 @@ class PreviewCanvas(QWidget):
 
         fine = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
         # Tick-Anzahl: jeder Standard-Maus-Tick = 120. Bei Touchpads oder
-        # schnellem Scrollen koennen mehrere Ticks aufsummiert ankommen.
+        # schnellem Scrollen können mehrere Ticks aufsummiert ankommen.
         ticks = max(1, abs(event.angleDelta().y()) // 120)
         delta = event.angleDelta().y()
         if delta == 0:
@@ -322,7 +322,7 @@ class PatternPreviewDialog(QDialog):
         self._setup_ui()
         self._apply_styles()
         self._update_info()
-        # Initial-Beschreibung fuer den Default-Modus
+        # Initial-Beschreibung für den Default-Modus
         initial_descs = self.DP_MODE_DESCRIPTIONS if self._is_dp else self.MODE_DESCRIPTIONS
         self._mode_desc.setText(initial_descs[0])
 
@@ -392,7 +392,7 @@ class PatternPreviewDialog(QDialog):
     def _create_toolbar(self) -> QHBoxLayout:
         """Erstellt die Toolbar — gruppiert Darstellung / Stoff / Optionen / Zoom.
 
-        Im DP-Modus werden die irrelevanten Gruppen (Stoff, Rueckstiche,
+        Im DP-Modus werden die irrelevanten Gruppen (Stoff, Rückstiche,
         Fortschritt) komplett ausgeblendet — die Vorschau zeigt dort
         nur die Drill-Optik mit Klebegrund.
         """
@@ -412,7 +412,7 @@ class PatternPreviewDialog(QDialog):
             self._mode_combo.setToolTip(
                 t(
                     "Drill-Vorschau: facettierte Drills auf Klebegrund.\n"
-                    "Pixel-Vorschau: flache Farbflaechen — wie im Editor."
+                    "Pixel-Vorschau: flache Farbflächen — wie im Editor."
                 )
             )
         else:
@@ -457,7 +457,7 @@ class PatternPreviewDialog(QDialog):
         self._sep_after_fabric = self._make_separator()
         row.addWidget(self._sep_after_fabric)
 
-        # === Gruppe: Optionen (Rueckstiche / Fortschritt — beide weg im DP) ===
+        # === Gruppe: Optionen (Rückstiche / Fortschritt — beide weg im DP) ===
         self._cb_backstitches = QCheckBox(t("Rückstiche"))
         self._cb_backstitches.setChecked(True)
         self._cb_backstitches.setToolTip(t("Rückstich-Linien in der Vorschau zeigen"))
@@ -507,7 +507,7 @@ class PatternPreviewDialog(QDialog):
         btn_fit.setToolTip(t("Zoom so anpassen, dass das ganze Muster sichtbar ist"))
         btn_fit.clicked.connect(lambda: self._canvas.zoom_fit())
         # Verhindert, dass dieser Button den Default-Status (Enter-Taste)
-        # des Close-Buttons im Footer uebernimmt.
+        # des Close-Buttons im Footer übernimmt.
         btn_fit.setAutoDefault(False)
         row.addWidget(btn_fit)
 
@@ -597,7 +597,7 @@ class PatternPreviewDialog(QDialog):
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
         # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
-        # der die globale :default-Hervorhebung ueberschreibt.
+        # der die globale :default-Hervorhebung überschreibt.
         close_btn.setStyleSheet(Styles.button_primary())
         footer.addWidget(button_box)
 
@@ -710,13 +710,13 @@ class PatternPreviewDialog(QDialog):
         t(
             "Drill-Vorschau: facettierte Quadrate mit Glanzlicht und Schatten — so sieht die fertige DP-Vorlage geklebt aus."
         ),
-        t("Pixel-Vorschau: flache Farbflaechen — schnell zur Kontroll-Ansicht ohne Drill-Detail."),
+        t("Pixel-Vorschau: flache Farbflächen — schnell zur Kontroll-Ansicht ohne Drill-Detail."),
     ]
 
     def _on_mode_changed(self, index: int) -> None:
         """Wechselt den Darstellungsmodus.
 
-        Im DP-Modus hat die Combo nur zwei Eintraege (Drill / Pixel) — der
+        Im DP-Modus hat die Combo nur zwei Einträge (Drill / Pixel) — der
         Renderer wechselt entsprechend zwischen FABRIC (mit DP-Drill-Render-
         Logik intern) und PIXEL.
         """

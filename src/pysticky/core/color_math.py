@@ -1,21 +1,21 @@
 """
-Farbmathematik: sRGB <-> CIE-Lab und perzeptuelle Naechste-Farbe-Suche.
+Farbmathematik: sRGB <-> CIE-Lab und perzeptuelle Nächste-Farbe-Suche.
 
-EINE Quelle fuer alle Lab-Konvertierungen im Projekt. Frueher war die
+EINE Quelle für alle Lab-Konvertierungen im Projekt. Früher war die
 D65-Matrix mehrfach kopiert (thread.py scalar, thread_cross_ref.py numpy,
 vom Eyedropper mitbenutzt) — klassische Copy-Paste-Drift mit Bug-Risiko,
-weil eine Korrektur an mehreren Stellen haette erfolgen muessen.
+weil eine Korrektur an mehreren Stellen hätte erfolgen müssen.
 
 Zwei Pfade, dieselbe Mathematik:
 
 - **Skalar** (`rgb_to_lab` / `lab_to_rgb`): pure Python, KEIN numpy-Import
   auf Modulebene — damit "core lite"-Module wie `thread.py` numpy-frei
-  importierbar bleiben. Schnell genug fuer Einzelfarben.
+  importierbar bleiben. Schnell genug für Einzelfarben.
 - **Vektorisiert** (`rgb_to_lab_array` / `nearest_index_by_lab`): numpy,
-  lokal in der Funktion importiert. Fuer Massen-Konvertierung beim
+  lokal in der Funktion importiert. Für Massen-Konvertierung beim
   Paletten-Matching (~500 Garne pro Palette).
 
-Metrik: CIE76 Delta-E (euklidische Distanz im Lab-Raum). Fuer Garn-Matching
+Metrik: CIE76 Delta-E (euklidische Distanz im Lab-Raum). Für Garn-Matching
 ausreichend, deterministisch und wahrnehmungsbasiert besser als plain RGB.
 """
 
@@ -110,7 +110,7 @@ def delta_e_sq(
     lab1: tuple[float, float, float],
     lab2: tuple[float, float, float],
 ) -> float:
-    """Quadriertes CIE76 Delta-E. Wurzel beim reinen Vergleichen unnoetig."""
+    """Quadriertes CIE76 Delta-E. Wurzel beim reinen Vergleichen unnötig."""
     dl = lab1[0] - lab2[0]
     da = lab1[1] - lab2[1]
     db = lab1[2] - lab2[2]
@@ -124,7 +124,7 @@ def delta_e(
     """CIE76 Delta-E zwischen zwei sRGB-Farben (0-255). Skalar, numpy-frei.
 
     Liefert die echte (nicht quadrierte) perzeptuelle Distanz — praktisch
-    fuer Anzeige-Indikatoren. Faustwerte: ΔE < 1 nicht wahrnehmbar, ~2-3
+    für Anzeige-Indikatoren. Faustwerte: ΔE < 1 nicht wahrnehmbar, ~2-3
     sehr guter Garn-Treffer, ~10 deutlich sichtbar, > 25 schlechter Match.
     """
     return delta_e_sq(rgb_to_lab(*rgb1), rgb_to_lab(*rgb2)) ** 0.5
@@ -163,7 +163,7 @@ def nearest_index_by_lab(
     target_rgb: tuple[int, int, int],
     candidates_rgb: Sequence[tuple[int, int, int]],
 ) -> int:
-    """Index des perzeptuell naechsten Kandidaten (CIE76 Delta-E in Lab).
+    """Index des perzeptuell nächsten Kandidaten (CIE76 Delta-E in Lab).
 
     Args:
         target_rgb: Zielfarbe (r, g, b), 0-255.
@@ -172,7 +172,7 @@ def nearest_index_by_lab(
     Returns:
         Index in `candidates_rgb` mit kleinstem Delta-E zur Zielfarbe.
 
-    Nutzt numpy fuer die Massen-Konvertierung (typisch ~500 Garne).
+    Nutzt numpy für die Massen-Konvertierung (typisch ~500 Garne).
     """
     import numpy as np
 

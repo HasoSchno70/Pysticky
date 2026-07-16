@@ -19,11 +19,11 @@ from ._helpers import make_section_form
 class GeneralTab(QWidget):
     """Tab: Allgemeine Einstellungen."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -113,7 +113,7 @@ class GeneralTab(QWidget):
             label = {"de": "Deutsch", "en": "English"}.get(code, code)
             self.combo_language.addItem(label, userData=code)
         self.combo_language.setToolTip(
-            t("Sprache der Benutzeroberflaeche. Aenderungen werden beim naechsten Start aktiv.")
+            t("Sprache der Benutzeroberfläche. Änderungen werden beim nächsten Start aktiv.")
         )
         form.addRow(t("Sprache:"), self.combo_language)
 
@@ -155,7 +155,7 @@ class GeneralTab(QWidget):
         layout.addWidget(group_watermark)
         layout.addStretch()
 
-    def load_settings(self, settings: QSettings):
+    def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         self.chk_autosave.setChecked(settings.value("autosave_enabled", True, type=bool))
         self.spin_autosave_interval.setValue(settings.value("autosave_interval", 5, type=int))
@@ -181,7 +181,7 @@ class GeneralTab(QWidget):
         self.edit_default_author.setText(settings.value("default_author", "", type=str))
         self.edit_default_copyright.setText(settings.value("default_copyright", "", type=str))
 
-    def save_settings(self, settings: QSettings):
+    def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
         settings.setValue("autosave_enabled", self.chk_autosave.isChecked())
         settings.setValue("autosave_interval", self.spin_autosave_interval.value())
@@ -199,7 +199,7 @@ class GeneralTab(QWidget):
         settings.setValue("default_copyright", self.edit_default_copyright.text().strip())
         settings.setValue("ui_language", self.combo_language.currentData() or "auto")
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
         self.chk_autosave.setChecked(True)
         self.spin_autosave_interval.setValue(5)

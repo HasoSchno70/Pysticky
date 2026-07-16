@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 from math import ceil
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +67,8 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
     """Exportiert Kreuzstich-Muster als PDF-Datei."""
 
     # Verfügbare Papierformate: Name → (pagesize, Stiche X, Stiche Y).
-    # A1/A0 sind hauptsaechlich fuer DP-1:1-Druck — bei 200x200 Drills mit
-    # 2.5mm Pitch braucht man mindestens A2, fuer eine einzelne Seite A1/A0.
+    # A1/A0 sind hauptsächlich für DP-1:1-Druck — bei 200x200 Drills mit
+    # 2.5mm Pitch braucht man mindestens A2, für eine einzelne Seite A1/A0.
     PAGE_FORMATS = (
         {
             "A4": {"pagesize": A4, "stitches_x": 40, "stitches_y": 40, "margin": 15},
@@ -101,8 +101,8 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         notes: str = "",
         cross_ref_palettes: list[str] | None = None,
         page_overlap_stitches: int = 0,
-        password: Optional[str] = None,
-        watermark_text: Optional[str] = None,
+        password: str | None = None,
+        watermark_text: str | None = None,
         allow_printing: bool = True,
         allow_copying: bool = True,
     ) -> None:
@@ -135,7 +135,7 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         # NICHT die feste 40-Drills-Vorgabe. So passt der echte Drill in
         # die ausgedruckte Klebefolien-Zelle.
         #
-        # Wir reservieren grosszuegig fuer Header (Spalten-/Zeilen-Nummern
+        # Wir reservieren großzügig für Header (Spalten-/Zeilen-Nummern
         # 8mm), Page-Title/Info-Block oben (~15mm) und Mini-Legend unten
         # (~20mm) — insgesamt grob 45mm. Sonst kollidiert das Drawing mit
         # dem Frame-Rand und reportlab wirft LayoutError.
@@ -161,15 +161,15 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         self._include_path_preview = include_path_preview
         self._optimization_result: "OptimizationResult | None" = None
 
-        # Optionale Hersteller-Cross-Reference fuer die Legende
+        # Optionale Hersteller-Cross-Reference für die Legende
         self.cross_ref_palettes: list[str] = cross_ref_palettes or []
 
         # Working-Chart-Pages: Overlap-Stiche an jeder Seite rechts/unten
         self.page_overlap_stitches: int = max(0, int(page_overlap_stitches))
 
         # PDF-Schutz: optionales Password und Wasserzeichen
-        self.password: Optional[str] = password or None
-        self.watermark_text: Optional[str] = (watermark_text or "").strip() or None
+        self.password: str | None = password or None
+        self.watermark_text: str | None = (watermark_text or "").strip() or None
         self.allow_printing: bool = bool(allow_printing)
         self.allow_copying: bool = bool(allow_copying)
 
@@ -223,7 +223,7 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         self._calculate_statistics()
 
         # Komposit-Grid einmalig pre-computen — alle Per-Pixel-Lookups
-        # gehen anschliessend ueber den Cache statt durch den Layer-Stack.
+        # gehen anschliessend über den Cache statt durch den Layer-Stack.
         self._cache = CompositeGridCache(self.pattern)
 
         # Stickpfade berechnen wenn gewünscht

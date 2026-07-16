@@ -1,7 +1,7 @@
 """
-Garn-Vorratsliste — speichert pro Hersteller-Farbe wieviele Straenge
+Garn-Vorratsliste — speichert pro Hersteller-Farbe wieviele Stränge
 der User aktuell besitzt. Genutzt vom Statistics-Dialog zur Berechnung
-einer Einkaufsliste fuer ein konkretes Muster.
+einer Einkaufsliste für ein konkretes Muster.
 
 Persistenz: JSON-Datei im App-Daten-Verzeichnis.
 """
@@ -33,7 +33,7 @@ def get_inventory_path() -> Path:
 
 
 def _key(manufacturer: str | None, catalog_number: str | None) -> str:
-    """Eindeutiger Inventory-Key. Leerstrings werden in 'unknown' uebersetzt."""
+    """Eindeutiger Inventory-Key. Leerstrings werden in 'unknown' übersetzt."""
     m = (manufacturer or "unknown").strip()
     c = (catalog_number or "unknown").strip()
     return f"{m}::{c}"
@@ -43,8 +43,8 @@ class Inventory:
     """Verwaltet die Garn-Vorratsliste.
 
     Die Daten werden flach als Dict gehalten: {key: strands_on_hand}.
-    Bei Aenderungen muss `save()` explizit aufgerufen werden — Hot-Reload
-    bei jedem Set waere bei vielen Aenderungen ineffizient.
+    Bei Änderungen muss `save()` explizit aufgerufen werden — Hot-Reload
+    bei jedem Set wäre bei vielen Änderungen ineffizient.
     """
 
     def __init__(self, path: Path | None = None) -> None:
@@ -71,7 +71,7 @@ class Inventory:
                 self._data = {str(k): int(v) for k, v in stock.items() if v is not None}
 
     def save(self) -> None:
-        """Schreibt die Inventory zurueck auf die Platte."""
+        """Schreibt die Inventory zurück auf die Platte."""
         payload = {
             "version": 1,
             "stock": dict(sorted(self._data.items())),
@@ -97,7 +97,7 @@ class Inventory:
             self._data[k] = int(strands)
 
     def items(self) -> Iterable[tuple[str, int]]:
-        """Iteriert (key, strands) ueber alle Eintraege."""
+        """Iteriert (key, strands) über alle Einträge."""
         return list(self._data.items())
 
     def clear(self) -> None:
@@ -112,7 +112,7 @@ def compute_shopping_list(
     inventory: Inventory,
     stitches_per_skein: dict[int, int],
 ) -> list[dict]:
-    """Berechnet die Einkaufsliste fuer ein konkretes Pattern.
+    """Berechnet die Einkaufsliste für ein konkretes Pattern.
 
     Args:
         pattern: das Pattern (mit color_entries)
@@ -158,9 +158,9 @@ def compute_shopping_list_multi(
     inventory: Inventory,
     stitches_per_skein: dict[int, int],
 ) -> list[dict]:
-    """Berechnet die kombinierte Einkaufsliste ueber mehrere Muster hinweg.
+    """Berechnet die kombinierte Einkaufsliste über mehrere Muster hinweg.
 
-    Summiert den Garnbedarf (in Straengen) pro Farbe ueber alle uebergebenen
+    Summiert den Garnbedarf (in Strängen) pro Farbe über alle übergebenen
     Patterns, bevor der Vorrat EINMAL insgesamt abgezogen wird — so wird
     derselbe Vorrats-Strang nicht mehrfach (einmal pro Projekt) verrechnet.
 

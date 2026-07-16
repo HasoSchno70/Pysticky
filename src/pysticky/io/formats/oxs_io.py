@@ -1,9 +1,9 @@
 """
 OXS (Open Cross Stitch) Dateiformat-Import und -Export.
 
-OXS ist ein XML-basiertes, offenes Austauschformat fuer Kreuzstich-Muster.
+OXS ist ein XML-basiertes, offenes Austauschformat für Kreuzstich-Muster.
 Es wird von Pattern Maker, MacStitch/WinStitch (Ursa Software), Stitch Fiddle
-und anderen unterstuetzt und ist damit die de-facto-Bruecke zwischen den
+und anderen unterstützt und ist damit die de-facto-Brücke zwischen den
 verschiedenen kommerziellen Tools.
 
 Format (vereinfachte Struktur):
@@ -65,7 +65,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 from xml.etree import ElementTree as ET
 
 from defusedxml.common import DefusedXmlException
@@ -115,7 +114,7 @@ class OXSImporter:
         except (ET.ParseError, OSError, DefusedXmlException):
             return False
 
-    def import_file(self, filepath: Path | str) -> Optional[Pattern]:
+    def import_file(self, filepath: Path | str) -> Pattern | None:
         filepath = Path(filepath)
         self.errors.clear()
         self.warnings.clear()
@@ -126,7 +125,7 @@ class OXSImporter:
 
         try:
             # _safe_parse (defusedxml): Schutz vor XXE / Billion-Laughs,
-            # da OXS-Dateien aus fremder Quelle stammen koennen.
+            # da OXS-Dateien aus fremder Quelle stammen können.
             tree = _safe_parse(filepath)
         except ET.ParseError as e:
             self.errors.append(f"XML-Parse-Fehler: {e}")
@@ -199,9 +198,9 @@ class OXSImporter:
         if palette_el is None:
             raise OXSImportError("Keine <palette>-Section gefunden")
 
-        # Thread-Lookup ueber alle bekannten Hersteller-Paletten, fuer
+        # Thread-Lookup über alle bekannten Hersteller-Paletten, für
         # Matching "DMC 310" -> echter Thread aus der DMC-Palette.
-        # Zusaetzlich: merken welche Threads aus Bead-Paletten stammen.
+        # Zusätzlich: merken welche Threads aus Bead-Paletten stammen.
         pm = get_palette_manager()
         pm.load_all()
         all_threads_by_key: dict[tuple[str, str], Thread] = {}
@@ -238,7 +237,7 @@ class OXSImporter:
             symbol = item.get("symbol", "").strip()
             color_hex = item.get("color", "").strip()
 
-            # index=0 ist per Konvention "cloth" — ueberspringen
+            # index=0 ist per Konvention "cloth" — überspringen
             if palindex == 0 and (name.lower() in {"cloth", "fabric", ""} or number == ""):
                 continue
 
@@ -247,7 +246,7 @@ class OXSImporter:
 
             # Falls in bekannter Palette: realen Thread verwenden, damit
             # Cross-Reference und Hersteller-Konvertierung greifen
-            thread: Optional[Thread] = None
+            thread: Thread | None = None
             is_bead = False
             is_diamond = False
             if manufacturer and catalog:
@@ -262,7 +261,7 @@ class OXSImporter:
                     color = ThreadColor.from_hex(color_hex or "#000000")
                 except (ValueError, IndexError):
                     self.warnings.append(
-                        f"Ungueltige Farbe '{color_hex}' fuer Palette-Item {palindex}"
+                        f"Ungueltige Farbe '{color_hex}' für Palette-Item {palindex}"
                     )
                     color = ThreadColor(0, 0, 0)
                 thread = Thread(
@@ -271,7 +270,7 @@ class OXSImporter:
                     manufacturer=manufacturer,
                     catalog_number=catalog,
                 )
-                # Heuristik: Manufacturer-Name enthaelt "Bead" oder "Diamond"
+                # Heuristik: Manufacturer-Name enthält "Bead" oder "Diamond"
                 if manufacturer:
                     mfr_lower = manufacturer.lower()
                     if "bead" in mfr_lower:
@@ -312,9 +311,9 @@ class OXSImporter:
                     else:
                         thread.strand_ratios = [1] * len(components)
 
-            # In Pattern einfuegen
+            # In Pattern einfügen
             pattern_idx = pattern.add_color(thread, is_bead=is_bead, is_diamond=is_diamond)
-            # Symbol uebernehmen wenn aus OXS gesetzt
+            # Symbol übernehmen wenn aus OXS gesetzt
             if symbol:
                 pattern.set_symbol(pattern_idx, symbol)
             palindex_map[palindex] = pattern_idx
@@ -462,7 +461,7 @@ class OXSImporter:
                 self.warnings.append(f"Unbekannter Ornament-Typ: {objtype}")
                 continue
 
-            # OXS: x=1.5 fuer Mitte der ersten Zelle. Pattern: x=0 fuer erste Zelle.
+            # OXS: x=1.5 für Mitte der ersten Zelle. Pattern: x=0 für erste Zelle.
             px = int(x1 - 1)
             py = int(y1 - 1)
             self._place_stitch(pattern, px, py, color_idx, stitch_code)
@@ -488,8 +487,8 @@ class OXSExporter:
         self,
         pattern: Pattern,
         filepath: Path | str,
-        author: Optional[str] = None,
-        copyright_: Optional[str] = None,
+        author: str | None = None,
+        copyright_: str | None = None,
     ) -> None:
         filepath = Path(filepath)
         root = self._build_tree(pattern, author=author, copyright_=copyright_)
@@ -504,8 +503,8 @@ class OXSExporter:
     def _build_tree(
         self,
         pattern: Pattern,
-        author: Optional[str] = None,
-        copyright_: Optional[str] = None,
+        author: str | None = None,
+        copyright_: str | None = None,
     ) -> ET.Element:
         chart = ET.Element("chart")
 
@@ -559,7 +558,7 @@ class OXSExporter:
             mfr = (thread.manufacturer or "").strip()
             display_name = thread.name or f"Color {i + 1}"
             if mfr and number:
-                # Sauberer Name, damit der Reader es zurueck-mappen kann
+                # Sauberer Name, damit der Reader es zurück-mappen kann
                 display_name = f"{mfr} {number} - {thread.name}"
             attrib = {
                 "index": str(i + 1),
@@ -571,7 +570,7 @@ class OXSExporter:
             # Tweed-Blend: Komponenten als Custom-Attribute mitgeben.
             # OXS-Standard kennt das nicht, aber Custom-Attribute werden
             # von anderen Tools ignoriert — kein Datenverlust auf der
-            # Empfaengerseite, und wir koennen den Blend bei Re-Import
+            # Empfängerseite, und wir können den Blend bei Re-Import
             # rekonstruieren.
             if thread.is_blend:
                 attrib["blend_components"] = ";".join(
@@ -581,7 +580,7 @@ class OXSExporter:
                 attrib["blend_ratios"] = ",".join(str(r) for r in (thread.strand_ratios or []))
             ET.SubElement(palette_el, "palette_item", attrib=attrib)
 
-        # Stiche aus allen sichtbaren Layern zusammenfuehren — composite
+        # Stiche aus allen sichtbaren Layern zusammenführen — composite
         fullstitches = ET.SubElement(chart, "fullstitches")
         halfstitches = ET.SubElement(chart, "halfstitches")
         quarterstitches = ET.SubElement(chart, "quarterstitches")
@@ -706,8 +705,8 @@ class OXSExporter:
 # ---------- Helpers ----------
 
 
-def _attr_value(parent: ET.Element, tag: str) -> Optional[str]:
-    """Liefert child.get('value') fuer das erste <tag>-Child, oder None."""
+def _attr_value(parent: ET.Element, tag: str) -> str | None:
+    """Liefert child.get('value') für das erste <tag>-Child, oder None."""
     el = parent.find(tag)
     if el is None:
         return None
@@ -727,8 +726,8 @@ def _attr_int(parent: ET.Element, tag: str, default: int = 0) -> int:
 
 def _parse_stitch_xy_palindex(
     el: ET.Element,
-) -> tuple[Optional[int], Optional[int], Optional[int]]:
-    """Liest x, y, palindex aus einem <stitch>-aehnlichen Element."""
+) -> tuple[int | None, int | None, int | None]:
+    """Liest x, y, palindex aus einem <stitch>-ähnlichen Element."""
     try:
         x = int(el.get("x", ""))
         y = int(el.get("y", ""))
@@ -741,7 +740,7 @@ def _parse_stitch_xy_palindex(
 def _parse_manufacturer_catalog(
     name: str,
     number: str,
-) -> tuple[Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None]:
     """
     Versucht aus name+number Hersteller und Katalog-Nummer zu extrahieren.
 
@@ -755,7 +754,7 @@ def _parse_manufacturer_catalog(
         return None, None
 
     if name and number:
-        # Suche Hersteller-Praefix in name
+        # Suche Hersteller-Präfix in name
         lower = name.lower()
         for mfr in _KNOWN_MANUFACTURERS:
             if lower.startswith(mfr.lower()):
@@ -773,20 +772,20 @@ def _parse_manufacturer_catalog(
 
 
 def _add_value_child(parent: ET.Element, tag: str, value: str) -> ET.Element:
-    """Fuegt <tag value="..."/> an parent an."""
+    """Fügt <tag value="..."/> an parent an."""
     return ET.SubElement(parent, tag, attrib={"value": value})
 
 
 def _fmt_coord(v: float) -> str:
-    """Formatiert eine Koord-Float fuer OXS — int wenn ganz, sonst .1f."""
+    """Formatiert eine Koord-Float für OXS — int wenn ganz, sonst .1f."""
     if abs(v - round(v)) < 1e-6:
         return str(int(round(v)))
     return f"{v:.1f}"
 
 
 _KNOWN_MANUFACTURERS = [
-    # Mehrwort-Praefixe zuerst, damit startswith-Match greift, BEVOR
-    # ein kuerzeres Praefix wie "Mill" das verschluckt.
+    # Mehrwort-Präfixe zuerst, damit startswith-Match greift, BEVOR
+    # ein kürzeres Präfix wie "Mill" das verschluckt.
     "Mill Hill Beads",
     "Mill Hill",
     "Weeks Dye Works",
@@ -815,7 +814,7 @@ _KNOWN_MANUFACTURERS = [
 
 def import_oxs(
     filepath: Path | str,
-) -> tuple[Optional[Pattern], list[str], list[str]]:
+) -> tuple[Pattern | None, list[str], list[str]]:
     """Convenience: liest OXS, liefert (Pattern, Fehler, Warnungen)."""
     importer = OXSImporter()
     pattern = importer.import_file(filepath)
@@ -825,8 +824,8 @@ def import_oxs(
 def export_oxs(
     pattern: Pattern,
     filepath: Path | str,
-    author: Optional[str] = None,
-    copyright_: Optional[str] = None,
+    author: str | None = None,
+    copyright_: str | None = None,
 ) -> None:
     """Convenience: schreibt Pattern als OXS-Datei."""
     exporter = OXSExporter()

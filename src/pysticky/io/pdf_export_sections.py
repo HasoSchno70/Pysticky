@@ -240,7 +240,7 @@ class PDFSectionsMixin(_Base):
         if cross_ref_palettes:
             from ..core.thread_cross_ref import find_equivalents
 
-        # Tabellen-Header — im DP-Modus entfaellt die Symbol-Spalte.
+        # Tabellen-Header — im DP-Modus entfällt die Symbol-Spalte.
         code_col = terms["code_header"]
         if is_dp:
             header = [t("Nr."), t("Farbe"), code_col, t("Farbname")]
@@ -280,26 +280,26 @@ class PDFSectionsMixin(_Base):
 
             # Tweed-Blends: beide Garnnummern in der Garnnr-Spalte
             if thread.is_blend:
-                garn_label = " + ".join(
+                thread_label = " + ".join(
                     f"{c.manufacturer or ''} {c.catalog_number or ''}".strip()
                     for c in thread.blend_components
                 )
             elif is_dp:
                 # Im DP-Modus: nur die Drill-Nummer (Manufacturer ist immer
-                # gleich, "DMC Diamond Painting 169" wuerde die Spalte sprengen
-                # und in die Name-Spalte ueberlaufen).
-                garn_label = thread.catalog_number or thread.name[:8]
+                # gleich, "DMC Diamond Painting 169" würde die Spalte sprengen
+                # und in die Name-Spalte überlaufen).
+                thread_label = thread.catalog_number or thread.name[:8]
             else:
-                garn_label = f"{thread.manufacturer} {thread.catalog_number or ''}"
+                thread_label = f"{thread.manufacturer} {thread.catalog_number or ''}"
 
-            # Im DP-Modus entfaellt die Symbol-Spalte — alle Folge-Indices
+            # Im DP-Modus entfällt die Symbol-Spalte — alle Folge-Indices
             # rutschen entsprechend einen Schritt nach links.
             if is_dp:
                 data.append(
                     [
                         str(i),
                         "",  # Farbfeld via TableStyle
-                        garn_label,
+                        thread_label,
                         thread.name[:28] + name_suffix,
                         *cross_cells,
                         str(stat["count"]),
@@ -313,7 +313,7 @@ class PDFSectionsMixin(_Base):
                         str(i),
                         stat["symbol"],
                         "",  # Farbfeld via TableStyle
-                        garn_label,
+                        thread_label,
                         thread.name[:18] + name_suffix,
                         *cross_cells,
                         str(stat["count"]),
@@ -393,7 +393,7 @@ class PDFSectionsMixin(_Base):
                 )
 
         # Spaltenbreiten je nach Modus.
-        # DP: nur kurze Drill-Nummer in Code-Spalte → mehr Platz fuer Name.
+        # DP: nur kurze Drill-Nummer in Code-Spalte → mehr Platz für Name.
         # Stick: "DMC 310" passt in 30mm.
         if is_dp:
             # Nr, Farbe, Code, Name, [cross...], Drills, %, Drills
@@ -404,7 +404,7 @@ class PDFSectionsMixin(_Base):
         col_widths.extend([18 * mm, 15 * mm, 15 * mm])
         table = Table(data, colWidths=col_widths)
 
-        # Basis-Style — Spalten-Indices haengen am sym_offset.
+        # Basis-Style — Spalten-Indices hängen am sym_offset.
         style_commands = [
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#3498db")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -705,7 +705,7 @@ class PDFSectionsMixin(_Base):
         end_x = min(core_end_x + overlap, self.pattern.width - 1)
         end_y = min(core_end_y + overlap, self.pattern.height - 1)
 
-        # Nachbarseiten fuer Page-Marker
+        # Nachbarseiten für Page-Marker
         neighbors = []
         if page_x > 0:
             neighbors.append(t("&larr; S. {n}").format(n=page_num))
@@ -767,7 +767,7 @@ class PDFSectionsMixin(_Base):
                     count = page_colors[stat["index"]]
                     code = thread.catalog_number or thread.name[:8]
                     if is_dp_pg:
-                        # Farb-HTML-Box als Marker (reportlab unterstuetzt
+                        # Farb-HTML-Box als Marker (reportlab unterstützt
                         # einfache <font>-Tags und <b>) — und kein Symbol,
                         # weil DP-Drills keine Symbol-Konvention haben.
                         # Die Box wird via Hex-Color als kleiner ASCII-Block ■ in der

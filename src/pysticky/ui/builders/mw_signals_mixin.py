@@ -37,8 +37,8 @@ class SignalsConnectorMixin:
         self.canvas.text_confirmed.connect(self._on_text_confirm)
 
         # Auswahl-Signale -> SelectionHandlersMixin.
-        # Copy/Cut/Paste/Delete kommen direkt aus den QActions im Bearbeiten-Menue;
-        # die Signale hier sind nur fuer die Tool-spezifischen Tasten F/R/H/V im Canvas.
+        # Copy/Cut/Paste/Delete kommen direkt aus den QActions im Bearbeiten-Menü;
+        # die Signale hier sind nur für die Tool-spezifischen Tasten F/R/H/V im Canvas.
         self.canvas.selection_fill.connect(self._on_selection_fill)
         self.canvas.selection_rotate_cw.connect(self._on_selection_rotate_cw)
         self.canvas.selection_rotate_ccw.connect(self._on_selection_rotate_ccw)
@@ -67,7 +67,7 @@ class SignalsConnectorMixin:
         self.color_bar.color_dropped.connect(self._on_color_dropped)
         self.color_bar.color_swap_requested.connect(self._on_color_swap_dropped)
 
-        # Klick in der Info-Panel-Farbuebersicht selektiert die Farbe in der
+        # Klick in der Info-Panel-Farbübersicht selektiert die Farbe in der
         # Musterfarben-Bar (und damit als aktive Zeichenfarbe).
         self.info_panel.color_clicked.connect(self._on_info_color_clicked)
 

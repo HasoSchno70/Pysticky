@@ -2,8 +2,8 @@
 Fortschritts-Panel - Zeigt den Stickfortschritt an.
 
 Zeigt den Gesamtfortschritt und den Fortschritt pro Farbe.
-Ermoeglicht das Markieren ganzer Farben als erledigt und
-das Zuruecksetzen des gesamten Fortschritts.
+Ermöglicht das Markieren ganzer Farben als erledigt und
+das Zurücksetzen des gesamten Fortschritts.
 """
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -37,7 +37,7 @@ class ProgressPanel(QWidget):
         self._pattern: Pattern | None = None
         self._color_widgets: list[QWidget] = []
         # Debounce-Timer: bei schnellen Updates (Drag im Sticken-Modus) wird
-        # nur die LETZTE Aenderung in 80ms tatsaechlich gerendert. Verhindert
+        # nur die LETZTE Änderung in 80ms tatsächlich gerendert. Verhindert
         # das "flackernde Fenster"-Problem (vorher: bei jedem Mausevent wurden
         # alle Color-Rows neu erzeugt, frische QFrames flashten als
         # Top-Level-Windows auf).
@@ -52,7 +52,7 @@ class ProgressPanel(QWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(10)
 
-        # === Sticken-Modus Toggle (gross + auffaellig) ===
+        # === Sticken-Modus Toggle (gross + auffällig) ===
         self.btn_stitch_mode = QPushButton("✓  " + t("Sticken-Modus starten"))
         self.btn_stitch_mode.setCheckable(True)
         self.btn_stitch_mode.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -77,7 +77,7 @@ class ProgressPanel(QWidget):
 
         # === Gesamt-Fortschrittsbalken ===
         self.overall_progress = QProgressBar()
-        self.overall_progress.setRange(0, 1000)  # 0.1% Aufloesung
+        self.overall_progress.setRange(0, 1000)  # 0.1% Auflösung
         self.overall_progress.setTextVisible(True)
         self.overall_progress.setFormat("%p%")
         self.overall_progress.setMinimumHeight(28)
@@ -99,7 +99,7 @@ class ProgressPanel(QWidget):
         """)
         layout.addWidget(self.overall_progress)
 
-        # === Stich-Zaehler ===
+        # === Stich-Zähler ===
         self.lbl_counts = QLabel("0 / 0 " + t("Stiche"))
         self.lbl_counts.setStyleSheet(f"""
             font-size: 13px;
@@ -236,23 +236,23 @@ class ProgressPanel(QWidget):
         """Aktualisiert die Fortschrittsanzeige (debounced).
 
         Bei rapider Aufrufung (z.B. Mausdrag im Sticken-Modus) wird nur die
-        letzte Aenderung pro 80ms tatsaechlich gerendert.
+        letzte Änderung pro 80ms tatsächlich gerendert.
         """
         self._pattern = pattern
-        # Sofortige (billige) Updates: nur Zaehler + Balken — kein Widget-Rebuild.
-        # Der teure Pro-Farben-Rebuild laeuft debounced.
+        # Sofortige (billige) Updates: nur Zähler + Balken — kein Widget-Rebuild.
+        # Der teure Pro-Farben-Rebuild läuft debounced.
         stats = pattern.get_progress_statistics()
         percent = stats["progress_percent"]
         self.overall_progress.setValue(int(percent * 10))
         completed = stats["completed_stitches"]
         total = stats["total_stitches"]
         self.lbl_counts.setText(f"{completed:,} / {total:,} Stiche".replace(",", "."))
-        # Pro-Farben-Rebuild verzoegert anstossen
+        # Pro-Farben-Rebuild verzögert anstossen
         if not self._update_timer.isActive():
             self._update_timer.start()
 
     def _do_update_progress(self) -> None:
-        """Eigentliches Pro-Farben-Update — laeuft via Debounce-Timer."""
+        """Eigentliches Pro-Farben-Update — läuft via Debounce-Timer."""
         if not self._pattern:
             return
         stats = self._pattern.get_progress_statistics()
@@ -284,10 +284,10 @@ class ProgressPanel(QWidget):
         self._per_color_layout.addStretch()
 
     def _create_color_row(self, color_data: dict) -> QWidget:
-        """Erstellt eine Zeile fuer eine Farbe.
+        """Erstellt eine Zeile für eine Farbe.
 
         Wichtig: alle Sub-Widgets bekommen `row` als Parent, sonst flashen
-        sie ggf. fuer einen Frame als Top-Level-Windows auf (Win-Qt-Quirk).
+        sie ggf. für einen Frame als Top-Level-Windows auf (Win-Qt-Quirk).
         """
         row = QFrame(self._scroll_content)
         row.setStyleSheet(f"""
@@ -375,7 +375,7 @@ class ProgressPanel(QWidget):
         """)
         layout.addWidget(progress)
 
-        # Untere Zeile: Zaehler + Button
+        # Untere Zeile: Zähler + Button
         bottom_row = QHBoxLayout()
         bottom_row.setSpacing(4)
 

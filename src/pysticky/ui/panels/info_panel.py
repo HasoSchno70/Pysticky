@@ -175,12 +175,12 @@ class StatCard(QFrame):
         self.lbl_value.setText(value)
 
     def set_label(self, label: str) -> None:
-        """Aendert das Label der Karte zur Laufzeit (z.B. fuer Modus-Wechsel)."""
+        """Ändert das Label der Karte zur Laufzeit (z.B. für Modus-Wechsel)."""
         self._label = label
         self.lbl_label.setText(label)
 
     def set_icon(self, icon: str) -> None:
-        """Aendert das Icon zur Laufzeit (Modus-Wechsel: ✦ -> 💎)."""
+        """Ändert das Icon zur Laufzeit (Modus-Wechsel: ✦ -> 💎)."""
         self._icon = icon
         self.icon_label.setText(icon)
 
@@ -210,7 +210,7 @@ class _ColorListItem(QFrame):
         self._calc_thread = calc_thread_fn
         self._selected = False
         self._hovered = False
-        # Modus beeinflusst Layout: im Diamond-Modus entfaellt die Symbol-
+        # Modus beeinflusst Layout: im Diamond-Modus entfällt die Symbol-
         # Spalte und der "Stiche"-Suffix wird zu "Drills".
         self._mode = mode
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -229,7 +229,7 @@ class _ColorListItem(QFrame):
         # Farbe-Quadrat. Alle internen QLabels mit parent=self konstruieren,
         # sonst flackern sie beim Color-List-Rebuild kurz als Top-Level-
         # Phantome auf (besonders das Symbol-Label mit setFixedWidth=14
-        # war der haupt-Uebeltaeter beim Mode-Switch und Pattern-Load).
+        # war der haupt-Übeltäter beim Mode-Switch und Pattern-Load).
         self.swatch = QLabel(self)
         self.swatch.setFixedSize(16, 16)
         c = thread.color
@@ -239,9 +239,9 @@ class _ColorListItem(QFrame):
         layout.addWidget(self.swatch)
 
         # Symbol (in Thread-Farbe wenn dunkel, sonst angepasst).
-        # Im Diamond-Modus entfaellt die Symbol-Spalte — Drills haben
-        # keine eingebuergerte Symbol-Konvention, dort identifiziert man
-        # ueber die Drill-Nummer.
+        # Im Diamond-Modus entfällt die Symbol-Spalte — Drills haben
+        # keine eingebürgerte Symbol-Konvention, dort identifiziert man
+        # über die Drill-Nummer.
         self.lbl_symbol = QLabel(self._entry.symbol, self)
         self.lbl_symbol.setFixedWidth(14)
         self.lbl_symbol.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -251,8 +251,8 @@ class _ColorListItem(QFrame):
         self.lbl_symbol.setVisible(self._mode != "diamond")
         layout.addWidget(self.lbl_symbol)
 
-        # Nummer (monospace fuer alignment). Im Diamond-Modus prominenter
-        # (groesser, in Vordergrund-Textfarbe), weil sie dort der Haupt-
+        # Nummer (monospace für alignment). Im Diamond-Modus prominenter
+        # (größer, in Vordergrund-Textfarbe), weil sie dort der Haupt-
         # Identifikator ist.
         num = thread.catalog_number or "—"
         self.lbl_num = QLabel(num, self)
@@ -326,7 +326,7 @@ class _ColorListItem(QFrame):
         self._fabric_count = fabric_count
         self._calc_thread = calc_thread_fn
 
-        # Symbol kann sich aendern wenn User es geaendert hat
+        # Symbol kann sich ändern wenn User es geändert hat
         self.lbl_symbol.setText(entry.symbol)
 
         # Stiche + Verbrauch neu berechnen
@@ -359,7 +359,7 @@ class _ColorListItem(QFrame):
 
     def paintEvent(self, event) -> None:
         # Eigener Hintergrund — Stylesheet auf Custom-Klassen ist in Qt
-        # nicht zuverlaessig; paintEvent gibt deterministische Kontrolle.
+        # nicht zuverläßig; paintEvent gibt deterministische Kontrolle.
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         rect = self.rect().adjusted(0, 0, -1, -1)
@@ -417,11 +417,11 @@ class SectionHeader(QWidget):
         layout.addStretch()
 
     def set_title(self, title: str) -> None:
-        """Aendert den Sektion-Titel zur Laufzeit (z.B. fuer Modus-Wechsel)."""
+        """Ändert den Sektion-Titel zur Laufzeit (z.B. für Modus-Wechsel)."""
         self._title_label.setText(title)
 
     def set_icon(self, icon: str) -> None:
-        """Aendert das Section-Icon zur Laufzeit."""
+        """Ändert das Section-Icon zur Laufzeit."""
         self._icon_label.setText(icon)
 
 
@@ -456,7 +456,7 @@ class InfoPanel(QWidget):
         layout.setContentsMargins(14, 14, 14, 14)
         layout.setSpacing(10)
 
-        # === Stoff-Auswahl (im DP-Modus: Drill-Groesse) ===
+        # === Stoff-Auswahl (im DP-Modus: Drill-Größe) ===
         self._section_fabric = SectionHeader("🧵", t("STOFFZÄHLUNG"), THEME.accent_primary)
         layout.addWidget(self._section_fabric)
 
@@ -525,7 +525,7 @@ class InfoPanel(QWidget):
         self.lbl_source_file.setStyleSheet(
             f"font-size: 11px; color: {THEME.text_secondary}; background: transparent;"
         )
-        # Eliding via Qt-FontMetrics: zu langer Name wird in der Mitte gekuerzt
+        # Eliding via Qt-FontMetrics: zu langer Name wird in der Mitte gekürzt
         self.lbl_source_file.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
         )
@@ -536,7 +536,7 @@ class InfoPanel(QWidget):
         self.lbl_source_status.setStyleSheet("font-size: 10px; background: transparent;")
         source_layout.addWidget(self.lbl_source_status)
 
-        # Legacy-Referenz fuer das Palette-Label (wird in update genutzt) —
+        # Legacy-Referenz für das Palette-Label (wird in update genutzt) —
         # versteckt, wir packen die Info in den Tooltip.
         self.lbl_source_palette = QLabel("")
         self.lbl_source_palette.setVisible(False)
@@ -563,7 +563,7 @@ class InfoPanel(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setMinimumHeight(150)
-        # Kein setMaximumHeight — Frame darf auf verfuegbaren Platz wachsen
+        # Kein setMaximumHeight — Frame darf auf verfügbaren Platz wachsen
         scroll.setStyleSheet(f"""
             QScrollArea {{ background: transparent; border: none; }}
             {Styles.scrollbar()}
@@ -574,17 +574,17 @@ class InfoPanel(QWidget):
         self.colors_list_layout = QVBoxLayout(scroll_content)
         self.colors_list_layout.setContentsMargins(2, 2, 2, 2)
         self.colors_list_layout.setSpacing(1)
-        # Stretch am Ende — Items werden vor diesem stretch eingefuegt,
+        # Stretch am Ende — Items werden vor diesem stretch eingefügt,
         # damit sie oben anliegen statt vertikal verteilt zu werden
         self.colors_list_layout.addStretch()
 
-        self._scroll_content = scroll_content  # fuer _update_colors_list
+        self._scroll_content = scroll_content  # für _update_colors_list
 
         scroll.setWidget(scroll_content)
         colors_layout.addWidget(scroll)
 
-        # stretch=1 sorgt dafuer dass die Farbuebersicht den restlichen Platz
-        # bis zum Panel-Boden ausfuellt (statt von einem addStretch hochgedrueckt
+        # stretch=1 sorgt dafür dass die Farbübersicht den restlichen Platz
+        # bis zum Panel-Boden ausfüllt (statt von einem addStretch hochgedrückt
         # zu werden).
         layout.addWidget(self.colors_frame, 1)
 
@@ -603,7 +603,7 @@ class InfoPanel(QWidget):
             }}
         """)
         # _update_source_info setzt die Datei-Label-Farbe je nach Status —
-        # hier nur den Default fuer den noch-nicht-aktualisierten Fall.
+        # hier nur den Default für den noch-nicht-aktualisierten Fall.
         self.lbl_source_file.setStyleSheet(
             f"font-size: 11px; color: {THEME.text_secondary}; background: transparent;"
         )
@@ -699,7 +699,7 @@ class InfoPanel(QWidget):
     def _calculate_stitch_time(self, stitches_to_do: int) -> str:
         """Berechnet die Arbeitszeit (Sticken oder Diamond Painting).
 
-        Modus-abhaengig:
+        Modus-abhängig:
         - Sticken: ~20s pro Kreuzstich (3 Stiche/min, mit Fadenwechsel)
         - Diamond: ~3s pro Drill (20 Drills/min, Hand-Tool-Tempo)
         """
@@ -724,7 +724,7 @@ class InfoPanel(QWidget):
     def _calculate_thread_usage(self, pattern: Pattern) -> str:
         """Berechnet Garn-/Drill-Bedarf.
 
-        Modus-abhaengig:
+        Modus-abhängig:
         - Sticken: Garn-Bedarf in Metern (5 cm Garn pro Stich bei 14ct).
         - Diamond: Drill-Gesamtanzahl (alle DP-Drills + Reserve 10%).
         """
@@ -734,7 +734,7 @@ class InfoPanel(QWidget):
             return "0"
 
         if self._mode == "diamond":
-            # 10% Reserve fuer verlorene/abgesprungene Drills
+            # 10% Reserve für verlorene/abgesprungene Drills
             total_drills = int(total_stitches * 1.10)
             return f"~{total_drills:,}".replace(",", ".") + " " + t("Drills")
 
@@ -778,7 +778,7 @@ class InfoPanel(QWidget):
         exists = source_path.exists()
         palette = pattern.source_palette_name or "—"
 
-        # Eliding fuer den Dateinamen — bei langen Namen Mitte kuerzen
+        # Eliding für den Dateinamen — bei langen Namen Mitte kürzen
         from PySide6.QtGui import QFontMetrics
 
         fm = QFontMetrics(self.lbl_source_file.font())
@@ -818,7 +818,7 @@ class InfoPanel(QWidget):
         )
 
     def _update_colors_list(self, pattern: Pattern) -> None:
-        """Baut die kompakte Farbliste auf — incremental wenn moeglich.
+        """Baut die kompakte Farbliste auf — incremental wenn möglich.
 
         WICHTIG: Bei jedem Stitch-Placed wird update_info() gerufen → diese
         Methode auch. Wenn wir hier alle Items neu erstellen, blinkt jedes
@@ -830,8 +830,8 @@ class InfoPanel(QWidget):
         entries = pattern.color_entries
 
         # Schnell-Pfad: gleiche Anzahl Items wie Farben + alle sind ColorListItems
-        # UND alle haben den aktuellen Modus (sonst muessen Symbol-Spalten
-        # neu gerendert werden -> Rebuild noetig).
+        # UND alle haben den aktuellen Modus (sonst müssen Symbol-Spalten
+        # neu gerendert werden -> Rebuild nötig).
         same_structure = (
             len(self._color_items) == len(entries)
             and all(isinstance(it, _ColorListItem) for it in self._color_items)
@@ -850,11 +850,11 @@ class InfoPanel(QWidget):
             return
 
         # Strukturänderung (Farbe hinzu/weg, Pattern-Wechsel): komplett neu.
-        # Hier wird nur ausgefuehrt wenn sich die Farb-Anzahl wirklich aendert,
+        # Hier wird nur ausgeführt wenn sich die Farb-Anzahl wirklich ändert,
         # nicht bei normalen Stitch-Placeds.
         #
         # WICHTIG: setUpdatesEnabled(False) auf den Scroll-Content wrappen,
-        # damit Qt waehrend des Rebuilds keine frisch-konstruierten
+        # damit Qt während des Rebuilds keine frisch-konstruierten
         # ColorListItems als Top-Level-Fenster flickert. Das war die
         # Quelle des "leeres Fenster poppt kurz auf"-Phantoms.
         scroll_content = self._scroll_content
@@ -898,7 +898,7 @@ class InfoPanel(QWidget):
             scroll_content.setUpdatesEnabled(True)
 
     def set_selected_color(self, index: int) -> None:
-        """Markiert die aktive Farbe in der Uebersicht (synchron mit ColorBar)
+        """Markiert die aktive Farbe in der Übersicht (synchron mit ColorBar)
         und scrollt sie sichtbar."""
         self._selected_color_index = index
         target_item = None
@@ -919,8 +919,8 @@ class InfoPanel(QWidget):
     def set_mode(self, mode: str) -> None:
         """Schaltet das Panel zwischen Kreuzstich- und Diamond-Painting-Modus.
 
-        Aendert Labels (Stiche/Drills, Stickzeit/Klebezeit, Stoff/Drill-Raster),
-        Combobox-Inhalte (Aida-Counts vs. Drill-Groessen) und die zugrunde-
+        Ändert Labels (Stiche/Drills, Stickzeit/Klebezeit, Stoff/Drill-Raster),
+        Combobox-Inhalte (Aida-Counts vs. Drill-Größen) und die zugrunde-
         liegenden Zeit-/Verbrauchs-Berechnungen.
 
         Args:
@@ -929,7 +929,7 @@ class InfoPanel(QWidget):
         if mode not in ("stitch", "diamond"):
             return
         if mode == self._mode:
-            # Bereits im richtigen Modus — keine UI-Aktion noetig (vermeidet
+            # Bereits im richtigen Modus — keine UI-Aktion nötig (vermeidet
             # Flackern beim wiederholten _apply_pattern_mode-Call).
             return
         self._mode = mode
@@ -962,15 +962,15 @@ class InfoPanel(QWidget):
             self.card_thread.set_label(t("Garnbedarf"))
             self.card_progress.setVisible(True)
 
-        # Fabric-Combo neu befuellen — die Inhalte sind modus-spezifisch.
-        # Im DP-Modus: Drill-Groessen (Standard 2.5mm Square, plus Round-Drill-
+        # Fabric-Combo neu befüllen — die Inhalte sind modus-spezifisch.
+        # Im DP-Modus: Drill-Größen (Standard 2.5mm Square, plus Round-Drill-
         # und seltener Mini-Drill-Raster). Im Stitch-Modus: Aida-Counts.
         self.combo_fabric.blockSignals(True)
         self.combo_fabric.clear()
         if is_dp:
-            # Drill-Pitch-Werte als Aida-equivalente Zaehlung ablegen, damit
-            # die existierende Garn-Verbrauchs-Logik durchlaeuft ohne Spezial-
-            # Behandlung. Aequivalenz: 2.5mm-Drill ≈ 10ct, 2.8mm ≈ 9ct.
+            # Drill-Pitch-Werte als Aida-equivalente Zählung ablegen, damit
+            # die existierende Garn-Verbrauchs-Logik durchläuft ohne Spezial-
+            # Behandlung. Äquivalenz: 2.5mm-Drill ≈ 10ct, 2.8mm ≈ 9ct.
             self.combo_fabric.addItem(t("2.5 mm Square (Standard)"), 10)
             self.combo_fabric.addItem(t("2.8 mm Round"), 9)
             self.combo_fabric.addItem(t("3.0 mm Round"), 8)

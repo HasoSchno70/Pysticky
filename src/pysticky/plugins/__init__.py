@@ -1,9 +1,9 @@
 """
-Plugin-System fuer PySticky.
+Plugin-System für PySticky.
 
-Plugins sind Python-Module, die ein Pattern manipulieren koennen. Jedes
+Plugins sind Python-Module, die ein Pattern manipulieren können. Jedes
 Plugin liegt in einem eigenen Verzeichnis, das eine `manifest.json` und
-ein Python-Modul (z.B. `plugin.py`) enthaelt.
+ein Python-Modul (z.B. `plugin.py`) enthält.
 
 Suchpfade:
     1. `src/pysticky/plugins/builtin/`  — mitgeliefert

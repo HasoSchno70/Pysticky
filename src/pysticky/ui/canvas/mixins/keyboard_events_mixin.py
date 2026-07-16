@@ -32,10 +32,10 @@ class KeyboardEventsMixin:
             return
 
         # Select-Tool: Tool-spezifische Tasten (F/R/H/V).
-        # Ctrl+C/X/V und Entf laufen ueber QActions im Bearbeiten-Menue —
+        # Ctrl+C/X/V und Entf laufen über QActions im Bearbeiten-Menü —
         # damit sind sie auch aktiv, wenn ein anderes Tool gerade vorne ist.
         # F/R/H/V bleiben hier, weil sie sonst mit Tool-Shortcuts kollidieren
-        # wuerden (R = Rect-Tool etc.) — nur das aktive Select-Tool will sie.
+        # würden (R = Rect-Tool etc.) — nur das aktive Select-Tool will sie.
         if current_tool in (Tool.SELECT, Tool.SELECT_LASSO):
             if key == Qt.Key.Key_F:
                 self.selection_fill.emit()
@@ -56,7 +56,7 @@ class KeyboardEventsMixin:
             self.update()
             return
 
-        # Sticken-Modus: Pfeiltasten springen zur naechsten/vorherigen
+        # Sticken-Modus: Pfeiltasten springen zur nächsten/vorherigen
         # ungehakten Zelle der aktuell aktiven Farbe (Reading-Order).
         if current_tool == Tool.PROGRESS:
             if key in (Qt.Key.Key_Right, Qt.Key.Key_Down):
@@ -75,7 +75,7 @@ class KeyboardEventsMixin:
                     self.stitch_marked_completed.emit(cx, cy)
                     self._batch_active = False
                     self.batch_ended.emit()
-                    # Direkt zur naechsten Zelle springen — Workflow-Beschleunigung
+                    # Direkt zur nächsten Zelle springen — Workflow-Beschleunigung
                     self.jump_to_next_stitch(forward=True)
                     return
 

@@ -1,8 +1,8 @@
 """
-Export-Handler fuer MainWindow.
+Export-Handler für MainWindow.
 
-Enthaelt den ExportWorker (laufender QThread fuer PDF/HTML) sowie die
-Menue-Slots fuer PDF-, HTML- und Bild-Export.
+Enthält den ExportWorker (laufender QThread für PDF/HTML) sowie die
+Menü-Slots für PDF-, HTML- und Bild-Export.
 """
 
 from typing import TYPE_CHECKING
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class ExportWorker(QObject):
-    """Worker fuer Hintergrund-Export (PDF/HTML)."""
+    """Worker für Hintergrund-Export (PDF/HTML)."""
 
     finished = Signal(bool, str)  # success, message
     start_export = Signal(str, str, str, str)  # export_type, filepath, page_format, notes
@@ -39,7 +39,7 @@ class ExportWorker(QObject):
     def _run_export(
         self, export_type: str, filepath: str, page_format: str, notes: str = ""
     ) -> None:
-        """Fuehrt den Export im Hintergrund aus."""
+        """Führt den Export im Hintergrund aus."""
         try:
             if export_type == "pdf":
                 from ...io import PDFExporter
@@ -74,7 +74,7 @@ class ExportWorker(QObject):
                     filepath,
                     pdf_page_format=page_format or "A4",
                 )
-                # Skipped-Komponenten in der Status-Message zurueckgeben,
+                # Skipped-Komponenten in der Status-Message zurückgeben,
                 # damit der User merkt wenn z.B. PDF fehlte.
                 msg = filepath
                 if result["skipped"]:
@@ -94,7 +94,7 @@ class ExportWorker(QObject):
 
 
 class ExportHandlersMixin:
-    """Mixin fuer PDF-, HTML- und Bild-Export."""
+    """Mixin für PDF-, HTML- und Bild-Export."""
 
     def _on_export_html(self: "MainWindow") -> None:
         """Exportiert das Muster als HTML im Hintergrund-Thread."""
@@ -121,20 +121,20 @@ class ExportHandlersMixin:
         if not check_reportlab_available():
             QMessageBox.warning(
                 self,
-                t("PDF-Export nicht verfuegbar"),
+                t("PDF-Export nicht verfügbar"),
                 t(
                     "PDF-Export benoetigt die Bibliothek 'reportlab'.\n\n"
                     "Bitte installieren mit:\n"
                     "pip install reportlab\n\n"
-                    "Alternativ koennen Sie den HTML-Export nutzen und\n"
+                    "Alternativ können Sie den HTML-Export nutzen und\n"
                     "im Browser als PDF drucken."
                 ),
             )
             return
 
         # Papierformat-Auswahl. Im DP-Modus markieren wir das empfohlene
-        # Format mit einem ✓ und waehlen es vor, damit der User die 1:1-
-        # Klebefolie auf moeglichst wenigen Seiten erhaelt.
+        # Format mit einem ✓ und wählen es vor, damit der User die 1:1-
+        # Klebefolie auf möglichst wenigen Seiten erhält.
         from ...io.export_common import (
             is_diamond_mode,
             recommend_paper_format_for_dp,
@@ -181,9 +181,9 @@ class ExportHandlersMixin:
             self,
             t("Papierformat"),
             (
-                t("Papierformat fuer den DP-Export (1:1-Massstab):")
+                t("Papierformat für den DP-Export (1:1-Massstab):")
                 if dp_mode
-                else t("Papierformat fuer den PDF-Export:")
+                else t("Papierformat für den PDF-Export:")
             ),
             format_labels,
             default_idx,
@@ -202,7 +202,7 @@ class ExportHandlersMixin:
         notes, ok_notes = QInputDialog.getMultiLineText(
             self,
             t("PDF-Notizen"),
-            t("Optionale Notizen fuer das PDF (leer lassen zum Ueberspringen):"),
+            t("Optionale Notizen für das PDF (leer lassen zum Ueberspringen):"),
             default_notes,
         )
         if not ok_notes:
@@ -274,7 +274,7 @@ class ExportHandlersMixin:
             cs = spin_cell.value()
             w = self.current_pattern.width * cs
             h = self.current_pattern.height * cs
-            size_label.setText(f"Bildgroesse: {w} x {h} Pixel")
+            size_label.setText(f"Bildgröße: {w} x {h} Pixel")
 
         spin_cell.valueChanged.connect(_update_size)
         _update_size()
@@ -357,7 +357,7 @@ class ExportHandlersMixin:
             return
 
         self.status_bar.showMessage(t("Erstelle Bundle…"), 0)
-        # page_format = A4 als Default fuer das enthaltene PDF
+        # page_format = A4 als Default für das enthaltene PDF
         self._start_export_worker("bundle", path, "A4")
 
     def _start_export_worker(
@@ -389,7 +389,7 @@ class ExportHandlersMixin:
         self._export_progress.setMinimumHeight(110)
         self._export_progress.show()
         # processEvents damit der Dialog SOFORT erscheint statt erst wenn
-        # der Worker bereits laeuft.
+        # der Worker bereits läuft.
         from PySide6.QtWidgets import QApplication
 
         QApplication.processEvents()
@@ -404,7 +404,7 @@ class ExportHandlersMixin:
 
         # PDF-Schutz aus dem letzten _on_export_pdf-Aufruf (None wenn HTML/Bundle)
         pdf_protection = getattr(self, "_pending_pdf_protection", None) or {}
-        # Verbrauchen — naechste Export-Runde startet ohne Schutz, falls
+        # Verbrauchen — nächste Export-Runde startet ohne Schutz, falls
         # nicht erneut konfiguriert.
         self._pending_pdf_protection = None
 
@@ -417,7 +417,7 @@ class ExportHandlersMixin:
         )
         self._export_worker.moveToThread(self._export_thread)
 
-        # QueuedConnection: Slot laeuft im Worker-Thread
+        # QueuedConnection: Slot läuft im Worker-Thread
         self._export_worker.start_export.connect(
             self._export_worker._run_export, Qt.ConnectionType.QueuedConnection
         )
@@ -458,7 +458,7 @@ class ExportHandlersMixin:
                 reply = QMessageBox.question(
                     self,
                     t("Export erfolgreich"),
-                    t("Das Muster wurde als PDF exportiert.\n\nMoechten Sie die Datei oeffnen?"),
+                    t("Das Muster wurde als PDF exportiert.\n\nMoechten Sie die Datei öffnen?"),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:
@@ -474,7 +474,7 @@ class ExportHandlersMixin:
                     t("Export erfolgreich"),
                     t(
                         "Das Muster wurde als HTML exportiert.\n\n"
-                        "Moechten Sie die Datei im Browser oeffnen?"
+                        "Moechten Sie die Datei im Browser öffnen?"
                     ),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
@@ -487,7 +487,7 @@ class ExportHandlersMixin:
                 reply = QMessageBox.question(
                     self,
                     t("Bundle erstellt"),
-                    t("Bundle gespeichert.\n\nMoechten Sie den Ordner oeffnen?"),
+                    t("Bundle gespeichert.\n\nMoechten Sie den Ordner öffnen?"),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:

@@ -44,14 +44,14 @@ from ..styles import THEME
 
 
 def _make_eye_icon(visible: bool, fg: QColor, size: int = 20) -> QIcon:
-    """Zeichnet ein Auge-Symbol — kein Emoji-Rendering noetig, plattform-unabhaengig."""
+    """Zeichnet ein Auge-Symbol — kein Emoji-Rendering nötig, plattform-unabhängig."""
     pm = QPixmap(size, size)
     pm.fill(Qt.GlobalColor.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
     pen_w = max(1.5, size / 12)
     p.setPen(QPen(fg, pen_w))
-    # Aeussere Augen-Form: zwei aufeinander treffende Boegen
+    # Äußere Augen-Form: zwei aufeinander treffende Bögen
     margin = size * 0.12
     rect_h = size * 0.55
     cx = size / 2
@@ -61,11 +61,11 @@ def _make_eye_icon(visible: bool, fg: QColor, size: int = 20) -> QIcon:
     path.quadTo(cx, cy - rect_h / 2 - size * 0.05, size - margin, cy)
     path.quadTo(cx, cy + rect_h / 2 + size * 0.05, margin, cy)
     p.drawPath(path)
-    # Pupille (gefuellter Kreis in der Mitte)
+    # Pupille (gefüllter Kreis in der Mitte)
     pupil_r = size * 0.18
     p.setBrush(fg)
     p.drawEllipse(int(cx - pupil_r), int(cy - pupil_r), int(2 * pupil_r), int(2 * pupil_r))
-    # Wenn versteckt: Schraegstrich durchs Auge
+    # Wenn versteckt: Schrägstrich durchs Auge
     if not visible:
         p.setPen(QPen(fg, pen_w + 0.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         p.drawLine(int(margin), int(size - margin), int(size - margin), int(margin))
@@ -74,14 +74,14 @@ def _make_eye_icon(visible: bool, fg: QColor, size: int = 20) -> QIcon:
 
 
 def _make_lock_icon(locked: bool, fg: QColor, size: int = 20) -> QIcon:
-    """Zeichnet ein Schloss-Symbol selbst (gefuellt, offen mit gehobenem Buegel)."""
+    """Zeichnet ein Schloss-Symbol selbst (gefüllt, offen mit gehobenem Bügel)."""
     pm = QPixmap(size, size)
     pm.fill(Qt.GlobalColor.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
     pen_w = max(1.5, size / 12)
 
-    # Buegel (Shackle) — geoeffnet, wenn nicht locked, leicht nach oben/rechts gekippt
+    # Bügel (Shackle) — geöffnet, wenn nicht locked, leicht nach oben/rechts gekippt
     p.setPen(QPen(fg, pen_w))
     p.setBrush(Qt.BrushStyle.NoBrush)
     shackle_w = size * 0.55
@@ -93,7 +93,7 @@ def _make_lock_icon(locked: bool, fg: QColor, size: int = 20) -> QIcon:
             int(shackle_x), int(shackle_y), int(shackle_w), int(shackle_h * 1.6), 0 * 16, 180 * 16
         )
     else:
-        # Geoeffnet: Buegel nach rechts geneigt, sieht nicht geschlossen aus
+        # Geöffnet: Bügel nach rechts geneigt, sieht nicht geschlossen aus
         shackle_y = size * 0.10
         # Linker Pfosten lang, rechter Pfosten als kurze Linie nach oben
         path = QPainterPath()
@@ -103,7 +103,7 @@ def _make_lock_icon(locked: bool, fg: QColor, size: int = 20) -> QIcon:
         path.lineTo(shackle_x + shackle_w, shackle_y + shackle_h * 0.1)
         p.drawPath(path)
 
-    # Korpus (gefuelltes Rechteck unter dem Buegel)
+    # Korpus (gefülltes Rechteck unter dem Bügel)
     body_h = size * 0.42
     body_w = size * 0.72
     body_x = (size - body_w) / 2
@@ -186,7 +186,7 @@ class LayerListItem(QWidget):
             f"color: {THEME.text_disabled}; font-size: 14px; background: transparent;"
         )
 
-        # Sichtbarkeits-Button: kraeftig gruen wenn an, hell-grau wenn aus.
+        # Sichtbarkeits-Button: kräftig grün wenn an, hell-grau wenn aus.
         # Icon-Farbe kontrastiert immer zum Hintergrund.
         vis_on = self._layer.visible
         if vis_on:
@@ -570,7 +570,7 @@ class LayerPanel(QWidget):
         self.edit_note.setPlaceholderText(t("z.B. Vordergrund, Schatten, Backstitch-Linien …"))
         self.edit_note.setToolTip(
             t(
-                "Freie Notiz zur aktuell ausgewaehlten Ebene — wird beim "
+                "Freie Notiz zur aktuell ausgewählten Ebene — wird beim "
                 "Speichern in der .pxs-Datei abgelegt."
             )
         )
@@ -644,18 +644,18 @@ class LayerPanel(QWidget):
         self._refresh_list()
 
     def _get_btn_style(self) -> str:
-        # padding explizit auf 0: die globale App-QSS setzt fuer QPushButton
+        # padding explizit auf 0: die globale App-QSS setzt für QPushButton
         # "padding: 6px 16px; min-height: 22px;" (siehe apply_theme_to_app).
         # Diese Werte werden hier NICHT automatisch durch das Fehlen einer
         # eigenen Angabe ausser Kraft gesetzt — Qt merged ungesetzte
         # Properties aus der App-weiten Stylesheet rein. Bei
-        # setFixedSize(28, 26) blieb dadurch kein Platz mehr fuer das Glyph
+        # setFixedSize(28, 26) blieb dadurch kein Platz mehr für das Glyph
         # (16px Padding pro Seite > 28px Breite) — die Buttons wirkten
         # komplett leer.
         # WICHTIG: min-width/min-height NICHT hier auf 0 setzen — ein in
-        # der QSS gesetztes min-width/min-height ueberschreibt Qts intern
+        # der QSS gesetztes min-width/min-height überschreibt Qts intern
         # via setFixedSize() gesetzte minimumSize/maximumSize, wodurch der
-        # Button auf seine Inhaltsgroesse zusammenschrumpft statt bei den
+        # Button auf seine Inhaltsgröße zusammenschrumpft statt bei den
         # fixen 28x26px zu bleiben.
         return f"""
             QPushButton {{
@@ -778,7 +778,7 @@ class LayerPanel(QWidget):
             self.layer_selected.emit(actual_index)
 
     def _apply_note_style(self) -> None:
-        """Style fuer Notiz-Editor — kontrastreich, klar als Eingabefeld erkennbar."""
+        """Style für Notiz-Editor — kontrastreich, klar als Eingabefeld erkennbar."""
         self.edit_note.setStyleSheet(f"""
             QPlainTextEdit {{
                 background: {THEME.bg_light};
@@ -793,8 +793,8 @@ class LayerPanel(QWidget):
                 background: {THEME.bg_lighter};
             }}
         """)
-        # Placeholder-Farbe via Palette (CSS-Property fuer Placeholder-Color
-        # ist nicht ueberall stabil unterstuetzt). text_muted hebt sich klar
+        # Placeholder-Farbe via Palette (CSS-Property für Placeholder-Color
+        # ist nicht überall stabil unterstützt). text_muted hebt sich klar
         # vom bg_light ab, ohne mit echtem Inhalt verwechselt zu werden.
         pal = self.edit_note.palette()
         pal.setColor(QPalette.ColorRole.PlaceholderText, QColor(THEME.text_muted))
@@ -810,7 +810,7 @@ class LayerPanel(QWidget):
         return wrapped
 
     def _commit_note(self) -> None:
-        """Schreibt den aktuellen Notiz-Text in den aktiven Layer (falls geaendert)."""
+        """Schreibt den aktuellen Notiz-Text in den aktiven Layer (falls geändert)."""
         if not self._layer_stack:
             return
         layer = self._layer_stack.active_layer

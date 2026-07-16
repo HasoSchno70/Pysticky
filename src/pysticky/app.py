@@ -3,7 +3,6 @@ Hauptanwendungs-Klasse mit Initialisierung und Styling.
 """
 
 import sys
-from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -33,10 +32,10 @@ class PySticky:
     APP_NAME_CONST = APP_NAME
     ORG_NAME_CONST = ORG_NAME
 
-    def __init__(self, args: Optional[list[str]] = None) -> None:
+    def __init__(self, args: list[str] | None = None) -> None:
         self.args = args or sys.argv
-        self.app: Optional[QApplication] = None
-        self.main_window: Optional[MainWindow] = None
+        self.app: QApplication | None = None
+        self.main_window: MainWindow | None = None
 
     def init(self) -> bool:
         """
@@ -55,11 +54,11 @@ class PySticky:
 
         # "Fusion" statt des nativen Plattform-Stils: der native Windows-
         # Stil ("windowsvista") rendert Tooltips und manche QPushButtons
-        # teils ueber die OS-Theme-Engine statt ueber unsere QSS/Palette —
-        # das fuehrt zu falschen Farben (z.B. schwarzer Tooltip-Text auf
+        # teils über die OS-Theme-Engine statt über unsere QSS/Palette —
+        # das führt zu falschen Farben (z.B. schwarzer Tooltip-Text auf
         # dunklem Grund) bzw. unsichtbaren Button-Glyphen, wenn OS- und
         # App-Theme voneinander abweichen. Fusion respektiert QSS/Palette
-        # vollstaendig und macht das Theming plattformunabhaengig konsistent.
+        # vollständig und macht das Theming plattformunabhängig konsistent.
         self.app.setStyle("Fusion")
 
         self.app.setHighDpiScaleFactorRoundingPolicy(
@@ -85,7 +84,7 @@ class PySticky:
         set_theme(theme_name)
 
         # Sprache initialisieren — VOR dem MainWindow-Build, damit
-        # die Menue-Strings beim Erzeugen schon uebersetzt werden.
+        # die Menü-Strings beim Erzeugen schon übersetzt werden.
         self._init_language(settings)
 
         # Zentrales Theme-System anwenden
@@ -94,12 +93,12 @@ class PySticky:
         # Zusätzliches QSS laden (falls vorhanden)
         self._load_stylesheet()
 
-        # Wheel-Guard: verhindert versehentliche Wert-Aenderungen in
-        # SpinBoxes/ComboBoxes/Slidern beim Scrollen ueber sie.
+        # Wheel-Guard: verhindert versehentliche Wert-Änderungen in
+        # SpinBoxes/ComboBoxes/Slidern beim Scrollen über sie.
         install_wheel_guard(self.app)
 
         # Custom-Tooltip statt Qt's nativem QToolTip: Qt rendert Tooltips
-        # fuer Widgets innerhalb von QDockWidgets auf Windows nachweislich
+        # für Widgets innerhalb von QDockWidgets auf Windows nachweislich
         # mit schwarzem statt Theme-Hintergrund (siehe custom_tooltip.py).
         install_custom_tooltips(self.app)
 
@@ -140,7 +139,7 @@ class PySticky:
             logger.info(f"UI-Sprache aktiv: {lang}")
         else:
             logger.warning(
-                f"Sprache '{lang}' nicht verfuegbar (gefunden: {available}, "
+                f"Sprache '{lang}' nicht verfügbar (gefunden: {available}, "
                 f"i18n-dir: {mgr._i18n_dir}) — bleibe bei Default (de)"
             )
 
@@ -167,9 +166,9 @@ class PySticky:
             if not self.init():
                 return 1
 
-        # Kein Auto-Demo mehr — der User laedt das Demo-Muster auf Wunsch
-        # ueber den Welcome-Screen oder Datei → Demo-Muster oeffnen.
-        # Das Welcome-Widget erscheint regulaer ueber _perform_start_action.
+        # Kein Auto-Demo mehr — der User lädt das Demo-Muster auf Wunsch
+        # über den Welcome-Screen oder Datei → Demo-Muster öffnen.
+        # Das Welcome-Widget erscheint regulär über _perform_start_action.
 
         self.main_window.show()
 

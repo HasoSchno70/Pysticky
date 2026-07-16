@@ -54,12 +54,12 @@ class ShortcutsTab(QWidget):
         "Rückstich": "B",
     }
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._shortcuts = dict(self.DEFAULT_SHORTCUTS)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
 
@@ -95,7 +95,7 @@ class ShortcutsTab(QWidget):
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
 
-    def _populate_list(self):
+    def _populate_list(self) -> None:
         """Füllt die Liste mit Shortcuts."""
         self.shortcuts_list.clear()
         for action, shortcut in self._shortcuts.items():
@@ -103,11 +103,11 @@ class ShortcutsTab(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, action)
             self.shortcuts_list.addItem(item)
 
-    def _on_item_double_clicked(self, item: QListWidgetItem):
+    def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
         """Bearbeitet Shortcut bei Doppelklick."""
         self._edit_shortcut()
 
-    def _edit_shortcut(self):
+    def _edit_shortcut(self) -> None:
         """Bearbeitet das ausgewählte Tastenkürzel."""
         current = self.shortcuts_list.currentItem()
         if not current:
@@ -141,7 +141,7 @@ class ShortcutsTab(QWidget):
                 self._shortcuts[action] = new_shortcut
                 current.setText(f"{t(action)}: {new_shortcut}")
 
-    def _reset_shortcuts(self):
+    def _reset_shortcuts(self) -> None:
         """Setzt alle Shortcuts auf Standardwerte zurück."""
         reply = QMessageBox.question(
             self,
@@ -153,18 +153,18 @@ class ShortcutsTab(QWidget):
             self._shortcuts = dict(self.DEFAULT_SHORTCUTS)
             self._populate_list()
 
-    def load_settings(self, settings: QSettings):
+    def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         shortcuts = settings.value("shortcuts", {})
         if shortcuts:
             self._shortcuts.update(shortcuts)
             self._populate_list()
 
-    def save_settings(self, settings: QSettings):
+    def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
         settings.setValue("shortcuts", self._shortcuts)
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
         self._shortcuts = dict(self.DEFAULT_SHORTCUTS)
         self._populate_list()

@@ -8,7 +8,7 @@ Verwendet numpy für effiziente Speicherung und schnelle Operationen.
 """
 
 from dataclasses import dataclass, field
-from typing import Iterator, Optional
+from typing import Iterator
 from uuid import uuid4
 
 import numpy as np
@@ -85,7 +85,7 @@ class Layer:
         self.completion_grid = new_completion
         self.stitch_type_grid = new_stitch_types
 
-    def get_stitch(self, x: int, y: int) -> Optional[int]:
+    def get_stitch(self, x: int, y: int) -> int | None:
         """
         Gibt den Farbindex an Position (x, y) zurück.
 
@@ -97,7 +97,7 @@ class Layer:
             return None if value == NO_STITCH else int(value)
         return None
 
-    def set_stitch(self, x: int, y: int, color_index: Optional[int], stitch_type: int = 0) -> bool:
+    def set_stitch(self, x: int, y: int, color_index: int | None, stitch_type: int = 0) -> bool:
         """
         Setzt einen Stich an Position (x, y).
 
@@ -391,7 +391,7 @@ class LayerStack:
         return self._layers
 
     @property
-    def active_layer(self) -> Optional[Layer]:
+    def active_layer(self) -> Layer | None:
         """Das aktuell aktive Layer."""
         if 0 <= self._active_index < len(self._layers):
             return self._layers[self._active_index]
@@ -415,7 +415,7 @@ class LayerStack:
     def __iter__(self) -> Iterator[Layer]:
         return iter(self._layers)
 
-    def add_layer(self, name: str, index: Optional[int] = None) -> Layer:
+    def add_layer(self, name: str, index: int | None = None) -> Layer:
         """
         Fügt ein neues Layer hinzu.
 
@@ -437,7 +437,7 @@ class LayerStack:
 
         return layer
 
-    def remove_layer(self, index: int) -> Optional[Layer]:
+    def remove_layer(self, index: int) -> Layer | None:
         """
         Entfernt ein Layer.
 
@@ -462,7 +462,7 @@ class LayerStack:
             return layer
         return None
 
-    def duplicate_layer(self, index: int) -> Optional[Layer]:
+    def duplicate_layer(self, index: int) -> Layer | None:
         """Dupliziert ein Layer."""
         if 0 <= index < len(self._layers):
             copy = self._layers[index].copy()
@@ -631,7 +631,7 @@ class LayerStack:
 
         return result
 
-    def get_composite_stitch(self, x: int, y: int) -> Optional[int]:
+    def get_composite_stitch(self, x: int, y: int) -> int | None:
         """
         Gibt den sichtbaren Farbindex an Position (x, y) zurück.
 
@@ -689,7 +689,7 @@ class LayerStack:
         for layer in self._layers:
             layer.resize(new_width, new_height)
 
-    def get_layer_by_id(self, layer_id: str) -> Optional[Layer]:
+    def get_layer_by_id(self, layer_id: str) -> Layer | None:
         """Findet ein Layer nach ID."""
         for layer in self._layers:
             if layer.id == layer_id:

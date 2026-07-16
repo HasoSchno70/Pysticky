@@ -43,14 +43,14 @@ class PDFDrawingsMixin(_Base):
     def _add_drill_shape(
         self, drawing, rx: float, ry: float, cell_w: float, cell_h: float, fill_color
     ) -> None:
-        """Fuegt einen Diamond-Painting-Drill (4 Facetten) ins Drawing.
+        """Fügt einen Diamond-Painting-Drill (4 Facetten) ins Drawing.
 
-        PDF-Y waechst nach oben — die "obere" Facette ist also die mit dem
-        groesseren Y. Wir invertieren entsprechend, damit das Glanzlicht
+        PDF-Y wächst nach oben — die "obere" Facette ist also die mit dem
+        größeren Y. Wir invertieren entsprechend, damit das Glanzlicht
         oben landet wenn das Bild aufrecht steht.
 
         Inset adaptiv (siehe stitch_shapes.diamond_inset_pixels): bei kleiner
-        Zellgroesse beruehren sich die Drills nahtlos.
+        Zellgröße berühren sich die Drills nahtlos.
         """
         min_side = min(cell_w, cell_h)
         inset = diamond_inset_pixels(min_side)
@@ -71,7 +71,7 @@ class PDFDrawingsMixin(_Base):
             amt = factor / 100.0
             return colors.Color(r * amt, g * amt, b * amt)
 
-        # In PDF-Koordinaten (Y waechst nach oben) ist y1 die obere Kante.
+        # In PDF-Koordinaten (Y wächst nach oben) ist y1 die obere Kante.
         c_top = _shaded(fill_color, 145)  # Glanzlicht
         c_right = _shaded(fill_color, 110)
         c_left = _shaded(fill_color, 95)
@@ -81,7 +81,7 @@ class PDFDrawingsMixin(_Base):
         drawing.add(Polygon([x1, y1, x1, y0, cx, cy], strokeColor=None, fillColor=c_right))
         drawing.add(Polygon([x1, y0, x0, y0, cx, cy], strokeColor=None, fillColor=c_bottom))
         drawing.add(Polygon([x0, y0, x0, y1, cx, cy], strokeColor=None, fillColor=c_left))
-        # Dunkler Kantenrand fuer Trennschaerfe — nur bei groesserer Zelle,
+        # Dunkler Kantenrand für Trennschärfe — nur bei größerer Zelle,
         # bei kleinem cell_size frisst der Rand den Drill auf.
         if diamond_should_draw_edge(min_side):
             drawing.add(
@@ -109,14 +109,14 @@ class PDFDrawingsMixin(_Base):
         height: float,
     ) -> None:
         """
-        Fuegt entweder ein Rect (FULL) oder ein Polygon (halb/Viertel) ins Drawing.
+        Fügt entweder ein Rect (FULL) oder ein Polygon (halb/Viertel) ins Drawing.
 
         PDF-Y ist invertiert (0 = unten). Die Eckpunkt-Berechnung kompensiert
         das, indem sie die normalisierten 0..1-Punkte aus `partial_stitch_points`
         per `1 - ny` spiegelt.
 
         Im DP-Modus wird stattdessen die Drill-Optik (4 Facetten) gerendert —
-        sowohl fuer echte DIAMOND-Stiche als auch fuer FULL-Stiche bei
+        sowohl für echte DIAMOND-Stiche als auch für FULL-Stiche bei
         Pattern.mode='diamond' (analog Canvas-Renderer).
         """
         stype = self._get_pixel_stitch_type(x, y)
@@ -193,7 +193,7 @@ class PDFDrawingsMixin(_Base):
             )
             return
 
-        # Polygon-Punkte aus normalisierter Form, mit Y-Flip fuer PDF-Koordinaten
+        # Polygon-Punkte aus normalisierter Form, mit Y-Flip für PDF-Koordinaten
         flat_points: list[float] = []
         for nx_norm, ny_norm in normalized_partial_stitch_shape(stype):
             px = rx + nx_norm * cell_w
@@ -433,7 +433,7 @@ class PDFDrawingsMixin(_Base):
         page_height = end_y - start_y + 1
 
         # Zellengröße berechnen (dynamisch basierend auf Papierformat).
-        # Im DP-Modus: fester Drill-Pitch fuer 1:1-Druck. Damit passt der
+        # Im DP-Modus: fester Drill-Pitch für 1:1-Druck. Damit passt der
         # echte 2.5/2.8/3.0mm-Drill genau in das ausgedruckte Raster.
         available_width = self._available_width
         # Platz für Zeilennummern links und Spaltennummern oben
@@ -585,7 +585,7 @@ class PDFDrawingsMixin(_Base):
         # Stick-Modus: Symbole als Text (klassischer Stick-Plan).
         # Diamond-Modus: Drill-Cells (facettierte Quadrate in Thread-Farbe),
         # weil DP keine Symbole nutzt und die Vorlage die Klebefolie selbst
-        # ist — der User muss Drill-Farben direkt erkennen koennen.
+        # ist — der User muss Drill-Farben direkt erkennen können.
         from .export_common import is_diamond_mode
 
         is_dp = is_diamond_mode(self.pattern)

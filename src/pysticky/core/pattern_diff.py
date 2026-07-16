@@ -25,10 +25,10 @@ DIFF_CHANGED: int = 3  # In beiden Stich, aber andere Farbe oder Stitch-Type
 class DiffStats:
     """Statistik eines Pattern-Diffs."""
 
-    added: int  # Anzahl neu hinzugefuegter Stiche
+    added: int  # Anzahl neu hinzugefügter Stiche
     removed: int  # Anzahl entfernter Stiche
     changed: int  # Anzahl modifizierter Stiche (Farbe oder Type anders)
-    same: int  # Anzahl unveraenderter Stiche
+    same: int  # Anzahl unveränderter Stiche
     width: int
     height: int
     size_changed: bool  # True wenn Width/Height unterschiedlich sind
@@ -52,7 +52,7 @@ class DiffStats:
 
 @dataclass
 class DiffResult:
-    """Vollstaendiges Ergebnis eines Pattern-Diffs."""
+    """Vollständiges Ergebnis eines Pattern-Diffs."""
 
     mask: np.ndarray  # uint8 Array mit DIFF_*-Werten, Shape (height, width)
     stats: DiffStats
@@ -66,12 +66,12 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
     """
     Vergleicht zwei Patterns und liefert eine Diff-Maske + Statistik.
 
-    Wenn die Patterns unterschiedliche Groessen haben, wird die kleinere
+    Wenn die Patterns unterschiedliche Größen haben, wird die kleinere
     Bounding-Box als Vergleichsbereich genommen. Felder ausserhalb gelten
     als added/removed.
 
     Args:
-        old_pattern: Das aeltere Pattern (z.B. Snapshot)
+        old_pattern: Das ältere Pattern (z.B. Snapshot)
         new_pattern: Das neuere Pattern (z.B. aktuell)
 
     Returns:
@@ -92,7 +92,7 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
 
     # Auf gemeinsame Bounding-Box padden: Felder ausserhalb des jeweiligen
     # Patterns gelten als NO_STITCH (Wert) bzw. Type 0 — exakt wie die
-    # frueheren in_old/in_new-Guards der Zell-fuer-Zell-Schleife.
+    # früheren in_old/in_new-Guards der Zell-für-Zell-Schleife.
     old_val = np.full((diff_h, diff_w), NO_STITCH, dtype=np.int16)
     old_val[:old_h, :old_w] = old_grid
     new_val = np.full((diff_h, diff_w), NO_STITCH, dtype=np.int16)

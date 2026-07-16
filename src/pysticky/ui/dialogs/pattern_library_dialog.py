@@ -9,9 +9,8 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -59,7 +58,7 @@ class PatternLibraryDialog(QDialog):
 
     pattern_selected = Signal(str)  # Filepath
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle(t("Muster-Bibliothek"))
         self.setMinimumSize(900, 600)
@@ -67,7 +66,7 @@ class PatternLibraryDialog(QDialog):
 
         self._library: LibraryData = LibraryData()
         self._library_path = self._get_library_path()
-        self._selected_entry: Optional[LibraryEntry] = None
+        self._selected_entry: LibraryEntry | None = None
         self._thumbnail_widgets: list[ThumbnailWidget] = []
 
         # Debounce-Timer für Suche
@@ -96,7 +95,7 @@ class PatternLibraryDialog(QDialog):
         self._thumbnails_dir.mkdir(exist_ok=True)
         return library_dir / "library.json"
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         """Erstellt die UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
@@ -324,16 +323,16 @@ class PatternLibraryDialog(QDialog):
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         close_btn = button_box.button(QDialogButtonBox.StandardButton.Close)
         close_btn.clicked.connect(self.reject)
-        # Andere Buttons im Dialog haben autoDefault=True und koennen den
-        # Default-Status uebernehmen — daher hier den sanktionierten
-        # Primary-Button-Stil unabhaengig von isDefault() setzen (konsistent
+        # Andere Buttons im Dialog haben autoDefault=True und können den
+        # Default-Status übernehmen — daher hier den sanktionierten
+        # Primary-Button-Stil unabhängig von isDefault() setzen (konsistent
         # mit dem Close-Button-Look der anderen Dialoge).
         close_btn.setStyleSheet(Styles.button_primary())
         btn_layout.addWidget(button_box)
 
         layout.addLayout(btn_layout)
 
-    def _load_library(self):
+    def _load_library(self) -> None:
         """Lädt die Bibliothek aus der JSON-Datei."""
         if self._library_path.exists():
             try:
@@ -347,7 +346,7 @@ class PatternLibraryDialog(QDialog):
         self._update_category_list()
         self._update_thumbnails()
 
-    def _save_library(self):
+    def _save_library(self) -> None:
         """Speichert die Bibliothek in die JSON-Datei."""
         try:
             with open(self._library_path, "w", encoding="utf-8") as f:
@@ -355,7 +354,7 @@ class PatternLibraryDialog(QDialog):
         except (OSError, ValueError) as e:
             logger.error("Fehler beim Speichern der Bibliothek: %s", e)
 
-    def _update_category_list(self):
+    def _update_category_list(self) -> None:
         """Aktualisiert die Kategorie-Liste."""
         self._category_list.clear()
 
@@ -375,7 +374,7 @@ class PatternLibraryDialog(QDialog):
         else:
             return sum(1 for e in self._library.entries if category in e.categories)
 
-    def _update_thumbnails(self):
+    def _update_thumbnails(self) -> None:
         """Aktualisiert die Thumbnail-Ansicht."""
         # Alte Widgets entfernen
         for widget in self._thumbnail_widgets:
@@ -442,15 +441,15 @@ class PatternLibraryDialog(QDialog):
 
         return entries
 
-    def _on_category_changed(self, row: int):
+    def _on_category_changed(self, row: int) -> None:
         """Handler für Kategorie-Wechsel."""
         self._update_thumbnails()
 
-    def _filter_thumbnails(self, text: str):
+    def _filter_thumbnails(self, text: str) -> None:
         """Filtert Thumbnails nach Suchtext (debounced)."""
         self._search_timer.start()
 
-    def _sort_changed(self, sort_by: str):
+    def _sort_changed(self, sort_by: str) -> None:
         """Sortiert die Einträge."""
         if sort_by == "Name":
             self._library.entries.sort(key=lambda e: e.name.lower())
@@ -463,7 +462,7 @@ class PatternLibraryDialog(QDialog):
 
         self._update_thumbnails()
 
-    def _on_thumbnail_clicked(self, entry: LibraryEntry):
+    def _on_thumbnail_clicked(self, entry: LibraryEntry) -> None:
         """Handler für Thumbnail-Klick."""
         self._selected_entry = entry
 
@@ -493,12 +492,12 @@ class PatternLibraryDialog(QDialog):
         self._notes_edit.setPlainText(entry.notes or "")
         self._notes_edit.blockSignals(False)
 
-    def _on_thumbnail_double_clicked(self, entry: LibraryEntry):
+    def _on_thumbnail_double_clicked(self, entry: LibraryEntry) -> None:
         """Handler für Thumbnail-Doppelklick."""
         self._selected_entry = entry
         self._open_selected()
 
-    def _open_selected(self):
+    def _open_selected(self) -> None:
         """Öffnet das ausgewählte Muster."""
         if self._selected_entry:
             # Letztes Öffnen aktualisieren
@@ -508,7 +507,7 @@ class PatternLibraryDialog(QDialog):
             self.pattern_selected.emit(self._selected_entry.filepath)
             self.accept()
 
-    def _show_context_menu(self, entry: LibraryEntry, pos):
+    def _show_context_menu(self, entry: LibraryEntry, pos: QPoint) -> None:
         """Zeigt das Kontextmenü."""
         menu = QMenu(self)
         menu.setStyleSheet(f"""
@@ -567,19 +566,19 @@ class PatternLibraryDialog(QDialog):
 
         menu.exec(pos)
 
-    def _open_entry(self, entry: LibraryEntry):
+    def _open_entry(self, entry: LibraryEntry) -> None:
         """Öffnet einen Eintrag."""
         self._selected_entry = entry
         self._open_selected()
 
-    def _toggle_favorite(self, entry: LibraryEntry):
+    def _toggle_favorite(self, entry: LibraryEntry) -> None:
         """Schaltet Favoriten-Status um."""
         entry.favorite = not entry.favorite
         self._save_library()
         self._update_category_list()
         self._update_thumbnails()
 
-    def _toggle_category(self, entry: LibraryEntry, category: str):
+    def _toggle_category(self, entry: LibraryEntry, category: str) -> None:
         """Fügt/entfernt eine Kategorie."""
         if category in entry.categories:
             entry.categories.remove(category)
@@ -589,7 +588,7 @@ class PatternLibraryDialog(QDialog):
         self._update_category_list()
         self._update_thumbnails()
 
-    def _show_in_explorer(self, entry: LibraryEntry):
+    def _show_in_explorer(self, entry: LibraryEntry) -> None:
         """Öffnet den Ordner im Explorer."""
         import os
         import subprocess
@@ -601,7 +600,7 @@ class PatternLibraryDialog(QDialog):
             else:
                 subprocess.run(["xdg-open", str(filepath.parent)])
 
-    def _remove_entry(self, entry: LibraryEntry):
+    def _remove_entry(self, entry: LibraryEntry) -> None:
         """Entfernt einen Eintrag aus der Bibliothek."""
         reply = QMessageBox.question(
             self,
@@ -617,7 +616,7 @@ class PatternLibraryDialog(QDialog):
             self._update_category_list()
             self._update_thumbnails()
 
-    def _add_patterns(self):
+    def _add_patterns(self) -> None:
         """Fügt neue Muster hinzu."""
         paths, _ = QFileDialog.getOpenFileNames(
             self,
@@ -633,7 +632,7 @@ class PatternLibraryDialog(QDialog):
         self._update_category_list()
         self._update_thumbnails()
 
-    def _scan_directory(self):
+    def _scan_directory(self) -> None:
         """Scannt ein Verzeichnis nach Mustern."""
         directory = QFileDialog.getExistingDirectory(self, t("Verzeichnis scannen"), "")
 
@@ -738,7 +737,7 @@ class PatternLibraryDialog(QDialog):
             logger.warning("Fehler beim Hinzufügen von %s: %s", filepath, e)
             return False
 
-    def _edit_tags_dialog(self, entry: LibraryEntry):
+    def _edit_tags_dialog(self, entry: LibraryEntry) -> None:
         """Öffnet einen Dialog zum Bearbeiten der Tags."""
         current_tags = ", ".join(entry.tags) if entry.tags else ""
         text, ok = QInputDialog.getText(
@@ -757,24 +756,24 @@ class PatternLibraryDialog(QDialog):
                 self._tags_edit.setText(", ".join(entry.tags))
                 self._tags_edit.blockSignals(False)
 
-    def _on_tags_changed(self):
+    def _on_tags_changed(self) -> None:
         """Tags wurden bearbeitet."""
         if self._selected_entry:
             text = self._tags_edit.text()
             self._selected_entry.tags = [t.strip() for t in text.split(",") if t.strip()]
             self._save_library()
 
-    def _on_notes_changed(self):
+    def _on_notes_changed(self) -> None:
         """Notizen werden bearbeitet (debounced)."""
         self._notes_save_timer.start()
 
-    def _save_notes(self):
+    def _save_notes(self) -> None:
         """Speichert die Notizen des ausgewählten Eintrags."""
         if self._selected_entry:
             self._selected_entry.notes = self._notes_edit.toPlainText().strip()
             self._save_library()
 
-    def _add_category(self):
+    def _add_category(self) -> None:
         """Fügt eine neue Kategorie hinzu."""
         name, ok = QInputDialog.getText(
             self, t("Neue Kategorie"), t("Name der Kategorie:"), QLineEdit.EchoMode.Normal
@@ -786,7 +785,7 @@ class PatternLibraryDialog(QDialog):
                 self._save_library()
                 self._update_category_list()
 
-    def _delete_category(self):
+    def _delete_category(self) -> None:
         """Löscht eine Kategorie."""
         current_row = self._category_list.currentRow()
         if current_row < 2:  # "Alle" und "Favoriten" nicht löschen

@@ -72,10 +72,10 @@ class PatternStatisticsDialog(QDialog):
         self._pattern = pattern
 
         self.setWindowTitle(t("Muster-Statistiken & Garnverbrauch"))
-        # Breit genug fuer alle 6 Tabs (inkl. "Einkaufsliste") gewaehlt, damit
+        # Breit genug für alle 6 Tabs (inkl. "Einkaufsliste") gewählt, damit
         # die Tab-Leiste auch dann nicht abgeschnitten wird, wenn
         # _auto_size_to_content() aus irgendeinem Grund (Bildschirm/DPI-
-        # Eigenheiten) nicht ausreichend vergroessert -- diese Mindestbreite
+        # Eigenheiten) nicht ausreichend vergrößert -- diese Mindestbreite
         # ist der harte Boden, unter den auto_size_dialog() nie geht.
         self.setMinimumSize(1200, 650)
 
@@ -85,9 +85,9 @@ class PatternStatisticsDialog(QDialog):
         self._auto_size_to_content()
 
     def _auto_size_to_content(self) -> None:
-        """Groesse so waehlen, dass moeglichst alle Tabs ohne Scrollen passen
+        """Größe so wählen, dass möglichst alle Tabs ohne Scrollen passen
         (gleiches Muster wie SettingsDialog — 6 Tabs mit Emoji brauchen bei
-        fixer Default-Groesse oft mehr Breite als die Tab-Leiste hat)."""
+        fixer Default-Größe oft mehr Breite als die Tab-Leiste hat)."""
         tabbar_w = self._tabs.tabBar().sizeHint().width() + 40
         auto_size_dialog(self, self._tab_widgets, min_width=tabbar_w)
 
@@ -146,7 +146,7 @@ class PatternStatisticsDialog(QDialog):
         export_btn = QPushButton(t("📄 Als CSV exportieren"))
         export_btn.clicked.connect(self._on_export_csv)
         # Verhindert, dass dieser Button den Default-Status (Enter-Taste)
-        # des Close-Buttons unten uebernimmt.
+        # des Close-Buttons unten übernimmt.
         export_btn.setAutoDefault(False)
         footer.addWidget(export_btn)
 
@@ -157,7 +157,7 @@ class PatternStatisticsDialog(QDialog):
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
         # Diese Datei setzt in _apply_styles() einen eigenen dialogweiten
-        # QPushButton-Stil, der die globale :default-Hervorhebung ueberschreibt
+        # QPushButton-Stil, der die globale :default-Hervorhebung überschreibt
         # — daher hier explizit den sanktionierten Primary-Button-Stil setzen.
         close_btn.setStyleSheet(Styles.button_primary())
         footer.addWidget(button_box)
@@ -190,7 +190,7 @@ class PatternStatisticsDialog(QDialog):
         self._card_layers = StatCard(t("Ebenen"), "-", "🗂️")
         cards_layout.addWidget(self._card_layers, 1, 2)
 
-        # Schwierigkeits-Karte mit Tooltip-Detail (Faktor-Aufschluesselung)
+        # Schwierigkeits-Karte mit Tooltip-Detail (Faktor-Aufschlüsselung)
         self._card_difficulty = StatCard(t("Schwierigkeit"), "-", "🎯")
         cards_layout.addWidget(self._card_difficulty, 2, 0, 1, 3)
 

@@ -116,8 +116,8 @@ class SimilarColorsDialog(QDialog):
         threshold_row = QHBoxLayout()
         threshold_row.addWidget(QLabel(t("Schwellwert:")))
         self._slider = QSlider(Qt.Orientation.Horizontal)
-        # Schwellwert als CIE76 Delta-E: ~5 sehr aehnlich, ~10 Default,
-        # ~25 noch zusammenfuehrbar. (Frueher RGB-Euklid 5-150.)
+        # Schwellwert als CIE76 Delta-E: ~5 sehr ähnlich, ~10 Default,
+        # ~25 noch zusammenführbar. (Früher RGB-Euklid 5-150.)
         self._slider.setRange(1, 50)
         self._slider.setValue(10)
         self._slider.valueChanged.connect(self._on_threshold_changed)

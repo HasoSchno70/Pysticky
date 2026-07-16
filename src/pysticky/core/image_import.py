@@ -34,15 +34,15 @@ class ImportSettings:
     keep_aspect_ratio: bool = True
     auto_backstitches: bool = False
 
-    # Pre-Import-Bildanpassung (vor Quantisierung). 1.0 = unveraendert.
+    # Pre-Import-Bildanpassung (vor Quantisierung). 1.0 = unverändert.
     brightness: float = 1.0  # 0.0 = schwarz, 2.0 = sehr hell
     contrast: float = 1.0  # 0.0 = grau, 2.0 = sehr kontrastreich
     saturation: float = 1.0  # 0.0 = Graustufen, 2.0 = sehr saturiert
 
     # Confetti-Reduction nach der Quantisierung. min_run_size <= 1 = aus.
     # Sinnvolle Werte: 2-5. Bei >=2 werden isolierte Einzelpixel der
-    # dominanten Nachbarfarbe zugeordnet, ueber 3 verschwinden auch
-    # kleine Cluster. Praxis-Empfehlung: 2 fuer dezente, 3 fuer aggressive
+    # dominanten Nachbarfarbe zugeordnet, über 3 verschwinden auch
+    # kleine Cluster. Praxis-Empfehlung: 2 für dezente, 3 für aggressive
     # Reduktion bei foto-realistischen Mustern.
     confetti_min_run_size: int = 1
 
@@ -57,7 +57,7 @@ class ImportSettings:
 
     @property
     def has_adjustments(self) -> bool:
-        """True wenn Helligkeit/Kontrast/Saettigung != 1.0 (also etwas anzupassen ist)."""
+        """True wenn Helligkeit/Kontrast/Sättigung != 1.0 (also etwas anzupassen ist)."""
         return self.brightness != 1.0 or self.contrast != 1.0 or self.saturation != 1.0
 
 
@@ -90,7 +90,7 @@ def import_image(
     image_path = Path(image_path)
 
     try:
-        # Basistyp annotieren: open() liefert ImageFile, spaetere convert()-
+        # Basistyp annotieren: open() liefert ImageFile, spätere convert()-
         # Zuweisungen liefern Image.Image (Basisklasse) — sonst Typkonflikt.
         image: Image.Image = Image.open(str(image_path))
     except OSError as e:
@@ -123,7 +123,7 @@ def import_image(
 
         image = image.crop((left, top, right, bottom))
 
-    # Helligkeit / Kontrast / Saettigung vor der Quantisierung anpassen,
+    # Helligkeit / Kontrast / Sättigung vor der Quantisierung anpassen,
     # damit die Farbwahl auf dem bearbeiteten Bild basiert.
     if settings.has_adjustments:
         from PIL import ImageEnhance
@@ -195,9 +195,9 @@ def import_image(
             preselected_threads=selected_threads,
         )
 
-    # Palette-Modus erkennen: wenn der User eine DP-/Bead-Palette gewaehlt
+    # Palette-Modus erkennen: wenn der User eine DP-/Bead-Palette gewählt
     # hat, soll das Pattern direkt im richtigen Modus angelegt werden, plus
-    # die ColorEntries muessen das passende is_diamond/is_bead-Flag tragen,
+    # die ColorEntries müssen das passende is_diamond/is_bead-Flag tragen,
     # damit der DP-Mode-Switch + Drill-Rendering greifen.
     # Modul-level get_palette_manager-Import schon vorhanden (oben).
     pm = get_palette_manager()
@@ -265,7 +265,7 @@ def import_image(
 
         index_grid = reduce_confetti(index_grid, settings.confetti_min_run_size)
 
-    # Stiche ins Layer schreiben und Stitch-Counts zaehlen
+    # Stiche ins Layer schreiben und Stitch-Counts zählen
     layer = pattern.active_layer
     assert layer is not None  # frisch erzeugtes Pattern hat immer ein aktives Layer
     for y in range(target_height):
@@ -569,14 +569,14 @@ def _select_colors_median_cut(
         # Fallback bei degeneriertem Split (z.B. np.median == min, sodass
         # `<` keinen Pixel matched): splitten am arithmetischen Mittel
         # zwischen min und max. Da `best_range > 0`, ist min < max
-        # garantiert -> beide Haelften nicht-leer.
+        # garantiert -> beide Hälften nicht-leer.
         if len(left) == 0 or len(right) == 0:
             mid = (float(np.min(box[:, best_channel])) + float(np.max(box[:, best_channel]))) / 2.0
             mask = box[:, best_channel] < mid
             left = box[mask]
             right = box[~mask]
 
-        # Nur zurueckpacken wenn echt geteilt wurde — sonst Endlosschleife.
+        # Nur zurückpacken wenn echt geteilt wurde — sonst Endlosschleife.
         if len(left) > 0 and len(right) > 0:
             boxes.append(left)
             boxes.append(right)
@@ -658,9 +658,9 @@ def generate_backstitches_from_edges(
 
     # Normalisieren und Schwellwert anwenden.
     # Achtung: bei uniformen Bildern produziert Sobel nur Float-Rauschen
-    # in Groessenordnung 1e-16. Wuerden wir hier durch dieses Rauschen
-    # teilen, wuerde der relative Threshold dieses Rauschen zu echten
-    # Kanten "verstaerken" — daher epsilon-Floor.
+    # in Größenordnung 1e-16. Würden wir hier durch dieses Rauschen
+    # teilen, würde der relative Threshold dieses Rauschen zu echten
+    # Kanten "verstärken" — daher epsilon-Floor.
     max_mag = float(np.max(edge_magnitude))
     if max_mag > 1e-6:
         edge_magnitude /= max_mag
