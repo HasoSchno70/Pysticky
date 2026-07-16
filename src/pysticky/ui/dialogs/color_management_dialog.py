@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -39,7 +40,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
-from ..styles import THEME
+from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
     from ...core import ColorEntry, Pattern
@@ -339,27 +340,29 @@ class ColorManagementDialog(QDialog):
 
         footer.addStretch()
 
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.clicked.connect(self.reject)
-        footer.addWidget(cancel_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 
         self._apply_btn = QPushButton(t("Übernehmen"))
         self._apply_btn.setDefault(True)
         self._apply_btn.clicked.connect(self.accept)
-        self._apply_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary};
-                color: white;
-                font-weight: bold;
-                padding: 8px 20px;
-            }}
-            QPushButton:hover {{
-                background: {THEME.accent_secondary};
-            }}
-        """)
-        footer.addWidget(self._apply_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        self._apply_btn.setStyleSheet(Styles.button_primary())
+        button_box.addButton(self._apply_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+
+        footer.addWidget(button_box)
 
         layout.addLayout(footer)
+
+        # Alle anderen Buttons im Dialog haben autoDefault=True und koennten
+        # sonst den Default-Status (Enter-Taste) von "Übernehmen" uebernehmen.
+        for btn in self.findChildren(QPushButton):
+            if btn is not self._apply_btn and button_box.buttonRole(btn) == (
+                QDialogButtonBox.ButtonRole.InvalidRole
+            ):
+                btn.setAutoDefault(False)
+        self._apply_btn.setDefault(True)
 
     def _apply_styles(self) -> None:
         self.setStyleSheet(f"""

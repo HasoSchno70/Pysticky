@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -277,9 +278,9 @@ class StitchPathDialog(QDialog):
 
         button_layout.addWidget(self._export_btn)
 
-        close_btn = QPushButton(t("Schließen"))
-        close_btn.clicked.connect(self.accept)
-        button_layout.addWidget(close_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        button_box.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.accept)
+        button_layout.addWidget(button_box)
         layout.addLayout(button_layout)
 
     def _set_running(self, running: bool) -> None:

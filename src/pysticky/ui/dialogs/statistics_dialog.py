@@ -16,6 +16,7 @@ from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QDoubleSpinBox,
     QFileDialog,
     QFrame,
@@ -37,7 +38,7 @@ from PySide6.QtWidgets import (
 
 from ...core.constants import COMMON_FABRIC_COUNTS
 from ...core.i18n import t
-from ..styles import THEME
+from ..styles import THEME, Styles
 from ..widgets.statistics_widgets import StatCard
 from .dialog_sizing import auto_size_dialog
 
@@ -144,22 +145,22 @@ class PatternStatisticsDialog(QDialog):
 
         export_btn = QPushButton(t("📄 Als CSV exportieren"))
         export_btn.clicked.connect(self._on_export_csv)
+        # Verhindert, dass dieser Button den Default-Status (Enter-Taste)
+        # des Close-Buttons unten uebernimmt.
+        export_btn.setAutoDefault(False)
         footer.addWidget(export_btn)
 
         footer.addStretch()
 
-        close_btn = QPushButton(t("Schließen"))
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close_btn = button_box.button(QDialogButtonBox.StandardButton.Close)
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
-        close_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary};
-                color: white;
-                font-weight: bold;
-                padding: 8px 20px;
-            }}
-        """)
-        footer.addWidget(close_btn)
+        # Diese Datei setzt in _apply_styles() einen eigenen dialogweiten
+        # QPushButton-Stil, der die globale :default-Hervorhebung ueberschreibt
+        # — daher hier explizit den sanktionierten Primary-Button-Stil setzen.
+        close_btn.setStyleSheet(Styles.button_primary())
+        footer.addWidget(button_box)
 
         layout.addLayout(footer)
 

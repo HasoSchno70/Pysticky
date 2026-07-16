@@ -155,7 +155,7 @@ class HeatmapDialog(QDialog):
         self._pattern = pattern
         self._composite = _composite_color_grid(pattern)
         self._block_size = 8
-        self._axis = self.AXIS_DENSITY
+        self._axis = self.AXIS_COLORS
 
         self.setWindowTitle(t("Pattern-Heatmap"))
         self.setMinimumSize(700, 600)
@@ -172,10 +172,18 @@ class HeatmapDialog(QDialog):
         controls.setSpacing(8)
 
         self._axis_combo = QComboBox()
-        self._axis_combo.addItem(t("Stichdichte (Anzahl Stiche pro Block)"), self.AXIS_DENSITY)
+        # Farbenvielfalt zuerst: zeigt beim ersten Blick eine bunte, aussagekraeftige
+        # Heatmap. Stichdichte ist bei vollflaechig gestickten Mustern meist
+        # durchgehend rot (ein einziger roter Kasten) und damit als Default weniger
+        # anschaulich.
         self._axis_combo.addItem(
             t("Farbenvielfalt (verschiedene Farben pro Block)"), self.AXIS_COLORS
         )
+        self._axis_combo.addItem(t("Stichdichte (Anzahl Stiche pro Block)"), self.AXIS_DENSITY)
+        self._axis_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        # Popup-Breite explizit an den laengsten Item-Text anpassen — sonst kann
+        # das Dropdown schmaler als der Text sein und diesen abschneiden.
+        self._axis_combo.view().setMinimumWidth(self._axis_combo.minimumSizeHint().width())
         self._axis_combo.currentIndexChanged.connect(self._on_axis_changed)
         controls.addRow(t("Achse:"), self._axis_combo)
 

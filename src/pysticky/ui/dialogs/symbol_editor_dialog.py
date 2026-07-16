@@ -12,6 +12,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QDialog,
+    QDialogButtonBox,
     QFrame,
     QGroupBox,
     QHBoxLayout,
@@ -293,16 +294,15 @@ class SymbolEditorDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.setFixedSize(100, 34)
-        cancel_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(cancel_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 
         ok_btn = QPushButton(t("Übernehmen"))
-        ok_btn.setFixedSize(100, 34)
         ok_btn.setDefault(True)
         ok_btn.clicked.connect(self._on_accept)
-        btn_layout.addWidget(ok_btn)
+        button_box.addButton(ok_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+
+        btn_layout.addWidget(button_box)
 
         layout.addLayout(btn_layout)
 

@@ -15,6 +15,7 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QFileDialog,
     QFrame,
     QGridLayout,
@@ -63,7 +64,6 @@ class PatternLibraryDialog(QDialog):
         self.setWindowTitle(t("Muster-Bibliothek"))
         self.setMinimumSize(900, 600)
         self.resize(1000, 700)
-        self.setStyleSheet(f"background: {THEME.bg_dark}; color: {THEME.text_primary};")
 
         self._library: LibraryData = LibraryData()
         self._library_path = self._get_library_path()
@@ -321,10 +321,15 @@ class PatternLibraryDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        close_btn = QPushButton(t("Schließen"))
-        close_btn.setStyleSheet(Styles.button_secondary())
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close_btn = button_box.button(QDialogButtonBox.StandardButton.Close)
         close_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(close_btn)
+        # Andere Buttons im Dialog haben autoDefault=True und koennen den
+        # Default-Status uebernehmen — daher hier den sanktionierten
+        # Primary-Button-Stil unabhaengig von isDefault() setzen (konsistent
+        # mit dem Close-Button-Look der anderen Dialoge).
+        close_btn.setStyleSheet(Styles.button_primary())
+        btn_layout.addWidget(button_box)
 
         layout.addLayout(btn_layout)
 

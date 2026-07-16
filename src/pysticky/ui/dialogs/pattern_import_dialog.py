@@ -78,7 +78,6 @@ class PatternImportDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(t("Muster importieren (XSD/PAT/OXS)"))
         self.setMinimumSize(*UI_CONFIG.dialog_min_medium)
-        self.setStyleSheet(f"background: {THEME.bg_dark}; color: {THEME.text_primary};")
 
         self._pattern: Optional[Pattern] = None
         self._filepath: Optional[Path] = None

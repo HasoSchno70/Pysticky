@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QDialog,
+    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -29,7 +30,7 @@ from ...core.snapshots import (
     parse_snapshot_timestamp,
     pattern_key_for,
 )
-from ..styles import THEME
+from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -109,16 +110,21 @@ class SnapshotHistoryDialog(QDialog):
         self._btn_restore = QPushButton(t("⟲ Wiederherstellen"))
         self._btn_restore.clicked.connect(self._on_restore)
         self._btn_restore.setEnabled(False)
+        # Verhindert, dass dieser Button den Default-Status (Enter-Taste)
+        # des Close-Buttons unten uebernimmt.
+        self._btn_restore.setAutoDefault(False)
         btn_row.addWidget(self._btn_restore)
 
         self._btn_delete = QPushButton(t("🗑 Löschen"))
         self._btn_delete.clicked.connect(self._on_delete)
         self._btn_delete.setEnabled(False)
+        self._btn_delete.setAutoDefault(False)
         btn_row.addWidget(self._btn_delete)
 
         self._btn_diff = QPushButton(t("⇄ Mit aktuellem vergleichen"))
         self._btn_diff.clicked.connect(self._on_diff)
         self._btn_diff.setEnabled(False)
+        self._btn_diff.setAutoDefault(False)
         self._btn_diff.setToolTip(
             t(
                 "Vergleicht den ausgewaehlten Snapshot visuell mit dem aktuell "
@@ -130,10 +136,16 @@ class SnapshotHistoryDialog(QDialog):
 
         btn_row.addStretch(1)
 
-        btn_close = QPushButton(t("Schließen"))
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        btn_close = button_box.button(QDialogButtonBox.StandardButton.Close)
         btn_close.clicked.connect(self.accept)
         btn_close.setDefault(True)
-        btn_row.addWidget(btn_close)
+        # Andere Buttons im Dialog sind QPushButtons mit autoDefault=True und
+        # koennen den Default-Status trotz setDefault(True) uebernehmen,
+        # sobald sie in einer QDialogButtonBox verdrahtet werden — daher hier
+        # den sanktionierten Primary-Button-Stil unabhaengig von isDefault() setzen.
+        btn_close.setStyleSheet(Styles.button_primary())
+        btn_row.addWidget(button_box)
 
         layout.addLayout(btn_row)
 

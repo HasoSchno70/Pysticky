@@ -14,6 +14,7 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QFrame,
     QGridLayout,
     QGroupBox,
@@ -29,7 +30,7 @@ from ...core.color_math import delta_e
 from ...core.i18n import t
 from ...core.palette import ThreadPalette, get_palette_manager
 from ...core.thread import Thread
-from ..styles import THEME
+from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -574,32 +575,18 @@ class ColorHarmonyDialog(QDialog):
 
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.setFixedSize(100, 34)
-        cancel_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(cancel_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 
         self._add_btn = QPushButton("Hinzufügen (0)")
-        self._add_btn.setFixedSize(120, 34)
         self._add_btn.setEnabled(False)
         self._add_btn.clicked.connect(self._on_add)
-        self._add_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {THEME.accent_primary};
-                color: white;
-                font-weight: bold;
-                border: none;
-                border-radius: 4px;
-            }}
-            QPushButton:hover {{
-                background-color: {THEME.accent_secondary};
-            }}
-            QPushButton:disabled {{
-                background-color: {THEME.bg_light};
-                color: {THEME.text_disabled};
-            }}
-        """)
-        btn_layout.addWidget(self._add_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        self._add_btn.setStyleSheet(Styles.button_primary())
+        button_box.addButton(self._add_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+
+        btn_layout.addWidget(button_box)
 
         layout.addLayout(btn_layout)
 

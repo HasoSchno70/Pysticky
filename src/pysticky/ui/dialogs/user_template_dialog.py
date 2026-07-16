@@ -15,6 +15,7 @@ from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -28,7 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
-from ..styles import THEME
+from ..styles import THEME, Styles
 
 
 @dataclass
@@ -208,22 +209,18 @@ class SaveTemplateDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(cancel_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 
         save_btn = QPushButton(t("Speichern"))
         save_btn.setDefault(True)
         save_btn.clicked.connect(self._on_save)
-        save_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary};
-                color: white;
-                font-weight: bold;
-                padding: 8px 20px;
-            }}
-        """)
-        btn_layout.addWidget(save_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        save_btn.setStyleSheet(Styles.button_primary())
+        button_box.addButton(save_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+
+        btn_layout.addWidget(button_box)
 
         layout.addLayout(btn_layout)
 
@@ -335,9 +332,9 @@ class ManageTemplatesDialog(QDialog):
 
         details_layout.addSpacing(20)
 
-        close_btn = QPushButton(t("Schließen"))
-        close_btn.clicked.connect(self.accept)
-        details_layout.addWidget(close_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        button_box.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.accept)
+        details_layout.addWidget(button_box)
 
         layout.addLayout(details_layout)
 

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -28,7 +29,7 @@ from ...core.color_math import delta_e
 from ...core.i18n import t
 from ...core.palette import ThreadPalette, get_palette_manager
 from ...core.thread import Thread, ThreadColor
-from ..styles import THEME
+from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -77,7 +78,7 @@ class _TargetThreadSelector(QDialog):
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # Info
         info = QLabel(
@@ -113,22 +114,16 @@ class _TargetThreadSelector(QDialog):
         # Buttons
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(cancel_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
         self._select_btn = QPushButton(t("Auswählen"))
         self._select_btn.setEnabled(False)
         self._select_btn.clicked.connect(self._on_select)
-        self._select_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary};
-                color: white; font-weight: bold;
-                padding: 7px 18px;
-            }}
-            QPushButton:hover {{ background: {THEME.accent_secondary}; }}
-            QPushButton:disabled {{ background: {THEME.bg_medium}; color: {THEME.text_disabled}; }}
-        """)
-        btn_layout.addWidget(self._select_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        self._select_btn.setStyleSheet(Styles.button_primary())
+        button_box.addButton(self._select_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+        btn_layout.addWidget(button_box)
         layout.addLayout(btn_layout)
 
         self._table.selectionModel().selectionChanged.connect(
@@ -314,20 +309,16 @@ class PaletteConversionDialog(QDialog):
 
         # Footer
         footer = QHBoxLayout()
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.clicked.connect(self.reject)
-        footer.addWidget(cancel_btn)
-        footer.addStretch()
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
         self._apply_btn = QPushButton(t("Alle konvertieren"))
-        self._apply_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary}; color: white;
-                font-weight: bold; padding: 8px 20px;
-            }}
-            QPushButton:hover {{ background: {THEME.accent_secondary}; }}
-        """)
         self._apply_btn.clicked.connect(self._on_apply)
-        footer.addWidget(self._apply_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        self._apply_btn.setStyleSheet(Styles.button_primary())
+        button_box.addButton(self._apply_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+        footer.addStretch()
+        footer.addWidget(button_box)
         layout.addLayout(footer)
 
     def _apply_styles(self) -> None:

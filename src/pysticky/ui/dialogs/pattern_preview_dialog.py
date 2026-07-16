@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QFileDialog,
     QFrame,
     QHBoxLayout,
@@ -44,7 +45,7 @@ from ...core.constants import (
 )
 from ...core.i18n import t
 from ..rendering import PreviewRenderEngine, RenderMode
-from ..styles import THEME
+from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -505,12 +506,16 @@ class PatternPreviewDialog(QDialog):
         btn_fit.setMinimumWidth(96)
         btn_fit.setToolTip(t("Zoom so anpassen, dass das ganze Muster sichtbar ist"))
         btn_fit.clicked.connect(lambda: self._canvas.zoom_fit())
+        # Verhindert, dass dieser Button den Default-Status (Enter-Taste)
+        # des Close-Buttons im Footer uebernimmt.
+        btn_fit.setAutoDefault(False)
         row.addWidget(btn_fit)
 
         btn_100 = QPushButton("1:1")
         btn_100.setMinimumWidth(46)
         btn_100.setToolTip(t("Auf 100% Zoom setzen"))
         btn_100.clicked.connect(lambda: self._canvas.zoom_100())
+        btn_100.setAutoDefault(False)
         row.addWidget(btn_100)
 
         return row
@@ -582,22 +587,19 @@ class PatternPreviewDialog(QDialog):
 
         export_btn = QPushButton(t("📷 Als Bild speichern..."))
         export_btn.clicked.connect(self._on_export_image)
+        export_btn.setAutoDefault(False)
         footer.addWidget(export_btn)
 
         footer.addStretch()
 
-        close_btn = QPushButton(t("Schließen"))
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close_btn = button_box.button(QDialogButtonBox.StandardButton.Close)
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
-        close_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary};
-                color: {THEME.bg_dark};
-                font-weight: bold;
-                padding: 8px 20px;
-            }}
-        """)
-        footer.addWidget(close_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        close_btn.setStyleSheet(Styles.button_primary())
+        footer.addWidget(button_box)
 
         return footer
 

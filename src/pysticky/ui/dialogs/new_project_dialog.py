@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QButtonGroup,
     QComboBox,
     QDialog,
+    QDialogButtonBox,
     QFrame,
     QGridLayout,
     QGroupBox,
@@ -30,7 +31,7 @@ from PySide6.QtWidgets import (
 from ...config import UI_CONFIG
 from ...core.constants import COMMON_FABRIC_COUNTS, MAX_PATTERN_SIZE
 from ...core.i18n import t
-from ..styles import THEME
+from ..styles import THEME, Styles
 from .user_template_dialog import load_user_templates
 
 # Vordefinierte Templates
@@ -587,26 +588,18 @@ class NewProjectDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.addStretch()
 
-        cancel_btn = QPushButton(t("Abbrechen"))
-        cancel_btn.clicked.connect(self.reject)
-        button_layout.addWidget(cancel_btn)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 
         self._create_btn = QPushButton(t("Erstellen"))
         self._create_btn.setDefault(True)
         self._create_btn.clicked.connect(self.accept)
-        self._create_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {THEME.accent_primary};
-                color: white;
-                font-weight: bold;
-                padding: 8px 20px;
-                border-radius: 4px;
-            }}
-            QPushButton:hover {{
-                background: {THEME.accent_secondary};
-            }}
-        """)
-        button_layout.addWidget(self._create_btn)
+        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # der die globale :default-Hervorhebung ueberschreibt.
+        self._create_btn.setStyleSheet(Styles.button_primary())
+        button_box.addButton(self._create_btn, QDialogButtonBox.ButtonRole.AcceptRole)
+
+        button_layout.addWidget(button_box)
 
         right_panel.addLayout(button_layout)
 

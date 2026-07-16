@@ -14,6 +14,7 @@ from typing import Optional
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
+    QDialogButtonBox,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -79,9 +80,9 @@ class PluginDialog(QDialog):
         self.btn_run.clicked.connect(self._on_run)
         btn_row.addWidget(self.btn_run)
 
-        btn_close = QPushButton(t("Schließen"))
-        btn_close.clicked.connect(self.reject)
-        btn_row.addWidget(btn_close)
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        button_box.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.reject)
+        btn_row.addWidget(button_box)
 
         layout.addLayout(btn_row)
 
