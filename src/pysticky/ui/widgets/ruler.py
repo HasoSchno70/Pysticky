@@ -41,7 +41,18 @@ class RulerWidget(QWidget):
         self._hover_pos: int = -1  # Grid-Position unter Maus (Lineal)
         self._canvas_pos: int = -1  # Grid-Position der Maus auf Canvas
 
-        # Farben aus THEME
+        self._apply_theme()
+
+        if orientation == Qt.Orientation.Horizontal:
+            self.setFixedHeight(self.RULER_SIZE)
+        else:
+            self.setFixedWidth(self.RULER_SIZE)
+
+        self.setMouseTracking(True)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def _apply_theme(self) -> None:
+        """Liest die Theme-Farben neu (initial und bei Live-Themewechsel)."""
         self._bg_color = QColor(THEME.bg_light)
         self._text_color = QColor(THEME.text_secondary)
         self._line_color = QColor(THEME.border_light)
@@ -51,14 +62,7 @@ class RulerWidget(QWidget):
         self._canvas_marker_color = QColor(THEME.success)
         self._canvas_marker_color.setAlpha(100)
         self._highlight_color = QColor(THEME.accent_secondary)
-
-        if orientation == Qt.Orientation.Horizontal:
-            self.setFixedHeight(self.RULER_SIZE)
-        else:
-            self.setFixedWidth(self.RULER_SIZE)
-
-        self.setMouseTracking(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.update()
 
     def set_parameters(self, offset: int, cell_size: int, pattern_size: int) -> None:
         self._offset = offset
@@ -267,14 +271,20 @@ class RulerCorner(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setFixedSize(RulerWidget.RULER_SIZE, RulerWidget.RULER_SIZE)
-        self._bg_color = QColor(THEME.bg_light)
         self._hover = False
         self._canvas_x: int = -1
         self._canvas_y: int = -1
 
+        self._apply_theme()
+
         self.setMouseTracking(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(t("Klicken zum Zentrieren"))
+
+    def _apply_theme(self) -> None:
+        """Liest die Theme-Farben neu (initial und bei Live-Themewechsel)."""
+        self._bg_color = QColor(THEME.bg_light)
+        self.update()
 
     def set_canvas_position(self, x: int, y: int) -> None:
         """Setzt die aktuelle Canvas-Position für die Anzeige."""
