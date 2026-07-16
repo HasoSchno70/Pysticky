@@ -1293,5 +1293,15 @@
   "⚠ Nicht ladbar: ": "⚠ Could not load: ",
   "Stränge insgesamt zu kaufen": "skeins to buy in total",
   "Garn-Vorrat": "Thread Inventory",
-  "Farbe ersetzen (Ctrl+R)": "Replace color (Ctrl+R)"
+  "Farbe ersetzen (Ctrl+R)": "Replace color (Ctrl+R)",
+  "Ersetzt alle Stiche einer Farbe durch eine andere Farbe. Die ersetzte Farbe bleibt in der Palette erhalten.": "Replaces all stitches of one color with another color. The replaced color stays in the palette.",
+  "Vorschläge (ähnlichste Farben)": "Suggestions (most similar colors)",
+  "Automatisch reduzieren": "Auto reduce",
+  "Alle Farben mit höchstens": "Replace all colors with at most",
+  "Stichen ersetzen": "stitches",
+  "Auto-Reduzieren": "Auto Reduce",
+  "Keine seltenen Farben unter dieser Schwelle.": "No rarely used colors below this threshold.",
+  "{colors} seltene Farbe(n) mit zusammen {stitches} Stichen würden auf {targets} häufige Farbe(n) verteilt.": "{colors} rare color(s) with {stitches} stitches in total would be merged into {targets} frequent color(s).",
+  "{n} Farbe(n) werden ersetzt:": "{n} color(s) will be replaced:",
+  "{n} Stiche werden ersetzt": "{n} stitches will be replaced"
 }

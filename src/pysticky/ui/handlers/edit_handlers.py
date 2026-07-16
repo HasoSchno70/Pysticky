@@ -42,13 +42,16 @@ class EditHandlersMixin:
         dialog = ReplaceColorDialog(self.current_pattern, current_color, self)
 
         if dialog.exec():
-            source_idx = dialog.get_source_index()
-            target_idx = dialog.get_target_index()
+            # Dialog liefert 1..n Ersetzungen: eine beim manuellen Ersetzen,
+            # mehrere beim Auto-Reduzieren seltener Farben.
+            mapping = dict(dialog.get_replacements())
+            if not mapping:
+                return
 
             changes = [
-                (x, y, target_idx)
+                (x, y, mapping[color_idx])
                 for x, y, color_idx in self.current_pattern.iterate_composite_stitches()
-                if color_idx == source_idx
+                if color_idx in mapping
             ]
 
             if changes:
@@ -59,7 +62,12 @@ class EditHandlersMixin:
 
                 self.canvas.update()
                 self.info_panel.update_info(self.current_pattern)
-                self.status_bar.showMessage(f"{len(changes)} Stiche ersetzt", 3000)
+                if len(mapping) == 1:
+                    self.status_bar.showMessage(f"{len(changes)} Stiche ersetzt", 3000)
+                else:
+                    self.status_bar.showMessage(
+                        f"{len(changes)} Stiche in {len(mapping)} Farben ersetzt", 3000
+                    )
             else:
                 self.status_bar.showMessage(t("Keine Stiche zum Ersetzen gefunden"), 3000)
 
