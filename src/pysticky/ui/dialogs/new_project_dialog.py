@@ -426,7 +426,7 @@ class NewProjectDialog(QDialog):
         self._template_cards: list[TemplateCard] = []
 
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
 
         # Standard: Benutzerdefiniert
         self._on_custom_selected()
@@ -594,7 +594,7 @@ class NewProjectDialog(QDialog):
         self._create_btn = QPushButton(t("Erstellen"))
         self._create_btn.setDefault(True)
         self._create_btn.clicked.connect(self.accept)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         self._create_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._create_btn, QDialogButtonBox.ButtonRole.AcceptRole)
@@ -607,7 +607,7 @@ class NewProjectDialog(QDialog):
 
         self._update_size_info()
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{
                 background: {THEME.bg_dark};

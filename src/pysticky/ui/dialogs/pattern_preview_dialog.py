@@ -321,7 +321,7 @@ class PatternPreviewDialog(QDialog):
         self.resize(1100, 800)
 
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
         self._update_info()
         # Initial-Beschreibung für den Default-Modus
         initial_descs = self.DP_MODE_DESCRIPTIONS if self._is_dp else self.MODE_DESCRIPTIONS
@@ -597,7 +597,7 @@ class PatternPreviewDialog(QDialog):
         close_btn = button_box.button(QDialogButtonBox.StandardButton.Close)
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         close_btn.setStyleSheet(Styles.button_primary())
         footer.addWidget(button_box)
@@ -608,7 +608,7 @@ class PatternPreviewDialog(QDialog):
     # Styling
     # =========================================================================
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         # Konsistent mit Settings/Harmony-Dialog: bessere Inputs + Akzent-Slider
         self.setStyleSheet(f"""
             QDialog {{

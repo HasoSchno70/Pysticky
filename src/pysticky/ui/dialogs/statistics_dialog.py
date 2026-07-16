@@ -81,7 +81,7 @@ class PatternStatisticsDialog(QDialog):
         self.setMinimumSize(1200, 650)
 
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
         self._calculate_statistics()
         self._auto_size_to_content()
 
@@ -157,7 +157,7 @@ class PatternStatisticsDialog(QDialog):
         close_btn = button_box.button(QDialogButtonBox.StandardButton.Close)
         close_btn.setDefault(True)
         close_btn.clicked.connect(self.accept)
-        # Diese Datei setzt in _apply_styles() einen eigenen dialogweiten
+        # Diese Datei setzt in _apply_theme() einen eigenen dialogweiten
         # QPushButton-Stil, der die globale :default-Hervorhebung überschreibt
         # — daher hier explizit den sanktionierten Primary-Button-Stil setzen.
         close_btn.setStyleSheet(Styles.button_primary())
@@ -557,7 +557,7 @@ class PatternStatisticsDialog(QDialog):
 
         layout.addWidget(color_group, 1)
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{
                 background: {THEME.bg_dark};

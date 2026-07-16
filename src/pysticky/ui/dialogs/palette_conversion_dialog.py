@@ -58,7 +58,7 @@ class _TargetThreadSelector(QDialog):
         self.setWindowTitle(t("Ziel-Garn wählen"))
         self.setMinimumSize(550, 500)
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
         self._populate()
 
     # -- UI ---------------------------------------------------------------
@@ -107,7 +107,7 @@ class _TargetThreadSelector(QDialog):
         self._select_btn = QPushButton(t("Auswählen"))
         self._select_btn.setEnabled(False)
         self._select_btn.clicked.connect(self._on_select)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         self._select_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._select_btn, QDialogButtonBox.ButtonRole.AcceptRole)
@@ -118,7 +118,7 @@ class _TargetThreadSelector(QDialog):
             lambda: self._select_btn.setEnabled(bool(self._table.selectedItems()))
         )
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{ background: {THEME.bg_dark}; }}
             QTableWidget {{
@@ -226,7 +226,7 @@ class PaletteConversionDialog(QDialog):
         self.setWindowTitle(t("Palette konvertieren"))
         self.setMinimumSize(800, 550)
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
 
         # Initial-Palette laden
         if self._palette_combo.count() > 0:
@@ -301,7 +301,7 @@ class PaletteConversionDialog(QDialog):
         button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
         self._apply_btn = QPushButton(t("Alle konvertieren"))
         self._apply_btn.clicked.connect(self._on_apply)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         self._apply_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._apply_btn, QDialogButtonBox.ButtonRole.AcceptRole)
@@ -309,7 +309,7 @@ class PaletteConversionDialog(QDialog):
         footer.addWidget(button_box)
         layout.addLayout(footer)
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{ background: {THEME.bg_dark}; }}
             QLabel {{ color: {THEME.text_primary}; }}

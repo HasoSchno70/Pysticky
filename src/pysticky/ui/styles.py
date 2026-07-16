@@ -143,17 +143,41 @@ def reapply_theme(app) -> None:
 
 
 def _append_dark_qss(app) -> None:
-    """Lädt dark.qss und hängt es an das App-Stylesheet an."""
+    """Lädt dark.qss und hängt es an das App-Stylesheet an.
+
+    Die @token@-Platzhalter im QSS werden aus ThemeColors gefüllt —
+    so gibt es genau EINE Quelle für die Theme-Farben, und das QSS
+    kann nicht mehr stillschweigend von ThemeColors wegdriften.
+    """
     from pathlib import Path
 
     style_path = Path(__file__).parent.parent / "resources" / "styles" / "dark.qss"
-    if style_path.exists():
-        try:
-            with open(style_path, "r", encoding="utf-8") as f:
-                current = app.styleSheet()
-                app.setStyleSheet(current + "\n" + f.read())
-        except OSError:
-            pass
+    if not style_path.exists():
+        return
+    try:
+        qss = style_path.read_text(encoding="utf-8")
+    except OSError:
+        from ..utils import get_logger
+
+        get_logger(__name__).warning("dark.qss konnte nicht geladen werden: %s", style_path)
+        return
+
+    for token, value in _dark_qss_tokens().items():
+        qss = qss.replace(token, value)
+    app.setStyleSheet(app.styleSheet() + "\n" + qss)
+
+
+def _dark_qss_tokens() -> dict[str, str]:
+    """Zuordnung der @token@-Platzhalter in dark.qss zu ThemeColors-Feldern."""
+    return {
+        "@bg_dark@": DARK_THEME.bg_dark,
+        "@bg_medium@": DARK_THEME.bg_medium,
+        "@bg_light@": DARK_THEME.bg_light,
+        "@bg_lighter@": DARK_THEME.bg_lighter,
+        "@border_light@": DARK_THEME.border_light,
+        "@accent_primary@": DARK_THEME.accent_primary,
+        "@text_muted@": DARK_THEME.text_muted,
+    }
 
 
 def _restyle_widget_tree(widget) -> None:

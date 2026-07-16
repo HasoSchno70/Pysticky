@@ -141,7 +141,7 @@ class ColorManagementDialog(QDialog):
         self.setMinimumSize(700, 550)
 
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
         self._populate_list()
 
     def _setup_ui(self) -> None:
@@ -354,7 +354,7 @@ class ColorManagementDialog(QDialog):
         self._apply_btn = QPushButton(t("Übernehmen"))
         self._apply_btn.setDefault(True)
         self._apply_btn.clicked.connect(self.accept)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         self._apply_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._apply_btn, QDialogButtonBox.ButtonRole.AcceptRole)
@@ -372,7 +372,7 @@ class ColorManagementDialog(QDialog):
                 btn.setAutoDefault(False)
         self._apply_btn.setDefault(True)
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{
                 background: {THEME.bg_dark};

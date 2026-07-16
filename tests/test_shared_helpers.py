@@ -20,6 +20,41 @@ def test_css_rgb():
     assert css_rgb((0, 0, 0)) == "rgb(0,0,0)"
 
 
+def test_dark_qss_tokens_resolve():
+    """Alle @token@-Platzhalter in dark.qss müssen in ThemeColors existieren
+    und bei der Substitution restlos aufgelöst werden."""
+    import re
+    from pathlib import Path
+
+    from pysticky.ui.styles import DARK_THEME, _dark_qss_tokens
+
+    qss_path = Path(__file__).parent.parent / "src/pysticky/resources/styles/dark.qss"
+    qss = qss_path.read_text(encoding="utf-8")
+    tokens = _dark_qss_tokens()
+
+    for token, value in tokens.items():
+        qss = qss.replace(token, value)
+
+    leftover = re.findall(r"@[a-z_]+@", qss)
+    assert not leftover, f"Unaufgelöste Tokens in dark.qss: {leftover}"
+    assert DARK_THEME.accent_primary in qss
+
+
+def test_append_dark_qss_on_app(qapp):
+    """Der echte Ladepfad: dark.qss wird substituiert ans App-Stylesheet gehängt."""
+    from pysticky.ui.styles import DARK_THEME, _append_dark_qss
+
+    before = qapp.styleSheet()
+    try:
+        _append_dark_qss(qapp)
+        sheet = qapp.styleSheet()
+        assert DARK_THEME.accent_primary in sheet
+        assert "@bg_dark@" not in sheet
+        assert "QMainWindow" in sheet
+    finally:
+        qapp.setStyleSheet(before)
+
+
 def test_to_qcolor_roundtrip(qapp):
     from pysticky.core.thread import ThreadColor
     from pysticky.ui.color_utils import from_qcolor, to_qcolor

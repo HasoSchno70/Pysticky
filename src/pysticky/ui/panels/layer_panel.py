@@ -256,6 +256,12 @@ class LayerListItem(QWidget):
             f"color: {THEME.accent_primary}; font-size: 11px; font-weight: 600; background: transparent;"
         )
 
+    def _apply_theme(self) -> None:
+        # Wird von _restyle_widget_tree beim Live-Theme-Wechsel aufgerufen —
+        # ohne das behalten bestehende Ebenen-Zeilen die alten Farben, bis
+        # sich ihr Sichtbar-/Sperr-Zustand ändert.
+        self._apply_styles()
+
     def sizeHint(self) -> QSize:
         return QSize(200, 44)
 

@@ -140,7 +140,7 @@ class SaveTemplateDialog(QDialog):
         self.setMinimumWidth(400)
 
         self._setup_ui(width, height, fabric_count)
-        self._apply_styles()
+        self._apply_theme()
 
     def _setup_ui(self, width: int, height: int, fabric_count: int) -> None:
         layout = QVBoxLayout(self)
@@ -214,7 +214,7 @@ class SaveTemplateDialog(QDialog):
         save_btn = QPushButton(t("Speichern"))
         save_btn.setDefault(True)
         save_btn.clicked.connect(self._on_save)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         save_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(save_btn, QDialogButtonBox.ButtonRole.AcceptRole)
@@ -223,7 +223,7 @@ class SaveTemplateDialog(QDialog):
 
         layout.addLayout(btn_layout)
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{
                 background: {THEME.bg_dark};
@@ -285,7 +285,7 @@ class ManageTemplatesDialog(QDialog):
         self.setMinimumSize(500, 400)
 
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
         self._refresh_list()
 
     def _setup_ui(self) -> None:
@@ -337,7 +337,7 @@ class ManageTemplatesDialog(QDialog):
 
         layout.addLayout(details_layout)
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         self.setStyleSheet(f"""
             QDialog {{
                 background: {THEME.bg_dark};

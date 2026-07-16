@@ -439,7 +439,7 @@ class ColorHarmonyDialog(QDialog):
         self.resize(820, 660)
 
         self._setup_ui()
-        self._apply_styles()
+        self._apply_theme()
 
         # Initiale Palette setzen (gleicher Hersteller oder DMC)
         self._select_initial_palette()
@@ -582,7 +582,7 @@ class ColorHarmonyDialog(QDialog):
         self._add_btn = QPushButton("Hinzufügen (0)")
         self._add_btn.setEnabled(False)
         self._add_btn.clicked.connect(self._on_add)
-        # _apply_styles() setzt einen eigenen dialogweiten QPushButton-Stil,
+        # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
         # der die globale :default-Hervorhebung überschreibt.
         self._add_btn.setStyleSheet(Styles.button_primary())
         button_box.addButton(self._add_btn, QDialogButtonBox.ButtonRole.AcceptRole)
@@ -591,7 +591,7 @@ class ColorHarmonyDialog(QDialog):
 
         layout.addLayout(btn_layout)
 
-    def _apply_styles(self) -> None:
+    def _apply_theme(self) -> None:
         # Identisches Akzent-Pillen-Pattern wie SettingsDialog — visuell konsistent.
         self.setStyleSheet(f"""
             QDialog {{
