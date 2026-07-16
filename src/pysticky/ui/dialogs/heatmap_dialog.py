@@ -184,6 +184,13 @@ class HeatmapDialog(QDialog):
         # Popup-Breite explizit an den laengsten Item-Text anpassen — sonst kann
         # das Dropdown schmaler als der Text sein und diesen abschneiden.
         self._axis_combo.view().setMinimumWidth(self._axis_combo.minimumSizeHint().width())
+        # Popup-Hoehe explizit setzen: Qt's automatische Popup-Groesse basiert
+        # auf sizeHintForRow(), das den globalen QSS-Padding auf
+        # "QComboBox QAbstractItemView" nicht mit einrechnet — das Ergebnis
+        # ist ein Dropdown, das knapp zu niedrig ist und die letzte Zeile
+        # abschneidet. Grosszuegiger Puffer pro Zeile umgeht das zuverlaessig.
+        row_height = self._axis_combo.fontMetrics().height() + 14
+        self._axis_combo.view().setMinimumHeight(row_height * self._axis_combo.count() + 8)
         self._axis_combo.currentIndexChanged.connect(self._on_axis_changed)
         controls.addRow(t("Achse:"), self._axis_combo)
 
