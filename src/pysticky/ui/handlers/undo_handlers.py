@@ -20,21 +20,32 @@ class UndoHandlersMixin:
         """Führt ein Undo-Command aus (batch-aware)."""
         if self.undo_manager.in_batch:
             self.undo_manager.add_to_batch(command)
+            # Panel-Updates aufschieben: _notify_panels("stitch") rechnet die
+            # komplette Muster-Statistik neu — pro Stich aufgerufen macht das
+            # große Batches (Farbe ersetzen, Füllen, Spiegeln) quadratisch
+            # langsam (40.000 Stiche => minutenlanger UI-Freeze).
+            self._pending_batch_scopes = getattr(self, "_pending_batch_scopes", set())
+            self._pending_batch_scopes.add(scope)
         else:
             self.undo_manager.execute(command)
             self._update_undo_actions()
             self._mark_unsaved()
-        self._notify_panels(scope)
+            self._notify_panels(scope)
 
     def _on_batch_started(self: "MainWindow", description: str) -> None:
         """Batch-Undo beginnen."""
         self.undo_manager.begin_batch(description)
+        self._pending_batch_scopes: set = set()
 
     def _on_batch_ended(self: "MainWindow") -> None:
         """Batch-Undo beenden."""
         self.undo_manager.end_batch()
         self._update_undo_actions()
         self._mark_unsaved()
+        # Aufgeschobene Panel-Updates jetzt genau einmal ausführen
+        for scope in getattr(self, "_pending_batch_scopes", set()):
+            self._notify_panels(scope)
+        self._pending_batch_scopes = set()
         QTimer.singleShot(100, self.minimap_panel.refresh)
         QTimer.singleShot(100, self.tile_preview_panel.refresh)
 

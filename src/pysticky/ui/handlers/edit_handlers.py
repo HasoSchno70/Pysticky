@@ -4,6 +4,7 @@ Bearbeiten-bezogene Handler für MainWindow.
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
 if TYPE_CHECKING:
@@ -55,10 +56,17 @@ class EditHandlersMixin:
             ]
 
             if changes:
-                self.canvas.batch_started.emit(t("Farbe ersetzen"))
-                for x, y, color_idx in changes:
-                    self.canvas.stitch_placed.emit(x, y, color_idx)
-                self.canvas.batch_ended.emit()
+                from PySide6.QtGui import QCursor
+                from PySide6.QtWidgets import QApplication
+
+                QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+                try:
+                    self.canvas.batch_started.emit(t("Farbe ersetzen"))
+                    for x, y, color_idx in changes:
+                        self.canvas.stitch_placed.emit(x, y, color_idx)
+                    self.canvas.batch_ended.emit()
+                finally:
+                    QApplication.restoreOverrideCursor()
 
                 self.canvas.update()
                 self.info_panel.update_info(self.current_pattern)
