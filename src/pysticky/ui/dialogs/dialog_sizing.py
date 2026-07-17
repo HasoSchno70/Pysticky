@@ -12,7 +12,11 @@ der Dialog auf kleinen/anderen Monitoren nicht über den Rand wächst -- eine
 QScrollArea um den Inhalt bleibt dafür als Fallback sinnvoll).
 """
 
+import os
+
 from PySide6.QtWidgets import QApplication, QDialog, QWidget
+
+_DEBUG_ENV_VAR = "PYSTICKY_DEBUG_DIALOG_SIZING"
 
 
 def auto_size_dialog(
@@ -70,4 +74,51 @@ def auto_size_dialog(
     # abgeschnittene Tab-Leiste.
     target_w = max(target_w, min_width)
 
-    dialog.resize(max(target_w, dialog.minimumWidth()), max(target_h, dialog.minimumHeight()))
+    final_w = max(target_w, dialog.minimumWidth())
+    final_h = max(target_h, dialog.minimumHeight())
+
+    if os.environ.get(_DEBUG_ENV_VAR):
+        _debug_print(
+            dialog,
+            screen,
+            avail,
+            content_w,
+            content_h,
+            min_width,
+            target_w,
+            target_h,
+            final_w,
+            final_h,
+        )
+
+    dialog.resize(final_w, final_h)
+
+
+def _debug_print(
+    dialog, screen, avail, content_w, content_h, min_width, target_w, target_h, final_w, final_h
+):
+    """Gibt jeden Zwischenschritt der Größenberechnung aus. Aktiviert per
+    Umgebungsvariable PYSTICKY_DEBUG_DIALOG_SIZING=1 -- gedacht, um auf einer
+    Maschine, die mit Headless-Tests nicht reproduzierbare Truncation zeigt,
+    einmalig echte Bildschirm-/DPI-Werte aus einem realen (nicht-offscreen)
+    Lauf einzusammeln (siehe open-items.md zum PatternStatisticsDialog)."""
+    name = type(dialog).__name__
+    print(f"[dialog_sizing] {name}: content={content_w}x{content_h} min_width={min_width}")
+    if screen is not None:
+        geo = screen.geometry()
+        print(
+            f"[dialog_sizing] {name}: screen={screen.name()!r} "
+            f"dpr={screen.devicePixelRatio()} logicalDPI={screen.logicalDotsPerInch()} "
+            f"geometry={geo.width()}x{geo.height()}"
+        )
+    else:
+        print(f"[dialog_sizing] {name}: screen=None (weder dialog.screen() noch primaryScreen())")
+    if avail is not None:
+        print(f"[dialog_sizing] {name}: availableGeometry={avail.width()}x{avail.height()}")
+    else:
+        print(f"[dialog_sizing] {name}: availableGeometry=None")
+    print(
+        f"[dialog_sizing] {name}: target={target_w}x{target_h} "
+        f"dialog.minimumSize={dialog.minimumWidth()}x{dialog.minimumHeight()} "
+        f"final={final_w}x{final_h}"
+    )
