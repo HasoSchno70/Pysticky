@@ -88,17 +88,8 @@ class PatternImportDialog(QDialog):
     def _setup_ui(self) -> None:
         """Erstellt die UI-Elemente."""
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(20, 20, 20, 20)
-
-        # Titel
-        title = QLabel(t("Muster Import (XSD/PAT/OXS)"))
-        title.setStyleSheet(f"""
-            font-size: 18px;
-            font-weight: bold;
-            color: {THEME.accent_primary};
-        """)
-        layout.addWidget(title)
+        layout.setSpacing(12)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # Beschreibung
         desc = QLabel(

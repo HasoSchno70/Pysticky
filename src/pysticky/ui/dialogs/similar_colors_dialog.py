@@ -107,11 +107,8 @@ class SimilarColorsDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
-
-        title = QLabel(t("Ähnliche Farben finden und zusammenführen"))
-        title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {THEME.text_primary};")
-        layout.addWidget(title)
+        layout.setSpacing(12)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # Schwellwert-Slider
         threshold_row = QHBoxLayout()

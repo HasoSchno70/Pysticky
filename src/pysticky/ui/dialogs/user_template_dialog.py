@@ -144,7 +144,8 @@ class SaveTemplateDialog(QDialog):
 
     def _setup_ui(self, width: int, height: int, fabric_count: int) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(12)
 
         # Vorschau
         preview_layout = QHBoxLayout()
@@ -290,7 +291,8 @@ class ManageTemplatesDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QHBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(12)
 
         # Liste
         list_layout = QVBoxLayout()

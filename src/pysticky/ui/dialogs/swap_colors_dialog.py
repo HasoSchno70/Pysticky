@@ -39,7 +39,8 @@ class SwapColorsDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(12)
 
         desc = QLabel(
             t(

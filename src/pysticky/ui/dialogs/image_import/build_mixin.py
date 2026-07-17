@@ -98,7 +98,8 @@ class BuildMixin:
         self.setMinimumSize(850, 650)
 
         layout = QHBoxLayout(self)
-        layout.setSpacing(20)
+        layout.setSpacing(12)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         self._left_layout = self._setup_left_panel()
         self._right_panel = self._setup_right_panel()

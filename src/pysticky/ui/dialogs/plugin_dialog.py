@@ -48,6 +48,8 @@ class PluginDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(12)
 
         header = QLabel(t("Verfuegbare Plugins"))
         header.setStyleSheet("font-size: 14px; font-weight: bold;")

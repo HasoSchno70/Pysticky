@@ -100,18 +100,10 @@ class PatternLibraryDialog(QDialog):
         """Erstellt die UI."""
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
-        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # Header
         header_layout = QHBoxLayout()
-
-        title = QLabel(t("📚 Muster-Bibliothek"))
-        title.setStyleSheet(f"""
-            font-size: 20px;
-            font-weight: bold;
-            color: {THEME.accent_primary};
-        """)
-        header_layout.addWidget(title)
 
         header_layout.addStretch()
 

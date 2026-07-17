@@ -45,6 +45,7 @@ class BlendThreadsDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(15, 15, 15, 15)
         layout.setSpacing(12)
 
         info = QLabel(

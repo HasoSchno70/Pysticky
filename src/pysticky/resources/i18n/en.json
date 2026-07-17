@@ -1040,6 +1040,7 @@
   "Keine Stiche mit dieser Farbe vorhanden": "No stitches with this color present",
   "Quell- und Zielfarbe sind identisch.": "Source and target color are identical.",
   "Versionen": "Versions",
+  "Versionen für {key}": "Versions for {key}",
   "Automatische Versionen werden alle 30 Minuten angelegt, sobald ungespeicherte Änderungen vorhanden sind. Doppelklick zeigt Details, der Button 'Wiederherstellen' lädt diese Version wieder als aktives Muster.": "Automatic versions are created every 30 minutes whenever there are unsaved changes. Double-click shows details; the 'Restore' button loads this version back as the active pattern.",
   "Wähle eine Version aus der Liste.": "Select a version from the list.",
   "⟲ Wiederherstellen": "⟲ Restore",

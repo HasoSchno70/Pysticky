@@ -53,7 +53,7 @@ class SnapshotHistoryDialog(QDialog):
         self._pattern = pattern
         self._key = pattern_key_for(pattern, current_file)
 
-        self.setWindowTitle(t("Versionen"))
+        self.setWindowTitle(t("Versionen für {key}").format(key=self._key))
         self.setMinimumSize(560, 480)
         self._setup_ui()
         self._reload()
@@ -61,12 +61,7 @@ class SnapshotHistoryDialog(QDialog):
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
-        layout.setSpacing(10)
-
-        # Header
-        header = QLabel(f"Versionen für '{self._key}'")
-        header.setStyleSheet(f"font-size: 14px; font-weight: 700; color: {THEME.accent_primary};")
-        layout.addWidget(header)
+        layout.setSpacing(12)
 
         intro = QLabel(
             t(

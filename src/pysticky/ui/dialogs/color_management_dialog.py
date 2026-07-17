@@ -146,15 +146,11 @@ class ColorManagementDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setSpacing(12)
         layout.setContentsMargins(15, 15, 15, 15)
 
         # Header
         header = QHBoxLayout()
-
-        title = QLabel(t("🎨 Farbpalette verwalten"))
-        title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {THEME.text_primary};")
-        header.addWidget(title)
 
         self._count_label = QLabel()
         self._count_label.setStyleSheet(f"color: {THEME.text_muted};")

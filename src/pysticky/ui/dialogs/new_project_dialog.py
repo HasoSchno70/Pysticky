@@ -433,7 +433,7 @@ class NewProjectDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QHBoxLayout(self)
-        layout.setSpacing(15)
+        layout.setSpacing(12)
         layout.setContentsMargins(15, 15, 15, 15)
 
         # Linke Seite: Templates

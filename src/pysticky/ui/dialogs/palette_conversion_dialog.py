@@ -65,7 +65,7 @@ class _TargetThreadSelector(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
+        layout.setSpacing(12)
         layout.setContentsMargins(15, 15, 15, 15)
 
         # Info
@@ -238,14 +238,6 @@ class PaletteConversionDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
         layout.setContentsMargins(15, 15, 15, 15)
-
-        # Header
-        header = QHBoxLayout()
-        title = QLabel(t("🔄 Palette konvertieren"))
-        title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {THEME.text_primary};")
-        header.addWidget(title)
-        header.addStretch()
-        layout.addLayout(header)
 
         # Ziel-Palette auswählen
         palette_row = QHBoxLayout()

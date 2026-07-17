@@ -51,7 +51,7 @@ class PatternPropertiesDialog(QDialog):
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
-        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # === Read-only Info-Block ===
         info_frame = QFrame()

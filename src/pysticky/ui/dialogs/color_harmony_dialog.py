@@ -447,8 +447,8 @@ class ColorHarmonyDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(14)
-        layout.setContentsMargins(20, 18, 20, 16)
+        layout.setSpacing(12)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # === Einführungs-Text: erklärt was der Dialog tut ===
         intro = QLabel(

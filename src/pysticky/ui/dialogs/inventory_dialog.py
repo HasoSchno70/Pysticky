@@ -111,7 +111,7 @@ class InventoryDialog(QDialog):
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
-        layout.setSpacing(10)
+        layout.setSpacing(12)
 
         intro = self._make_intro_card(
             t(

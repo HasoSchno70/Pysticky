@@ -338,8 +338,8 @@ class PatternPreviewDialog(QDialog):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
-        layout.setContentsMargins(14, 12, 14, 12)
+        layout.setSpacing(12)
+        layout.setContentsMargins(15, 15, 15, 15)
 
         # --- Erklärungs-Banner (modus-spezifisch) ---
         if self._is_dp:
