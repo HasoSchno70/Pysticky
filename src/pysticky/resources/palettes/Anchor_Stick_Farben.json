@@ -2,65 +2,65 @@
  {
   "AnchorNumber": "1",
   "Color": {
-   "R": 253,
-   "G": 252,
-   "B": 249
+   "R": 255,
+   "G": 255,
+   "B": 255
   },
-  "Name": "Snow White"
+  "Name": "White Bright"
  },
  {
   "AnchorNumber": "2",
   "Color": {
-   "R": 249,
-   "G": 247,
-   "B": 241
+   "R": 250,
+   "G": 250,
+   "B": 250
   },
-  "Name": "Winter White"
+  "Name": "White"
  },
  {
   "AnchorNumber": "6",
   "Color": {
    "R": 255,
-   "G": 217,
-   "B": 206
+   "G": 194,
+   "B": 177
   },
-  "Name": "Peach"
+  "Name": "Peach Very Light"
  },
  {
   "AnchorNumber": "8",
   "Color": {
-   "R": 249,
-   "G": 204,
-   "B": 199
+   "R": 253,
+   "G": 172,
+   "B": 144
   },
-  "Name": "Terra Cotta-UL VY LT"
+  "Name": "Peach Light"
  },
  {
   "AnchorNumber": "9",
   "Color": {
-   "R": 247,
-   "G": 175,
-   "B": 175
+   "R": 236,
+   "G": 136,
+   "B": 125
   },
-  "Name": "Salmon"
+  "Name": "Coral Very Light"
  },
  {
   "AnchorNumber": "10",
   "Color": {
-   "R": 243,
-   "G": 137,
-   "B": 136
+   "R": 233,
+   "G": 124,
+   "B": 117
   },
-  "Name": "Salmon-MD"
+  "Name": "Coral Light"
  },
  {
   "AnchorNumber": "11",
   "Color": {
-   "R": 226,
-   "G": 74,
-   "B": 74
+   "R": 216,
+   "G": 87,
+   "B": 79
   },
-  "Name": "Coral-MD"
+  "Name": "Coral Medium"
  },
  {
   "AnchorNumber": "12",
@@ -74,65 +74,65 @@
  {
   "AnchorNumber": "13",
   "Color": {
-   "R": 189,
-   "G": 7,
-   "B": 32
+   "R": 182,
+   "G": 8,
+   "B": 0
   },
-  "Name": "Coral Red-VY DK"
+  "Name": "Coral Dark"
  },
  {
   "AnchorNumber": "19",
   "Color": {
-   "R": 169,
-   "G": 21,
-   "B": 44
+   "R": 174,
+   "G": 26,
+   "B": 60
   },
-  "Name": "Red-DK"
+  "Name": "Pink Bright Ultra Very"
  },
  {
   "AnchorNumber": "20",
   "Color": {
-   "R": 137,
-   "G": 9,
-   "B": 32
+   "R": 153,
+   "G": 17,
+   "B": 46
   },
-  "Name": "Garnet-MD"
+  "Name": "Garnet Light"
  },
  {
   "AnchorNumber": "22",
   "Color": {
-   "R": 132,
-   "G": 40,
-   "B": 57
+   "R": 126,
+   "G": 5,
+   "B": 32
   },
-  "Name": "Garnet-VY DK"
+  "Name": "Garnet"
  },
  {
   "AnchorNumber": "23",
   "Color": {
    "R": 253,
-   "G": 193,
-   "B": 196
+   "G": 200,
+   "B": 201
   },
-  "Name": "Mauve-LT"
+  "Name": "Baby Pink Very Light"
  },
  {
   "AnchorNumber": "24",
   "Color": {
-   "R": 254,
-   "G": 178,
-   "B": 187
+   "R": 251,
+   "G": 168,
+   "B": 171
   },
-  "Name": "Pink-MD"
+  "Name": "Baby Pink Light"
  },
  {
   "AnchorNumber": "25",
   "Color": {
-   "R": 255,
-   "G": 183,
-   "B": 182
+   "R": 236,
+   "G": 158,
+   "B": 174
   },
-  "Name": "Geranium-Pale"
+  "Name": "Baby Pink"
  },
  {
   "AnchorNumber": "26",
@@ -141,187 +141,187 @@
    "G": 124,
    "B": 136
   },
-  "Name": "Baby Pink Med"
+  "Name": "Baby Pink Medium"
  },
  {
   "AnchorNumber": "27",
   "Color": {
-   "R": 254,
-   "G": 146,
-   "B": 164
+   "R": 235,
+   "G": 89,
+   "B": 110
   },
-  "Name": "Carnation-LT"
+  "Name": "Baby Pink Dark"
  },
  {
   "AnchorNumber": "28",
   "Color": {
-   "R": 255,
-   "G": 123,
-   "B": 142
+   "R": 219,
+   "G": 62,
+   "B": 86
   },
-  "Name": "Carnation-MD"
+  "Name": "Baby Pink Very Dark"
  },
  {
   "AnchorNumber": "29",
   "Color": {
-   "R": 229,
-   "G": 31,
-   "B": 68
+   "R": 195,
+   "G": 30,
+   "B": 55
   },
-  "Name": "Red-BRT"
+  "Name": "Baby Pink Ultra Very Dark"
  },
  {
   "AnchorNumber": "31",
   "Color": {
-   "R": 234,
-   "G": 137,
-   "B": 157
+   "R": 238,
+   "G": 124,
+   "B": 141
   },
-  "Name": "Dusty Rose"
+  "Name": "Pink Bright Light"
  },
  {
   "AnchorNumber": "33",
   "Color": {
-   "R": 255,
-   "G": 147,
-   "B": 147
+   "R": 250,
+   "G": 121,
+   "B": 149
   },
-  "Name": "Geranium"
+  "Name": "Pink Bright"
  },
  {
   "AnchorNumber": "35",
   "Color": {
-   "R": 233,
-   "G": 75,
-   "B": 105
+   "R": 206,
+   "G": 64,
+   "B": 96
   },
-  "Name": "Melon-VY DK"
+  "Name": "Pink Bright Dark"
  },
  {
   "AnchorNumber": "36",
   "Color": {
-   "R": 253,
-   "G": 175,
-   "B": 182
+   "R": 240,
+   "G": 146,
+   "B": 160
   },
-  "Name": "Rose-LT"
+  "Name": "Pink Bright Very Light"
  },
  {
   "AnchorNumber": "38",
   "Color": {
-   "R": 240,
-   "G": 86,
-   "B": 112
+   "R": 182,
+   "G": 71,
+   "B": 88
   },
-  "Name": "Rose"
+  "Name": "Dusty Pink"
  },
  {
   "AnchorNumber": "39",
   "Color": {
-   "R": 189,
-   "G": 9,
-   "B": 32
+   "R": 136,
+   "G": 46,
+   "B": 60
   },
-  "Name": "Coral Red-VY DK"
+  "Name": "Dusty Pink Dark"
  },
  {
   "AnchorNumber": "40",
   "Color": {
-   "R": 255,
-   "G": 166,
-   "B": 192
-  },
-  "Name": "Cranberry"
- },
- {
-  "AnchorNumber": "41",
-  "Color": {
-   "R": 240,
-   "G": 86,
-   "B": 112
+   "R": 239,
+   "G": 112,
+   "B": 138
   },
   "Name": "Rose"
  },
  {
+  "AnchorNumber": "41",
+  "Color": {
+   "R": 198,
+   "G": 78,
+   "B": 103
+  },
+  "Name": "Rose Dark"
+ },
+ {
   "AnchorNumber": "42",
   "Color": {
-   "R": 201,
-   "G": 45,
-   "B": 61
+   "R": 187,
+   "G": 64,
+   "B": 89
   },
-  "Name": "Red"
+  "Name": "Rose Very Dark"
  },
  {
   "AnchorNumber": "43",
   "Color": {
-   "R": 137,
-   "G": 9,
-   "B": 32
+   "R": 136,
+   "G": 38,
+   "B": 57
   },
-  "Name": "Garnet-MD"
+  "Name": "Garnet Medium"
  },
  {
   "AnchorNumber": "44",
   "Color": {
-   "R": 132,
-   "G": 40,
-   "B": 57
+   "R": 130,
+   "G": 45,
+   "B": 60
   },
-  "Name": "Garnet-VY DK"
+  "Name": "Garnet Dark"
  },
  {
   "AnchorNumber": "45",
   "Color": {
-   "R": 132,
-   "G": 40,
-   "B": 57
+   "R": 111,
+   "G": 37,
+   "B": 49
   },
-  "Name": "Garnet-VY DK"
+  "Name": "Garnet Very Dark"
  },
  {
   "AnchorNumber": "46",
   "Color": {
-   "R": 252,
-   "G": 52,
-   "B": 5
+   "R": 211,
+   "G": 36,
+   "B": 0
   },
-  "Name": "Orange Red-BRT"
+  "Name": "Christmas Red Light"
  },
  {
   "AnchorNumber": "47",
   "Color": {
-   "R": 169,
-   "G": 21,
-   "B": 44
+   "R": 165,
+   "G": 28,
+   "B": 0
   },
-  "Name": "Red-DK"
+  "Name": "Christmas Red"
  },
  {
   "AnchorNumber": "48",
   "Color": {
-   "R": 255,
-   "G": 217,
-   "B": 217
+   "R": 253,
+   "G": 188,
+   "B": 209
   },
-  "Name": "Dusty Rose-UL VY LT"
+  "Name": "Pink Very Light"
  },
  {
   "AnchorNumber": "49",
   "Color": {
-   "R": 255,
-   "G": 191,
-   "B": 191
+   "R": 244,
+   "G": 174,
+   "B": 197
   },
-  "Name": "Dusty Rose-MD VY LT"
+  "Name": "Pink Light"
  },
  {
   "AnchorNumber": "50",
   "Color": {
    "R": 255,
-   "G": 183,
-   "B": 182
+   "G": 159,
+   "B": 188
   },
-  "Name": "Geranium-Pale"
+  "Name": "Pink"
  },
  {
   "AnchorNumber": "51",
@@ -335,83 +335,83 @@
  {
   "AnchorNumber": "52",
   "Color": {
-   "R": 255,
-   "G": 142,
-   "B": 176
+   "R": 252,
+   "G": 125,
+   "B": 163
   },
-  "Name": "Cyclamen Pink-LT"
+  "Name": "Pink Dark"
  },
  {
   "AnchorNumber": "54",
   "Color": {
-   "R": 226,
-   "G": 42,
-   "B": 120
+   "R": 225,
+   "G": 82,
+   "B": 125
   },
-  "Name": "Cyclamen Pink-DK"
+  "Name": "Pink Very Dark"
  },
  {
   "AnchorNumber": "55",
   "Color": {
-   "R": 236,
-   "G": 136,
-   "B": 155
+   "R": 249,
+   "G": 156,
+   "B": 200
   },
-  "Name": "Raspberry-LT"
+  "Name": "Pink Mauve Light"
  },
  {
   "AnchorNumber": "57",
   "Color": {
-   "R": 226,
-   "G": 42,
-   "B": 120
+   "R": 210,
+   "G": 74,
+   "B": 138
   },
-  "Name": "Cyclamen Pink-DK"
+  "Name": "Pink Mauve Medium Dark"
  },
  {
   "AnchorNumber": "59",
   "Color": {
-   "R": 147,
-   "G": 55,
-   "B": 72
+   "R": 141,
+   "G": 1,
+   "B": 66
   },
-  "Name": "Raspberry-VY DK"
+  "Name": "Pink Mauve Ultra Very Dark"
  },
  {
   "AnchorNumber": "60",
   "Color": {
-   "R": 230,
-   "G": 168,
-   "B": 174
+   "R": 221,
+   "G": 156,
+   "B": 180
   },
-  "Name": "Dusty Rose-LT"
+  "Name": "Cerise Ultra Very Light"
  },
  {
   "AnchorNumber": "62",
   "Color": {
-   "R": 208,
-   "G": 113,
-   "B": 114
+   "R": 195,
+   "G": 76,
+   "B": 132
   },
-  "Name": "Mauve"
+  "Name": "Cerise Light"
  },
  {
   "AnchorNumber": "63",
   "Color": {
-   "R": 172,
-   "G": 53,
-   "B": 89
+   "R": 163,
+   "G": 44,
+   "B": 100
   },
-  "Name": "Mauve-DK"
+  "Name": "Cerise"
  },
  {
   "AnchorNumber": "65",
   "Color": {
-   "R": 115,
-   "G": 67,
-   "B": 75
+   "R": 114,
+   "G": 25,
+   "B": 68
   },
-  "Name": "Antique Mauve-VY DK"
+  "Name": "Cerise Ultra Very Dark"
  },
  {
   "AnchorNumber": "66",
@@ -420,16 +420,16 @@
    "G": 139,
    "B": 187
   },
-  "Name": "Dusty Plum LT"
+  "Name": "Dusty Plum Light"
  },
  {
   "AnchorNumber": "68",
   "Color": {
-   "R": 188,
-   "G": 70,
-   "B": 102
+   "R": 172,
+   "G": 57,
+   "B": 111
   },
-  "Name": "Dusty Rose-UL DK"
+  "Name": "Dusty Plum Medium"
  },
  {
   "AnchorNumber": "69",
@@ -438,16 +438,16 @@
    "G": 0,
    "B": 64
   },
-  "Name": "Dusty Plum Med DK"
+  "Name": "Dusty Plum Medium Dark"
  },
  {
   "AnchorNumber": "70",
   "Color": {
-   "R": 220,
-   "G": 105,
-   "B": 133
+   "R": 73,
+   "G": 0,
+   "B": 41
   },
-  "Name": "Dusty Rose-VY DK"
+  "Name": "Dusty Plum Very Dark"
  },
  {
   "AnchorNumber": "72",
@@ -456,7 +456,7 @@
    "G": 1,
    "B": 30
   },
-  "Name": "Dusty Plum Ultra VY"
+  "Name": "Dusty Plum Ultra Very Dark"
  },
  {
   "AnchorNumber": "73",
@@ -465,34 +465,34 @@
    "G": 197,
    "B": 215
   },
-  "Name": "Plum Ultra VY LT"
+  "Name": "Plum Ultra Very Light"
  },
  {
   "AnchorNumber": "74",
   "Color": {
-   "R": 158,
-   "G": 38,
-   "B": 100
+   "R": 239,
+   "G": 161,
+   "B": 187
   },
-  "Name": "Plum"
+  "Name": "Plum Very Light"
  },
  {
   "AnchorNumber": "75",
   "Color": {
-   "R": 132,
-   "G": 2,
-   "B": 69
+   "R": 230,
+   "G": 139,
+   "B": 168
   },
-  "Name": "Plum-DK"
+  "Name": "Plum Light"
  },
  {
   "AnchorNumber": "76",
   "Color": {
-   "R": 100,
-   "G": 26,
-   "B": 80
+   "R": 163,
+   "G": 70,
+   "B": 99
   },
-  "Name": "Violet-VY DK"
+  "Name": "Plum Medium Light"
  },
  {
   "AnchorNumber": "77",
@@ -501,7 +501,7 @@
    "G": 52,
    "B": 94
   },
-  "Name": "Plum Med"
+  "Name": "Plum Medium"
  },
  {
   "AnchorNumber": "78",
@@ -510,7 +510,7 @@
    "G": 41,
    "B": 78
   },
-  "Name": "Plum Med DK"
+  "Name": "Plum Medium Dark"
  },
  {
   "AnchorNumber": "83",
@@ -533,20 +533,20 @@
  {
   "AnchorNumber": "85",
   "Color": {
-   "R": 116,
-   "G": 57,
-   "B": 95
+   "R": 255,
+   "G": 172,
+   "B": 233
   },
-  "Name": "Grape-DK"
+  "Name": "Mauve Very Light"
  },
  {
   "AnchorNumber": "86",
   "Color": {
-   "R": 89,
-   "G": 38,
-   "B": 53
+   "R": 234,
+   "G": 123,
+   "B": 206
   },
-  "Name": "Grape-VY DK"
+  "Name": "Mauve Medium Light"
  },
  {
   "AnchorNumber": "87",
@@ -564,7 +564,7 @@
    "G": 47,
    "B": 110
   },
-  "Name": "Mauve Med"
+  "Name": "Mauve Medium"
  },
  {
   "AnchorNumber": "89",
@@ -573,7 +573,7 @@
    "G": 7,
    "B": 77
   },
-  "Name": "Mauve DK"
+  "Name": "Mauve Dark"
  },
  {
   "AnchorNumber": "90",
@@ -582,7 +582,7 @@
    "G": 151,
    "B": 181
   },
-  "Name": "Purple LT"
+  "Name": "Purple Light"
  },
  {
   "AnchorNumber": "92",
@@ -591,7 +591,7 @@
    "G": 76,
    "B": 137
   },
-  "Name": "Purple Med"
+  "Name": "Purple Medium"
  },
  {
   "AnchorNumber": "94",
@@ -600,43 +600,43 @@
    "G": 12,
    "B": 99
   },
-  "Name": "Purple DK"
+  "Name": "Purple Dark"
  },
  {
   "AnchorNumber": "95",
   "Color": {
-   "R": 221,
-   "G": 181,
-   "B": 205
+   "R": 217,
+   "G": 187,
+   "B": 221
   },
-  "Name": "Violet-LT"
+  "Name": "Violet Ultra Very Light"
  },
  {
   "AnchorNumber": "96",
   "Color": {
-   "R": 165,
-   "G": 101,
-   "B": 141
+   "R": 201,
+   "G": 140,
+   "B": 184
   },
-  "Name": "Violet"
+  "Name": "Violet Very Light"
  },
  {
   "AnchorNumber": "97",
   "Color": {
-   "R": 130,
-   "G": 60,
-   "B": 109
+   "R": 168,
+   "G": 104,
+   "B": 150
   },
-  "Name": "Violet-MD"
+  "Name": "Violet Light"
  },
  {
   "AnchorNumber": "98",
   "Color": {
-   "R": 100,
-   "G": 56,
-   "B": 104
+   "R": 151,
+   "G": 82,
+   "B": 132
   },
-  "Name": "Violet-DK"
+  "Name": "Violet Medium Light"
  },
  {
   "AnchorNumber": "99",
@@ -645,34 +645,34 @@
    "G": 57,
    "B": 105
   },
-  "Name": "Violet Med DK"
+  "Name": "Violet Medium Dark"
  },
  {
   "AnchorNumber": "100",
   "Color": {
-   "R": 132,
-   "G": 93,
-   "B": 141
+   "R": 100,
+   "G": 45,
+   "B": 85
   },
-  "Name": "Lavender-VY DK"
+  "Name": "Violet Dark"
  },
  {
   "AnchorNumber": "101",
   "Color": {
-   "R": 165,
-   "G": 125,
-   "B": 169
+   "R": 75,
+   "G": 20,
+   "B": 59
   },
-  "Name": "Lavender-DK"
+  "Name": "Violet Very Dark"
  },
  {
   "AnchorNumber": "102",
   "Color": {
-   "R": 197,
-   "G": 161,
-   "B": 197
+   "R": 49,
+   "G": 3,
+   "B": 49
   },
-  "Name": "Lavender-MD"
+  "Name": "Lavender Ultra Very Dark"
  },
  {
   "AnchorNumber": "103",
@@ -681,97 +681,97 @@
    "G": 215,
    "B": 234
   },
-  "Name": "Purple VY LT"
+  "Name": "Purple Very Light"
  },
  {
   "AnchorNumber": "108",
   "Color": {
-   "R": 110,
-   "G": 60,
-   "B": 112
+   "R": 181,
+   "G": 142,
+   "B": 195
   },
-  "Name": "Lavender-UL DK"
+  "Name": "Lavender Very Light"
  },
  {
   "AnchorNumber": "109",
   "Color": {
-   "R": 178,
-   "G": 147,
-   "B": 184
+   "R": 155,
+   "G": 105,
+   "B": 172
   },
-  "Name": "Blue Violet-MD DK"
+  "Name": "Lavender Light"
  },
  {
   "AnchorNumber": "110",
   "Color": {
-   "R": 154,
-   "G": 147,
-   "B": 184
+   "R": 124,
+   "G": 74,
+   "B": 141
   },
-  "Name": "Blue Violet-MD"
+  "Name": "Lavender Medium"
  },
  {
   "AnchorNumber": "111",
   "Color": {
-   "R": 125,
-   "G": 144,
-   "B": 173
+   "R": 93,
+   "G": 44,
+   "B": 110
   },
-  "Name": "Lavender Blue-MD"
+  "Name": "Lavender Dark"
  },
  {
   "AnchorNumber": "112",
   "Color": {
-   "R": 94,
-   "G": 116,
-   "B": 150
+   "R": 66,
+   "G": 31,
+   "B": 78
   },
-  "Name": "Lavender Blue-DK"
+  "Name": "Lavender Very Dark"
  },
  {
   "AnchorNumber": "117",
   "Color": {
-   "R": 72,
-   "G": 71,
-   "B": 101
+   "R": 182,
+   "G": 195,
+   "B": 229
   },
-  "Name": "Cornflower Blue-VY DK"
+  "Name": "Blue Violet Very Light"
  },
  {
   "AnchorNumber": "118",
   "Color": {
-   "R": 87,
-   "G": 93,
-   "B": 125
+   "R": 129,
+   "G": 117,
+   "B": 173
   },
-  "Name": "Cornflower Blue-DK"
+  "Name": "Blue Violet Light"
  },
  {
   "AnchorNumber": "119",
   "Color": {
-   "R": 114,
-   "G": 127,
-   "B": 164
+   "R": 83,
+   "G": 56,
+   "B": 114
   },
-  "Name": "Cornflower Blue-MD"
+  "Name": "Blue Violet Dark"
  },
  {
   "AnchorNumber": "120",
   "Color": {
-   "R": 145,
-   "G": 158,
-   "B": 195
+   "R": 191,
+   "G": 207,
+   "B": 233
   },
-  "Name": "Cornflower Blue-LT"
+  "Name": "Blue Purple Very Light"
  },
  {
   "AnchorNumber": "121",
   "Color": {
-   "R": 189,
-   "G": 197,
-   "B": 219
+   "R": 104,
+   "G": 110,
+   "B": 140
   },
-  "Name": "Cornflower Blue-VY LT"
+  "Name": "Blue Purple Light"
  },
  {
   "AnchorNumber": "122",
@@ -780,16 +780,16 @@
    "G": 61,
    "B": 90
   },
-  "Name": "Blue Purple Med"
+  "Name": "Blue Purple Medium"
  },
  {
   "AnchorNumber": "123",
   "Color": {
-   "R": 118,
-   "G": 144,
-   "B": 184
+   "R": 27,
+   "G": 24,
+   "B": 58
   },
-  "Name": "Delft Blue-MD"
+  "Name": "Blue Purple Dark"
  },
  {
   "AnchorNumber": "124",
@@ -807,79 +807,79 @@
    "G": 0,
    "B": 42
   },
-  "Name": "Navy Blue VY DK"
+  "Name": "Navy Blue Very Dark"
  },
  {
   "AnchorNumber": "128",
   "Color": {
-   "R": 16,
-   "G": 67,
-   "B": 111
+   "R": 194,
+   "G": 214,
+   "B": 248
   },
-  "Name": "Royal Blue-DK"
+  "Name": "Sky Blue Very Light"
  },
  {
   "AnchorNumber": "129",
   "Color": {
-   "R": 18,
-   "G": 73,
-   "B": 127
+   "R": 159,
+   "G": 180,
+   "B": 216
   },
-  "Name": "Royal Blue"
+  "Name": "Sky Blue Light"
  },
  {
   "AnchorNumber": "130",
   "Color": {
-   "R": 16,
-   "G": 56,
-   "B": 94
+   "R": 133,
+   "G": 154,
+   "B": 190
   },
-  "Name": "Royal Blue-VY DK"
+  "Name": "Sky Blue"
  },
  {
   "AnchorNumber": "131",
   "Color": {
-   "R": 39,
-   "G": 61,
-   "B": 117
+   "R": 83,
+   "G": 93,
+   "B": 134
   },
-  "Name": "Navy Blue"
+  "Name": "Sky Blue Medium"
  },
  {
   "AnchorNumber": "132",
   "Color": {
-   "R": 35,
-   "G": 50,
-   "B": 101
+   "R": 54,
+   "G": 62,
+   "B": 103
   },
-  "Name": "Navy Blue-DK"
+  "Name": "Sky Blue Dark"
  },
  {
   "AnchorNumber": "133",
   "Color": {
-   "R": 29,
-   "G": 42,
-   "B": 85
+   "R": 11,
+   "G": 24,
+   "B": 88
   },
-  "Name": "Navy Blue-VY DK"
+  "Name": "Sky Blue Very Dark"
  },
  {
   "AnchorNumber": "134",
   "Color": {
-   "R": 73,
-   "G": 131,
-   "B": 167
+   "R": 0,
+   "G": 0,
+   "B": 64
   },
-  "Name": "Blue-DK"
+  "Name": "Sky Blue Ultra Dark"
  },
  {
   "AnchorNumber": "136",
   "Color": {
-   "R": 59,
-   "G": 107,
-   "B": 137
+   "R": 117,
+   "G": 130,
+   "B": 168
   },
-  "Name": "Blue-VY DK"
+  "Name": "Delft Medium"
  },
  {
   "AnchorNumber": "137",
@@ -888,7 +888,7 @@
    "G": 83,
    "B": 128
   },
-  "Name": "Delft Med DK"
+  "Name": "Delft Medium Dark"
  },
  {
   "AnchorNumber": "139",
@@ -897,34 +897,34 @@
    "G": 49,
    "B": 86
   },
-  "Name": "Delft VY DK"
+  "Name": "Delft Very Dark"
  },
  {
   "AnchorNumber": "140",
   "Color": {
-   "R": 186,
-   "G": 212,
-   "B": 231
+   "R": 153,
+   "G": 180,
+   "B": 215
   },
-  "Name": "Baby Blue-LT"
+  "Name": "Royal Blue Light"
  },
  {
   "AnchorNumber": "142",
   "Color": {
-   "R": 92,
-   "G": 145,
-   "B": 186
+   "R": 44,
+   "G": 74,
+   "B": 124
   },
-  "Name": "Baby Blue-DK"
+  "Name": "Royal Blue Medium"
  },
  {
   "AnchorNumber": "143",
   "Color": {
-   "R": 55,
-   "G": 104,
-   "B": 141
+   "R": 22,
+   "G": 44,
+   "B": 81
   },
-  "Name": "Baby Blue-VY DK"
+  "Name": "Royal Blue Dark"
  },
  {
   "AnchorNumber": "144",
@@ -933,115 +933,115 @@
    "G": 189,
    "B": 217
   },
-  "Name": "Navy Blue Ultra VY L"
+  "Name": "Navy Blue Ultra Very Light"
  },
  {
   "AnchorNumber": "145",
   "Color": {
-   "R": 61,
-   "G": 135,
+   "R": 120,
+   "G": 132,
    "B": 164
   },
-  "Name": "Wedgewood-MD"
+  "Name": "Navy Blue Very Light"
  },
  {
   "AnchorNumber": "146",
   "Color": {
-   "R": 52,
-   "G": 104,
-   "B": 126
+   "R": 66,
+   "G": 85,
+   "B": 128
   },
-  "Name": "Wedgewood-VY DK"
+  "Name": "Navy Blue Light"
  },
  {
   "AnchorNumber": "147",
   "Color": {
-   "R": 30,
-   "G": 82,
-   "B": 104
+   "R": 32,
+   "G": 48,
+   "B": 86
   },
-  "Name": "Wedgewood-UL VY DK"
+  "Name": "Navy Blue Medium Light"
  },
  {
   "AnchorNumber": "148",
   "Color": {
-   "R": 174,
-   "G": 218,
-   "B": 228
+   "R": 14,
+   "G": 32,
+   "B": 75
   },
-  "Name": "Sky Blue-LT"
+  "Name": "Navy Blue Medium"
  },
  {
   "AnchorNumber": "149",
   "Color": {
-   "R": 81,
-   "G": 149,
-   "B": 169
+   "R": 2,
+   "G": 2,
+   "B": 79
   },
-  "Name": "Wedgewood-LT"
+  "Name": "Navy Blue Medium Dark"
  },
  {
   "AnchorNumber": "150",
   "Color": {
-   "R": 61,
-   "G": 120,
-   "B": 145
+   "R": 9,
+   "G": 9,
+   "B": 76
   },
-  "Name": "Wedgewood-DK"
+  "Name": "Navy Blue Dark"
  },
  {
   "AnchorNumber": "152",
   "Color": {
-   "R": 128,
-   "G": 179,
-   "B": 202
+   "R": 8,
+   "G": 0,
+   "B": 49
   },
-  "Name": "Sky Blue"
+  "Name": "Navy Blue Ultra Very Dark"
  },
  {
   "AnchorNumber": "158",
   "Color": {
-   "R": 155,
-   "G": 161,
-   "B": 185
+   "R": 209,
+   "G": 243,
+   "B": 245
   },
-  "Name": "Blue Gray-MD"
+  "Name": "Baby Blue Ultra Very Light"
  },
  {
   "AnchorNumber": "159",
   "Color": {
-   "R": 122,
-   "G": 130,
-   "B": 166
+   "R": 176,
+   "G": 212,
+   "B": 233
   },
-  "Name": "Blue Gray"
+  "Name": "Baby Blue Light"
  },
  {
   "AnchorNumber": "160",
   "Color": {
-   "R": 94,
-   "G": 86,
-   "B": 122
+   "R": 159,
+   "G": 200,
+   "B": 226
   },
-  "Name": "Blue Violet-VY DK"
+  "Name": "Baby Blue"
  },
  {
   "AnchorNumber": "161",
   "Color": {
-   "R": 165,
-   "G": 176,
-   "B": 211
+   "R": 87,
+   "G": 129,
+   "B": 156
   },
-  "Name": "Blue Violet-MD LT"
+  "Name": "Baby Blue Dark"
  },
  {
   "AnchorNumber": "162",
   "Color": {
-   "R": 175,
-   "G": 169,
-   "B": 201
+   "R": 38,
+   "G": 86,
+   "B": 115
   },
-  "Name": "Blue Violet-MD"
+  "Name": "Baby Blue Very Dark"
  },
  {
   "AnchorNumber": "163",
@@ -1055,11 +1055,11 @@
  {
   "AnchorNumber": "164",
   "Color": {
-   "R": 213,
-   "G": 217,
-   "B": 239
+   "R": 18,
+   "G": 53,
+   "B": 75
   },
-  "Name": "Blue Violet-VY LT"
+  "Name": "Baby Blue Ultra Very Dark"
  },
  {
   "AnchorNumber": "167",
@@ -1068,70 +1068,70 @@
    "G": 189,
    "B": 202
   },
-  "Name": "Blue Green LT"
+  "Name": "Blue Green Light"
  },
  {
   "AnchorNumber": "168",
   "Color": {
-   "R": 54,
-   "G": 129,
-   "B": 142
+   "R": 95,
+   "G": 133,
+   "B": 143
   },
-  "Name": "Peacock Blue-VY DK"
+  "Name": "Blue Green Medium"
  },
  {
   "AnchorNumber": "169",
   "Color": {
-   "R": 63,
-   "G": 151,
-   "B": 167
+   "R": 45,
+   "G": 79,
+   "B": 89
   },
-  "Name": "Peacock Blue-DK"
+  "Name": "Blue Green Dark"
  },
  {
   "AnchorNumber": "170",
   "Color": {
-   "R": 102,
-   "G": 173,
-   "B": 188
+   "R": 22,
+   "G": 61,
+   "B": 72
   },
-  "Name": "Peacock Blue"
+  "Name": "Blue Green Very Dark"
  },
  {
   "AnchorNumber": "175",
   "Color": {
-   "R": 50,
-   "G": 172,
-   "B": 188
+   "R": 141,
+   "G": 158,
+   "B": 195
   },
-  "Name": "Turquoise-BRT DK"
+  "Name": "Cornflower Blue Light"
  },
  {
   "AnchorNumber": "176",
   "Color": {
-   "R": 6,
-   "G": 198,
-   "B": 204
+   "R": 99,
+   "G": 95,
+   "B": 149
   },
-  "Name": "Turquoise-BRT MD"
+  "Name": "Cornflower Blue Medium"
  },
  {
   "AnchorNumber": "177",
   "Color": {
-   "R": 8,
-   "G": 229,
-   "B": 232
+   "R": 58,
+   "G": 45,
+   "B": 97
   },
-  "Name": "Turquoise-BRT LT"
+  "Name": "Cornflower Blue Dark"
  },
  {
   "AnchorNumber": "178",
   "Color": {
-   "R": 56,
-   "G": 107,
-   "B": 114
+   "R": 43,
+   "G": 29,
+   "B": 83
   },
-  "Name": "Turquoise-UL VY DK"
+  "Name": "Cornflower Blue Very D"
  },
  {
   "AnchorNumber": "179",
@@ -1145,92 +1145,92 @@
  {
   "AnchorNumber": "185",
   "Color": {
-   "R": 91,
-   "G": 165,
-   "B": 181
+   "R": 142,
+   "G": 209,
+   "B": 193
   },
-  "Name": "Turquoise"
+  "Name": "Turquoise Very Light"
  },
  {
   "AnchorNumber": "186",
   "Color": {
-   "R": 146,
-   "G": 197,
-   "B": 206
+   "R": 105,
+   "G": 181,
+   "B": 163
   },
-  "Name": "Turquoise-LT"
+  "Name": "Turquoise Light"
  },
  {
   "AnchorNumber": "187",
   "Color": {
-   "R": 190,
-   "G": 229,
-   "B": 232
+   "R": 54,
+   "G": 139,
+   "B": 120
   },
-  "Name": "Turquoise-VY LT"
+  "Name": "Turquoise Medium"
  },
  {
   "AnchorNumber": "188",
   "Color": {
-   "R": 113,
-   "G": 176,
-   "B": 161
+   "R": 36,
+   "G": 98,
+   "B": 83
   },
-  "Name": "Aquamarine-LT"
+  "Name": "Turquoise Dark"
  },
  {
   "AnchorNumber": "189",
   "Color": {
-   "R": 73,
-   "G": 125,
-   "B": 112
+   "R": 38,
+   "G": 68,
+   "B": 60
   },
-  "Name": "Aquamarine-DK"
+  "Name": "Turquoise Very Dark"
  },
  {
   "AnchorNumber": "203",
   "Color": {
-   "R": 84,
-   "G": 181,
-   "B": 166
+   "R": 143,
+   "G": 192,
+   "B": 149
   },
-  "Name": "Teal Green-LT"
+  "Name": "Emerald Green Ultra Very Light"
  },
  {
   "AnchorNumber": "204",
   "Color": {
-   "R": 87,
-   "G": 149,
-   "B": 148
+   "R": 106,
+   "G": 153,
+   "B": 111
   },
-  "Name": "Teal Green-MD"
+  "Name": "Emerald Green Very Light"
  },
  {
   "AnchorNumber": "205",
   "Color": {
-   "R": 54,
-   "G": 127,
-   "B": 119
+   "R": 78,
+   "G": 113,
+   "B": 82
   },
-  "Name": "Teal Green-DK"
+  "Name": "Emerald Green Light"
  },
  {
   "AnchorNumber": "206",
   "Color": {
-   "R": 91,
-   "G": 201,
-   "B": 182
+   "R": 160,
+   "G": 205,
+   "B": 177
   },
-  "Name": "Sea Green-MD"
+  "Name": "Jade Very Light"
  },
  {
   "AnchorNumber": "208",
   "Color": {
-   "R": 64,
-   "G": 184,
-   "B": 163
+   "R": 102,
+   "G": 158,
+   "B": 124
   },
-  "Name": "Sea Green-DK"
+  "Name": "Jade Light"
  },
  {
   "AnchorNumber": "209",
@@ -1239,16 +1239,16 @@
    "G": 136,
    "B": 102
   },
-  "Name": "Jade Med"
+  "Name": "Jade Medium"
  },
  {
   "AnchorNumber": "210",
   "Color": {
-   "R": 49,
-   "G": 142,
-   "B": 134
+   "R": 47,
+   "G": 88,
+   "B": 63
   },
-  "Name": "Sea Green-VY DK"
+  "Name": "Jade Medium Dark"
  },
  {
   "AnchorNumber": "211",
@@ -1257,16 +1257,16 @@
    "G": 77,
    "B": 52
   },
-  "Name": "Jade DK"
+  "Name": "Jade Dark"
  },
  {
   "AnchorNumber": "212",
   "Color": {
-   "R": 57,
-   "G": 134,
-   "B": 121
+   "R": 29,
+   "G": 63,
+   "B": 42
   },
-  "Name": "Green-BRT DK"
+  "Name": "Jade Very Dark"
  },
  {
   "AnchorNumber": "213",
@@ -1275,97 +1275,97 @@
    "G": 199,
    "B": 182
   },
-  "Name": "Misty Green Ultra VY"
+  "Name": "Misty Green Ultra Very Light"
  },
  {
   "AnchorNumber": "214",
   "Color": {
-   "R": 75,
-   "G": 181,
-   "B": 163
+   "R": 150,
+   "G": 179,
+   "B": 155
   },
-  "Name": "Green-BRT LT"
+  "Name": "Misty Green Very Light"
  },
  {
   "AnchorNumber": "215",
   "Color": {
-   "R": 29,
-   "G": 159,
-   "B": 109
+   "R": 83,
+   "G": 123,
+   "B": 90
   },
-  "Name": "Emerald Green-LT"
+  "Name": "Misty Green Light"
  },
  {
   "AnchorNumber": "216",
   "Color": {
-   "R": 26,
-   "G": 146,
-   "B": 103
+   "R": 58,
+   "G": 93,
+   "B": 64
   },
-  "Name": "Emerald Green-MD"
+  "Name": "Misty Green Medium"
  },
  {
   "AnchorNumber": "217",
   "Color": {
-   "R": 26,
-   "G": 128,
-   "B": 88
+   "R": 46,
+   "G": 76,
+   "B": 60
   },
-  "Name": "Emerald Green-DK"
+  "Name": "Misty Green Dark"
  },
  {
   "AnchorNumber": "218",
   "Color": {
-   "R": 23,
-   "G": 113,
-   "B": 75
+   "R": 34,
+   "G": 61,
+   "B": 46
   },
-  "Name": "Emerald Green-VY DK"
+  "Name": "Misty Green Very Dark"
  },
  {
   "AnchorNumber": "225",
   "Color": {
-   "R": 18,
-   "G": 92,
-   "B": 61
+   "R": 121,
+   "G": 164,
+   "B": 94
   },
-  "Name": "Emerald Green-UL VY DK"
+  "Name": "Christmas Green Very Light"
  },
  {
   "AnchorNumber": "226",
   "Color": {
-   "R": 155,
-   "G": 197,
-   "B": 172
+   "R": 91,
+   "G": 133,
+   "B": 66
   },
-  "Name": "Celadon Green-LT"
+  "Name": "Christmas Green Light"
  },
  {
   "AnchorNumber": "227",
   "Color": {
-   "R": 103,
-   "G": 167,
-   "B": 127
+   "R": 58,
+   "G": 116,
+   "B": 45
   },
-  "Name": "Celadon Green"
+  "Name": "Christmas Green"
  },
  {
   "AnchorNumber": "228",
   "Color": {
-   "R": 73,
-   "G": 121,
-   "B": 90
+   "R": 44,
+   "G": 93,
+   "B": 34
   },
-  "Name": "Celadon Green-DK"
+  "Name": "Christmas Green Medium"
  },
  {
   "AnchorNumber": "229",
   "Color": {
-   "R": 115,
-   "G": 149,
-   "B": 94
+   "R": 32,
+   "G": 79,
+   "B": 22
   },
-  "Name": "Yellow Green-MD"
+  "Name": "Christmas Green Dark"
  },
  {
   "AnchorNumber": "230",
@@ -1383,7 +1383,7 @@
    "G": 170,
    "B": 167
   },
-  "Name": "Shell Grey LT"
+  "Name": "Shell Grey Light"
  },
  {
   "AnchorNumber": "232",
@@ -1392,7 +1392,7 @@
    "G": 128,
    "B": 127
   },
-  "Name": "Shell Grey Med"
+  "Name": "Shell Grey Medium"
  },
  {
   "AnchorNumber": "233",
@@ -1401,34 +1401,34 @@
    "G": 97,
    "B": 94
   },
-  "Name": "Shell Grey DK"
+  "Name": "Shell Grey Dark"
  },
  {
   "AnchorNumber": "234",
   "Color": {
-   "R": 6,
-   "G": 103,
-   "B": 25
+   "R": 193,
+   "G": 191,
+   "B": 196
   },
-  "Name": "Green"
+  "Name": "Pearl Grey Very Light"
  },
  {
   "AnchorNumber": "235",
   "Color": {
-   "R": 65,
-   "G": 145,
-   "B": 43
+   "R": 72,
+   "G": 72,
+   "B": 72
   },
-  "Name": "Green-LT"
+  "Name": "Pewter Grey"
  },
  {
   "AnchorNumber": "236",
   "Color": {
-   "R": 9,
-   "G": 117,
-   "B": 29
+   "R": 31,
+   "G": 31,
+   "B": 31
   },
-  "Name": "Green-BRT"
+  "Name": "Pewter Grey Very Dark"
  },
  {
   "AnchorNumber": "238",
@@ -1446,142 +1446,142 @@
    "G": 134,
    "B": 38
   },
-  "Name": "Chartreuse VY DK"
+  "Name": "Chartreuse Very Dark"
  },
  {
   "AnchorNumber": "240",
   "Color": {
-   "R": 143,
-   "G": 168,
-   "B": 119
+   "R": 165,
+   "G": 191,
+   "B": 150
   },
-  "Name": "Forest Green"
+  "Name": "Pistachio Green Light"
  },
  {
   "AnchorNumber": "241",
   "Color": {
-   "R": 117,
-   "G": 141,
-   "B": 93
+   "R": 133,
+   "G": 172,
+   "B": 110
   },
-  "Name": "Forest Green-MD"
+  "Name": "Pistachio Green"
  },
  {
   "AnchorNumber": "242",
   "Color": {
-   "R": 90,
-   "G": 115,
-   "B": 67
+   "R": 107,
+   "G": 141,
+   "B": 88
   },
-  "Name": "Forest Green-DK"
+  "Name": "Pistachio Green Medium"
  },
  {
   "AnchorNumber": "243",
   "Color": {
-   "R": 66,
-   "G": 84,
-   "B": 50
+   "R": 90,
+   "G": 115,
+   "B": 74
   },
-  "Name": "Forest Green-VY DK"
+  "Name": "Pistachio Green Medium Dark"
  },
  {
   "AnchorNumber": "244",
   "Color": {
-   "R": 202,
-   "G": 218,
-   "B": 186
+   "R": 71,
+   "G": 92,
+   "B": 59
   },
-  "Name": "Forest Green-LT"
+  "Name": "Pistachio Green Dark"
  },
  {
   "AnchorNumber": "245",
   "Color": {
-   "R": 115,
-   "G": 132,
-   "B": 88
+   "R": 52,
+   "G": 78,
+   "B": 36
   },
-  "Name": "Pine Green-MD"
+  "Name": "Pistachio Green Dark"
  },
  {
   "AnchorNumber": "246",
   "Color": {
-   "R": 96,
-   "G": 109,
-   "B": 73
+   "R": 34,
+   "G": 57,
+   "B": 21
   },
-  "Name": "Pine Green-DK"
+  "Name": "Pistachio Green Very Dark"
  },
  {
   "AnchorNumber": "253",
   "Color": {
-   "R": 129,
-   "G": 181,
-   "B": 55
+   "R": 180,
+   "G": 187,
+   "B": 142
   },
-  "Name": "Parrot Green-MD"
+  "Name": "Forest Green Ultra Very Light"
  },
  {
   "AnchorNumber": "254",
   "Color": {
-   "R": 100,
-   "G": 140,
-   "B": 42
+   "R": 158,
+   "G": 166,
+   "B": 104
   },
-  "Name": "Parrot Green-DK"
+  "Name": "Forest Green Very Light"
  },
  {
   "AnchorNumber": "255",
   "Color": {
-   "R": 87,
-   "G": 122,
-   "B": 36
+   "R": 116,
+   "G": 133,
+   "B": 5
   },
-  "Name": "Parrot Green-VY DK"
+  "Name": "Forest Green Light"
  },
  {
   "AnchorNumber": "256",
   "Color": {
-   "R": 156,
-   "G": 205,
-   "B": 50
+   "R": 99,
+   "G": 114,
+   "B": 1
   },
-  "Name": "Chartreuse-BRT"
+  "Name": "Forest Green Medium"
  },
  {
   "AnchorNumber": "257",
   "Color": {
-   "R": 125,
-   "G": 183,
-   "B": 73
+   "R": 87,
+   "G": 99,
+   "B": 1
   },
-  "Name": "Chartreuse"
+  "Name": "Forest Green Dark"
  },
  {
   "AnchorNumber": "258",
   "Color": {
-   "R": 73,
-   "G": 169,
-   "B": 49
+   "R": 69,
+   "G": 79,
+   "B": 1
   },
-  "Name": "Kelly Green"
+  "Name": "Forest Green Very Dark"
  },
  {
   "AnchorNumber": "259",
   "Color": {
-   "R": 201,
-   "G": 232,
-   "B": 104
+   "R": 233,
+   "G": 248,
+   "B": 199
   },
-  "Name": "Parrot Green-LT"
+  "Name": "Laurel Green Very Light"
  },
  {
   "AnchorNumber": "260",
   "Color": {
-   "R": 226,
-   "G": 234,
-   "B": 106
+   "R": 181,
+   "G": 193,
+   "B": 155
   },
-  "Name": "Moss Green-LT"
+  "Name": "Laurel Green Light"
  },
  {
   "AnchorNumber": "261",
@@ -1590,16 +1590,16 @@
    "G": 143,
    "B": 103
   },
-  "Name": "Laurel Green Med"
+  "Name": "Laurel Green Medium"
  },
  {
   "AnchorNumber": "262",
   "Color": {
-   "R": 194,
-   "G": 202,
-   "B": 66
+   "R": 73,
+   "G": 81,
+   "B": 54
   },
-  "Name": "Moss Green-MD LT"
+  "Name": "Laurel Green Dark"
  },
  {
   "AnchorNumber": "263",
@@ -1608,79 +1608,79 @@
    "G": 55,
    "B": 32
   },
-  "Name": "Loden Green DK"
+  "Name": "Loden Green Dark"
  },
  {
   "AnchorNumber": "264",
   "Color": {
-   "R": 169,
-   "G": 176,
-   "B": 58
+   "R": 173,
+   "G": 187,
+   "B": 133
   },
-  "Name": "Moss Green"
+  "Name": "Avocado Green Ultra Very Light"
  },
  {
   "AnchorNumber": "265",
   "Color": {
-   "R": 138,
-   "G": 143,
-   "B": 53
+   "R": 140,
+   "G": 158,
+   "B": 71
   },
-  "Name": "Moss Green-DK"
+  "Name": "Avocado Green Very Light"
  },
  {
   "AnchorNumber": "266",
   "Color": {
-   "R": 116,
-   "G": 134,
-   "B": 62
+   "R": 113,
+   "G": 128,
+   "B": 54
   },
-  "Name": "Avocado Green"
+  "Name": "Avocado Green Light"
  },
  {
   "AnchorNumber": "267",
   "Color": {
-   "R": 90,
-   "G": 102,
-   "B": 42
+   "R": 82,
+   "G": 94,
+   "B": 39
   },
-  "Name": "Avocado Green-VY DK"
+  "Name": "Avocado Green Medium"
  },
  {
   "AnchorNumber": "268",
   "Color": {
-   "R": 68,
-   "G": 79,
-   "B": 35
+   "R": 65,
+   "G": 76,
+   "B": 27
   },
-  "Name": "Avocado Green-DK"
+  "Name": "Avocado Green Dark"
  },
  {
   "AnchorNumber": "269",
   "Color": {
-   "R": 51,
-   "G": 59,
-   "B": 27
+   "R": 40,
+   "G": 46,
+   "B": 15
   },
-  "Name": "Avocado Green-Black"
+  "Name": "Avocado Green Very Dark"
  },
  {
   "AnchorNumber": "271",
   "Color": {
-   "R": 78,
-   "G": 133,
-   "B": 99
+   "R": 240,
+   "G": 207,
+   "B": 207
   },
-  "Name": "Blue Green-DK"
+  "Name": "Baby Pink Ultra Very L"
  },
  {
   "AnchorNumber": "273",
   "Color": {
-   "R": 125,
-   "G": 174,
-   "B": 150
+   "R": 48,
+   "G": 45,
+   "B": 40
   },
-  "Name": "Blue Green-MD"
+  "Name": "Beaver Grey Very Dark"
  },
  {
   "AnchorNumber": "274",
@@ -1689,70 +1689,70 @@
    "G": 178,
    "B": 181
   },
-  "Name": "Grey Blue VY LT"
+  "Name": "Grey Blue Very Light"
  },
  {
   "AnchorNumber": "275",
   "Color": {
-   "R": 241,
-   "G": 246,
-   "B": 166
+   "R": 255,
+   "G": 248,
+   "B": 206
   },
-  "Name": "Moss Green-VY LT"
+  "Name": "Off White"
  },
  {
   "AnchorNumber": "276",
   "Color": {
-   "R": 176,
-   "G": 193,
-   "B": 123
+   "R": 233,
+   "G": 222,
+   "B": 190
   },
-  "Name": "Avocado Green-VY LT"
+  "Name": "Coffee Ultra Very Light"
  },
  {
   "AnchorNumber": "277",
   "Color": {
-   "R": 150,
-   "G": 173,
-   "B": 81
+   "R": 78,
+   "G": 48,
+   "B": 8
   },
-  "Name": "Avocado Green-LT"
+  "Name": "Gold Dark"
  },
  {
   "AnchorNumber": "278",
   "Color": {
-   "R": 198,
+   "R": 215,
    "G": 207,
-   "B": 174
+   "B": 109
   },
-  "Name": "Fern Green-VY LT"
+  "Name": "Lime Green Light"
  },
  {
   "AnchorNumber": "279",
   "Color": {
-   "R": 173,
-   "G": 179,
-   "B": 153
+   "R": 171,
+   "G": 155,
+   "B": 71
   },
-  "Name": "Fern Green-LT"
+  "Name": "Lime Green"
  },
  {
   "AnchorNumber": "280",
   "Color": {
-   "R": 152,
-   "G": 160,
-   "B": 128
+   "R": 128,
+   "G": 113,
+   "B": 56
   },
-  "Name": "Fern Green"
+  "Name": "Yellow Green"
  },
  {
   "AnchorNumber": "281",
   "Color": {
-   "R": 104,
-   "G": 111,
-   "B": 81
+   "R": 76,
+   "G": 68,
+   "B": 22
   },
-  "Name": "Fern Green-DK"
+  "Name": "Yellow Green Dark"
  },
  {
   "AnchorNumber": "282",
@@ -1766,56 +1766,56 @@
  {
   "AnchorNumber": "288",
   "Color": {
-   "R": 201,
-   "G": 194,
-   "B": 121
+   "R": 255,
+   "G": 244,
+   "B": 114
   },
-  "Name": "Olive Green-LT"
+  "Name": "Lemon Light"
  },
  {
   "AnchorNumber": "289",
   "Color": {
-   "R": 190,
-   "G": 181,
-   "B": 78
+   "R": 250,
+   "G": 229,
+   "B": 85
   },
-  "Name": "Olive Green-MD"
+  "Name": "Lemon Medium"
  },
  {
   "AnchorNumber": "290",
   "Color": {
-   "R": 150,
-   "G": 142,
-   "B": 56
+   "R": 252,
+   "G": 195,
+   "B": 24
   },
-  "Name": "Olive Green"
+  "Name": "Lemon Dark"
  },
  {
   "AnchorNumber": "291",
   "Color": {
-   "R": 132,
-   "G": 125,
-   "B": 50
+   "R": 241,
+   "G": 176,
+   "B": 7
   },
-  "Name": "Olive Green-VY DK"
+  "Name": "Canary Yellow Bright"
  },
  {
   "AnchorNumber": "292",
   "Color": {
-   "R": 230,
-   "G": 238,
-   "B": 214
+   "R": 255,
+   "G": 232,
+   "B": 143
   },
-  "Name": "Yellow Green-VY LT"
+  "Name": "Golden Brown Very Light"
  },
  {
   "AnchorNumber": "293",
   "Color": {
-   "R": 217,
-   "G": 239,
-   "B": 206
+   "R": 248,
+   "G": 216,
+   "B": 108
   },
-  "Name": "Pistachio Green-VY LT"
+  "Name": "Golden Yellow Light"
  },
  {
   "AnchorNumber": "294",
@@ -1829,11 +1829,11 @@
  {
   "AnchorNumber": "295",
   "Color": {
-   "R": 107,
-   "G": 138,
-   "B": 92
+   "R": 246,
+   "G": 206,
+   "B": 66
   },
-  "Name": "Pistachio Green-MD"
+  "Name": "Golden Yellow Medium Light"
  },
  {
   "AnchorNumber": "296",
@@ -1847,92 +1847,92 @@
  {
   "AnchorNumber": "297",
   "Color": {
-   "R": 34,
-   "G": 97,
-   "B": 48
+   "R": 241,
+   "G": 177,
+   "B": 10
   },
-  "Name": "Pistachio Green-VY DK"
+  "Name": "Golden Yellow Medium"
  },
  {
   "AnchorNumber": "298",
   "Color": {
-   "R": 25,
-   "G": 75,
-   "B": 37
+   "R": 247,
+   "G": 166,
+   "B": 19
   },
-  "Name": "Pistachio Green-UL VY DK"
+  "Name": "Golden Yellow Dark"
  },
  {
   "AnchorNumber": "300",
   "Color": {
-   "R": 255,
-   "G": 243,
-   "B": 177
+   "R": 252,
+   "G": 230,
+   "B": 171
   },
-  "Name": "Topaz-VY LT"
+  "Name": "Yellow Very Light"
  },
  {
   "AnchorNumber": "301",
   "Color": {
    "R": 255,
-   "G": 233,
-   "B": 149
+   "G": 205,
+   "B": 124
   },
-  "Name": "Yellow-Pale"
+  "Name": "Burnt Orange Very Light"
  },
  {
   "AnchorNumber": "302",
   "Color": {
    "R": 255,
-   "G": 217,
-   "B": 87
+   "G": 181,
+   "B": 82
   },
-  "Name": "Tangerine-LT"
+  "Name": "Burnt Orange Light"
  },
  {
   "AnchorNumber": "303",
   "Color": {
    "R": 255,
-   "G": 193,
-   "B": 89
+   "G": 148,
+   "B": 19
   },
-  "Name": "Tangerine-MD"
+  "Name": "Burnt Orange Medium"
  },
  {
   "AnchorNumber": "304",
   "Color": {
-   "R": 255,
-   "G": 165,
-   "B": 45
+   "R": 229,
+   "G": 131,
+   "B": 0
   },
-  "Name": "Tangerine"
+  "Name": "Burnt Orange"
  },
  {
   "AnchorNumber": "305",
   "Color": {
-   "R": 255,
-   "G": 141,
-   "B": 2
+   "R": 253,
+   "G": 200,
+   "B": 104
   },
-  "Name": "Tangerine-DK"
+  "Name": "Topaz Very Light"
  },
  {
   "AnchorNumber": "306",
   "Color": {
-   "R": 255,
-   "G": 202,
-   "B": 66
+   "R": 243,
+   "G": 157,
+   "B": 53
   },
-  "Name": "Topaz-MD LT"
+  "Name": "Gold"
  },
  {
   "AnchorNumber": "307",
   "Color": {
-   "R": 255,
-   "G": 183,
+   "R": 214,
+   "G": 128,
    "B": 23
   },
-  "Name": "Canary-Deep"
+  "Name": "Topaz Light"
  },
  {
   "AnchorNumber": "308",
@@ -1941,25 +1941,25 @@
    "G": 92,
    "B": 7
   },
-  "Name": "Topaz Med"
+  "Name": "Topaz Medium"
  },
  {
   "AnchorNumber": "309",
   "Color": {
-   "R": 255,
-   "G": 216,
-   "B": 2
+   "R": 151,
+   "G": 68,
+   "B": 0
   },
-  "Name": "Lemon-DK"
+  "Name": "Topaz Medium Dark"
  },
  {
   "AnchorNumber": "310",
   "Color": {
-   "R": 255,
-   "G": 229,
-   "B": 2
+   "R": 125,
+   "G": 59,
+   "B": 0
   },
-  "Name": "Canary-BRT"
+  "Name": "Topaz Very Dark"
  },
  {
   "AnchorNumber": "311",
@@ -1968,7 +1968,7 @@
    "G": 176,
    "B": 105
   },
-  "Name": "Tangerine VY LT"
+  "Name": "Tangerine Very Light"
  },
  {
   "AnchorNumber": "312",
@@ -1982,29 +1982,29 @@
  {
   "AnchorNumber": "313",
   "Color": {
-   "R": 249,
-   "G": 141,
-   "B": 21
+   "R": 247,
+   "G": 151,
+   "B": 89
   },
-  "Name": "Pumpkin-LT"
+  "Name": "Tangerine Light"
  },
  {
   "AnchorNumber": "314",
   "Color": {
-   "R": 248,
-   "G": 129,
-   "B": 2
+   "R": 246,
+   "G": 128,
+   "B": 51
   },
-  "Name": "Pumpkin"
+  "Name": "Tangerine Medium"
  },
  {
   "AnchorNumber": "316",
   "Color": {
-   "R": 255,
-   "G": 125,
-   "B": 79
+   "R": 232,
+   "G": 96,
+   "B": 39
   },
-  "Name": "Burnt Orange"
+  "Name": "Tangerine Dark"
  },
  {
   "AnchorNumber": "317",
@@ -2027,11 +2027,11 @@
  {
   "AnchorNumber": "323",
   "Color": {
-   "R": 255,
-   "G": 95,
-   "B": 55
+   "R": 232,
+   "G": 125,
+   "B": 79
   },
-  "Name": "Burnt Orange-BRT"
+  "Name": "Orange Spice Light"
  },
  {
   "AnchorNumber": "324",
@@ -2040,16 +2040,16 @@
    "G": 103,
    "B": 52
   },
-  "Name": "Orange Spice Med"
+  "Name": "Orange Spice Medium"
  },
  {
   "AnchorNumber": "326",
   "Color": {
-   "R": 231,
-   "G": 94,
-   "B": 33
+   "R": 182,
+   "G": 76,
+   "B": 31
   },
-  "Name": "Orange Spice-DK"
+  "Name": "Orange Spice Dark"
  },
  {
   "AnchorNumber": "327",
@@ -2063,11 +2063,11 @@
  {
   "AnchorNumber": "328",
   "Color": {
-   "R": 249,
-   "G": 153,
-   "B": 113
+   "R": 251,
+   "G": 131,
+   "B": 102
   },
-  "Name": "Orange Spice-LT"
+  "Name": "Peach Medium"
  },
  {
   "AnchorNumber": "329",
@@ -2076,16 +2076,16 @@
    "G": 120,
    "B": 70
   },
-  "Name": "Peach DK"
+  "Name": "Peach Dark"
  },
  {
   "AnchorNumber": "330",
   "Color": {
-   "R": 228,
-   "G": 117,
-   "B": 37
+   "R": 246,
+   "G": 111,
+   "B": 30
   },
-  "Name": "Copper-LT"
+  "Name": "Orange"
  },
  {
   "AnchorNumber": "331",
@@ -2099,29 +2099,29 @@
  {
   "AnchorNumber": "332",
   "Color": {
-   "R": 174,
-   "G": 86,
-   "B": 22
+   "R": 225,
+   "G": 82,
+   "B": 14
   },
-  "Name": "Copper-MD"
+  "Name": "Orange Dark"
  },
  {
   "AnchorNumber": "333",
   "Color": {
-   "R": 168,
-   "G": 71,
-   "B": 18
+   "R": 212,
+   "G": 72,
+   "B": 5
   },
-  "Name": "Red Copper"
+  "Name": "Orange Very Dark"
  },
  {
   "AnchorNumber": "334",
   "Color": {
-   "R": 132,
-   "G": 54,
-   "B": 12
+   "R": 202,
+   "G": 60,
+   "B": 0
   },
-  "Name": "Red Copper-DK"
+  "Name": "Orange Red Very Dark"
  },
  {
   "AnchorNumber": "335",
@@ -2135,11 +2135,11 @@
  {
   "AnchorNumber": "336",
   "Color": {
-   "R": 185,
-   "G": 33,
-   "B": 53
+   "R": 243,
+   "G": 158,
+   "B": 126
   },
-  "Name": "Red-MD"
+  "Name": "Mahogany Ultra Very Light"
  },
  {
   "AnchorNumber": "337",
@@ -2148,25 +2148,25 @@
    "G": 123,
    "B": 94
   },
-  "Name": "Mahogany VY LT"
+  "Name": "Mahogany Very Light"
  },
  {
   "AnchorNumber": "338",
   "Color": {
-   "R": 173,
-   "G": 116,
-   "B": 59
+   "R": 204,
+   "G": 97,
+   "B": 68
   },
-  "Name": "Golden Brown"
+  "Name": "Mahogany Light"
  },
  {
   "AnchorNumber": "339",
   "Color": {
-   "R": 249,
-   "G": 189,
-   "B": 121
+   "R": 180,
+   "G": 74,
+   "B": 34
   },
-  "Name": "Golden Brown-Pale"
+  "Name": "Mahogany"
  },
  {
   "AnchorNumber": "340",
@@ -2175,43 +2175,43 @@
    "G": 56,
    "B": 18
   },
-  "Name": "Mahogany Med DK"
+  "Name": "Mahogany Medium Dark"
  },
  {
   "AnchorNumber": "341",
   "Color": {
-   "R": 222,
-   "G": 158,
-   "B": 88
+   "R": 140,
+   "G": 49,
+   "B": 15
   },
-  "Name": "Golden Brown-LT"
+  "Name": "Mahogany Dark"
  },
  {
   "AnchorNumber": "342",
   "Color": {
-   "R": 196,
-   "G": 131,
-   "B": 68
+   "R": 215,
+   "G": 179,
+   "B": 224
   },
-  "Name": "Golden Brown-MD"
+  "Name": "Lavender Ultra Very Light"
  },
  {
   "AnchorNumber": "343",
   "Color": {
-   "R": 147,
-   "G": 81,
-   "B": 20
+   "R": 185,
+   "G": 192,
+   "B": 205
   },
-  "Name": "Golden Brown-DK"
+  "Name": "Antique Blue Light"
  },
  {
   "AnchorNumber": "347",
   "Color": {
-   "R": 207,
-   "G": 167,
-   "B": 64
+   "R": 211,
+   "G": 165,
+   "B": 128
   },
-  "Name": "Old Gold-MD"
+  "Name": "Chocolate Light"
  },
  {
   "AnchorNumber": "348",
@@ -2225,11 +2225,11 @@
  {
   "AnchorNumber": "349",
   "Color": {
-   "R": 171,
-   "G": 132,
-   "B": 6
+   "R": 148,
+   "G": 87,
+   "B": 49
   },
-  "Name": "Old Gold-VY DK"
+  "Name": "Chocolate Medium"
  },
  {
   "AnchorNumber": "350",
@@ -2243,20 +2243,20 @@
  {
   "AnchorNumber": "351",
   "Color": {
-   "R": 247,
-   "G": 238,
-   "B": 205
+   "R": 102,
+   "G": 51,
+   "B": 14
   },
-  "Name": "Old Gold-VY LT"
+  "Name": "Copper Dark"
  },
  {
   "AnchorNumber": "352",
   "Color": {
-   "R": 186,
-   "G": 146,
-   "B": 83
+   "R": 89,
+   "G": 40,
+   "B": 14
   },
-  "Name": "Hazelnut Brown"
+  "Name": "Copper Very Dark"
  },
  {
   "AnchorNumber": "354",
@@ -2270,74 +2270,74 @@
  {
   "AnchorNumber": "355",
   "Color": {
-   "R": 222,
-   "G": 160,
-   "B": 155
+   "R": 113,
+   "G": 63,
+   "B": 34
   },
-  "Name": "Shell Pink-MD LT"
+  "Name": "Chocolate Medium Dark"
  },
  {
   "AnchorNumber": "357",
   "Color": {
-   "R": 211,
-   "G": 158,
-   "B": 99
+   "R": 91,
+   "G": 44,
+   "B": 17
   },
-  "Name": "Mustard"
+  "Name": "Chocolate Dark"
  },
  {
   "AnchorNumber": "358",
   "Color": {
-   "R": 186,
-   "G": 159,
-   "B": 102
+   "R": 98,
+   "G": 57,
+   "B": 27
   },
-  "Name": "Mustard-MD"
+  "Name": "Coffee Dark"
  },
  {
   "AnchorNumber": "359",
   "Color": {
-   "R": 133,
-   "G": 96,
-   "B": 59
+   "R": 85,
+   "G": 47,
+   "B": 20
   },
-  "Name": "Hazelnut Brown-VY DK"
+  "Name": "Coffee Very Dark"
  },
  {
   "AnchorNumber": "360",
   "Color": {
-   "R": 162,
-   "G": 114,
-   "B": 68
+   "R": 76,
+   "G": 39,
+   "B": 12
   },
-  "Name": "Hazelnut Brown-DK"
+  "Name": "Black Brown Medium"
  },
  {
   "AnchorNumber": "361",
   "Color": {
-   "R": 200,
-   "G": 161,
-   "B": 125
+   "R": 231,
+   "G": 193,
+   "B": 151
   },
-  "Name": "Hazelnut Brown-LT"
+  "Name": "Tan Very Light"
  },
  {
   "AnchorNumber": "362",
   "Color": {
-   "R": 200,
-   "G": 146,
-   "B": 83
+   "R": 181,
+   "G": 142,
+   "B": 99
   },
-  "Name": "Tan"
+  "Name": "Tan Medium Light"
  },
  {
   "AnchorNumber": "363",
   "Color": {
-   "R": 186,
-   "G": 121,
-   "B": 74
+   "R": 185,
+   "G": 131,
+   "B": 71
   },
-  "Name": "Brown-VY LT"
+  "Name": "Golden Brown Light"
  },
  {
   "AnchorNumber": "364",
@@ -2351,47 +2351,47 @@
  {
   "AnchorNumber": "365",
   "Color": {
-   "R": 124,
-   "G": 71,
-   "B": 33
+   "R": 116,
+   "G": 72,
+   "B": 23
   },
-  "Name": "Brown-MD"
+  "Name": "Golden Brown Medium"
  },
  {
   "AnchorNumber": "366",
   "Color": {
-   "R": 230,
-   "G": 189,
-   "B": 144
+   "R": 225,
+   "G": 198,
+   "B": 173
   },
-  "Name": "Tan-LT"
+  "Name": "Coffee Very Light"
  },
  {
   "AnchorNumber": "367",
   "Color": {
-   "R": 250,
-   "G": 213,
-   "B": 189
+   "R": 217,
+   "G": 180,
+   "B": 144
   },
-  "Name": "Tawny"
+  "Name": "Coffee Light"
  },
  {
   "AnchorNumber": "368",
   "Color": {
-   "R": 255,
-   "G": 228,
-   "B": 209
+   "R": 187,
+   "G": 143,
+   "B": 110
   },
-  "Name": "Tawny-LT"
+  "Name": "Coffee"
  },
  {
   "AnchorNumber": "369",
   "Color": {
-   "R": 184,
-   "G": 100,
-   "B": 93
+   "R": 139,
+   "G": 93,
+   "B": 60
   },
-  "Name": "Shell Pink-MD"
+  "Name": "Coffee Medium Light"
  },
  {
   "AnchorNumber": "370",
@@ -2400,16 +2400,16 @@
    "G": 71,
    "B": 31
   },
-  "Name": "Coffee Med"
+  "Name": "Coffee Medium"
  },
  {
   "AnchorNumber": "371",
   "Color": {
-   "R": 211,
-   "G": 89,
-   "B": 112
+   "R": 99,
+   "G": 58,
+   "B": 27
   },
-  "Name": "Raspberry-MD"
+  "Name": "Coffee Medium Dark"
  },
  {
   "AnchorNumber": "372",
@@ -2423,38 +2423,38 @@
  {
   "AnchorNumber": "373",
   "Color": {
-   "R": 138,
-   "G": 64,
-   "B": 83
+   "R": 136,
+   "G": 98,
+   "B": 58
   },
-  "Name": "Antique Mauve-DK"
+  "Name": "Tan Medium Dark"
  },
  {
   "AnchorNumber": "374",
   "Color": {
-   "R": 185,
-   "G": 117,
-   "B": 129
+   "R": 109,
+   "G": 66,
+   "B": 19
   },
-  "Name": "Antique Mauve-MD"
+  "Name": "Tan Dark"
  },
  {
   "AnchorNumber": "375",
   "Color": {
-   "R": 225,
-   "G": 181,
-   "B": 189
+   "R": 85,
+   "G": 51,
+   "B": 14
   },
-  "Name": "Antique Mauve-VY LT"
+  "Name": "Hazelnut Brown Medium"
  },
  {
   "AnchorNumber": "376",
   "Color": {
-   "R": 152,
-   "G": 93,
-   "B": 70
+   "R": 228,
+   "G": 189,
+   "B": 176
   },
-  "Name": "Beige Brown-MD"
+  "Name": "Dusty Flesh Light"
  },
  {
   "AnchorNumber": "377",
@@ -2468,74 +2468,74 @@
  {
   "AnchorNumber": "378",
   "Color": {
-   "R": 91,
-   "G": 75,
-   "B": 57
+   "R": 162,
+   "G": 117,
+   "B": 103
   },
-  "Name": "Beige Brown-VY DK"
+  "Name": "Dusty Flesh Medium"
  },
  {
   "AnchorNumber": "379",
   "Color": {
-   "R": 211,
-   "G": 188,
-   "B": 163
+   "R": 146,
+   "G": 104,
+   "B": 90
   },
-  "Name": "Beige Brown-VY LT"
+  "Name": "Dusty Flesh Dark"
  },
  {
   "AnchorNumber": "380",
   "Color": {
-   "R": 184,
-   "G": 157,
-   "B": 128
+   "R": 66,
+   "G": 34,
+   "B": 10
   },
-  "Name": "Beige Brown-LT"
+  "Name": "Black Brown Medium Dark"
  },
  {
   "AnchorNumber": "381",
   "Color": {
-   "R": 56,
-   "G": 33,
-   "B": 16
+   "R": 54,
+   "G": 26,
+   "B": 6
   },
-  "Name": "Coffee Brown-UL DK"
+  "Name": "Black Brown Dark"
  },
  {
   "AnchorNumber": "382",
   "Color": {
-   "R": 103,
-   "G": 59,
-   "B": 27
+   "R": 48,
+   "G": 20,
+   "B": 0
   },
-  "Name": "Coffee Brown-DK"
+  "Name": "Black Brown Very Dark"
  },
  {
   "AnchorNumber": "386",
   "Color": {
-   "R": 244,
-   "G": 238,
-   "B": 230
+   "R": 250,
+   "G": 244,
+   "B": 201
   },
-  "Name": "Mocha Brown-UL VY LT"
+  "Name": "Yellow Ultra Very Light"
  },
  {
   "AnchorNumber": "387",
   "Color": {
-   "R": 242,
-   "G": 236,
-   "B": 220
+   "R": 218,
+   "G": 210,
+   "B": 193
   },
-  "Name": "Ecru"
+  "Name": "Beige Brown Very Light"
  },
  {
   "AnchorNumber": "388",
   "Color": {
-   "R": 232,
-   "G": 228,
-   "B": 213
+   "R": 195,
+   "G": 177,
+   "B": 167
   },
-  "Name": "Beige Gray-LT"
+  "Name": "Beige Brown Light"
  },
  {
   "AnchorNumber": "389",
@@ -2549,83 +2549,83 @@
  {
   "AnchorNumber": "390",
   "Color": {
-   "R": 135,
-   "G": 125,
-   "B": 99
+   "R": 219,
+   "G": 214,
+   "B": 201
   },
-  "Name": "Beige Gray-VY DK"
+  "Name": "Beige Grey Light"
  },
  {
   "AnchorNumber": "391",
   "Color": {
-   "R": 129,
-   "G": 108,
-   "B": 87
+   "R": 170,
+   "G": 158,
+   "B": 146
   },
-  "Name": "Beige Gray-UL DK"
+  "Name": "Beige Grey Medium"
  },
  {
   "AnchorNumber": "392",
   "Color": {
-   "R": 229,
-   "G": 218,
-   "B": 206
+   "R": 128,
+   "G": 110,
+   "B": 93
   },
-  "Name": "Mocha Brown-VY LT"
+  "Name": "Beige Grey Dark"
  },
  {
   "AnchorNumber": "393",
   "Color": {
-   "R": 217,
-   "G": 208,
-   "B": 205
+   "R": 85,
+   "G": 73,
+   "B": 61
   },
-  "Name": "Shell Gray-LT"
+  "Name": "Beige Grey Ultra Very Dark"
  },
  {
   "AnchorNumber": "397",
   "Color": {
-   "R": 178,
-   "G": 168,
-   "B": 158
+   "R": 213,
+   "G": 212,
+   "B": 201
   },
-  "Name": "Beaver Gray-MD"
+  "Name": "Pearl Grey Ultra Very Light"
  },
  {
   "AnchorNumber": "398",
   "Color": {
    "R": 137,
-   "G": 127,
-   "B": 117
+   "G": 136,
+   "B": 138
   },
-  "Name": "Beaver Gray-DK"
+  "Name": "Pearl Grey"
  },
  {
   "AnchorNumber": "399",
   "Color": {
-   "R": 112,
-   "G": 103,
-   "B": 94
+   "R": 100,
+   "G": 98,
+   "B": 99
   },
-  "Name": "Beaver Gray-VY DK"
+  "Name": "Steel Grey Light"
  },
  {
   "AnchorNumber": "400",
   "Color": {
-   "R": 74,
-   "G": 74,
-   "B": 74
+   "R": 58,
+   "G": 58,
+   "B": 58
   },
-  "Name": "Beaver Gray-UL DK"
+  "Name": "Pewter Grey Dark"
  },
  {
   "AnchorNumber": "401",
   "Color": {
-   "R": 101,
-   "G": 102,
-   "B": 90
+   "R": 53,
+   "G": 44,
+   "B": 42
   },
-  "Name": "Ash Gray-VY LT"
+  "Name": "Shell Grey Very Dark"
  },
  {
   "AnchorNumber": "402",
@@ -2657,11 +2657,11 @@
  {
   "AnchorNumber": "410",
   "Color": {
-   "R": 138,
-   "G": 64,
-   "B": 69
+   "R": 29,
+   "G": 88,
+   "B": 160
   },
-  "Name": "Shell Pink-VY DK"
+  "Name": "Electric Blue Dark"
  },
  {
   "AnchorNumber": "433",
@@ -2670,7 +2670,7 @@
    "G": 173,
    "B": 255
   },
-  "Name": "Electric Blue Med"
+  "Name": "Electric Blue Medium"
  },
  {
   "AnchorNumber": "681",
@@ -2688,7 +2688,7 @@
    "G": 47,
    "B": 39
   },
-  "Name": "Misty Green Ultra VY"
+  "Name": "Misty Green Ultra Very Dark"
  },
  {
   "AnchorNumber": "778",
@@ -2697,7 +2697,7 @@
    "G": 180,
    "B": 157
   },
-  "Name": "Flesh VY LT"
+  "Name": "Flesh Very Light"
  },
  {
   "AnchorNumber": "779",
@@ -2706,7 +2706,7 @@
    "G": 82,
    "B": 104
   },
-  "Name": "Grey Blue VY DK"
+  "Name": "Grey Blue Very Dark"
  },
  {
   "AnchorNumber": "829",
@@ -2720,29 +2720,29 @@
  {
   "AnchorNumber": "830",
   "Color": {
-   "R": 202,
-   "G": 173,
-   "B": 110
+   "R": 204,
+   "G": 195,
+   "B": 188
   },
-  "Name": "Golden Olive-LT"
+  "Name": "Drab Brown Very Light"
  },
  {
   "AnchorNumber": "831",
   "Color": {
-   "R": 191,
-   "G": 157,
-   "B": 83
+   "R": 166,
+   "G": 147,
+   "B": 128
   },
-  "Name": "Golden Olive"
+  "Name": "Drab Brown Light"
  },
  {
   "AnchorNumber": "832",
   "Color": {
-   "R": 172,
-   "G": 145,
-   "B": 88
+   "R": 112,
+   "G": 87,
+   "B": 65
   },
-  "Name": "Golden Olive-MD"
+  "Name": "Drab Brown Medium"
  },
  {
   "AnchorNumber": "833",
@@ -2765,47 +2765,47 @@
  {
   "AnchorNumber": "842",
   "Color": {
-   "R": 224,
-   "G": 218,
-   "B": 205
+   "R": 196,
+   "G": 190,
+   "B": 156
   },
-  "Name": "Beige Gray-MD"
+  "Name": "Khaki Green Light"
  },
  {
   "AnchorNumber": "843",
   "Color": {
-   "R": 220,
-   "G": 204,
-   "B": 172
+   "R": 125,
+   "G": 117,
+   "B": 76
   },
-  "Name": "Drab Brown-VY LT"
+  "Name": "Khaki Green Medium Light"
  },
  {
   "AnchorNumber": "844",
   "Color": {
-   "R": 190,
-   "G": 156,
-   "B": 122
+   "R": 94,
+   "G": 88,
+   "B": 55
   },
-  "Name": "Drab Brown-LT"
+  "Name": "Khaki Green Medium"
  },
  {
   "AnchorNumber": "845",
   "Color": {
-   "R": 152,
-   "G": 120,
-   "B": 88
+   "R": 68,
+   "G": 62,
+   "B": 36
   },
-  "Name": "Drab Brown"
+  "Name": "Khaki Green Medium Dark"
  },
  {
   "AnchorNumber": "846",
   "Color": {
-   "R": 123,
-   "G": 98,
-   "B": 73
+   "R": 46,
+   "G": 43,
+   "B": 26
   },
-  "Name": "Drab Brown-DK"
+  "Name": "Khaki Green Dark"
  },
  {
   "AnchorNumber": "847",
@@ -2814,88 +2814,88 @@
    "G": 195,
    "B": 198
   },
-  "Name": "Grey Blue Ultra VY L"
+  "Name": "Grey Blue Ultra Very Light"
  },
  {
   "AnchorNumber": "848",
   "Color": {
-   "R": 221,
-   "G": 218,
-   "B": 195
+   "R": 156,
+   "G": 162,
+   "B": 158
   },
-  "Name": "Yellow Beige-LT"
+  "Name": "Grey Blue Light"
  },
  {
   "AnchorNumber": "849",
   "Color": {
-   "R": 218,
-   "G": 190,
-   "B": 156
+   "R": 127,
+   "G": 131,
+   "B": 129
   },
-  "Name": "Yellow Beige-MD"
+  "Name": "Grey Blue Medium"
  },
  {
   "AnchorNumber": "850",
   "Color": {
-   "R": 190,
-   "G": 152,
-   "B": 108
+   "R": 96,
+   "G": 109,
+   "B": 116
   },
-  "Name": "Yellow Beige-DK"
+  "Name": "Grey Blue Dark"
  },
  {
   "AnchorNumber": "851",
   "Color": {
-   "R": 169,
-   "G": 126,
-   "B": 75
+   "R": 51,
+   "G": 64,
+   "B": 81
   },
-  "Name": "Yellow Beige-VY DK"
+  "Name": "Grey Blue Ultra Very Dark"
  },
  {
   "AnchorNumber": "852",
   "Color": {
-   "R": 191,
-   "G": 168,
-   "B": 115
+   "R": 204,
+   "G": 194,
+   "B": 165
   },
-  "Name": "Mustard"
+  "Name": "Avocado Ultra Very Light"
  },
  {
   "AnchorNumber": "853",
   "Color": {
-   "R": 206,
-   "G": 185,
-   "B": 134
+   "R": 145,
+   "G": 136,
+   "B": 107
   },
-  "Name": "Mustard-LT"
+  "Name": "Avocado Very Light"
  },
  {
   "AnchorNumber": "854",
   "Color": {
-   "R": 248,
-   "G": 230,
-   "B": 202
+   "R": 123,
+   "G": 112,
+   "B": 82
   },
-  "Name": "Tan-UL VY LT"
+  "Name": "Avocado Light"
  },
  {
   "AnchorNumber": "855",
   "Color": {
-   "R": 238,
-   "G": 206,
-   "B": 160
+   "R": 112,
+   "G": 99,
+   "B": 62
   },
-  "Name": "Tan-VY LT"
+  "Name": "Avocado Medium"
  },
  {
   "AnchorNumber": "856",
   "Color": {
-   "R": 255,
-   "G": 233,
-   "B": 215
+   "R": 72,
+   "G": 64,
+   "B": 32
   },
-  "Name": "Tawny-VY LT"
+  "Name": "Yellow Green Medium"
  },
  {
   "AnchorNumber": "857",
@@ -2909,47 +2909,47 @@
  {
   "AnchorNumber": "858",
   "Color": {
-   "R": 246,
-   "G": 222,
-   "B": 217
+   "R": 188,
+   "G": 201,
+   "B": 177
   },
-  "Name": "Baby Pink-LT"
+  "Name": "Fern Green Very Light"
  },
  {
   "AnchorNumber": "859",
   "Color": {
-   "R": 255,
-   "G": 225,
-   "B": 219
+   "R": 111,
+   "G": 125,
+   "B": 99
   },
-  "Name": "Baby Pink"
+  "Name": "Fern Green Light"
  },
  {
   "AnchorNumber": "860",
   "Color": {
-   "R": 253,
-   "G": 207,
-   "B": 215
+   "R": 80,
+   "G": 91,
+   "B": 71
   },
-  "Name": "Melon-LT"
+  "Name": "Fern Green Medium"
  },
  {
   "AnchorNumber": "861",
   "Color": {
-   "R": 255,
-   "G": 175,
-   "B": 190
+   "R": 57,
+   "G": 65,
+   "B": 49
   },
-  "Name": "Melon-MD"
+  "Name": "Fern Green Dark"
  },
  {
   "AnchorNumber": "862",
   "Color": {
-   "R": 255,
-   "G": 123,
-   "B": 148
+   "R": 0,
+   "G": 42,
+   "B": 27
   },
-  "Name": "Melon-DK"
+  "Name": "Fern Green Very Dark"
  },
  {
   "AnchorNumber": "863",
@@ -2972,119 +2972,119 @@
  {
   "AnchorNumber": "868",
   "Color": {
-   "R": 255,
-   "G": 133,
-   "B": 113
+   "R": 211,
+   "G": 134,
+   "B": 112
   },
-  "Name": "Apricot-MD"
+  "Name": "Peach Flesh"
  },
  {
   "AnchorNumber": "869",
   "Color": {
-   "R": 254,
-   "G": 173,
-   "B": 154
+   "R": 180,
+   "G": 162,
+   "B": 174
   },
-  "Name": "Apricot"
+  "Name": "Antique Violet Very Light"
  },
  {
   "AnchorNumber": "870",
   "Color": {
-   "R": 230,
-   "G": 111,
-   "B": 111
+   "R": 141,
+   "G": 110,
+   "B": 131
   },
-  "Name": "Salmon-DK"
+  "Name": "Antique Violet Light"
  },
  {
   "AnchorNumber": "871",
   "Color": {
-   "R": 193,
-   "G": 47,
-   "B": 47
+   "R": 93,
+   "G": 69,
+   "B": 86
   },
-  "Name": "Salmon-VY DK"
+  "Name": "Antique Violet Medium"
  },
  {
   "AnchorNumber": "872",
   "Color": {
-   "R": 136,
-   "G": 50,
-   "B": 36
+   "R": 78,
+   "G": 57,
+   "B": 72
   },
-  "Name": "Terra Cotta-VY DK"
+  "Name": "Antique Violet Medium Dark"
  },
  {
   "AnchorNumber": "873",
   "Color": {
-   "R": 154,
-   "G": 70,
-   "B": 56
+   "R": 66,
+   "G": 37,
+   "B": 57
   },
-  "Name": "Terra Cotta-DK"
+  "Name": "Antique Violet Dark"
  },
  {
   "AnchorNumber": "874",
   "Color": {
-   "R": 187,
-   "G": 87,
-   "B": 70
+   "R": 179,
+   "G": 147,
+   "B": 96
   },
-  "Name": "Terra Cotta"
+  "Name": "Gold Very Light"
  },
  {
   "AnchorNumber": "875",
   "Color": {
-   "R": 199,
-   "G": 108,
-   "B": 93
+   "R": 148,
+   "G": 180,
+   "B": 166
   },
-  "Name": "Terra Cotta-MD"
+  "Name": "Sea Foam Green Light"
  },
  {
   "AnchorNumber": "876",
   "Color": {
-   "R": 219,
-   "G": 139,
-   "B": 122
+   "R": 88,
+   "G": 113,
+   "B": 103
   },
-  "Name": "Terra Cotta-LT"
+  "Name": "Sea Foam Green Medium"
  },
  {
   "AnchorNumber": "877",
   "Color": {
-   "R": 240,
-   "G": 172,
-   "B": 157
+   "R": 52,
+   "G": 91,
+   "B": 74
   },
-  "Name": "Terra Cotta-VY LT"
+  "Name": "Sea Foam Green Dark"
  },
  {
   "AnchorNumber": "878",
   "Color": {
-   "R": 188,
-   "G": 141,
-   "B": 131
+   "R": 27,
+   "G": 61,
+   "B": 48
   },
-  "Name": "Rosewood-LT"
+  "Name": "Sea Foam Green Very Dark"
  },
  {
   "AnchorNumber": "879",
   "Color": {
-   "R": 152,
-   "G": 76,
-   "B": 65
+   "R": 25,
+   "G": 52,
+   "B": 40
   },
-  "Name": "Rosewood-MD"
+  "Name": "Sea Foam Green Ultra Very Dark"
  },
  {
   "AnchorNumber": "880",
   "Color": {
-   "R": 106,
-   "G": 39,
-   "B": 28
+   "R": 229,
+   "G": 192,
+   "B": 164
   },
-  "Name": "Rosewood-DK"
+  "Name": "Cream Medium"
  },
  {
   "AnchorNumber": "881",
@@ -3093,7 +3093,7 @@
    "G": 187,
    "B": 146
   },
-  "Name": "Cream DK"
+  "Name": "Cream Dark"
  },
  {
   "AnchorNumber": "882",
@@ -3102,7 +3102,7 @@
    "G": 158,
    "B": 133
   },
-  "Name": "Antique Mahogany LT"
+  "Name": "Antique Mahogany Light"
  },
  {
   "AnchorNumber": "883",
@@ -3116,200 +3116,200 @@
  {
   "AnchorNumber": "884",
   "Color": {
-   "R": 168,
-   "G": 138,
-   "B": 131
+   "R": 141,
+   "G": 76,
+   "B": 55
   },
-  "Name": "Cocoa-LT"
+  "Name": "Antique Mahogany Dark"
  },
  {
   "AnchorNumber": "885",
   "Color": {
-   "R": 127,
-   "G": 95,
-   "B": 89
+   "R": 239,
+   "G": 228,
+   "B": 199
   },
-  "Name": "Cocoa"
+  "Name": "Yellow Beige Very Light"
  },
  {
   "AnchorNumber": "886",
   "Color": {
-   "R": 100,
-   "G": 77,
-   "B": 71
+   "R": 211,
+   "G": 195,
+   "B": 167
   },
-  "Name": "Cocoa-DK"
+  "Name": "Yellow Beige Light"
  },
  {
   "AnchorNumber": "887",
   "Color": {
    "R": 188,
-   "G": 182,
-   "B": 174
+   "G": 174,
+   "B": 132
   },
-  "Name": "Beaver Gray-LT"
+  "Name": "Yellow Beige Medium"
  },
  {
   "AnchorNumber": "888",
   "Color": {
-   "R": 181,
-   "G": 161,
-   "B": 141
+   "R": 136,
+   "G": 105,
+   "B": 64
   },
-  "Name": "Mocha Brown-MD"
+  "Name": "Hazelnut Brown Light"
  },
  {
   "AnchorNumber": "889",
   "Color": {
-   "R": 109,
-   "G": 89,
-   "B": 69
+   "R": 92,
+   "G": 58,
+   "B": 24
   },
-  "Name": "Mocha Brown-DK"
+  "Name": "Drab Brown Very Dark"
  },
  {
   "AnchorNumber": "890",
   "Color": {
-   "R": 77,
-   "G": 62,
-   "B": 44
+   "R": 195,
+   "G": 133,
+   "B": 49
   },
-  "Name": "Mocha Brown-VY DK"
+  "Name": "Old Gold Medium"
  },
  {
   "AnchorNumber": "891",
   "Color": {
-   "R": 140,
-   "G": 112,
-   "B": 80
+   "R": 247,
+   "G": 193,
+   "B": 104
   },
-  "Name": "Mocha Beige-DK"
+  "Name": "Old Gold Light"
  },
  {
   "AnchorNumber": "892",
   "Color": {
-   "R": 166,
-   "G": 133,
-   "B": 94
+   "R": 244,
+   "G": 219,
+   "B": 207
   },
-  "Name": "Mocha Beige-MD"
+  "Name": "Shell Pink Very Light"
  },
  {
   "AnchorNumber": "893",
   "Color": {
-   "R": 205,
-   "G": 184,
-   "B": 158
+   "R": 215,
+   "G": 170,
+   "B": 168
   },
-  "Name": "Mocha Beige-LT"
+  "Name": "Shell Pink Light"
  },
  {
   "AnchorNumber": "894",
   "Color": {
-   "R": 147,
-   "G": 71,
-   "B": 17
+   "R": 209,
+   "G": 146,
+   "B": 145
   },
-  "Name": "Mahogany-DK"
+  "Name": "Shell Pink Medium Light"
  },
  {
   "AnchorNumber": "895",
   "Color": {
-   "R": 181,
-   "G": 97,
-   "B": 45
+   "R": 185,
+   "G": 116,
+   "B": 114
   },
-  "Name": "Mahogany-MD"
+  "Name": "Shell Pink Medium"
  },
  {
   "AnchorNumber": "896",
   "Color": {
-   "R": 209,
-   "G": 123,
-   "B": 59
+   "R": 110,
+   "G": 51,
+   "B": 53
   },
-  "Name": "Mahogany-LT"
+  "Name": "Shell Pink"
  },
  {
   "AnchorNumber": "897",
   "Color": {
-   "R": 255,
-   "G": 213,
-   "B": 183
+   "R": 90,
+   "G": 2,
+   "B": 0
   },
-  "Name": "Mahogany-UL VY LT"
+  "Name": "Shell Pink Very Dark"
  },
  {
   "AnchorNumber": "898",
   "Color": {
-   "R": 113,
-   "G": 49,
-   "B": 2
+   "R": 92,
+   "G": 71,
+   "B": 54
   },
-  "Name": "Mahogany-VY DK"
+  "Name": "Drab Brown Dark"
  },
  {
   "AnchorNumber": "899",
   "Color": {
-   "R": 75,
-   "G": 44,
-   "B": 21
+   "R": 147,
+   "G": 131,
+   "B": 117
   },
-  "Name": "Coffee Brown-VY DK"
+  "Name": "Brown Grey Light"
  },
  {
   "AnchorNumber": "900",
   "Color": {
-   "R": 32,
-   "G": 19,
-   "B": 10
+   "R": 128,
+   "G": 126,
+   "B": 121
   },
-  "Name": "Black Brown"
+  "Name": "Beaver Grey Light"
  },
  {
   "AnchorNumber": "901",
   "Color": {
-   "R": 166,
-   "G": 138,
-   "B": 94
+   "R": 160,
+   "G": 95,
+   "B": 0
   },
-  "Name": "Mocha Beige-MD"
+  "Name": "Old Gold Dark"
  },
  {
   "AnchorNumber": "903",
   "Color": {
-   "R": 189,
-   "G": 131,
-   "B": 99
+   "R": 97,
+   "G": 79,
+   "B": 64
   },
-  "Name": "Desert Sand-MD"
+  "Name": "Brown Grey Medium"
  },
  {
   "AnchorNumber": "904",
   "Color": {
-   "R": 162,
-   "G": 110,
-   "B": 82
+   "R": 77,
+   "G": 57,
+   "B": 39
   },
-  "Name": "Desert Sand-VY DK"
+  "Name": "Brown Grey Medium"
  },
  {
   "AnchorNumber": "905",
   "Color": {
-   "R": 137,
-   "G": 87,
-   "B": 59
+   "R": 53,
+   "G": 39,
+   "B": 27
   },
-  "Name": "Desert Sand-UL VY DK"
+  "Name": "Brown Grey Dark"
  },
  {
   "AnchorNumber": "906",
   "Color": {
-   "R": 245,
-   "G": 227,
-   "B": 208
+   "R": 66,
+   "G": 44,
+   "B": 20
   },
-  "Name": "Beige Brown-UL VY LT"
+  "Name": "Hazelnut Brown Dark"
  },
  {
   "AnchorNumber": "907",
@@ -3318,7 +3318,7 @@
    "G": 91,
    "B": 39
   },
-  "Name": "Gold Med"
+  "Name": "Gold Medium"
  },
  {
   "AnchorNumber": "914",
@@ -3327,16 +3327,16 @@
    "G": 107,
    "B": 91
   },
-  "Name": "Flesh DK"
+  "Name": "Flesh Dark"
  },
  {
   "AnchorNumber": "920",
   "Color": {
-   "R": 232,
-   "G": 229,
-   "B": 229
+   "R": 128,
+   "G": 139,
+   "B": 153
   },
-  "Name": "Beaver Gray-VY LT"
+  "Name": "Antique Blue Medium Light"
  },
  {
   "AnchorNumber": "921",
@@ -3345,25 +3345,25 @@
    "G": 97,
    "B": 114
   },
-  "Name": "Antique Blue Med"
+  "Name": "Antique Blue Medium"
  },
  {
   "AnchorNumber": "922",
   "Color": {
-   "R": 194,
-   "G": 181,
-   "B": 176
+   "R": 45,
+   "G": 49,
+   "B": 59
   },
-  "Name": "Shell Gray-MD"
+  "Name": "Antique Blue Dark"
  },
  {
   "AnchorNumber": "923",
   "Color": {
-   "R": 147,
-   "G": 125,
-   "B": 117
+   "R": 10,
+   "G": 60,
+   "B": 1
   },
-  "Name": "Shell Gray-DK"
+  "Name": "Christmas Green Very Dark"
  },
  {
   "AnchorNumber": "924",
@@ -3372,25 +3372,25 @@
    "G": 63,
    "B": 13
   },
-  "Name": "Yellow Green VY DK"
+  "Name": "Yellow Green Very Dark"
  },
  {
   "AnchorNumber": "925",
   "Color": {
-   "R": 255,
-   "G": 102,
-   "B": 36
+   "R": 228,
+   "G": 86,
+   "B": 52
   },
   "Name": "Tangerine"
  },
  {
   "AnchorNumber": "926",
   "Color": {
-   "R": 223,
-   "G": 229,
-   "B": 229
+   "R": 243,
+   "G": 236,
+   "B": 223
   },
-  "Name": "Gray Green-VY LT"
+  "Name": "Beige Brown Ultra Very Light"
  },
  {
   "AnchorNumber": "927",
@@ -3404,11 +3404,11 @@
  {
   "AnchorNumber": "928",
   "Color": {
-   "R": 154,
-   "G": 176,
-   "B": 176
+   "R": 172,
+   "G": 218,
+   "B": 230
   },
-  "Name": "Gray Green-MD"
+  "Name": "Blue Green Very Light"
  },
  {
   "AnchorNumber": "929",
@@ -3440,11 +3440,11 @@
  {
   "AnchorNumber": "933",
   "Color": {
-   "R": 108,
-   "G": 135,
-   "B": 160
+   "R": 233,
+   "G": 214,
+   "B": 199
   },
-  "Name": "Antique Blue-MD"
+  "Name": "Dusty Flesh Very Light"
  },
  {
   "AnchorNumber": "934",
@@ -3467,11 +3467,11 @@
  {
   "AnchorNumber": "936",
   "Color": {
-   "R": 201,
-   "G": 211,
-   "B": 221
+   "R": 80,
+   "G": 51,
+   "B": 41
   },
-  "Name": "Antique Blue-VY LT"
+  "Name": "Dusty Flesh Very Dark"
  },
  {
   "AnchorNumber": "937",
@@ -3503,56 +3503,56 @@
  {
   "AnchorNumber": "940",
   "Color": {
-   "R": 100,
-   "G": 108,
-   "B": 108
+   "R": 55,
+   "G": 61,
+   "B": 99
   },
-  "Name": "Pewter-DK"
+  "Name": "Delft Dark"
  },
  {
   "AnchorNumber": "941",
   "Color": {
-   "R": 134,
-   "G": 134,
-   "B": 134
+   "R": 37,
+   "G": 41,
+   "B": 73
   },
-  "Name": "Pewter-LT"
+  "Name": "Cornflower Blue Medium"
  },
  {
   "AnchorNumber": "942",
   "Color": {
-   "R": 88,
-   "G": 88,
-   "B": 88
+   "R": 217,
+   "G": 171,
+   "B": 130
   },
-  "Name": "Pewter Gray-DK"
+  "Name": "Tan Light"
  },
  {
   "AnchorNumber": "943",
   "Color": {
-   "R": 68,
-   "G": 68,
-   "B": 68
+   "R": 165,
+   "G": 113,
+   "B": 72
   },
-  "Name": "Pewter Gray-VY DK"
+  "Name": "Tan Medium"
  },
  {
   "AnchorNumber": "944",
   "Color": {
-   "R": 142,
-   "G": 142,
-   "B": 142
+   "R": 120,
+   "G": 58,
+   "B": 13
   },
-  "Name": "Steel Gray-DK"
+  "Name": "Tan Very Dark"
  },
  {
   "AnchorNumber": "945",
   "Color": {
-   "R": 173,
-   "G": 173,
-   "B": 173
+   "R": 164,
+   "G": 151,
+   "B": 94
   },
-  "Name": "Steel Gray-LT"
+  "Name": "Yellow Green Very Light"
  },
  {
   "AnchorNumber": "946",
@@ -3611,11 +3611,11 @@
  {
   "AnchorNumber": "956",
   "Color": {
-   "R": 255,
-   "G": 221,
-   "B": 154
+   "R": 196,
+   "G": 188,
+   "B": 150
   },
-  "Name": "Straw-LT"
+  "Name": "Yellow Green Ultra Very Light"
  },
  {
   "AnchorNumber": "957",
@@ -3648,37 +3648,37 @@
   "AnchorNumber": "968",
   "Color": {
    "R": 244,
-   "G": 177,
-   "B": 106
+   "G": 192,
+   "B": 193
   },
-  "Name": "Autumn Gold-MD"
+  "Name": "Dusty Violet Light"
  },
  {
   "AnchorNumber": "969",
   "Color": {
-   "R": 244,
-   "G": 153,
-   "B": 72
+   "R": 193,
+   "G": 140,
+   "B": 141
   },
-  "Name": "Autumn Gold-DK"
+  "Name": "Dusty Violet Medium"
  },
  {
   "AnchorNumber": "970",
   "Color": {
-   "R": 252,
-   "G": 213,
-   "B": 152
+   "R": 131,
+   "G": 78,
+   "B": 80
   },
-  "Name": "Autumn Gold-LT"
+  "Name": "Dusty Violet Dark"
  },
  {
   "AnchorNumber": "972",
   "Color": {
-   "R": 255,
-   "G": 193,
-   "B": 108
+   "R": 104,
+   "G": 47,
+   "B": 53
   },
-  "Name": "Topaz-LT"
+  "Name": "Dusty Violet Very Dark"
  },
  {
   "AnchorNumber": "973",
@@ -3701,47 +3701,47 @@
  {
   "AnchorNumber": "975",
   "Color": {
-   "R": 176,
-   "G": 121,
-   "B": 34
+   "R": 197,
+   "G": 205,
+   "B": 214
   },
-  "Name": "Topaz-DK"
+  "Name": "Blue Very Light"
  },
  {
   "AnchorNumber": "976",
   "Color": {
-   "R": 164,
-   "G": 111,
-   "B": 34
+   "R": 136,
+   "G": 151,
+   "B": 171
   },
-  "Name": "Topaz-VY DK"
+  "Name": "Blue Light"
  },
  {
   "AnchorNumber": "977",
   "Color": {
-   "R": 150,
-   "G": 101,
-   "B": 28
+   "R": 87,
+   "G": 106,
+   "B": 131
   },
-  "Name": "Topaz-UL VY DK"
+  "Name": "Blue Medium"
  },
  {
   "AnchorNumber": "978",
   "Color": {
-   "R": 194,
-   "G": 187,
-   "B": 132
+   "R": 70,
+   "G": 87,
+   "B": 107
   },
-  "Name": "Khaki Green-LT"
+  "Name": "Blue Dark"
  },
  {
   "AnchorNumber": "979",
   "Color": {
-   "R": 168,
-   "G": 169,
-   "B": 95
+   "R": 45,
+   "G": 58,
+   "B": 75
   },
-  "Name": "Khaki Green-MD"
+  "Name": "Blue Very Dark"
  },
  {
   "AnchorNumber": "980",
@@ -3764,443 +3764,443 @@
  {
   "AnchorNumber": "1002",
   "Color": {
-   "R": 249,
-   "G": 251,
-   "B": 240
+   "R": 221,
+   "G": 120,
+   "B": 65
   },
-  "Name": "Off White"
+  "Name": "Golden Brown Very Light"
  },
  {
   "AnchorNumber": "1003",
   "Color": {
-   "R": 211,
-   "G": 208,
-   "B": 210
+   "R": 177,
+   "G": 88,
+   "B": 36
   },
-  "Name": "Pewter-VY LT"
+  "Name": "Salmon"
  },
  {
   "AnchorNumber": "1004",
   "Color": {
-   "R": 144,
-   "G": 194,
-   "B": 182
+   "R": 134,
+   "G": 58,
+   "B": 26
   },
-  "Name": "Aquamarine-VY LT"
+  "Name": "Orange Spice Very Dark"
  },
  {
   "AnchorNumber": "1005",
   "Color": {
-   "R": 82,
-   "G": 141,
-   "B": 127
+   "R": 123,
+   "G": 2,
+   "B": 0
   },
-  "Name": "Aquamarine"
+  "Name": "Christmas Red Ultra Very Dark"
  },
  {
   "AnchorNumber": "1006",
   "Color": {
-   "R": 113,
-   "G": 176,
-   "B": 119
+   "R": 143,
+   "G": 24,
+   "B": 0
   },
-  "Name": "Nile Green-MD"
+  "Name": "Dusty Rose Very Dark"
  },
  {
   "AnchorNumber": "1007",
   "Color": {
-   "R": 138,
-   "G": 188,
-   "B": 147
+   "R": 120,
+   "G": 79,
+   "B": 66
   },
-  "Name": "Nile Green"
+  "Name": "Flesh Very Dark"
  },
  {
   "AnchorNumber": "1008",
   "Color": {
-   "R": 164,
-   "G": 216,
-   "B": 175
+   "R": 182,
+   "G": 133,
+   "B": 113
   },
-  "Name": "Nile Green-LT"
+  "Name": "Flesh Medium"
  },
  {
   "AnchorNumber": "1009",
   "Color": {
-   "R": 87,
-   "G": 153,
-   "B": 108
+   "R": 255,
+   "G": 227,
+   "B": 199
   },
-  "Name": "Jade-MD"
+  "Name": "Cream"
  },
  {
   "AnchorNumber": "1010",
   "Color": {
-   "R": 53,
-   "G": 133,
-   "B": 100
+   "R": 255,
+   "G": 218,
+   "B": 187
   },
-  "Name": "Jade Green"
+  "Name": "Copper Very Light"
  },
  {
   "AnchorNumber": "1011",
   "Color": {
-   "R": 145,
-   "G": 194,
-   "B": 154
+   "R": 240,
+   "G": 218,
+   "B": 196
   },
-  "Name": "Jade-LT"
+  "Name": "Peach Flesh Very Light"
  },
  {
   "AnchorNumber": "1012",
   "Color": {
-   "R": 187,
-   "G": 217,
-   "B": 194
+   "R": 241,
+   "G": 187,
+   "B": 164
   },
-  "Name": "Jade-UL VY LT"
+  "Name": "Flesh"
  },
  {
   "AnchorNumber": "1013",
   "Color": {
-   "R": 254,
-   "G": 207,
-   "B": 196
+   "R": 184,
+   "G": 103,
+   "B": 76
   },
-  "Name": "Apricot-LT"
+  "Name": "Terracotta"
  },
  {
   "AnchorNumber": "1014",
   "Color": {
-   "R": 254,
-   "G": 233,
-   "B": 220
+   "R": 146,
+   "G": 39,
+   "B": 0
   },
-  "Name": "Peach-VY LT"
+  "Name": "Mahogany Very Dark"
  },
  {
   "AnchorNumber": "1015",
   "Color": {
-   "R": 249,
-   "G": 205,
-   "B": 193
+   "R": 150,
+   "G": 24,
+   "B": 21
   },
-  "Name": "Peach-LT"
+  "Name": "Mahogany Ultra Very Dark"
  },
  {
   "AnchorNumber": "1016",
   "Color": {
-   "R": 255,
-   "G": 203,
-   "B": 203
+   "R": 202,
+   "G": 151,
+   "B": 161
   },
-  "Name": "Salmon-LT"
+  "Name": "Antique Mauve Very Light"
  },
  {
   "AnchorNumber": "1017",
   "Color": {
-   "R": 255,
-   "G": 228,
-   "B": 228
+   "R": 164,
+   "G": 110,
+   "B": 121
   },
-  "Name": "Salmon-VY LT"
+  "Name": "Antique Mauve Medium"
  },
  {
   "AnchorNumber": "1018",
   "Color": {
-   "R": 240,
-   "G": 208,
-   "B": 214
+   "R": 121,
+   "G": 69,
+   "B": 79
   },
-  "Name": "Dusty Rose-VY LT"
+  "Name": "Antique Mauve Light"
  },
  {
   "AnchorNumber": "1019",
   "Color": {
-   "R": 228,
-   "G": 162,
-   "B": 155
+   "R": 104,
+   "G": 39,
+   "B": 52
   },
-  "Name": "Shell Pink-MD"
+  "Name": "Antique Mauve Dark"
  },
  {
   "AnchorNumber": "1020",
   "Color": {
-   "R": 244,
-   "G": 189,
-   "B": 171
+   "R": 242,
+   "G": 183,
+   "B": 188
   },
-  "Name": "Terra Cotta-UL VY LT"
+  "Name": "Dusty Rose Ultra Very Light"
  },
  {
   "AnchorNumber": "1021",
   "Color": {
-   "R": 254,
-   "G": 175,
-   "B": 187
+   "R": 227,
+   "G": 147,
+   "B": 155
   },
-  "Name": "Carnation-VY LT"
+  "Name": "Dusty Rose Very Light"
  },
  {
   "AnchorNumber": "1022",
   "Color": {
-   "R": 255,
-   "G": 147,
-   "B": 147
+   "R": 227,
+   "G": 129,
+   "B": 139
   },
-  "Name": "Geranium"
+  "Name": "Dusty Rose Light"
  },
  {
   "AnchorNumber": "1023",
   "Color": {
-   "R": 254,
-   "G": 183,
-   "B": 183
+   "R": 193,
+   "G": 96,
+   "B": 106
   },
-  "Name": "Geranium-Pale"
+  "Name": "Dusty Rose"
  },
  {
   "AnchorNumber": "1024",
   "Color": {
-   "R": 199,
-   "G": 224,
-   "B": 218
+   "R": 172,
+   "G": 68,
+   "B": 77
   },
-  "Name": "Sea Green-LT"
+  "Name": "Dusty Rose Medium"
  },
  {
   "AnchorNumber": "1025",
   "Color": {
-   "R": 180,
-   "G": 229,
-   "B": 232
+   "R": 142,
+   "G": 39,
+   "B": 49
   },
-  "Name": "Turquoise-VY LT"
+  "Name": "Dusty Rose Dark"
  },
  {
   "AnchorNumber": "1026",
   "Color": {
-   "R": 199,
-   "G": 234,
-   "B": 239
+   "R": 242,
+   "G": 210,
+   "B": 211
   },
-  "Name": "Sky Blue-VY LT"
+  "Name": "Dusty Violet Very Light"
  },
  {
   "AnchorNumber": "1027",
   "Color": {
-   "R": 219,
-   "G": 238,
-   "B": 247
+   "R": 145,
+   "G": 78,
+   "B": 76
   },
-  "Name": "Blue-UL VY LT"
+  "Name": "Shell Pink Medium Dark"
  },
  {
   "AnchorNumber": "1028",
   "Color": {
-   "R": 191,
-   "G": 223,
-   "B": 239
+   "R": 95,
+   "G": 1,
+   "B": 55
   },
-  "Name": "Blue-VY LT"
+  "Name": "Dusty Plum Dark"
  },
  {
   "AnchorNumber": "1029",
   "Color": {
-   "R": 163,
-   "G": 196,
-   "B": 217
+   "R": 97,
+   "G": 20,
+   "B": 64
   },
-  "Name": "Blue-LT"
+  "Name": "Plum Dark"
  },
  {
   "AnchorNumber": "1030",
   "Color": {
-   "R": 109,
-   "G": 160,
-   "B": 193
+   "R": 117,
+   "G": 103,
+   "B": 163
   },
-  "Name": "Blue-MD"
+  "Name": "Blue Violet Medium"
  },
  {
   "AnchorNumber": "1031",
   "Color": {
-   "R": 207,
-   "G": 225,
-   "B": 239
+   "R": 210,
+   "G": 224,
+   "B": 240
   },
-  "Name": "Baby Blue-Pale"
+  "Name": "Antique Blue Ultra Very Light"
  },
  {
   "AnchorNumber": "1032",
   "Color": {
-   "R": 178,
-   "G": 194,
-   "B": 220
+   "R": 182,
+   "G": 199,
+   "B": 213
   },
-  "Name": "Lavender Blue-LT"
+  "Name": "Antique Blue Very Light"
  },
  {
   "AnchorNumber": "1033",
   "Color": {
-   "R": 125,
-   "G": 144,
-   "B": 173
+   "R": 144,
+   "G": 154,
+   "B": 174
   },
-  "Name": "Lavender Blue-MD"
+  "Name": "Antique Blue"
  },
  {
   "AnchorNumber": "1034",
   "Color": {
-   "R": 94,
-   "G": 116,
-   "B": 150
+   "R": 83,
+   "G": 94,
+   "B": 115
   },
-  "Name": "Lavender Blue-DK"
+  "Name": "Antique Blue Medium Dark"
  },
  {
   "AnchorNumber": "1035",
   "Color": {
-   "R": 98,
-   "G": 105,
-   "B": 142
+   "R": 48,
+   "G": 53,
+   "B": 70
   },
-  "Name": "Cornflower Blue"
+  "Name": "Antique Blue Very Dark"
  },
  {
   "AnchorNumber": "1036",
   "Color": {
-   "R": 236,
-   "G": 158,
-   "B": 198
+   "R": 29,
+   "G": 37,
+   "B": 76
   },
-  "Name": "Plum-VY LT"
+  "Name": "Antique Blue Ultra Very Dark"
  },
  {
   "AnchorNumber": "1037",
   "Color": {
-   "R": 246,
-   "G": 176,
-   "B": 215
+   "R": 215,
+   "G": 229,
+   "B": 234
   },
-  "Name": "Plum-UL LT"
+  "Name": "Blue Ultra Very Light"
  },
  {
   "AnchorNumber": "1038",
   "Color": {
-   "R": 199,
-   "G": 75,
-   "B": 139
+   "R": 137,
+   "G": 176,
+   "B": 200
   },
-  "Name": "Plum-LT"
+  "Name": "Baby Blue Medium"
  },
  {
   "AnchorNumber": "1039",
   "Color": {
-   "R": 173,
-   "G": 53,
-   "B": 89
+   "R": 100,
+   "G": 147,
+   "B": 176
   },
-  "Name": "Mauve-DK"
+  "Name": "Baby Blue Medium Dark"
  },
  {
   "AnchorNumber": "1040",
   "Color": {
-   "R": 138,
-   "G": 23,
-   "B": 51
+   "R": 69,
+   "G": 66,
+   "B": 63
   },
-  "Name": "Mauve-VY DK"
+  "Name": "Beaver Grey Dark"
  },
  {
   "AnchorNumber": "1041",
   "Color": {
-   "R": 181,
-   "G": 49,
-   "B": 74
+   "R": 42,
+   "G": 40,
+   "B": 36
   },
-  "Name": "Raspberry-DK"
+  "Name": "Beaver Grey Ultra Dark"
  },
  {
   "AnchorNumber": "1042",
   "Color": {
-   "R": 221,
-   "G": 87,
-   "B": 112
+   "R": 215,
+   "G": 240,
+   "B": 214
   },
-  "Name": "Raspberry-MD"
+  "Name": "Sea Foam Green Very Light"
  },
  {
   "AnchorNumber": "1043",
   "Color": {
-   "R": 236,
-   "G": 136,
-   "B": 155
+   "R": 218,
+   "G": 246,
+   "B": 202
   },
-  "Name": "Raspberry-LT"
+  "Name": "Pistachio Green Very Light"
  },
  {
   "AnchorNumber": "1044",
   "Color": {
-   "R": 255,
-   "G": 142,
-   "B": 176
+   "R": 17,
+   "G": 46,
+   "B": 0
   },
-  "Name": "Cyclamen Pink-LT"
+  "Name": "Pistachio Green Ultra Very Dark"
  },
  {
   "AnchorNumber": "1045",
   "Color": {
-   "R": 245,
-   "G": 73,
-   "B": 141
+   "R": 165,
+   "G": 117,
+   "B": 60
   },
-  "Name": "Cyclamen Pink"
+  "Name": "Golden Brown Medium Light"
  },
  {
   "AnchorNumber": "1046",
   "Color": {
-   "R": 226,
-   "G": 42,
-   "B": 120
+   "R": 119,
+   "G": 74,
+   "B": 26
   },
-  "Name": "Cyclamen Pink-DK"
+  "Name": "Golden Brown Medium Dark"
  },
  {
   "AnchorNumber": "1047",
   "Color": {
-   "R": 220,
-   "G": 220,
-   "B": 174
+   "R": 221,
+   "G": 154,
+   "B": 110
   },
-  "Name": "Green Gray"
+  "Name": "Copper Light"
  },
  {
   "AnchorNumber": "1048",
   "Color": {
-   "R": 158,
-   "G": 166,
-   "B": 132
+   "R": 172,
+   "G": 103,
+   "B": 53
   },
-  "Name": "Green Gray"
+  "Name": "Copper Medium"
  },
  {
   "AnchorNumber": "1049",
   "Color": {
-   "R": 138,
-   "G": 148,
-   "B": 106
+   "R": 137,
+   "G": 74,
+   "B": 28
   },
-  "Name": "Green Gray-MD"
+  "Name": "Copper Medium Dark"
  },
  {
   "AnchorNumber": "1050",
   "Color": {
-   "R": 97,
-   "G": 104,
-   "B": 74
+   "R": 54,
+   "G": 31,
+   "B": 12
   },
-  "Name": "Green Gray-DK"
+  "Name": "Mocha Brown Dark"
  },
  {
   "AnchorNumber": "1051",
@@ -4245,7 +4245,7 @@
    "G": 227,
    "B": 234
   },
-  "Name": "Teal UL LT"
+  "Name": "Teal Ultra Light"
  },
  {
   "AnchorNumber": "1062",
@@ -4254,7 +4254,7 @@
    "G": 195,
    "B": 207
   },
-  "Name": "Teal LT"
+  "Name": "Teal Light"
  },
  {
   "AnchorNumber": "1064",
@@ -4263,7 +4263,7 @@
    "G": 163,
    "B": 178
   },
-  "Name": "Teal LT"
+  "Name": "Teal Medium Light"
  },
  {
   "AnchorNumber": "1066",
@@ -4272,7 +4272,7 @@
    "G": 107,
    "B": 122
   },
-  "Name": "Teal Med"
+  "Name": "Teal Medium"
  },
  {
   "AnchorNumber": "1068",
@@ -4290,7 +4290,7 @@
    "G": 207,
    "B": 180
   },
-  "Name": "Jade LT"
+  "Name": "Jade Light"
  },
  {
   "AnchorNumber": "1072",
@@ -4299,7 +4299,7 @@
    "G": 175,
    "B": 135
   },
-  "Name": "Jade Med LT"
+  "Name": "Jade Medium Light"
  },
  {
   "AnchorNumber": "1074",
@@ -4308,7 +4308,7 @@
    "G": 168,
    "B": 154
   },
-  "Name": "Jade Med"
+  "Name": "Jade Medium"
  },
  {
   "AnchorNumber": "1076",
@@ -4326,25 +4326,25 @@
    "G": 199,
    "B": 163
   },
-  "Name": "Taupe UL LT"
+  "Name": "Taupe Ultra Light"
  },
  {
   "AnchorNumber": "1082",
   "Color": {
-   "R": 121,
-   "G": 129,
-   "B": 165
+   "R": 202,
+   "G": 174,
+   "B": 140
   },
-  "Name": "Blue Gray"
+  "Name": "Taupe Medium Light"
  },
  {
   "AnchorNumber": "1084",
   "Color": {
-   "R": 165,
-   "G": 176,
-   "B": 211
+   "R": 169,
+   "G": 137,
+   "B": 102
   },
-  "Name": "Blue Violet-MD LT"
+  "Name": "Taupe"
  },
  {
   "AnchorNumber": "1085",
@@ -4353,16 +4353,16 @@
    "G": 116,
    "B": 82
   },
-  "Name": "Taupe DK"
+  "Name": "Taupe Dark"
  },
  {
   "AnchorNumber": "1086",
   "Color": {
-   "R": 185,
-   "G": 193,
-   "B": 223
+   "R": 85,
+   "G": 61,
+   "B": 52
   },
-  "Name": "Blue Violet-LT"
+  "Name": "Taupe Medium Dark"
  },
  {
   "AnchorNumber": "1088",
@@ -4371,7 +4371,7 @@
    "G": 73,
    "B": 30
   },
-  "Name": "Taupe VY DK"
+  "Name": "Taupe Very Dark"
  },
  {
   "AnchorNumber": "1089",
@@ -4380,52 +4380,52 @@
    "G": 165,
    "B": 180
   },
-  "Name": "Electric Blue Med"
+  "Name": "Electric Blue Medium"
  },
  {
   "AnchorNumber": "1090",
   "Color": {
-   "R": 213,
-   "G": 217,
-   "B": 239
+   "R": 19,
+   "G": 191,
+   "B": 224
   },
-  "Name": "Blue Violet-VY LT"
+  "Name": "Electric Blue Light"
  },
  {
   "AnchorNumber": "1092",
   "Color": {
-   "R": 229,
-   "G": 205,
-   "B": 219
+   "R": 153,
+   "G": 216,
+   "B": 210
   },
-  "Name": "Violet-Very light"
+  "Name": "Teal Light"
  },
  {
   "AnchorNumber": "1094",
   "Color": {
-   "R": 229,
-   "G": 205,
-   "B": 229
+   "R": 252,
+   "G": 158,
+   "B": 197
   },
-  "Name": "Lavender-LT"
+  "Name": "Pink Medium Light"
  },
  {
   "AnchorNumber": "1096",
   "Color": {
-   "R": 242,
-   "G": 208,
-   "B": 214
+   "R": 159,
+   "G": 179,
+   "B": 193
   },
-  "Name": "Dusty Rose-VY LT"
+  "Name": "Blue Grey Light"
  },
  {
   "AnchorNumber": "1098",
   "Color": {
-   "R": 230,
-   "G": 162,
-   "B": 155
+   "R": 212,
+   "G": 24,
+   "B": 41
   },
-  "Name": "Shell Pink-MD LT"
+  "Name": "Red"
  },
  {
   "AnchorNumber": "1100",
@@ -4491,13 +4491,22 @@
   "Name": "Blue-UL VY LT"
  },
  {
+  "AnchorNumber": "1201",
+  "Color": {
+   "R": 229,
+   "G": 172,
+   "B": 141
+  },
+  "Name": "Desert Sand Light"
+ },
+ {
   "AnchorNumber": "4146",
   "Color": {
    "R": 216,
    "G": 157,
    "B": 140
   },
-  "Name": "Flesh LT"
+  "Name": "Flesh Light"
  },
  {
   "AnchorNumber": "5975",
@@ -4506,7 +4515,7 @@
    "G": 56,
    "B": 26
   },
-  "Name": "Terracotta DK"
+  "Name": "Terracotta Dark"
  },
  {
   "AnchorNumber": "8581",
@@ -4515,7 +4524,7 @@
    "G": 62,
    "B": 58
   },
-  "Name": "Beaver Grey Med"
+  "Name": "Beaver Grey Medium"
  },
  {
   "AnchorNumber": "9046",
@@ -4533,15 +4542,15 @@
    "G": 241,
    "B": 255
   },
-  "Name": "Baby Blue VY LT"
+  "Name": "Baby Blue Very Light"
  },
  {
   "AnchorNumber": "9575",
   "Color": {
-   "R": 78,
-   "G": 80,
-   "B": 112
+   "R": 230,
+   "G": 142,
+   "B": 113
   },
-  "Name": "Cornflower Blu M V D"
+  "Name": "Terracotta Light"
  }
 ]

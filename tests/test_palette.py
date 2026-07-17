@@ -76,10 +76,12 @@ class TestThreadPalette:
 
 
 class TestAnchorPaletteData:
-    """Regressionstests fuer die Anchor-Paletten-Erweiterung (2026-07,
-    76 zuvor fehlende Farben ergaenzt, siehe anchor-palette-update-2026-07
-    Memory). Laedt ueber den echten PaletteManager-Pfad, nicht per Hand-JSON-
-    Parsing, damit ein Test-Fehler auch einen echten Lade-Bruch faengt."""
+    """Regressionstests fuer die Anchor-Palette (2026-07): erst 76 fehlende
+    Farben ergaenzt, dann die komplette Basis auf stitchmate.app umgestellt
+    (unsere alte Basis wich in ueber 2/3 aller Farben von einer unabhaengigen
+    Quelle ab -- siehe anchor-palette-update-2026-07 Memory). Laedt ueber den
+    echten PaletteManager-Pfad, nicht per Hand-JSON-Parsing, damit ein
+    Test-Fehler auch einen echten Lade-Bruch faengt."""
 
     def test_anchor_has_no_duplicate_catalog_numbers(self):
         manager = PaletteManager()
@@ -90,10 +92,12 @@ class TestAnchorPaletteData:
         assert len(numbers) == len(set(numbers))
 
     def test_anchor_925_926_are_distinct_names_not_yellow_green_duplicate(self):
-        """xstitchify.com dupliziert faelschlich Nr. 924s Namen auf 925 --
-        Family/Hex (#ff6624, Orange) stimmen mit mystitchworld.com ('TANGERINE')
-        und der DMC-970-Konversion ueberein, nur der Name war ein
-        Off-by-one-Fehler. Beim Import korrigiert."""
+        """Sowohl xstitchify.com als auch stitchmate.app duplizieren
+        faelschlich Nr. 924s Namen auf 925 (vermutlich gemeinsamer Upstream,
+        z.B. dieselbe offizielle Coats-Farbkarte) -- beide unabhaengig
+        berechneten Hex-Werte (#ff6624 bzw. #e45634) sind aber eindeutig
+        Orange, nicht Oliv-Gruen, und mystitchworld.com nennt 925 unabhaengig
+        'TANGERINE'. Beim Import auf 'Tangerine' korrigiert."""
         manager = PaletteManager()
         manager.load_all()
         anchor = manager.get_palette("Anchor")
@@ -106,6 +110,17 @@ class TestAnchorPaletteData:
         assert "Yellow Green" in t924.name
         assert t925.color.r > t925.color.g > 50  # Orange, nicht Oliv-Gruen
 
+    def test_anchor_242_243_244_pistachio_green_have_distinct_names(self):
+        """Gleiche Bug-Klasse wie 924/925, hier bei stitchmate: 244 uebernahm
+        faelschlich 242s Namen. Ueber DMC-367-Konversion ('Pistachio Green Dk')
+        auf 'Pistachio Green Dark' korrigiert."""
+        manager = PaletteManager()
+        manager.load_all()
+        anchor = manager.get_palette("Anchor")
+        assert anchor is not None
+        names = {n: anchor.find_by_number(n).name for n in ("242", "243", "244")}
+        assert len(set(names.values())) == 3, names
+
     def test_anchor_previously_missing_colors_now_present(self):
         manager = PaletteManager()
         manager.load_all()
@@ -114,6 +129,41 @@ class TestAnchorPaletteData:
         # Stichprobe aus den 76 2026-07 ergaenzten Nummern
         for number in ("26", "144", "778", "4146", "9046", "9159"):
             assert anchor.find_by_number(number) is not None, number
+
+
+class TestDmcPaletteData:
+    """Regressionstests fuer die DMC-Basis-Umstellung auf stitchmate.app
+    (2026-07): unsere alte Basis wich in 451 von 454 Farben von einer
+    unabhaengigen Quelle ab (Namen UND RGB, nicht nur Nuancen) -- siehe
+    anchor-palette-update-2026-07 Memory."""
+
+    def test_dmc_has_no_duplicate_catalog_numbers(self):
+        manager = PaletteManager()
+        manager.load_all()
+        dmc = manager.get_palette("DMC")
+        assert dmc is not None
+        numbers = [t.catalog_number for t in dmc.threads]
+        assert len(numbers) == len(set(numbers))
+
+    def test_dmc_legacy_placeholder_codes_still_present(self):
+        """8000/9000 sind dokumentierte Platzhalter-Nummern fuer White/Ecru
+        (siehe MEMORY.md), 5200 ein alter Alias fuer B5200 -- bewusst nicht
+        entfernt, falls Nutzer-Muster/Inventar noch darauf verweisen."""
+        manager = PaletteManager()
+        manager.load_all()
+        dmc = manager.get_palette("DMC")
+        assert dmc is not None
+        for number in ("5200", "8000", "9000", "B5200", "BLANC", "ECRU"):
+            assert dmc.find_by_number(number) is not None, number
+
+    def test_dmc_310_is_black(self):
+        manager = PaletteManager()
+        manager.load_all()
+        dmc = manager.get_palette("DMC")
+        assert dmc is not None
+        black = dmc.find_by_number("310")
+        assert black is not None
+        assert (black.color.r, black.color.g, black.color.b) < (20, 20, 20)
 
 
 class TestPaletteManager:
