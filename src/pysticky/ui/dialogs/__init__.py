@@ -8,7 +8,7 @@ from .color_management_dialog import ColorManagementDialog
 from .grid_options_dialog import GridOptionsDialog
 from .heatmap_dialog import HeatmapDialog
 from .hoop_planner_dialog import HoopPlannerDialog
-from .image_import_dialog import ImageImportDialog
+from .image_import import ImageImportDialog
 from .inventory_dialog import InventoryDialog
 from .new_project_dialog import NewProjectDialog
 from .palette_conversion_dialog import PaletteConversionDialog
