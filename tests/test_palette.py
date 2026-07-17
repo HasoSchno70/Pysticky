@@ -75,6 +75,47 @@ class TestThreadPalette:
         assert similar[0].name == "Rot"
 
 
+class TestAnchorPaletteData:
+    """Regressionstests fuer die Anchor-Paletten-Erweiterung (2026-07,
+    76 zuvor fehlende Farben ergaenzt, siehe anchor-palette-update-2026-07
+    Memory). Laedt ueber den echten PaletteManager-Pfad, nicht per Hand-JSON-
+    Parsing, damit ein Test-Fehler auch einen echten Lade-Bruch faengt."""
+
+    def test_anchor_has_no_duplicate_catalog_numbers(self):
+        manager = PaletteManager()
+        manager.load_all()
+        anchor = manager.get_palette("Anchor")
+        assert anchor is not None
+        numbers = [t.catalog_number for t in anchor.threads]
+        assert len(numbers) == len(set(numbers))
+
+    def test_anchor_925_926_are_distinct_names_not_yellow_green_duplicate(self):
+        """xstitchify.com dupliziert faelschlich Nr. 924s Namen auf 925 --
+        Family/Hex (#ff6624, Orange) stimmen mit mystitchworld.com ('TANGERINE')
+        und der DMC-970-Konversion ueberein, nur der Name war ein
+        Off-by-one-Fehler. Beim Import korrigiert."""
+        manager = PaletteManager()
+        manager.load_all()
+        anchor = manager.get_palette("Anchor")
+        assert anchor is not None
+        t924 = anchor.find_by_number("924")
+        t925 = anchor.find_by_number("925")
+        assert t924 is not None
+        assert t925 is not None
+        assert t924.name != t925.name
+        assert "Yellow Green" in t924.name
+        assert t925.color.r > t925.color.g > 50  # Orange, nicht Oliv-Gruen
+
+    def test_anchor_previously_missing_colors_now_present(self):
+        manager = PaletteManager()
+        manager.load_all()
+        anchor = manager.get_palette("Anchor")
+        assert anchor is not None
+        # Stichprobe aus den 76 2026-07 ergaenzten Nummern
+        for number in ("26", "144", "778", "4146", "9046", "9159"):
+            assert anchor.find_by_number(number) is not None, number
+
+
 class TestPaletteManager:
     """Tests für PaletteManager."""
 
