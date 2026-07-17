@@ -3,6 +3,13 @@ Vorschau-Widget für die Stickpfad-Visualisierung.
 
 Zeigt den optimierten Stickpfad mit Zoom, Pan und
 verschiedenen Anzeigeoptionen (Nummern, Sprünge, Gitter).
+
+Bewusst KEINE THEME-Farben für die Zeichenfläche: Hintergrund, Gitter
+und Beschriftung passen sich der Leuchtdichte der aktuell dargestellten
+GARNFARBE an (helles Garn → dunkler Grund und umgekehrt), damit der
+Pfad unabhängig vom App-Theme immer Kontrast hat. Die Marker-Farben
+(Start grün, Ende rot, Sprünge rot gestrichelt) sind semantische
+Signalfarben. Alles zentral als Konstanten unten definiert.
 """
 
 from __future__ import annotations
@@ -26,6 +33,32 @@ from ...core import ColorPath, Pattern
 from ...utils import clamp
 from ..color_utils import to_qcolor
 from .custom_tooltip import hide_custom_tooltip, show_custom_tooltip
+
+# Kontrast-adaptive Zeichenflächen-Farben, gewählt nach Garn-Leuchtdichte
+# (hell / dunkel / mittel):
+_BG_FOR_LIGHT_THREAD = QColor(50, 50, 58)
+_BG_FOR_DARK_THREAD = QColor(235, 235, 240)
+_BG_FOR_MID_THREAD = QColor(170, 170, 180)
+_GRID_FOR_LIGHT_THREAD = QColor(80, 80, 90)
+_GRID_FOR_DARK_THREAD = QColor(200, 200, 210)
+_GRID_FOR_MID_THREAD = QColor(150, 150, 160)
+_TEXT_FOR_LIGHT_THREAD = QColor(200, 200, 200)
+_TEXT_FOR_DARK_THREAD = QColor(60, 60, 60)
+
+# Semantische Signalfarben (theme-unabhängig)
+_FALLBACK_THREAD_COLOR = QColor(200, 200, 200)
+_JUMP_LINE_COLOR = QColor(220, 80, 80)
+_START_MARKER_COLOR = QColor(30, 220, 30)
+_END_MARKER_COLOR = QColor(220, 50, 50)
+_NUMBER_ON_LIGHT = QColor(0, 0, 0)
+_NUMBER_ON_DARK = QColor(255, 255, 255)
+
+
+def _translucent(color: QColor, alpha: int) -> QColor:
+    """Kopie der Farbe mit Alpha (Konstanten bleiben unveraendert)."""
+    c = QColor(color)
+    c.setAlpha(alpha)
+    return c
 
 
 class PathPreviewWidget(QWidget):
@@ -146,27 +179,27 @@ class PathPreviewWidget(QWidget):
     def _get_background_color(self) -> QColor:
         """Ermittelt passenden Hintergrund basierend auf Farbhelligkeit."""
         if self._current_color_luminance > 0.6:
-            return QColor(50, 50, 58)
+            return QColor(_BG_FOR_LIGHT_THREAD)
         elif self._current_color_luminance < 0.4:
-            return QColor(235, 235, 240)
+            return QColor(_BG_FOR_DARK_THREAD)
         else:
-            return QColor(170, 170, 180)
+            return QColor(_BG_FOR_MID_THREAD)
 
     def _get_grid_color(self) -> QColor:
         """Ermittelt passende Gitterfarbe."""
         if self._current_color_luminance > 0.6:
-            return QColor(80, 80, 90)
+            return QColor(_GRID_FOR_LIGHT_THREAD)
         elif self._current_color_luminance < 0.4:
-            return QColor(200, 200, 210)
+            return QColor(_GRID_FOR_DARK_THREAD)
         else:
-            return QColor(150, 150, 160)
+            return QColor(_GRID_FOR_MID_THREAD)
 
     def _get_text_color(self) -> QColor:
         """Ermittelt passende Textfarbe."""
         if self._current_color_luminance > 0.6:
-            return QColor(200, 200, 200)
+            return QColor(_TEXT_FOR_LIGHT_THREAD)
         else:
-            return QColor(60, 60, 60)
+            return QColor(_TEXT_FOR_DARK_THREAD)
 
     def _stitch_at_pos(self, pos: QPointF):
         """Ermittelt den Stich an einer Bildschirmposition."""
@@ -304,7 +337,7 @@ class PathPreviewWidget(QWidget):
         # Aktiver Pfad
         if self._color_path:
             entry = self._pattern.get_color_entry(self._color_path.color_index)
-            color = to_qcolor(entry.thread.color) if entry else QColor(200, 200, 200)
+            color = to_qcolor(entry.thread.color) if entry else QColor(_FALLBACK_THREAD_COLOR)
 
             # Gefüllte Zellen
             painter.setPen(Qt.PenStyle.NoPen)
@@ -330,7 +363,7 @@ class PathPreviewWidget(QWidget):
                         y2 = oy + step.y * cell + cell / 2
 
                         if step.is_jump and self._show_jumps:
-                            pen = QPen(QColor(220, 80, 80), line_width, Qt.PenStyle.DashLine)
+                            pen = QPen(_JUMP_LINE_COLOR, line_width, Qt.PenStyle.DashLine)
                         else:
                             pen = QPen(line_color, line_width)
                         painter.setPen(pen)
@@ -346,9 +379,9 @@ class PathPreviewWidget(QWidget):
             # Nummern
             if self._show_numbers and cell >= 16:
                 if entry and entry.thread.color.luminance > 0.5:
-                    num_color = QColor(0, 0, 0)
+                    num_color = _NUMBER_ON_LIGHT
                 else:
-                    num_color = QColor(255, 255, 255)
+                    num_color = _NUMBER_ON_DARK
                 painter.setPen(num_color)
                 font = painter.font()
                 font.setPixelSize(max(8, int(cell / 3)))
@@ -371,13 +404,13 @@ class PathPreviewWidget(QWidget):
                 start = self._color_path.steps[0]
                 sx = ox + start.x * cell + cell / 2
                 sy = oy + start.y * cell + cell / 2
-                painter.setPen(QPen(QColor(30, 220, 30), pen_width))
-                painter.setBrush(QColor(30, 220, 30, 50))
+                painter.setPen(QPen(_START_MARKER_COLOR, pen_width))
+                painter.setBrush(_translucent(_START_MARKER_COLOR, 50))
                 painter.drawEllipse(QPointF(sx, sy), marker_size / 2, marker_size / 2)
 
                 # "S" Label
                 if cell >= 10:
-                    painter.setPen(QColor(30, 220, 30))
+                    painter.setPen(_START_MARKER_COLOR)
                     font = painter.font()
                     font.setPixelSize(max(10, int(cell / 2)))
                     font.setBold(True)
@@ -392,15 +425,15 @@ class PathPreviewWidget(QWidget):
                 end = self._color_path.steps[-1]
                 ex = ox + end.x * cell + cell / 2
                 ey = oy + end.y * cell + cell / 2
-                painter.setPen(QPen(QColor(220, 50, 50), pen_width))
-                painter.setBrush(QColor(220, 50, 50, 50))
+                painter.setPen(QPen(_END_MARKER_COLOR, pen_width))
+                painter.setBrush(_translucent(_END_MARKER_COLOR, 50))
                 painter.drawRect(
                     QRectF(ex - marker_size / 2, ey - marker_size / 2, marker_size, marker_size)
                 )
 
                 # "E" Label
                 if cell >= 10:
-                    painter.setPen(QColor(220, 50, 50))
+                    painter.setPen(_END_MARKER_COLOR)
                     painter.drawText(
                         QRectF(ex - cell, ey + cell * 0.5, cell * 2, cell),
                         Qt.AlignmentFlag.AlignCenter,

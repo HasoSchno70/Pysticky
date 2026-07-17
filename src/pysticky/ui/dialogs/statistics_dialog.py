@@ -156,6 +156,11 @@ class PatternStatisticsDialog(QDialog):
             }}
             QTableWidget {{
                 background: {THEME.bg_medium};
+                /* alternate-background-color statt ::item:alternate-Regel:
+                   die ::item-QSS-Regel uebermalt per setBackground gesetzte
+                   Farb-Swatches in geraden Zeilen — die Palette-Variante
+                   laesst Item-Hintergruende gewinnen. */
+                alternate-background-color: {THEME.bg_light};
                 color: {THEME.text_primary};
                 border: 1px solid {THEME.border_dark};
                 border-radius: 4px;
@@ -163,9 +168,6 @@ class PatternStatisticsDialog(QDialog):
             }}
             QTableWidget::item {{
                 padding: 5px;
-            }}
-            QTableWidget::item:alternate {{
-                background: {THEME.bg_light};
             }}
             QHeaderView::section {{
                 background: {THEME.bg_light};
