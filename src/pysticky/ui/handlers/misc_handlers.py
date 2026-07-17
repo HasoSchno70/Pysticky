@@ -729,6 +729,11 @@ class MiscHandlersMixin:
         # Stoff-Textur (Aida-Optik)
         self.canvas.show_fabric_texture = self._settings.value("fabric_texture", True, type=bool)
 
+        # Tastenkürzel (live, ohne Neustart)
+        from ..shortcuts_registry import apply_saved_overrides
+
+        apply_saved_overrides(self._shortcut_registry, self._settings)
+
         self.canvas.update()
 
     def _reapply_all_widget_styles(self: "MainWindow") -> None:

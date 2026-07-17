@@ -254,28 +254,44 @@ see [ARCHITECTURE.en.md](ARCHITECTURE.en.md). Build instructions in [BUILD.en.md
 | Drag onto color bar | Add color (from palette) or swap (from swatch) |
 
 ### Global Keyboard Shortcuts
+All shortcuts can be individually customized under Settings -> Keyboard
+Shortcuts (double-click an entry).
+
 | Shortcut | Function |
 |---------|----------|
 | `Ctrl+N` / `Ctrl+O` / `Ctrl+S` | New / Open / Save |
 | `Ctrl+Shift+S` | Save as |
 | `Ctrl+Alt+P` | Properties (author, notes, stitching date) |
-| `Ctrl+I` / `Ctrl+Shift+I` | Import image / Import XSD-PAT |
+| `Ctrl+Alt+V` | Versions |
+| `Ctrl+I` / `Ctrl+Alt+I` | Import image / Import XSD-PAT |
 | `Ctrl+L` | Pattern library |
 | `Ctrl+E` / `Ctrl+Shift+E` / `Ctrl+Alt+E` | Export HTML / PDF / Image |
 | `Ctrl+P` | Print |
 | `Ctrl+Z` / `Ctrl+Y` | Undo / Redo |
-| `Ctrl+H` | Replace color |
+| `Ctrl+R` | Replace color |
+| `Ctrl+H` | Highlight active color |
 | `Ctrl+Shift+T` | Swap colors |
 | `Ctrl+Shift+P` | Manage color palette |
-| `Ctrl+Shift+S` | Statistics + yarn consumption |
+| `Ctrl+Shift+H` | Color harmonies |
+| `Ctrl+Shift+C` | Auto-crop |
+| `Ctrl+Shift+M` | Merge similar colors |
+| `Ctrl+Shift+K` | Convert palette |
+| `Ctrl+Shift+G` | Statistics + yarn consumption |
+| `Ctrl+Shift+I` | Yarn inventory |
+| `Ctrl+M` | Stitching mode |
 | `Ctrl+Shift+O` | Stitch-path optimization |
+| `Ctrl+D` | Diamond view |
+| `F5` | Pattern preview |
+| `Ctrl+Shift+N` | New layer |
 | `Ctrl+,` | Settings |
 | `Ctrl++` / `Ctrl+-` / `Ctrl+0` / `Ctrl+1` | Zoom in/out / Fit / 100% |
 | Arrow keys | Pan canvas |
-| `?` | Keyboard shortcuts overview |
+| `F1` | Keyboard shortcuts overview |
 
 ### Tool Shortcuts
-`P` Pencil · `E` Eraser · `F` Fill · `I` Eyedropper · `L` Line · `R` Rectangle (`Shift+R` filled) · `O` Ellipse (`Shift+O` filled) · `G` Polygon (`Shift+G` filled) · `T` Text · `B` Backstitch · `D` Gradient · `K` Progress · `S` Selection (rectangle, `Shift+S` lasso) · `M` Move
+`P` Pencil · `E` Eraser · `F` Fill · `I` Eyedropper · `L` Line · `R` Rectangle · `O` Ellipse · `G` Polygon · `T` Text · `B` Backstitch · `D` Gradient · `K` Progress · `S` Selection (rectangle/lasso) · `M` Move
+
+For the shape tools (rectangle/ellipse/polygon) and selection, clicking the already-active tool button a second time toggles between the two variants (e.g. outline/filled, rectangle/lasso) — this isn't bound to a separate key combination.
 
 ### Selection
 | Shortcut | Function |

@@ -49,6 +49,7 @@ from .builders import (
     ActionsBuilderMixin,
     DockBuilderMixin,
     MenuBuilderMixin,
+    ShortcutsRegistryMixin,
     SignalsConnectorMixin,
     ToolbarBuilderMixin,
 )
@@ -91,6 +92,7 @@ class MainWindow(
     ToolbarBuilderMixin,
     DockBuilderMixin,
     SignalsConnectorMixin,
+    ShortcutsRegistryMixin,
 ):
     """
     Hauptfenster der PySticky Kreuzstich-Anwendung.
@@ -143,6 +145,13 @@ class MainWindow(
         self._create_dock_widgets()  # DockBuilderMixin
         self._create_status_bar()
         self._connect_signals()  # SignalsConnectorMixin
+
+        # Tastenkürzel-Registry: Ziele sammeln, dann gespeicherte
+        # Custom-Shortcuts anwenden (überschreibt die Defaults live).
+        self._register_shortcut_targets()  # ShortcutsRegistryMixin
+        from .shortcuts_registry import apply_saved_overrides
+
+        apply_saved_overrides(self._shortcut_registry, self._settings)
 
         # Gespeichertes Dock-Layout wiederherstellen
         saved_state = self._settings.value("window/state")

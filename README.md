@@ -254,28 +254,44 @@ siehe [ARCHITECTURE.md](ARCHITECTURE.md). Build-Anleitung in [BUILD.md](BUILD.md
 | Drag auf Farb-Bar | Farbe hinzufuegen (von Palette) oder tauschen (von Swatch) |
 
 ### Globale Tastenkuerzel
+Alle Tastenkuerzel sind unter Einstellungen -> Tastenkuerzel individuell
+anpassbar (Doppelklick auf einen Eintrag).
+
 | Kuerzel | Funktion |
 |---------|----------|
 | `Ctrl+N` / `Ctrl+O` / `Ctrl+S` | Neu / Oeffnen / Speichern |
 | `Ctrl+Shift+S` | Speichern unter |
 | `Ctrl+Alt+P` | Eigenschaften (Autor, Notizen, Stickdatum) |
-| `Ctrl+I` / `Ctrl+Shift+I` | Bild importieren / XSD-PAT importieren |
+| `Ctrl+Alt+V` | Versionen |
+| `Ctrl+I` / `Ctrl+Alt+I` | Bild importieren / XSD-PAT importieren |
 | `Ctrl+L` | Muster-Bibliothek |
 | `Ctrl+E` / `Ctrl+Shift+E` / `Ctrl+Alt+E` | Export HTML / PDF / Bild |
 | `Ctrl+P` | Drucken |
 | `Ctrl+Z` / `Ctrl+Y` | Rueckgaengig / Wiederherstellen |
-| `Ctrl+H` | Farbe ersetzen |
+| `Ctrl+R` | Farbe ersetzen |
+| `Ctrl+H` | Aktive Farbe hervorheben |
 | `Ctrl+Shift+T` | Farben tauschen |
 | `Ctrl+Shift+P` | Farbpalette verwalten |
-| `Ctrl+Shift+S` | Statistiken + Garnverbrauch |
+| `Ctrl+Shift+H` | Farb-Harmonien |
+| `Ctrl+Shift+C` | Auto-Zuschneiden |
+| `Ctrl+Shift+M` | Aehnliche Farben zusammenfuehren |
+| `Ctrl+Shift+K` | Palette konvertieren |
+| `Ctrl+Shift+G` | Statistiken + Garnverbrauch |
+| `Ctrl+Shift+I` | Garn-Vorrat |
+| `Ctrl+M` | Sticken-Modus |
 | `Ctrl+Shift+O` | Stickpfad-Optimierung |
+| `Ctrl+D` | Diamond-Ansicht |
+| `F5` | Vorlagen-Vorschau |
+| `Ctrl+Shift+N` | Neue Ebene |
 | `Ctrl+,` | Einstellungen |
 | `Ctrl++` / `Ctrl+-` / `Ctrl+0` / `Ctrl+1` | Zoom +/- / Einpassen / 100 % |
 | Pfeiltasten | Canvas verschieben |
-| `?` | Tastenkuerzel-Uebersicht |
+| `F1` | Tastenkuerzel-Uebersicht |
 
 ### Werkzeug-Shortcuts
-`P` Stift · `E` Radierer · `F` Fuellen · `I` Pipette · `L` Linie · `R` Rechteck (`Shift+R` gefuellt) · `O` Ellipse (`Shift+O` gefuellt) · `G` Polygon (`Shift+G` gefuellt) · `T` Text · `B` Rueckstich · `D` Farbverlauf · `K` Fortschritt · `S` Auswahl (Rechteck, `Shift+S` Lasso) · `M` Bewegen
+`P` Stift · `E` Radierer · `F` Fuellen · `I` Pipette · `L` Linie · `R` Rechteck · `O` Ellipse · `G` Polygon · `T` Text · `B` Rueckstich · `D` Farbverlauf · `K` Fortschritt · `S` Auswahl (Rechteck/Lasso) · `M` Bewegen
+
+Bei den Form-Werkzeugen (Rechteck/Ellipse/Polygon) und der Auswahl schaltet ein zweiter Klick auf den bereits aktiven Werkzeug-Button zwischen den beiden Varianten um (z. B. Umriss/Gefuellt, Rechteck/Lasso) — nicht ueber eine eigene Tastenkombination.
 
 ### Auswahl
 | Kuerzel | Funktion |

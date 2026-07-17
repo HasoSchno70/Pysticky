@@ -197,8 +197,12 @@ class ThreadTab(QWidget):
         )
         if skipped_count > 0:
             self._total_skeins_label.setText(
-                f"Gesamt: {total_skeins} Stränge ({skipped_count} Farbe(n) übersprungen)"
+                t("Gesamt: {n} Stränge ({skipped} Farbe(n) übersprungen)").format(
+                    n=total_skeins, skipped=skipped_count
+                )
             )
         else:
-            self._total_skeins_label.setText(f"Gesamt: {total_skeins} Stränge")
-        self._total_cost_label.setText(f"Geschätzte Kosten: {total_cost:.2f} €")
+            self._total_skeins_label.setText(t("Gesamt: {n} Stränge").format(n=total_skeins))
+        self._total_cost_label.setText(
+            t("Geschätzte Kosten: {cost} €").format(cost=f"{total_cost:.2f}")
+        )

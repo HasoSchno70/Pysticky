@@ -226,8 +226,13 @@ class ActionsBuilderMixin:
         self.action_import_palette.triggered.connect(self._on_import_palette)
 
         self.action_statistics = QAction(t("&Statistiken && Garnverbrauch..."), self)
-        self.action_statistics.setShortcut("Ctrl+Shift+S")
-        self.action_statistics.setToolTip(t("Statistiken & Garnverbrauch (Ctrl+Shift+S)"))
+        # War "Ctrl+Shift+S" -- kollidierte mit action_save_as, dessen
+        # QKeySequence.StandardKey.SaveAs sich auf dieser Plattform auf
+        # genau dieselbe Kombination auflöst (im Quellcode nicht sichtbar,
+        # da dort nur die StandardKey-Konstante steht -- gefunden per
+        # Laufzeit-Check der Tastenkürzel-Registry, nicht per Text-Suche).
+        self.action_statistics.setShortcut("Ctrl+Shift+G")
+        self.action_statistics.setToolTip(t("Statistiken & Garnverbrauch (Ctrl+Shift+G)"))
         self.action_statistics.triggered.connect(self._on_show_statistics)
 
         self.action_inventory = QAction(t("&Garn-Vorrat..."), self)

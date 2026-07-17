@@ -623,3 +623,7 @@ class ToolBar(QWidget):
                 self._on_toggle_clicked(btn)
             else:
                 self._on_tool_clicked(tool, btn)
+
+    def get_button(self, tool: Tool) -> "ToolButton | None":
+        """Gibt den Button für ein Werkzeug zurück (für die Tastenkürzel-Registry)."""
+        return self._buttons.get(tool)

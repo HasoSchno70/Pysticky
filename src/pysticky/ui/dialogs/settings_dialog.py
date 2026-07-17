@@ -93,7 +93,9 @@ class SettingsDialog(QDialog):
         self.tools_tab = ToolsTab()
         self.colors_tab = ColorsTab()
         self.files_tab = FilesTab()
-        self.shortcuts_tab = ShortcutsTab()
+        self.shortcuts_tab = ShortcutsTab(
+            registry=getattr(self.parent(), "_shortcut_registry", None)
+        )
 
         # Tabs in scrollbarer Area — bei kleinem Fenster bleiben alle Felder
         # erreichbar statt abgeschnitten zu werden.
