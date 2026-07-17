@@ -166,6 +166,101 @@ class TestDmcPaletteData:
         assert (black.color.r, black.color.g, black.color.b) < (20, 20, 20)
 
 
+class TestCosmoPaletteData:
+    """Regressionstests fuer die Cosmo-Erweiterung (2026-07): von 91 auf
+    542 Farben (500 von stitchmate.app + 42 eigene Katalognummern, die dort
+    fehlen). Eigene kuratierte Namen fuer die urspruenglichen 91 Farben
+    blieben erhalten -- stitchmate liefert fuer Cosmo keine echten Namen,
+    nur den Code wiederholt."""
+
+    def test_cosmo_has_no_duplicate_catalog_numbers(self):
+        manager = PaletteManager()
+        manager.load_all()
+        cosmo = manager.get_palette("Cosmo")
+        assert cosmo is not None
+        numbers = [t.catalog_number for t in cosmo.threads]
+        assert len(numbers) == len(set(numbers))
+
+    def test_cosmo_previously_missing_colors_now_present(self):
+        manager = PaletteManager()
+        manager.load_all()
+        cosmo = manager.get_palette("Cosmo")
+        assert cosmo is not None
+        for number in ("351", "480A", "1000", "2041", "500"):
+            assert cosmo.find_by_number(number) is not None, number
+
+    def test_cosmo_curated_names_preserved_for_original_colors(self):
+        manager = PaletteManager()
+        manager.load_all()
+        cosmo = manager.get_palette("Cosmo")
+        assert cosmo is not None
+        white = cosmo.find_by_number("100")
+        assert white is not None
+        assert white.name == "White"
+
+
+class TestAllPalettesHaveResolvedCatalogNumbers:
+    """Regressionstest fuer einen 2026-07 gefundenen, schwerwiegenden Bug:
+    10 von 19 Paletten-Dateien nutzten das JSON-Feld "Nummer" statt eines auf
+    "Number"/"Code" endenden Feldnamens, den PaletteManager._load_palette_file()
+    zur Katalognummer-Erkennung erwartet -- dadurch war thread.catalog_number
+    fuer JEDE Farbe dieser 10 Paletten None. Das kollabierte den
+    manufacturer+catalog_number-Dedup-Schluessel in image_import.py auf einen
+    einzigen Wert pro Palette, wodurch ein Bildimport in eine dieser Paletten
+    praktisch das gesamte Muster auf eine einzige Farbe kollabieren liess
+    (reproduziert: 2 klar getrennte Farbbloecke -> 0/200 statt 100/100 Stiche).
+    Betroffen waren Classic Colorworks, Cosmo, Finca, Gentle Art Sampler
+    Threads, Olympus, Riolis Gamma, Sullivans, Valdani, Venus, Weeks Dye
+    Works. Gefixt durch Umbenennen auf <Hersteller>Number je Datei."""
+
+    def test_no_palette_has_unresolved_catalog_numbers(self):
+        manager = PaletteManager()
+        manager.load_all()
+        broken = []
+        for name in manager.available_palettes:
+            palette = manager.get_palette(name)
+            assert palette is not None
+            if any(t.catalog_number is None for t in palette.threads):
+                broken.append(name)
+        assert broken == []
+
+    def test_no_palette_has_duplicate_catalog_numbers(self):
+        manager = PaletteManager()
+        manager.load_all()
+        dupes = {}
+        for name in manager.available_palettes:
+            palette = manager.get_palette(name)
+            assert palette is not None
+            numbers = [t.catalog_number for t in palette.threads]
+            if len(numbers) != len(set(numbers)):
+                dupes[name] = len(numbers) - len(set(numbers))
+        assert dupes == {}
+
+    def test_image_import_into_cosmo_does_not_collapse_colors(self, tmp_path):
+        """Reproduziert exakt den urspruenglichen Bug: zwei klar getrennte
+        Farbbloecke muessen zwei unterschiedliche Farb-Eintraege mit
+        korrekten, disjunkten Stichzahlen ergeben statt auf eine Farbe zu
+        kollabieren."""
+        from PIL import Image
+
+        from pysticky.core.image_import import ImportSettings, import_image
+
+        path = tmp_path / "two_blocks.png"
+        img = Image.new("RGB", (20, 10), (255, 0, 0))
+        for x in range(10, 20):
+            for y in range(10):
+                img.putpixel((x, y), (0, 0, 255))
+        img.save(path)
+
+        settings = ImportSettings(
+            width=20, height=10, max_colors=5, palette_name="Cosmo", dithering_mode="none"
+        )
+        pattern = import_image(path, settings)
+        assert len(pattern.color_entries) == 2
+        counts = sorted(e.stitch_count for e in pattern.color_entries)
+        assert counts == [100, 100]
+
+
 class TestPaletteManager:
     """Tests für PaletteManager."""
 
