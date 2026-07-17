@@ -10,6 +10,62 @@ vor 1.0: `0.MINOR.PATCH`, Breaking Changes möglich innerhalb 0.x).
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-07-17
+
+### Hinzugefügt
+
+- Farb-Toleranz (ΔE) beim Füllen und bei "Farbe ersetzen" — ersetzt/füllt
+  jetzt auch ähnliche statt nur exakt gleiche Farben
+- "Mystery-Modus" (Einstellungen → Dateien → Export): druckt Musterseiten
+  ohne Farben (nur Symbol + Gitter) für Überraschungs-Kits
+- "Bildimport wiederholen…" (Datei-Menü): öffnet den Import-Dialog
+  vorbefüllt mit Quellbild, Ausschnitt und Einstellungen des aktuellen
+  Musters, um den Import mit angepassten Werten zu wiederholen
+- Farbe-ersetzen-Dialog komplett überarbeitet: Vorschlags-Kacheln mit den
+  ähnlichsten Farben, große Original-➜-Neu-Vorschau, Auto-Reduzieren
+  seltener Farben in einem Schritt
+- Datei-Logging (Einstellungen → Diagnose) — schreibt bei Bedarf alle
+  Fehler nach `~/.pysticky/logs`
+- "Tastenkürzel"-Settings-Tab ist jetzt echt verdrahtet (vorher wirkungslos)
+- Anchor-Palette um 76 zuvor fehlende Farben ergänzt, danach komplett auf
+  eine verifizierte Quelle (stitchmate.app) umgestellt; DMC und Cosmo
+  ebenso (Cosmo 91 → 542 Farben)
+
+### Geändert
+
+- Farbabstand-Metrik überall von CIE76 auf CIEDE2000 upgegradet
+  (genauere Farbtoleranz/Ähnlichkeits-Berechnung)
+- Diamond Painting zeigt jetzt überall Farb-Symbole statt DMC-Nummern
+  (Canvas, HTML-/PDF-Export)
+- Madeira-Paletten konsolidiert: unklare, herkunftsungeklärte 269-Farben-
+  Datei entfernt, verifizierte Mouliné-Palette (381 Farben) ist jetzt die
+  alleinige "Madeira"-Palette
+- Dialog-Feinschliff: doppelte Titel-Zeilen in 6 Dialogen entfernt (Titel
+  steht schon in der Fensterleiste), Innenabstände über ~23 Dialoge
+  vereinheitlicht
+- Statistik-Dialog (1078 → 297 Zeilen) und Bildimport-Dialog
+  (1110 Zeilen → 6 Module) intern aufgeteilt — keine sichtbare Änderung,
+  nur wartbarer
+
+### Behoben
+
+- **Kritisch:** 10 Garnpaletten (u.a. Cosmo, Finca, Olympus, Valdani,
+  Weeks Dye Works) hatten nie eine erkennbare Katalognummer — ein
+  Bildimport in eine dieser Paletten ließ das gesamte Muster auf eine
+  einzige Farbe kollabieren
+- Gitterlinien waren gegen gedeckte/graue Garnfarben (z.B. Wasser/Himmel
+  bei Foto-Importen) kaum sichtbar — Kontrast deutlich erhöht
+- Speichern-Absturz bei nicht-serialisierbarem Zustand
+- "Farbe ersetzen" bei großen Mustern: minutenlanger UI-Freeze durch
+  Massen-Operationen behoben (jetzt ~0,25s statt Minuten)
+- Lineal und Start-Bildschirm aktualisierten sich nicht live bei
+  Theme-Wechsel
+- Absturz beim Farbe-Löschen und Spiegeln (nicht existierendes
+  `clear_stitch`)
+- Zwei echte Tastenkürzel-Kollisionen gefunden und behoben
+  (`action_save_as`/`action_statistics`, u.a.)
+- Statistik-Tabellen: Farb-Swatches in geraden Zeilen waren unsichtbar
+
 ## [0.8.2] — 2026-07-15
 
 ### Behoben

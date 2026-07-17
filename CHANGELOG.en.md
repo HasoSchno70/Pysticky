@@ -10,6 +10,61 @@ versioning based on [Semantic Versioning](https://semver.org/) (pre-1.0:
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-07-17
+
+### Added
+
+- Color tolerance (ΔE) for fill and "replace color" — now also replaces/
+  fills similar, not just exactly matching, colors
+- "Mystery mode" (Settings → Files → Export): prints pattern pages
+  without colors (symbol + grid only) for surprise/blind-stitch kits
+- "Repeat image import…" (File menu): reopens the import dialog pre-filled
+  with the current pattern's source image, crop, and settings, so the
+  import can be redone with tweaked values
+- Replace-color dialog overhauled: suggestion tiles with the closest
+  matching colors, a large original-➜-new preview, one-step auto-reduce
+  of rare colors
+- File logging (Settings → Diagnostics) — writes all errors to
+  `~/.pysticky/logs` on request
+- "Keyboard Shortcuts" settings tab is now actually wired up (was
+  previously inert)
+- Extended the Anchor palette by 76 previously-missing colors, then
+  switched the whole palette to a verified source (stitchmate.app); did
+  the same for DMC and Cosmo (Cosmo 91 → 542 colors)
+
+### Changed
+
+- Upgraded the color-distance metric everywhere from CIE76 to CIEDE2000
+  (more accurate tolerance/similarity calculations)
+- Diamond Painting now shows color symbols instead of DMC numbers
+  everywhere (canvas, HTML/PDF export)
+- Consolidated the Madeira palettes: removed the old 269-color file of
+  unclear origin, the verified Mouliné palette (381 colors) is now the
+  sole "Madeira" palette
+- Dialog polish: removed duplicate title labels in 6 dialogs (the title
+  is already in the window's title bar), unified inner spacing across
+  ~23 dialogs
+- Internally split the statistics dialog (1078 → 297 lines) and the
+  image import dialog (1110 lines → 6 modules) — no visible change, just
+  more maintainable
+
+### Fixed
+
+- **Critical:** 10 thread palettes (incl. Cosmo, Finca, Olympus, Valdani,
+  Weeks Dye Works) never had a resolvable catalog number — importing an
+  image into one of these palettes collapsed the entire pattern onto a
+  single color
+- Grid lines were barely visible against muted/gray thread colors (e.g.
+  water/sky in photo imports) — contrast significantly increased
+- Save crash on non-serializable state
+- "Replace color" on large patterns: a multi-minute UI freeze from batch
+  operations fixed (now ~0.25s instead of minutes)
+- Ruler and start screen didn't update live on a theme switch
+- Crash on color delete and mirror (nonexistent `clear_stitch`)
+- Found and fixed two real keyboard shortcut collisions
+  (`action_save_as`/`action_statistics`, among others)
+- Statistics tables: color swatches on even rows were invisible
+
 ## [0.8.2] — 2026-07-15
 
 ### Fixed
