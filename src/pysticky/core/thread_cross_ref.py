@@ -5,7 +5,7 @@ Sucht zu einem gegebenen Thread (z.B. DMC 310) die jeweils farblich
 nächste Entsprechung in einer Ziel-Palette (Anchor, Madeira, ...).
 
 Es gibt keine offiziellen 1:1-Mappings zwischen den Hersteller-Kataloge,
-darum nutzen wir Delta-E (CIE76 in Lab) — wahrnehmungsbasiert besser als
+darum nutzen wir Delta-E (CIEDE2000 in Lab) — wahrnehmungsbasiert besser als
 plain RGB. Der Algorithmus ist deterministisch und liefert pro Frage
 denselben Match.
 

@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 
 def _color_distance(c1: ThreadColor, c2: ThreadColor) -> float:
-    """Perzeptuelle Farbdistanz (CIE76 Delta-E in Lab)."""
+    """Perzeptuelle Farbdistanz (CIEDE2000 Delta-E in Lab)."""
     return delta_e((c1.r, c1.g, c1.b), (c2.r, c2.g, c2.b))
 
 
@@ -401,7 +401,7 @@ class PaletteConversionDialog(QDialog):
                 tgt_info = f"{target.manufacturer or '-'} {target.catalog_number or '-'}"
                 self._table.setItem(row, 5, QTableWidgetItem(tgt_info))
 
-                # Abstand (CIE76 Delta-E: <=10 gut, <=25 akzeptabel)
+                # Abstand (CIEDE2000 Delta-E: <=10 gut, <=25 akzeptabel)
                 dist_item = QTableWidgetItem(f"{dist:.1f}")
                 dist_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 if dist <= 10:

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Iterator
 
 from ..utils.logging import get_logger
-from .color_math import delta_e_sq, rgb_to_lab
+from .color_math import delta_e2000, rgb_to_lab
 from .thread import Thread, ThreadColor
 
 logger = get_logger(__name__)
@@ -66,7 +66,7 @@ class ThreadPalette:
         """
         Findet ähnliche Farben basierend auf perzeptueller CIE-Lab-Distanz.
 
-        Nutzt Delta-E (CIE76) statt RGB-Euklid — konsistent mit der
+        Nutzt CIEDE2000 statt RGB-Euklid — konsistent mit der
         Cross-Reference-Suche (thread_cross_ref.find_equivalent) und
         wahrnehmungsmäßig korrekter.
 
@@ -80,7 +80,7 @@ class ThreadPalette:
         target_lab = rgb_to_lab(color.r, color.g, color.b)
 
         def color_distance(t: Thread) -> float:
-            return delta_e_sq(rgb_to_lab(t.color.r, t.color.g, t.color.b), target_lab)
+            return delta_e2000(rgb_to_lab(t.color.r, t.color.g, t.color.b), target_lab)
 
         sorted_threads = sorted(self.threads, key=color_distance)
         return sorted_threads[:max_results]

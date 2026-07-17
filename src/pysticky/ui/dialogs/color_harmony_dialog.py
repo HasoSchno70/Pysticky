@@ -109,7 +109,7 @@ def hsl_to_rgb(h: float, s: float, l: float) -> tuple[int, int, int]:
 
 
 def color_distance(c1: tuple[int, int, int], c2: tuple[int, int, int]) -> float:
-    """Perzeptueller Farbabstand (CIE76 Delta-E in Lab)."""
+    """Perzeptueller Farbabstand (CIEDE2000 Delta-E in Lab)."""
     return delta_e(c1, c2)
 
 
@@ -210,7 +210,7 @@ class ColorSwatch(QFrame):
 
     def _distance_label(self) -> tuple[str, str, int]:
         """Liefert (Symbol, Text, Punkte) für den Distanz-Indikator."""
-        # CIE76 Delta-E statt RGB-Euklid (früher 25/60/120).
+        # CIEDE2000 Delta-E statt RGB-Euklid (früher 25/60/120).
         d = self._distance
         if d < 5:
             return ("●●●●", "Perfekt", 4)

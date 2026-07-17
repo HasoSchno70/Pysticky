@@ -167,7 +167,7 @@ class ReplaceColorDialog(QDialog):
         tolerance_row = QHBoxLayout()
         tolerance_row.addWidget(QLabel(t("Toleranz:")))
         self.tolerance_slider = QSlider(Qt.Orientation.Horizontal)
-        # ΔE (CIE76): 0 = nur die exakte Quellfarbe, ~10 sehr ähnlich,
+        # ΔE (CIEDE2000): 0 = nur die exakte Quellfarbe, ~10 sehr ähnlich,
         # ~25 noch zusammenführbar (gleiche Skala wie similar_colors_dialog.py).
         self.tolerance_slider.setRange(0, 50)
         self.tolerance_slider.setValue(0)
