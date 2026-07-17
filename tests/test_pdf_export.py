@@ -67,3 +67,36 @@ def test_pdf_export_empty_pattern(empty_pattern, tmp_path):
     ok = PDFExporter(empty_pattern, include_path_preview=False).export(target)
     assert ok is True
     assert target.exists()
+
+
+def test_pdf_export_mystery_mode_stitch_and_diamond(tmp_path):
+    """Mystery-Modus exportiert ohne Crash, sowohl Stick- als auch DP-Muster."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    idx = pattern.add_color(
+        Thread.from_hex("Rot", "#FF0000", manufacturer="DMC", catalog_number="321")
+    )
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+    target = tmp_path / "mystery_stitch.pdf"
+    ok = PDFExporter(pattern, mystery_mode=True, include_path_preview=False).export(target)
+    assert ok is True
+    assert target.stat().st_size > 0
+
+    dp_pattern = Pattern(width=5, height=5)
+    dp_pattern.mode = "diamond"
+    dp_idx = dp_pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(5):
+        for y in range(5):
+            dp_pattern.set_stitch(x, y, dp_idx)
+    target_dp = tmp_path / "mystery_dp.pdf"
+    ok_dp = PDFExporter(dp_pattern, mystery_mode=True, include_path_preview=False).export(target_dp)
+    assert ok_dp is True
+    assert target_dp.stat().st_size > 0

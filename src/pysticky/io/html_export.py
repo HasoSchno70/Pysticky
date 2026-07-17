@@ -74,8 +74,12 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
         pattern: "Pattern",
         cross_ref_palettes: list[str] | None = None,
         page_overlap_stitches: int = 0,
+        mystery_mode: bool = False,
     ) -> None:
         self.pattern = pattern
+        # Mystery-Modus: Musterseiten + Vorschau ohne Farben (nur Symbole
+        # + Gitter) für Überraschungs-Kits. Legende bleibt unverändert.
+        self.mystery_mode = mystery_mode
         self._color_stats: list[dict] = []
         self._total_stitches = 0
         self._total_skeins = 0

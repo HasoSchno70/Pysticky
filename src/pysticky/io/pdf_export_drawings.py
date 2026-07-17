@@ -382,6 +382,21 @@ class PDFDrawingsMixin(_Base):
             )
         )
 
+        # Mystery-Modus: Vorschau bleibt Platzhalter, damit das fertige
+        # Bild vor dem Sticken keine Überraschung verrät.
+        if getattr(self, "mystery_mode", False):
+            drawing.add(
+                String(
+                    width / 2,
+                    height / 2 - min(width, height) * 0.12,
+                    "?",
+                    fontSize=min(width, height) * 0.4,
+                    fillColor=colors.HexColor("#cccccc"),
+                    textAnchor="middle",
+                )
+            )
+            return drawing
+
         # Stiche zeichnen
         for y in range(self.pattern.height):
             for x in range(self.pattern.width):
@@ -604,12 +619,28 @@ class PDFDrawingsMixin(_Base):
                 ry = grid_offset_y + (page_height - 1 - y) * cell_size
 
                 if is_dp:
-                    # Drill mit echter Farbe rendern, plus Symbol (wie Garn)
-                    # damit man dem Klebebild ansieht, welcher Stein wohin
-                    # gehört.
                     rgb = self._get_pixel_color(mx, my)
                     if rgb is None:
                         continue
+                    symbol = self._get_pixel_symbol(mx, my)
+                    if getattr(self, "mystery_mode", False):
+                        # Mystery-Modus: keine Drill-Farbe, nur Symbol auf
+                        # dem weißen Gitter-Hintergrund (siehe oben).
+                        if symbol:
+                            drawing.add(
+                                String(
+                                    cx,
+                                    cy - font_size / 3,
+                                    symbol,
+                                    fontSize=font_size,
+                                    fillColor=colors.black,
+                                    textAnchor="middle",
+                                )
+                            )
+                        continue
+                    # Drill mit echter Farbe rendern, plus Symbol (wie Garn)
+                    # damit man dem Klebebild ansieht, welcher Stein wohin
+                    # gehört.
                     fill_color = colors.Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255)
                     # Klebegrund-Hintergrund + facettierter Drill
                     drawing.add(
@@ -630,7 +661,6 @@ class PDFDrawingsMixin(_Base):
                         cell_size,
                         fill_color,
                     )
-                    symbol = self._get_pixel_symbol(mx, my)
                     if symbol:
                         luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255.0
                         text_color = colors.black if luminance > 0.5 else colors.white

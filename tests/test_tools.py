@@ -158,3 +158,68 @@ def test_fill_tool_no_op_when_color_matches(pattern_with_stitches):
     ctx = _make_ctx(pattern_with_stitches, 10, 10, color_index=2)
     changes = tool.on_mouse_press(ctx, _mouse_event())
     assert changes == []
+
+
+def _qsettings_with_scope():
+    """QSettings() braucht Org/App-Name auf der QCoreApplication, sonst
+    landen setValue()-Aufrufe im Leeren (siehe test_tablet_pressure.py)."""
+    from PySide6.QtCore import QCoreApplication, QSettings
+
+    app = QCoreApplication.instance()
+    app.setOrganizationName("PySticky")
+    app.setApplicationName("PySticky")
+    return QSettings()
+
+
+def test_fill_tool_zero_tolerance_default_exact_match_only():
+    """Ohne Toleranz-Setting (Default 0) wird nur exakt gleiche Farbe gefuellt."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=3, height=1)
+    pattern.color_entries.clear()
+    idx_red = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    idx_near = pattern.add_color(Thread.from_hex("Nahrot", "#FA0A0A"))
+    idx_new = pattern.add_color(Thread.from_hex("Neu", "#0000FF"))
+    pattern.set_stitch(0, 0, idx_red)
+    pattern.set_stitch(1, 0, idx_near)
+
+    s = _qsettings_with_scope()
+    old = s.value("fill_tolerance", 0, type=int)
+    s.setValue("fill_tolerance", 0)
+    try:
+        tool = FillTool()
+        ctx = _make_ctx(pattern, 0, 0, color_index=idx_new)
+        changes = tool.on_mouse_press(ctx, _mouse_event())
+        assert changes == [(0, 0, idx_new)]
+    finally:
+        s.setValue("fill_tolerance", old)
+
+
+def test_fill_tool_tolerance_includes_similar_neighbor_color():
+    """Toleranz > 0 fuellt auch farblich aehnliche (nicht exakt gleiche) Nachbarn.
+
+    #FF0000 und #FA0A0A liegen nah beieinander (kleines Delta-E), #00FF00
+    ist weit weg und darf nicht mit erfasst werden.
+    """
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=3, height=1)
+    pattern.color_entries.clear()
+    idx_red = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    idx_near = pattern.add_color(Thread.from_hex("Nahrot", "#FA0A0A"))
+    idx_green = pattern.add_color(Thread.from_hex("Gruen", "#00FF00"))
+    idx_new = pattern.add_color(Thread.from_hex("Neu", "#0000FF"))
+    pattern.set_stitch(0, 0, idx_red)
+    pattern.set_stitch(1, 0, idx_near)
+    pattern.set_stitch(2, 0, idx_green)
+
+    s = _qsettings_with_scope()
+    old = s.value("fill_tolerance", 0, type=int)
+    s.setValue("fill_tolerance", 100)  # entspricht max. 50 Delta-E
+    try:
+        tool = FillTool()
+        ctx = _make_ctx(pattern, 0, 0, color_index=idx_new)
+        changes = tool.on_mouse_press(ctx, _mouse_event())
+        assert dict((x, c) for x, _, c in changes) == {0: idx_new, 1: idx_new}
+    finally:
+        s.setValue("fill_tolerance", old)

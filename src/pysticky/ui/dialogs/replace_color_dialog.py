@@ -21,11 +21,13 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QSlider,
     QSpinBox,
     QVBoxLayout,
 )
 
 from ...core import Pattern
+from ...core.color_math import delta_e
 from ...core.color_reduce import compute_rare_color_replacements, rank_similar_colors
 from ...core.i18n import t
 from ..color_utils import color_swatch_icon
@@ -161,6 +163,27 @@ class ReplaceColorDialog(QDialog):
         preview_layout.addStretch()
         layout.addLayout(preview_layout)
 
+        # --- Toleranz ---
+        tolerance_row = QHBoxLayout()
+        tolerance_row.addWidget(QLabel(t("Toleranz:")))
+        self.tolerance_slider = QSlider(Qt.Orientation.Horizontal)
+        # ΔE (CIE76): 0 = nur die exakte Quellfarbe, ~10 sehr ähnlich,
+        # ~25 noch zusammenführbar (gleiche Skala wie similar_colors_dialog.py).
+        self.tolerance_slider.setRange(0, 50)
+        self.tolerance_slider.setValue(0)
+        self.tolerance_slider.setToolTip(
+            t(
+                "0 = nur die exakte Quellfarbe wird ersetzt.\n"
+                "Höherer Wert = auch farblich ähnliche Farben werden mit ersetzt."
+            )
+        )
+        self.tolerance_slider.valueChanged.connect(self._on_tolerance_changed)
+        tolerance_row.addWidget(self.tolerance_slider, 1)
+        self.tolerance_label = QLabel("0")
+        self.tolerance_label.setMinimumWidth(24)
+        tolerance_row.addWidget(self.tolerance_label)
+        layout.addLayout(tolerance_row)
+
         self.info_label = QLabel()
         self.info_label.setObjectName("infoLabel")
         layout.addWidget(self.info_label)
@@ -289,15 +312,38 @@ class ReplaceColorDialog(QDialog):
                 self._suggestion_buttons.setExclusive(True)
         self._update_preview()
 
+    def _matching_indices(self) -> list[int]:
+        """Farb-Indices innerhalb der Toleranz der Quellfarbe (exkl. Zielfarbe).
+
+        Bei Toleranz 0 nur die exakte Quellfarbe (Alt-Verhalten).
+        """
+        entries = self.pattern.color_entries
+        if not (0 <= self._source_index < len(entries)):
+            return []
+
+        tolerance = self.tolerance_slider.value()
+        if tolerance <= 0:
+            return [self._source_index]
+
+        source_rgb = entries[self._source_index].thread.color.to_tuple()
+        return [
+            i
+            for i, entry in enumerate(entries)
+            if i != self._target_index
+            and delta_e(source_rgb, entry.thread.color.to_tuple()) <= tolerance
+        ]
+
+    def _on_tolerance_changed(self, value: int) -> None:
+        self.tolerance_label.setText(str(value))
+        self._update_preview()
+
     def _update_preview(self) -> None:
         entries = self.pattern.color_entries
-        source_count = 0
         if 0 <= self._source_index < len(entries):
             entry = entries[self._source_index]
             color = entry.thread.color
             self.source_color_box.set_color(color.r, color.g, color.b)
-            source_count = entry.stitch_count
-            self.source_count_label.setText(_stitch_count_text(source_count))
+            self.source_count_label.setText(_stitch_count_text(entry.stitch_count))
 
         if 0 <= self._target_index < len(entries):
             entry = entries[self._target_index]
@@ -305,8 +351,16 @@ class ReplaceColorDialog(QDialog):
             self.target_color_box.set_color(color.r, color.g, color.b)
             self.target_count_label.setText(_stitch_count_text(entry.stitch_count))
 
-        if source_count > 0:
-            self.info_label.setText(t("{n} Stiche werden ersetzt").format(n=source_count))
+        matches = self._matching_indices()
+        total_count = sum(entries[i].stitch_count for i in matches)
+        if len(matches) > 1:
+            self.info_label.setText(
+                t("{colors} ähnliche Farben ({stitches} Stiche) werden ersetzt").format(
+                    colors=len(matches), stitches=total_count
+                )
+            )
+        elif total_count > 0:
+            self.info_label.setText(t("{n} Stiche werden ersetzt").format(n=total_count))
         else:
             self.info_label.setText(t("Keine Stiche mit dieser Farbe vorhanden"))
 
@@ -367,7 +421,8 @@ class ReplaceColorDialog(QDialog):
         if self._source_index == self._target_index:
             QMessageBox.warning(self, t("Hinweis"), t("Quell- und Zielfarbe sind identisch."))
             return
-        self._replacements = [(self._source_index, self._target_index)]
+        matches = self._matching_indices()
+        self._replacements = [(idx, self._target_index) for idx in matches]
         self.accept()
 
     def get_replacements(self) -> list[tuple[int, int]]:

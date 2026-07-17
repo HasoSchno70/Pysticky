@@ -4,10 +4,15 @@ Füll-Werkzeug (Flood Fill) mit Scanline-Algorithmus.
 
 from collections import deque
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSettings, Qt
 from PySide6.QtGui import QMouseEvent
 
+from ...core.color_math import delta_e
 from .base_tool import BaseTool, ToolContext
+
+# Toleranz ist in den Settings 0-100% skaliert; 50 ΔE ist der praktische
+# Ober-Wert, den similar_colors_dialog.py für "noch zusammenführbar" nutzt.
+_MAX_TOLERANCE_DELTA_E = 50.0
 
 
 class FillTool(BaseTool):
@@ -16,6 +21,8 @@ class FillTool(BaseTool):
 
     - Klick: Füllt zusammenhängenden Bereich mit aktueller Farbe
     - Verwendet effizienten Scanline-Algorithmus
+    - Farbtoleranz (Settings → Werkzeuge) erlaubt das Miteinschließen
+      ähnlicher (nicht nur exakt gleicher) Nachbarfarben
     """
 
     def get_cursor(self) -> Qt.CursorShape:
@@ -30,8 +37,13 @@ class FillTool(BaseTool):
         if not self._is_valid_pos(ctx, ctx.grid_x, ctx.grid_y):
             return []
 
+        tolerance_pct = QSettings().value("fill_tolerance", 0, type=int)
+        max_delta_e = _MAX_TOLERANCE_DELTA_E * (tolerance_pct / 100)
+
         # Flood Fill ausführen
-        return self._scanline_fill(ctx, ctx.grid_x, ctx.grid_y, ctx.current_color_index)
+        return self._scanline_fill(
+            ctx, ctx.grid_x, ctx.grid_y, ctx.current_color_index, max_delta_e
+        )
 
     def on_mouse_move(
         self, ctx: ToolContext, event: QMouseEvent
@@ -44,13 +56,21 @@ class FillTool(BaseTool):
         return []
 
     def _scanline_fill(
-        self, ctx: ToolContext, start_x: int, start_y: int, new_color_idx: int
+        self,
+        ctx: ToolContext,
+        start_x: int,
+        start_y: int,
+        new_color_idx: int,
+        max_delta_e: float = 0.0,
     ) -> list[tuple[int, int, int | None]]:
         """
         Scanline Flood-Fill-Algorithmus.
 
         Effizienter als rekursiver/stack-basierter Ansatz.
         Scannt horizontal und fügt Zeilen darüber/darunter zur Queue hinzu.
+
+        max_delta_e > 0 lässt auch Nachbarfarben mitfüllen, die der
+        Startfarbe farblich ähnlich (aber nicht identisch) sind.
         """
         layer = ctx.pattern.active_layer
         if not layer:
@@ -61,6 +81,22 @@ class FillTool(BaseTool):
         # Wenn gleiche Farbe, nichts tun
         if target_color == new_color_idx:
             return []
+
+        target_rgb = None
+        if max_delta_e > 0 and target_color is not None:
+            target_entry = ctx.pattern.get_color_entry(target_color)
+            if target_entry:
+                target_rgb = target_entry.thread.color.to_tuple()
+
+        def matches(idx: int | None) -> bool:
+            if idx == target_color:
+                return True
+            if target_rgb is None or idx is None:
+                return False
+            entry = ctx.pattern.get_color_entry(idx)
+            if not entry:
+                return False
+            return delta_e(target_rgb, entry.thread.color.to_tuple()) <= max_delta_e
 
         width = ctx.pattern.width
         height = ctx.pattern.height
@@ -82,15 +118,13 @@ class FillTool(BaseTool):
                 continue
 
             # Richtige Farbe?
-            if layer.get_stitch(x, y) != target_color:
+            if not matches(layer.get_stitch(x, y)):
                 continue
 
             # Nach links scannen bis zur Grenze
             left = x
             while (
-                left > 0
-                and layer.get_stitch(left - 1, y) == target_color
-                and (left - 1, y) not in visited
+                left > 0 and matches(layer.get_stitch(left - 1, y)) and (left - 1, y) not in visited
             ):
                 left -= 1
 
@@ -98,7 +132,7 @@ class FillTool(BaseTool):
             right = x
             while (
                 right < width - 1
-                and layer.get_stitch(right + 1, y) == target_color
+                and matches(layer.get_stitch(right + 1, y))
                 and (right + 1, y) not in visited
             ):
                 right += 1
@@ -107,7 +141,7 @@ class FillTool(BaseTool):
             for fill_x in range(left, right + 1):
                 if (fill_x, y) not in visited:
                     # Nochmal prüfen (wichtig!)
-                    if layer.get_stitch(fill_x, y) == target_color:
+                    if matches(layer.get_stitch(fill_x, y)):
                         visited.add((fill_x, y))
                         changes.append((fill_x, y, new_color_idx))
 
@@ -115,12 +149,12 @@ class FillTool(BaseTool):
             for fill_x in range(left, right + 1):
                 # Zeile darüber
                 if y > 0 and (fill_x, y - 1) not in visited:
-                    if layer.get_stitch(fill_x, y - 1) == target_color:
+                    if matches(layer.get_stitch(fill_x, y - 1)):
                         queue.append((fill_x, y - 1))
 
                 # Zeile darunter
                 if y < height - 1 and (fill_x, y + 1) not in visited:
-                    if layer.get_stitch(fill_x, y + 1) == target_color:
+                    if matches(layer.get_stitch(fill_x, y + 1)):
                         queue.append((fill_x, y + 1))
 
         return changes

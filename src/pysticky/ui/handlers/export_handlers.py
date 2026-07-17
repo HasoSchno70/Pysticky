@@ -33,12 +33,14 @@ class ExportWorker(QObject):
         cross_ref_palettes: list[str] | None = None,
         page_overlap_stitches: int = 0,
         pdf_protection: dict | None = None,
+        mystery_mode: bool = False,
     ) -> None:
         super().__init__()
         self._pattern = pattern
         self._cross_ref_palettes = cross_ref_palettes or []
         self._page_overlap = max(0, int(page_overlap_stitches))
         self._pdf_protection = pdf_protection or {}
+        self._mystery_mode = mystery_mode
 
     def _run_export(
         self, export_type: str, filepath: str, page_format: str, notes: str = ""
@@ -58,6 +60,7 @@ class ExportWorker(QObject):
                     watermark_text=self._pdf_protection.get("watermark_text"),
                     allow_printing=self._pdf_protection.get("allow_printing", True),
                     allow_copying=self._pdf_protection.get("allow_copying", True),
+                    mystery_mode=self._mystery_mode,
                 )
                 success = exporter.export(filepath)
             elif export_type == "html":
@@ -67,6 +70,7 @@ class ExportWorker(QObject):
                     self._pattern,
                     cross_ref_palettes=self._cross_ref_palettes,
                     page_overlap_stitches=self._page_overlap,
+                    mystery_mode=self._mystery_mode,
                 )
                 success = exporter.export(filepath)
             elif export_type == "bundle":
@@ -406,6 +410,7 @@ class ExportHandlersMixin:
         cross_ref_csv = s.value("export/cross_ref_palettes", "", type=str)
         cross_ref_palettes = [p.strip() for p in cross_ref_csv.split(",") if p.strip()]
         page_overlap = s.value("export/page_overlap_stitches", 0, type=int)
+        mystery_mode = s.value("export/mystery_mode", False, type=bool)
 
         # PDF-Schutz aus dem letzten _on_export_pdf-Aufruf (None wenn HTML/Bundle)
         pdf_protection = getattr(self, "_pending_pdf_protection", None) or {}
@@ -419,6 +424,7 @@ class ExportHandlersMixin:
             cross_ref_palettes=cross_ref_palettes,
             page_overlap_stitches=page_overlap,
             pdf_protection=pdf_protection,
+            mystery_mode=mystery_mode,
         )
         self._export_worker.moveToThread(self._export_thread)
 

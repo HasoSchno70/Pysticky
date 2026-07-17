@@ -127,6 +127,20 @@ class FilesTab(QWidget):
         self._populate_cross_ref_list()
         form.addRow(t("Cross-Reference:"), self.list_cross_ref)
 
+        # Mystery-Modus: Musterseiten + Vorschau ohne Farben (nur Symbole
+        # + Gitter), für Überraschungs-Kits. Legende bleibt normal sichtbar,
+        # damit man beim Sticken nachschlagen kann.
+        self.chk_mystery_mode = QCheckBox(t("Mystery-Modus (Farben in Export ausblenden)"))
+        self.chk_mystery_mode.setToolTip(
+            t(
+                "Musterseiten und Vorschau werden in HTML-/PDF-Export ohne\n"
+                "Farben gedruckt (nur Symbole + Gitter) — für Überraschungs-\n"
+                "Kits, bei denen das fertige Bild vorher nicht bekannt sein soll.\n"
+                "Die Legende bleibt normal sichtbar."
+            )
+        )
+        form.addRow(self.chk_mystery_mode)
+
         layout.addWidget(group_export)
 
         # === Import ===
@@ -204,6 +218,7 @@ class FilesTab(QWidget):
         cross_ref_csv = settings.value("export/cross_ref_palettes", "", type=str)
         self._set_cross_ref_selection([p.strip() for p in cross_ref_csv.split(",") if p.strip()])
         self.spin_page_overlap.setValue(settings.value("export/page_overlap_stitches", 0, type=int))
+        self.chk_mystery_mode.setChecked(settings.value("export/mystery_mode", False, type=bool))
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
@@ -220,6 +235,7 @@ class FilesTab(QWidget):
             ",".join(self._get_cross_ref_selection()),
         )
         settings.setValue("export/page_overlap_stitches", self.spin_page_overlap.value())
+        settings.setValue("export/mystery_mode", self.chk_mystery_mode.isChecked())
 
     def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
@@ -233,3 +249,4 @@ class FilesTab(QWidget):
         self.combo_dither_method.setCurrentIndex(1)
         self._set_cross_ref_selection([])
         self.spin_page_overlap.setValue(0)
+        self.chk_mystery_mode.setChecked(False)

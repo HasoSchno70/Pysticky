@@ -99,3 +99,53 @@ def test_html_export_includes_copyright_in_footer(pattern_with_stitches, tmp_pat
     HTMLExporter(pattern_with_stitches).export(target)
     content = target.read_text(encoding="utf-8")
     assert content.count("(c) 2026 Anna") >= 2  # Cover + mindestens eine Seite
+
+
+def test_html_export_mystery_mode_replaces_preview_with_placeholder(
+    pattern_with_stitches, tmp_path
+):
+    """Mystery-Modus zeigt in Deckblatt/Vorschau/Uebersicht ein '?' statt des Bildes."""
+    normal = tmp_path / "normal.html"
+    HTMLExporter(pattern_with_stitches, mystery_mode=False).export(normal)
+    mystery = tmp_path / "mystery.html"
+    HTMLExporter(pattern_with_stitches, mystery_mode=True).export(mystery)
+
+    normal_content = normal.read_text(encoding="utf-8")
+    mystery_content = mystery.read_text(encoding="utf-8")
+
+    assert ">?<" not in normal_content
+    # 3x: Deckblatt, Vorschau-Seite, Uebersichtskarte
+    assert mystery_content.count(">?<") == 3
+
+
+def test_html_export_mystery_mode_diamond_cells_have_no_background(tmp_path):
+    """Im DP-Modus verschwindet im Mystery-Modus die Drill-Hintergrundfarbe pro Zelle."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.mode = "diamond"
+    idx = pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+
+    normal = tmp_path / "dp_normal.html"
+    HTMLExporter(pattern, mystery_mode=False).export(normal)
+    mystery = tmp_path / "dp_mystery.html"
+    HTMLExporter(pattern, mystery_mode=True).export(mystery)
+
+    normal_content = normal.read_text(encoding="utf-8")
+    mystery_content = mystery.read_text(encoding="utf-8")
+
+    # Per-Zelle-Markup hat ein Semikolon vor dem schliessenden Anfuehrungs-
+    # zeichen (style='background:rgb(...);'), die Legende/Mini-Legende
+    # nicht (style='background:rgb(...)') -- so bleibt der Legenden-Treffer
+    # (bewusst weiterhin farbig) von der Pruefung ausgenommen.
+    cell_bg = "background:rgb(255,0,0);'"
+    assert cell_bg in normal_content
+    assert cell_bg not in mystery_content

@@ -30,6 +30,7 @@ class _ExportBase:
     """Gemeinsames Interface von HTML- und PDF-Exporter."""
 
     pattern: Pattern
+    mystery_mode: bool
     _cache: CompositeGridCache | None
     _color_stats: list[dict]
     _total_stitches: int

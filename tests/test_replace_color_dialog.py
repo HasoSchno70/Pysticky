@@ -91,6 +91,27 @@ def test_auto_reduce_returns_multi_replacements(dialog, monkeypatch):
     assert dict(dialog.get_replacements()) == {1: 0, 3: 2}
 
 
+def test_tolerance_zero_replaces_only_exact_source(dialog):
+    """Toleranz 0 (Default) ist das Alt-Verhalten: nur die exakte Quellfarbe."""
+    dialog.target_combo.setCurrentIndex(4)  # Grün
+    assert dialog.tolerance_slider.value() == 0
+    dialog._on_accept()
+    assert dialog.get_replacements() == [(0, 4)]
+
+
+def test_tolerance_includes_similar_colors(dialog):
+    """Toleranz > 0 erfasst auch farblich ähnliche Farben, nicht nur die Quelle.
+
+    Rot(#FF0000, idx 0) und Dunkelrot(#CC0000, idx 1) liegen bei ΔE~19.4
+    nah beieinander; Blau/Hellblau liegen weit weg (ΔE~176/~168) und
+    dürfen bei Toleranz 25 nicht mit erfasst werden.
+    """
+    dialog.tolerance_slider.setValue(25)
+    dialog.target_combo.setCurrentIndex(4)  # Grün
+    dialog._on_accept()
+    assert dict(dialog.get_replacements()) == {0: 4, 1: 4}
+
+
 def test_reduce_preview_disables_button_without_candidates(dialog):
     dialog.reduce_spin.setValue(1)  # nur Hellblau (1 Stich) ist selten
     assert dialog.reduce_btn.isEnabled()

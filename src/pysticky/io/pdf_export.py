@@ -107,6 +107,7 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         watermark_text: str | None = None,
         allow_printing: bool = True,
         allow_copying: bool = True,
+        mystery_mode: bool = False,
     ) -> None:
         if not REPORTLAB_AVAILABLE:
             raise ImportError(
@@ -114,6 +115,9 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
             )
 
         self.pattern = pattern
+        # Mystery-Modus: Musterseiten + Vorschau ohne Farben (nur Symbole
+        # + Gitter) für Überraschungs-Kits. Legende bleibt unverändert.
+        self.mystery_mode = mystery_mode
         self._color_stats: list[dict] = []
         self._total_stitches = 0
         self._total_skeins = 0

@@ -253,10 +253,13 @@ class HTMLPagesMixin(_Base):
                             # plus Symbol (wie Garn) damit man dem Klebebild
                             # ansieht, welcher Stein wohin gehört. Die echte
                             # Drill-Facetten-Optik kommt zusätzlich über das
-                            # SVG-Overlay.
+                            # SVG-Overlay. Mystery-Modus: keine Drill-Farbe,
+                            # nur Symbol + Gitter (wie normaler Stick-Modus).
                             rgb = self._get_pixel_color(mx, my)
                             symbol = self._get_pixel_symbol(mx, my)
-                            if rgb is not None:
+                            if getattr(self, "mystery_mode", False):
+                                row_cells.append(f"<td{class_str}>{_html_encode(symbol)}</td>")
+                            elif rgb is not None:
                                 bg = f"background:{css_rgb(rgb)};"
                                 row_cells.append(
                                     f"<td{class_str} style='{bg}'>{_html_encode(symbol)}</td>"

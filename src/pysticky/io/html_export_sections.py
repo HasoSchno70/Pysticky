@@ -21,6 +21,20 @@ else:
 class HTMLSectionsMixin(_Base):
     """Mixin-Klasse für HTML-Sektionen des Kreuzstich-Exports."""
 
+    def _mystery_svg_rects(self, width: float, height: float) -> list[str]:
+        """Platzhalter statt echter Musterfarben (Mystery-Modus).
+
+        Verhindert, dass Deckblatt/Vorschau/Übersicht das fertige Bild
+        verraten -- Backstiche würden die Kontur ebenfalls verraten,
+        werden also von den Aufrufern zusätzlich weggelassen.
+        """
+        font_size = min(width, height) * 0.5
+        return [
+            f"<rect x='0' y='0' width='{width:.1f}' height='{height:.1f}' fill='#f5f5f5'/>",
+            f"<text x='{width / 2:.1f}' y='{height / 2 + font_size * 0.35:.1f}' "
+            f"font-size='{font_size:.0f}' text-anchor='middle' fill='#cccccc'>?</text>",
+        ]
+
     def _generate_header(self, title: str) -> str:
         """Generiert den HTML-Header mit CSS."""
         return f"""<!DOCTYPE html>
@@ -235,29 +249,33 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         is_dp = is_diamond_mode(self.pattern)
 
         # SVG für Vorschau (halbe/Viertel als Polygone, Drills im DP-Modus
-        # als facettierte Quadrate).
-        svg_rects = []
-        for y in range(self.pattern.height):
-            for x in range(self.pattern.width):
-                color = self._get_pixel_color(x, y)
-                if color:
-                    rx = x * cell_w
-                    ry = y * cell_h
-                    stype = self._get_pixel_stitch_type(x, y)
-                    svg_rects.append(
-                        svg_shape_for_stitch(
-                            stype,
-                            rx,
-                            ry,
-                            cell_w,
-                            cell_h,
-                            color,
-                            as_diamond=is_dp,
+        # als facettierte Quadrate). Mystery-Modus: Platzhalter statt Bild.
+        if getattr(self, "mystery_mode", False):
+            svg_rects = self._mystery_svg_rects(mini_w, mini_h)
+        else:
+            svg_rects = []
+            for y in range(self.pattern.height):
+                for x in range(self.pattern.width):
+                    color = self._get_pixel_color(x, y)
+                    if color:
+                        rx = x * cell_w
+                        ry = y * cell_h
+                        stype = self._get_pixel_stitch_type(x, y)
+                        svg_rects.append(
+                            svg_shape_for_stitch(
+                                stype,
+                                rx,
+                                ry,
+                                cell_w,
+                                cell_h,
+                                color,
+                                as_diamond=is_dp,
+                            )
                         )
-                    )
 
         # Rückstiche existieren nur im Stick-Modus — im DP nicht rendern.
-        if is_dp:
+        # Im Mystery-Modus ebenfalls weglassen (würden die Kontur verraten).
+        if is_dp or getattr(self, "mystery_mode", False):
             backstitch_svg = ""
             backstitch_count = 0
             backstitch_info = ""
@@ -409,35 +427,39 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         is_dp_preview = is_diamond_mode(self.pattern)
         bg_fill = "#ebe8dc" if is_dp_preview else "#fafafa"
+        mystery = getattr(self, "mystery_mode", False)
         svg_elements: list[str] = [
             f"<rect x='0' y='0' width='{total_width:.1f}' height='{total_height:.1f}' fill='{bg_fill}'/>"
         ]
-        for y in range(self.pattern.height):
-            for x in range(self.pattern.width):
-                color = self._get_pixel_color(x, y)
-                if not color:
-                    continue
-                stype = self._get_pixel_stitch_type(x, y)
-                svg_elements.append(
-                    svg_shape_for_stitch(
-                        stype,
-                        x * cell_size,
-                        y * cell_size,
-                        cell_size,
-                        cell_size,
-                        color,
-                        as_diamond=is_dp_preview,
+        if mystery:
+            svg_elements.extend(self._mystery_svg_rects(total_width, total_height))
+        else:
+            for y in range(self.pattern.height):
+                for x in range(self.pattern.width):
+                    color = self._get_pixel_color(x, y)
+                    if not color:
+                        continue
+                    stype = self._get_pixel_stitch_type(x, y)
+                    svg_elements.append(
+                        svg_shape_for_stitch(
+                            stype,
+                            x * cell_size,
+                            y * cell_size,
+                            cell_size,
+                            cell_size,
+                            color,
+                            as_diamond=is_dp_preview,
+                        )
                     )
-                )
         # rows ist Legacy-Name, jetzt eine einzige SVG — Template unten erwartet
         # eine Liste, also ein einzelnes Element reicht.
         rows = ["".join(svg_elements)]
 
-        # Rückstiche für Vorschau
-        backstitch_svg = self._generate_backstitches_svg(cell_size)
+        # Rückstiche für Vorschau — im Mystery-Modus weglassen (Kontur).
+        backstitch_svg = "" if mystery else self._generate_backstitches_svg(cell_size)
 
         backstitch_info = ""
-        if self.pattern.backstitches:
+        if not mystery and self.pattern.backstitches:
             backstitch_info = t(
                 "<div class='backstitch-info'><strong>&#8600; R&uuml;ckstiche:</strong> "
                 "{n} Linien werden &uuml;ber dem Muster gezeigt.</div>"
@@ -657,28 +679,34 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
         is_dp_overview = is_diamond_mode(self.pattern)
         overview_unit_label = terms_for(self.pattern)["unit_plural"]
-        svg_rects = []
-        for y in range(self.pattern.height):
-            for x in range(self.pattern.width):
-                color = self._get_pixel_color(x, y)
-                if color:
-                    rx = x * cell_w
-                    ry = y * cell_h
-                    stype = self._get_pixel_stitch_type(x, y)
-                    svg_rects.append(
-                        svg_shape_for_stitch(
-                            stype,
-                            rx,
-                            ry,
-                            cell_w,
-                            cell_h,
-                            color,
-                            as_diamond=is_dp_overview,
+        mystery = getattr(self, "mystery_mode", False)
+        if mystery:
+            svg_rects = self._mystery_svg_rects(overview_w, overview_h)
+        else:
+            svg_rects = []
+            for y in range(self.pattern.height):
+                for x in range(self.pattern.width):
+                    color = self._get_pixel_color(x, y)
+                    if color:
+                        rx = x * cell_w
+                        ry = y * cell_h
+                        stype = self._get_pixel_stitch_type(x, y)
+                        svg_rects.append(
+                            svg_shape_for_stitch(
+                                stype,
+                                rx,
+                                ry,
+                                cell_w,
+                                cell_h,
+                                color,
+                                as_diamond=is_dp_overview,
+                            )
                         )
-                    )
 
-        # Rückstiche für Übersicht — im DP-Modus weglassen.
-        backstitch_svg = "" if is_dp_overview else self._generate_backstitches_svg(cell_w)
+        # Rückstiche für Übersicht — im DP-Modus und Mystery-Modus weglassen.
+        backstitch_svg = (
+            "" if (is_dp_overview or mystery) else self._generate_backstitches_svg(cell_w)
+        )
 
         # Rasterlinien
         grid_lines = []
