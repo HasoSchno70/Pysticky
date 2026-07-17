@@ -297,7 +297,8 @@ class FileHandlersMixin:
 
         from ..dialogs import ImageImportDialog
 
-        dialog = ImageImportDialog(self)
+        prefer_diamond = bool(self.current_pattern and self.current_pattern.mode == "diamond")
+        dialog = ImageImportDialog(self, prefer_diamond=prefer_diamond)
         if filepath:
             # Bild direkt laden (z.B. bei Drag & Drop)
             dialog._on_browse_with_path(filepath)

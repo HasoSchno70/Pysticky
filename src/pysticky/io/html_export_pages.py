@@ -249,14 +249,18 @@ class HTMLPagesMixin(_Base):
                         class_str = f" class='{' '.join(cell_classes)}'" if cell_classes else ""
 
                         if is_dp_cells:
-                            # DP: farbiges Cell mit Drill-Farbe als Hintergrund.
-                            # Die echte Drill-Facetten-Optik kommt über das
-                            # SVG-Overlay; hier reicht die solide Farbe als
-                            # Klebevorlage.
+                            # DP: farbiges Cell mit Drill-Farbe als Hintergrund,
+                            # plus Symbol (wie Garn) damit man dem Klebebild
+                            # ansieht, welcher Stein wohin gehört. Die echte
+                            # Drill-Facetten-Optik kommt zusätzlich über das
+                            # SVG-Overlay.
                             rgb = self._get_pixel_color(mx, my)
+                            symbol = self._get_pixel_symbol(mx, my)
                             if rgb is not None:
                                 bg = f"background:{css_rgb(rgb)};"
-                                row_cells.append(f"<td{class_str} style='{bg}'></td>")
+                                row_cells.append(
+                                    f"<td{class_str} style='{bg}'>{_html_encode(symbol)}</td>"
+                                )
                             else:
                                 row_cells.append(f"<td{class_str}></td>")
                         else:

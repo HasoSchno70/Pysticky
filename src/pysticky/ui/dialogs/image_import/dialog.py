@@ -38,7 +38,7 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
 
     pattern_created = Signal(object)  # Pattern
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, *, prefer_diamond: bool = False) -> None:
         super().__init__(parent)
         self._image_path: Path | None = None
         self._preview_pattern: Pattern | None = None
@@ -46,6 +46,7 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self._image_height: int = 0
         self._updating_size: bool = False
         self._crop: tuple[float, float, float, float] = (0, 0, 1, 1)
+        self._prefer_diamond = prefer_diamond
         self._setup_ui()
         self._connect_signals()
         self._check_dependencies()
@@ -77,6 +78,19 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
                 ),
             )
 
+    def _update_size_suffix(self) -> None:
+        """Passt das Breite/Höhe-Suffix an die gewählte Palette an.
+
+        "Stiche" ergibt für Diamond-Painting-Paletten keinen Sinn (dort
+        gibt's keine Stiche, sondern Drills/Steine).
+        """
+        pm = get_palette_manager()
+        palette = pm.get_palette(self.combo_palette.currentText())
+        is_diamond = palette is not None and palette.is_diamond
+        suffix = t(" Drills") if is_diamond else t(" Stiche")
+        self.spin_width.setSuffix(suffix)
+        self.spin_height.setSuffix(suffix)
+
     def _load_palettes(self) -> None:
         """Lädt die verfügbaren Paletten."""
         pm = get_palette_manager()
@@ -84,6 +98,24 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
 
         for name in sorted(pm.available_palettes):
             self.combo_palette.addItem(name)
+
+        # Wenn das aktuell offene Projekt schon im Diamond-Painting-Modus
+        # ist, macht ein Garnhersteller-Default keinen Sinn -- zuerst eine
+        # DP-Palette suchen, erst danach auf DMC/Anchor zurückfallen.
+        if self._prefer_diamond:
+            dp_name = next(
+                (
+                    n
+                    for n in sorted(pm.available_palettes)
+                    if (pal := pm.get_palette(n)) is not None and pal.is_diamond
+                ),
+                None,
+            )
+            if dp_name is not None:
+                index = self.combo_palette.findText(dp_name)
+                if index >= 0:
+                    self.combo_palette.setCurrentIndex(index)
+                    return
 
         index = self.combo_palette.findText("DMC")
         if index >= 0:
@@ -119,6 +151,8 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self.spin_confetti.valueChanged.connect(self._on_settings_changed)
         self.chk_backstitches.toggled.connect(self._on_settings_changed)
         self.chk_aspect.toggled.connect(self._on_aspect_toggled)
+        self.combo_palette.currentIndexChanged.connect(self._update_size_suffix)
+        self._update_size_suffix()
 
         # Bild-Anpassung
         self.slider_brightness.valueChanged.connect(self._on_brightness_changed)

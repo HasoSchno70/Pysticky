@@ -4075,5 +4075,14 @@
             "B": 218
         },
         "Name": "Ecru"
+    },
+    {
+        "DmcNumber": "B5200",
+        "Color": {
+            "R": 255,
+            "G": 255,
+            "B": 255
+        },
+        "Name": "Snow White"
     }
 ]

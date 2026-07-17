@@ -101,8 +101,8 @@ h3 {{ text-align: center; color: #666; margin: 10px 0; font-size: 14px; }}
 
 /* Muster-Raster */
 .pattern-container {{ position: relative; display: inline-block; }}
-.grid-table {{ border-collapse: collapse; margin: 15px auto; border: 2px solid #333; }}
-.grid-table td {{ border: 1px solid #ccc; width: 16px; height: 16px; text-align: center; font-size: 10px; font-weight: bold; vertical-align: middle; padding: 1px; }}
+.grid-table {{ border-collapse: collapse; margin: 15px auto; border: 2px solid #333; table-layout: fixed; }}
+.grid-table td {{ border: 1px solid #ccc; width: 16px; height: 16px; text-align: center; font-size: 10px; font-weight: bold; vertical-align: middle; padding: 1px; overflow: hidden; white-space: nowrap; }}
 .grid-header {{ background-color: #ecf0f1; font-weight: bold; font-size: 9px; color: #333; }}
 td.thick-right {{ border-right: 2px solid #333; }}
 td.thick-bottom {{ border-bottom: 2px solid #333; }}
@@ -598,28 +598,12 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         unit_col = terms["unit_plural"]  # Stiche / Drills
         supply_col = terms["supply_unit"]  # Stränge / Drills
         code_col = terms["code_header"]  # Garnnummer / Drill-Code
-        # Im DP-Modus entfällt die Symbol-Spalte (Drills tragen ihre
-        # Identität über den Code, nicht über Unicode-Symbole).
-        if is_dp:
-            symbol_header = ""
-        else:
-            symbol_header = f"<th>{t('Symbol')}</th>"
-
-        # Zur Vereinfachung: im DP-Modus zusätzlich die Symbol-Spalte
-        # aus den Rows herausfiltern (sie steht im Format "<td...>Symbol</td>").
-        if is_dp:
-            filtered_rows = []
-            for row in rows:
-                # zweites <td> überspringen (Symbol-Zelle)
-                start = row.find("<td", row.find("<td") + 1)  # zweites <td
-                end = row.find("</td>", start) + len("</td>")
-                filtered_rows.append(row[:start] + row[end:])
-            rows_html = "".join(filtered_rows)
-            # Summary-Row colspan ebenfalls reduzieren
-            summary_colspan = 4 + len(cross_ref_palettes)
-        else:
-            rows_html = "".join(rows)
-            summary_colspan = 5 + len(cross_ref_palettes)
+        # Symbol-Spalte bleibt auch im DP-Modus stehen -- Drills bekommen
+        # dasselbe Symbol wie Garnfarben (siehe Pattern.add_color) und die
+        # Musterseiten zeigen es jetzt ebenfalls pro Zelle an.
+        symbol_header = f"<th>{t('Symbol')}</th>"
+        rows_html = "".join(rows)
+        summary_colspan = 5 + len(cross_ref_palettes)
 
         # Summary-Row neu bauen (wir brauchen modus-spezifischen colspan)
         summary_row = f"""<tr style='background:#e8f4fc;font-weight:bold;'>

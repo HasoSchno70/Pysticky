@@ -222,37 +222,24 @@ class RenderingMixin:
                         painter, screen_x, row_y, cell_size, stype, fill_color
                     )
 
-                # Symbol/Drill-Nummer zeichnen — beide hängen am gleichen
-                # show_symbols-Toggle, damit der User sie ein/aus knipsen
-                # kann ohne Mode-Wechsel. Im DP-Modus: DMC-Nummer statt
-                # Unicode-Symbol, plus tighter Threshold (Drills sind
-                # größer als Symbole).
-                show_label_common = (
+                # Symbol zeichnen — hängt am show_symbols-Toggle, damit der
+                # User es ein/aus knipsen kann ohne Mode-Wechsel. Diamant-
+                # Farben bekommen dasselbe Symbol wie Garn-Farben (siehe
+                # Pattern.add_color), keine Sonderbehandlung mehr nötig.
+                show_label = (
                     self._show_symbols
                     and opacity >= 0.5
+                    and cell_size >= 12
                     and (isolate_idx is None or color_index == isolate_idx)
                 )
-                if diamond_view:
-                    if show_label_common and cell_size >= 18:
-                        label = entry.thread.catalog_number or ""
-                        if label:
-                            self._draw_drill_label(
-                                painter,
-                                screen_x,
-                                row_y,
-                                cell_size,
-                                label,
-                                thread_color.luminance > 0.5,
-                            )
-                else:
-                    if show_label_common and cell_size >= 12:
-                        symbol_color = self._cache.get_symbol_color(thread_color.luminance > 0.5)
-                        painter.setPen(symbol_color)
-                        painter.drawText(
-                            QRect(screen_x, row_y, cell_size, cell_size),
-                            Qt.AlignmentFlag.AlignCenter,
-                            entry.symbol,
-                        )
+                if show_label:
+                    symbol_color = self._cache.get_symbol_color(thread_color.luminance > 0.5)
+                    painter.setPen(symbol_color)
+                    painter.drawText(
+                        QRect(screen_x, row_y, cell_size, cell_size),
+                        Qt.AlignmentFlag.AlignCenter,
+                        entry.symbol,
+                    )
 
     @staticmethod
     def _draw_partial_stitch(
@@ -406,31 +393,6 @@ class RenderingMixin:
 
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
-    def _draw_drill_label(
-        self: "CrossStitchCanvas",
-        painter: QPainter,
-        x: int,
-        y: int,
-        size: int,
-        label: str,
-        light_bg: bool,
-    ) -> None:
-        """Zeichnet die DMC-Nummer in der Mitte eines Drills."""
-        # Kleinere Schrift als Symbol-Font, damit auch 3-stellige Nummern
-        # in eine Zelle passen. Heuristik: Schriftgröße = size // 4.
-        from PySide6.QtGui import QFont
-
-        font = QFont(painter.font())
-        font.setPixelSize(max(7, size // 4))
-        font.setBold(True)
-        painter.setFont(font)
-        painter.setPen(self._cache.get_symbol_color(light_bg))
-        painter.drawText(
-            QRect(x, y, size, size),
-            Qt.AlignmentFlag.AlignCenter,
-            label,
-        )
-
     @staticmethod
     def _draw_bead(painter: QPainter, x: int, y: int, size: int, color: QColor) -> None:
         """Zeichnet eine Perle: größerer Kreis mit Glanzpunkt."""
@@ -531,19 +493,7 @@ class RenderingMixin:
                 else:
                     painter.fillRect(cell_rect, fill_color)
 
-                if diamond_view:
-                    if self._show_symbols and cell_size >= 18 and opacity >= 0.5:
-                        label = entry.thread.catalog_number or ""
-                        if label:
-                            self._draw_drill_label(
-                                painter,
-                                screen_x,
-                                screen_y,
-                                cell_size,
-                                label,
-                                thread_color.luminance > 0.5,
-                            )
-                elif self._show_symbols and cell_size >= 12 and opacity >= 0.5:
+                if self._show_symbols and cell_size >= 12 and opacity >= 0.5:
                     symbol_color = self._cache.get_symbol_color(thread_color.luminance > 0.5)
                     painter.setPen(symbol_color)
                     painter.drawText(cell_rect, Qt.AlignmentFlag.AlignCenter, entry.symbol)

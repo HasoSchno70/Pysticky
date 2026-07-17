@@ -255,18 +255,14 @@ class ColorSwatch(QWidget):
             painter.setPen(QPen(QColor(255, 255, 255), 1.5))
             painter.drawLine(rect.left() + 1, rect.top() + 1, rect.left() + 7, rect.top() + 7)
 
-        # Beschriftung unter dem Swatch: Symbol im Stick-Modus,
-        # Drill-Nummer im Diamond-Modus. Symbole sind im DP-Workflow
-        # nicht etabliert — dort dient die Drill-Nummer als Identifikator.
+        # Beschriftung unter dem Swatch: Symbol, wie auf der Zeichenfläche
+        # (Diamant-Farben bekommen dasselbe Symbol wie Garnfarben, siehe
+        # Pattern.add_color) — sonst lässt sich ein Canvas-Symbol nicht auf
+        # das passende Swatch zurückführen.
         symbol_y = rect.bottom() + 2
 
-        if self._mode == "diamond":
-            label_text = self._entry.thread.catalog_number or self._entry.symbol
-            # Drill-Nummern können 3-stellig sein -> kleinere Schrift
-            size = 8 if self._selected else 7
-        else:
-            label_text = self._entry.symbol
-            size = 10 if self._selected else 9
+        label_text = self._entry.symbol
+        size = 10 if self._selected else 9
 
         if self._selected:
             painter.setPen(accent)

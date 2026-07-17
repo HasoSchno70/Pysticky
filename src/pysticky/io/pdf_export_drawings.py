@@ -583,9 +583,9 @@ class PDFDrawingsMixin(_Base):
 
         # === 3. Cell-Inhalt zeichnen ===
         # Stick-Modus: Symbole als Text (klassischer Stick-Plan).
-        # Diamond-Modus: Drill-Cells (facettierte Quadrate in Thread-Farbe),
-        # weil DP keine Symbole nutzt und die Vorlage die Klebefolie selbst
-        # ist — der User muss Drill-Farben direkt erkennen können.
+        # Diamond-Modus: Drill-Cells (facettierte Quadrate in Thread-Farbe)
+        # plus Symbol-Text obendrauf, damit die Klebefolie neben der
+        # Drill-Farbe auch das Garn-Symbol als Identifikator zeigt.
         from .export_common import is_diamond_mode
 
         is_dp = is_diamond_mode(self.pattern)
@@ -604,8 +604,9 @@ class PDFDrawingsMixin(_Base):
                 ry = grid_offset_y + (page_height - 1 - y) * cell_size
 
                 if is_dp:
-                    # Drill mit echter Farbe rendern. Statt _get_pixel_symbol
-                    # nutzen wir _get_pixel_color (RGB-Tuple oder None).
+                    # Drill mit echter Farbe rendern, plus Symbol (wie Garn)
+                    # damit man dem Klebebild ansieht, welcher Stein wohin
+                    # gehört.
                     rgb = self._get_pixel_color(mx, my)
                     if rgb is None:
                         continue
@@ -629,6 +630,20 @@ class PDFDrawingsMixin(_Base):
                         cell_size,
                         fill_color,
                     )
+                    symbol = self._get_pixel_symbol(mx, my)
+                    if symbol:
+                        luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255.0
+                        text_color = colors.black if luminance > 0.5 else colors.white
+                        drawing.add(
+                            String(
+                                cx,
+                                cy - font_size / 3,
+                                symbol,
+                                fontSize=font_size,
+                                fillColor=text_color,
+                                textAnchor="middle",
+                            )
+                        )
                 else:
                     symbol = self._get_pixel_symbol(mx, my)
                     if symbol:

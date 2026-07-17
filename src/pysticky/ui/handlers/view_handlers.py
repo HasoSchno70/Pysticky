@@ -256,24 +256,16 @@ class ViewHandlersMixin:
                 progress_dock.setFloating(False)
             progress_dock.setVisible(not diamond)
 
-        # Symbol-Toggle umlabeln: im DP zeigt er Drill-Nummern statt Symbole.
-        # Das Verhalten ist dasselbe (show_symbols-Flag), nur der visuelle
-        # Output unterscheidet sich.
+        # Symbol-Toggle: zeigt in beiden Modi dasselbe Farb-Symbol an
+        # (Diamant-Farben bekommen seit Kurzem dasselbe Symbol wie
+        # Garnfarben), daher keine modusabhängige Umlabelung mehr nötig.
         chk_sym = getattr(self, "chk_symbols", None)
         action_sym = getattr(self, "action_show_symbols", None)
-        if diamond:
-            sym_text = t("Nummern")
-            sym_tip = t("Drill-Nummern in den Zellen ein-/ausblenden")
-            action_text = t("&Drill-Nummern anzeigen")
-        else:
-            sym_text = t("Symbole")
-            sym_tip = t("Symbole anzeigen")
-            action_text = t("&Symbole anzeigen")
         if chk_sym is not None:
-            chk_sym.setText(sym_text)
-            chk_sym.setToolTip(sym_tip)
+            chk_sym.setText(t("Symbole"))
+            chk_sym.setToolTip(t("Symbole anzeigen"))
         if action_sym is not None:
-            action_sym.setText(action_text)
+            action_sym.setText(t("&Symbole anzeigen"))
 
         # Stitch-Werkzeuge je nach Modus disablen
         self._apply_tool_availability_for_mode(diamond)

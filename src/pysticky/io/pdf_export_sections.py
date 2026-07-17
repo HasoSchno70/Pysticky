@@ -240,12 +240,10 @@ class PDFSectionsMixin(_Base):
         if cross_ref_palettes:
             from ..core.thread_cross_ref import find_equivalents
 
-        # Tabellen-Header — im DP-Modus entfällt die Symbol-Spalte.
+        # Tabellen-Header — Symbol-Spalte auch im DP-Modus (Drills bekommen
+        # dasselbe Symbol wie Garnfarben, siehe Pattern.add_color).
         code_col = terms["code_header"]
-        if is_dp:
-            header = [t("Nr."), t("Farbe"), code_col, t("Farbname")]
-        else:
-            header = [t("Nr."), t("Sym."), t("Farbe"), code_col, t("Farbname")]
+        header = [t("Nr."), t("Sym."), t("Farbe"), code_col, t("Farbname")]
         header.extend(cross_ref_palettes)
         header.extend([unit_label, "%", supply_label])
         n_cross = len(cross_ref_palettes)
@@ -292,119 +290,71 @@ class PDFSectionsMixin(_Base):
             else:
                 thread_label = f"{thread.manufacturer} {thread.catalog_number or ''}"
 
-            # Im DP-Modus entfällt die Symbol-Spalte — alle Folge-Indices
-            # rutschen entsprechend einen Schritt nach links.
-            if is_dp:
-                data.append(
-                    [
-                        str(i),
-                        "",  # Farbfeld via TableStyle
-                        thread_label,
-                        thread.name[:28] + name_suffix,
-                        *cross_cells,
-                        str(stat["count"]),
-                        percent_str,
-                        skeins_str,
-                    ]
-                )
-            else:
-                data.append(
-                    [
-                        str(i),
-                        stat["symbol"],
-                        "",  # Farbfeld via TableStyle
-                        thread_label,
-                        thread.name[:18] + name_suffix,
-                        *cross_cells,
-                        str(stat["count"]),
-                        percent_str,
-                        skeins_str,
-                    ]
-                )
+            data.append(
+                [
+                    str(i),
+                    stat["symbol"],
+                    "",  # Farbfeld via TableStyle
+                    thread_label,
+                    thread.name[:18] + name_suffix,
+                    *cross_cells,
+                    str(stat["count"]),
+                    percent_str,
+                    skeins_str,
+                ]
+            )
 
-        # Spalten-Indices: ohne Symbol-Spalte (DP) rutscht alles um 1 nach links
-        sym_offset = 0 if is_dp else 1  # 0 = keine Sym-Spalte, 1 = mit
-        color_col = sym_offset  # Stick: 2 (=1+1), DP: 1 (=0+1)... wait
-        # Korrigiere: Stick = [0:Nr, 1:Sym, 2:Farbe, 3:Code, 4:Name, cross..., stitches]
-        #             DP    = [0:Nr,        1:Farbe, 2:Code, 3:Name, cross..., stitches]
-        color_col = 1 + sym_offset  # Stick=2, DP=1
-        code_col_idx = 2 + sym_offset  # Stick=3, DP=2
-        name_col = 3 + sym_offset  # Stick=4, DP=3
-        stitches_col = 4 + sym_offset + n_cross
+        # Spalten-Indices: [0:Nr, 1:Sym, 2:Farbe, 3:Code, 4:Name, cross..., stitches]
+        color_col = 2
+        code_col_idx = 3
+        name_col = 4
+        stitches_col = 5 + n_cross
         skeins_col = stitches_col + 2
 
         # Summenzeile passend bauen
         empty_cross = [""] * n_cross
-        if is_dp:
-            if self._skipped_colors > 0:
-                data.append(
-                    [
-                        "",
-                        "",
-                        "",
-                        t("Zu kleben:"),
-                        *empty_cross,
-                        str(self._stitches_to_do),
-                        "100%",
-                        str(self._total_skeins),
-                    ]
-                )
-            else:
-                data.append(
-                    [
-                        "",
-                        "",
-                        "",
-                        t("Gesamt:"),
-                        *empty_cross,
-                        str(self._total_stitches),
-                        "100%",
-                        str(self._total_skeins),
-                    ]
-                )
+        if self._skipped_colors > 0:
+            action_label = t("Zu kleben:") if is_dp else t("Zu sticken:")
+            data.append(
+                [
+                    "",
+                    "",
+                    "",
+                    "",
+                    action_label,
+                    *empty_cross,
+                    str(self._stitches_to_do),
+                    "100%",
+                    str(self._total_skeins),
+                ]
+            )
         else:
-            if self._skipped_colors > 0:
-                data.append(
-                    [
-                        "",
-                        "",
-                        "",
-                        "",
-                        t("Zu sticken:"),
-                        *empty_cross,
-                        str(self._stitches_to_do),
-                        "100%",
-                        str(self._total_skeins),
-                    ]
-                )
-            else:
-                data.append(
-                    [
-                        "",
-                        "",
-                        "",
-                        "",
-                        t("Gesamt:"),
-                        *empty_cross,
-                        str(self._total_stitches),
-                        "100%",
-                        str(self._total_skeins),
-                    ]
-                )
+            data.append(
+                [
+                    "",
+                    "",
+                    "",
+                    "",
+                    t("Gesamt:"),
+                    *empty_cross,
+                    str(self._total_stitches),
+                    "100%",
+                    str(self._total_skeins),
+                ]
+            )
 
         # Spaltenbreiten je nach Modus.
         # DP: nur kurze Drill-Nummer in Code-Spalte → mehr Platz für Name.
         # Stick: "DMC 310" passt in 30mm.
         if is_dp:
-            # Nr, Farbe, Code, Name, [cross...], Drills, %, Drills
-            col_widths = [10 * mm, 10 * mm, 18 * mm, 61 * mm]
+            col_widths = [10 * mm, 10 * mm, 10 * mm, 18 * mm, 51 * mm]
         else:
             col_widths = [10 * mm, 10 * mm, 8 * mm, 30 * mm, 45 * mm]
         col_widths.extend([14 * mm] * n_cross)
         col_widths.extend([18 * mm, 15 * mm, 15 * mm])
         table = Table(data, colWidths=col_widths)
 
-        # Basis-Style — Spalten-Indices hängen am sym_offset.
+        # Basis-Style
         style_commands = [
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#3498db")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
