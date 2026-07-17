@@ -104,9 +104,12 @@ class CrossStitchCanvas(
     _BG_COLOR_RGB = (26, 26, 46)  # THEME.bg_dark
     _EMPTY_CELL_RGB = (250, 250, 245)
     _CURSOR_COLOR_RGB = (0, 120, 212)
-    _GRID_COLOR_RGB = (80, 80, 80)
-    _GRID_MINOR_RGB = (120, 120, 120)
-    _GRID_MAJOR_RGB = (100, 100, 100)
+    # Dunkler als frueher (war 80/120/100) -- gegen gedeckte/graue Musterfarben
+    # (z.B. Anchor "Tin"/"Pewter"-Familie) hatte das alte, hellere Grau kaum
+    # noch Kontrast und die Gitterlinien wirkten wie zufaellig verschwunden.
+    _GRID_COLOR_RGB = (45, 45, 45)
+    _GRID_MINOR_RGB = (85, 85, 85)
+    _GRID_MAJOR_RGB = (60, 60, 60)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
