@@ -308,14 +308,12 @@ class InventoryDialog(QDialog):
     # === Tab 1 Pattern ===
 
     def _populate_pattern_tab(self) -> None:
-        from .statistics_dialog import PatternStatisticsDialog
+        from .statistics_tabs import STITCHES_PER_SKEIN
 
         entries = self._pattern.color_entries
         needed_by_key = {
             (item["thread"].manufacturer, item["thread"].catalog_number): item["needed_skeins"]
-            for item in compute_shopping_list(
-                self._pattern, self._inventory, PatternStatisticsDialog.STITCHES_PER_SKEIN
-            )
+            for item in compute_shopping_list(self._pattern, self._inventory, STITCHES_PER_SKEIN)
         }
 
         self._pattern_table.setRowCount(len(entries))
@@ -674,7 +672,7 @@ class InventoryDialog(QDialog):
         Einkaufsliste. Dateien, die nicht geladen werden können (gelöscht,
         verschoben, beschädigt), werden übersprungen und aufgelistet."""
         from ...core import load_pattern
-        from .statistics_dialog import PatternStatisticsDialog
+        from .statistics_tabs import STITCHES_PER_SKEIN
 
         patterns = []
         failed: list[str] = []
@@ -695,9 +693,7 @@ class InventoryDialog(QDialog):
             self._multi_summary.setText("")
             return
 
-        items = compute_shopping_list_multi(
-            patterns, self._inventory, PatternStatisticsDialog.STITCHES_PER_SKEIN
-        )
+        items = compute_shopping_list_multi(patterns, self._inventory, STITCHES_PER_SKEIN)
 
         self._multi_shopping_table.setRowCount(len(items))
         total_to_buy = 0
