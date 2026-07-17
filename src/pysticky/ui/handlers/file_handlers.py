@@ -304,6 +304,35 @@ class FileHandlersMixin:
             dialog._on_browse_with_path(filepath)
         self._exec_import_dialog(dialog, t("Bild importiert"))
 
+    def _on_reimport_image(self: "MainWindow") -> None:
+        """Bildimport des aktuellen Musters mit angepassten Einstellungen
+        wiederholen (Wizard Recall) -- öffnet den Import-Dialog vorbefüllt
+        mit Quellbild, Ausschnitt und Einstellungen des aktuellen Musters,
+        statt bei Null anzufangen."""
+        from ...core import can_change_palette
+
+        if not self.current_pattern or not can_change_palette(self.current_pattern):
+            QMessageBox.warning(
+                self,
+                t("Bildimport nicht möglich"),
+                t(
+                    "Das Muster wurde nicht aus einem Bild importiert\n"
+                    "oder das Originalbild ist nicht mehr verfügbar."
+                ),
+            )
+            return
+
+        if not self._check_save_changes():
+            return
+
+        from ..dialogs import ImageImportDialog
+
+        prefer_diamond = self.current_pattern.mode == "diamond"
+        dialog = ImageImportDialog(
+            self, prefer_diamond=prefer_diamond, seed_pattern=self.current_pattern
+        )
+        self._exec_import_dialog(dialog, t("Bild importiert"))
+
     def _on_import_xsd_pat(self: "MainWindow") -> None:
         """XSD/PAT-Datei importieren."""
         if not self._check_save_changes():

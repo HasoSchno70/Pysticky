@@ -38,7 +38,13 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
 
     pattern_created = Signal(object)  # Pattern
 
-    def __init__(self, parent=None, *, prefer_diamond: bool = False) -> None:
+    def __init__(
+        self,
+        parent=None,
+        *,
+        prefer_diamond: bool = False,
+        seed_pattern: Pattern | None = None,
+    ) -> None:
         super().__init__(parent)
         self._image_path: Path | None = None
         self._preview_pattern: Pattern | None = None
@@ -50,7 +56,57 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self._setup_ui()
         self._connect_signals()
         self._check_dependencies()
+        if seed_pattern is not None:
+            self._seed_from_pattern(seed_pattern)
         self._auto_size_to_content()
+
+    def _seed_from_pattern(self, pattern: Pattern) -> None:
+        """Befüllt den Dialog aus einem bereits importierten Muster
+        ("Bildimport wiederholen"/Wizard Recall) -- Quellbild, Ausschnitt,
+        Palette und alle Import-Einstellungen kommen aus pattern.source_*
+        bzw. pattern.metadata, damit der Import mit angepassten Werten
+        wiederholt werden kann, ohne das Bild erneut auszuwählen."""
+        if not pattern.source_image_path:
+            return
+
+        self._load_image_from_path(pattern.source_image_path)
+        if self._image_path is None:
+            return  # Datei fehlt/beschädigt -- Warnung kam schon von _load_image_from_path
+
+        # Ausschnitt setzen (löst _on_crop_changed aus, das Breite/Höhe
+        # zunächst auf einen Ausschnitt-Default umrechnet) -- die exakte
+        # gespeicherte Mustergröße wird direkt danach wiederhergestellt.
+        self.crop_preview.set_crop(*pattern.source_image_crop)
+
+        self._updating_size = True
+        self.spin_width.setValue(pattern.width)
+        self.spin_height.setValue(pattern.height)
+        self._updating_size = False
+        self._update_size_info()
+
+        if pattern.source_palette_name:
+            palette_index = self.combo_palette.findText(pattern.source_palette_name)
+            if palette_index >= 0:
+                self.combo_palette.setCurrentIndex(palette_index)
+
+        meta = pattern.metadata
+        self.spin_colors.setValue(meta.get("max_colors", self.spin_colors.value()))
+
+        mode_map = {"none": 0, "floyd_steinberg": 1, "ordered": 2}
+        self.combo_dithering.setCurrentIndex(mode_map.get(meta.get("dithering_mode", "none"), 0))
+
+        quant_map = {"nearest": 0, "median_cut": 1}
+        self.combo_quantization.setCurrentIndex(
+            quant_map.get(meta.get("quantization_method", "nearest"), 0)
+        )
+
+        self.chk_backstitches.setChecked(bool(meta.get("auto_backstitches", False)))
+        self.chk_aspect.setChecked(bool(meta.get("keep_aspect_ratio", True)))
+        self.spin_confetti.setValue(meta.get("confetti_min_run_size", 1))
+
+        self.slider_brightness.setValue(round(meta.get("brightness", 1.0) * 100))
+        self.slider_contrast.setValue(round(meta.get("contrast", 1.0) * 100))
+        self.slider_saturation.setValue(round(meta.get("saturation", 1.0) * 100))
 
     def _auto_size_to_content(self) -> None:
         """Größe so wählen, dass die linke Einstellungs-Spalte nicht

@@ -279,6 +279,26 @@ def test_import_remembers_source_image_path(tmp_path):
     assert pattern.source_image_path == str(path)
 
 
+def test_import_metadata_carries_full_settings_for_recall(tmp_path):
+    """metadata speichert genug, um den Import spaeter identisch zu
+    wiederholen (Wizard Recall) -- insbesondere Groesse und Bildanpassung,
+    die vorher fehlten."""
+    path = _make_solid_rgb(tmp_path, (50, 100, 150))
+    settings = ImportSettings(
+        width=12,
+        height=9,
+        keep_aspect_ratio=False,
+        brightness=1.2,
+        contrast=0.8,
+        saturation=1.5,
+    )
+    pattern = import_image(path, settings)
+    assert pattern.metadata["keep_aspect_ratio"] is False
+    assert pattern.metadata["brightness"] == pytest.approx(1.2)
+    assert pattern.metadata["contrast"] == pytest.approx(0.8)
+    assert pattern.metadata["saturation"] == pytest.approx(1.5)
+
+
 def test_import_invalid_file_raises(tmp_path):
     """Nicht-existierende oder kaputte Datei -> ValueError."""
     fake = tmp_path / "doesnt_exist.png"

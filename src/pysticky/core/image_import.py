@@ -226,6 +226,10 @@ def import_image(
             "max_colors": settings.max_colors,
             "auto_backstitches": settings.auto_backstitches,
             "confetti_min_run_size": settings.confetti_min_run_size,
+            "keep_aspect_ratio": settings.keep_aspect_ratio,
+            "brightness": settings.brightness,
+            "contrast": settings.contrast,
+            "saturation": settings.saturation,
         },
     )
     pattern.color_entries.clear()

@@ -53,6 +53,12 @@ class ActionsBuilderMixin:
         self.action_import_image.setToolTip(t("Bild importieren (Ctrl+I)"))
         self.action_import_image.triggered.connect(self._on_import_image)
 
+        self.action_reimport_image = QAction(t("Bildimport wiederholen..."), self)
+        self.action_reimport_image.setToolTip(
+            t("Bildimport des aktuellen Musters mit angepassten Einstellungen wiederholen")
+        )
+        self.action_reimport_image.triggered.connect(self._on_reimport_image)
+
         self.action_import_xsd_pat = QAction(t("Muster importieren (XSD/PAT/OXS)..."), self)
         self.action_import_xsd_pat.setShortcut("Ctrl+Alt+I")
         self.action_import_xsd_pat.setToolTip(t("Muster importieren (XSD/PAT/OXS)..."))

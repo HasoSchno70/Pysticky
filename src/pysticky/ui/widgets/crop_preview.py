@@ -126,6 +126,17 @@ class CropPreviewWidget(QLabel):
         self._update_crop_rect()
         self.update()
 
+    def set_crop(self, x1: float, y1: float, x2: float, y2: float) -> None:
+        """Setzt den Ausschnitt programmatisch (normalisiert 0-1), z.B. beim
+        Vorbefüllen des Import-Dialogs aus einem bereits importierten Muster."""
+        self._crop_x1 = clamp(x1, 0.0, 1.0)
+        self._crop_y1 = clamp(y1, 0.0, 1.0)
+        self._crop_x2 = clamp(x2, 0.0, 1.0)
+        self._crop_y2 = clamp(y2, 0.0, 1.0)
+        self._update_crop_rect()
+        self._emit_crop_changed()
+        self.update()
+
     def resizeEvent(self, event) -> None:
         """Widget-Größe geändert."""
         super().resizeEvent(event)

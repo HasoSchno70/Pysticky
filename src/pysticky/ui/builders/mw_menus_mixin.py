@@ -43,6 +43,7 @@ class MenuBuilderMixin:
 
         file_menu.addSeparator()
         file_menu.addAction(self.action_import_image)
+        file_menu.addAction(self.action_reimport_image)
         file_menu.addAction(self.action_import_xsd_pat)
         file_menu.addAction(self.action_open_demo)
 
