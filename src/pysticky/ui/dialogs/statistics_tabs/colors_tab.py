@@ -15,8 +15,8 @@ from PySide6.QtWidgets import (
 )
 
 from ....core.i18n import t
-from ...color_utils import to_qcolor
 from ...styles import THEME
+from ._table_helpers import color_swatch_item, sortable_count_item
 
 if TYPE_CHECKING:
     from ....core import Pattern
@@ -65,10 +65,7 @@ class ColorsTab(QWidget):
 
         for row, entry in enumerate(entries):
             # Farbe
-            color = to_qcolor(entry.thread.color)
-            color_item = QTableWidgetItem()
-            color_item.setBackground(QBrush(color))
-            self._colors_table.setItem(row, 0, color_item)
+            self._colors_table.setItem(row, 0, color_swatch_item(entry.thread.color))
 
             # Symbol (mit Skip-Markierung)
             symbol_text = f"⊘ {entry.symbol}" if entry.skip_stitching else entry.symbol
@@ -95,8 +92,7 @@ class ColorsTab(QWidget):
             self._colors_table.setItem(row, 4, QTableWidgetItem(entry.thread.catalog_number or "-"))
 
             # Stiche
-            stitch_item = QTableWidgetItem()
-            stitch_item.setData(Qt.ItemDataRole.DisplayRole, entry.stitch_count)
+            stitch_item = sortable_count_item(entry.stitch_count)
             if entry.skip_stitching:
                 stitch_item.setForeground(QBrush(QColor(THEME.text_muted)))
             self._colors_table.setItem(row, 5, stitch_item)

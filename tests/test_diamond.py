@@ -1292,13 +1292,12 @@ def test_image_import_stick_palette_keeps_stitch_mode(tmp_path):
 
 
 def test_image_import_dp_presets_in_builtin_list():
-    """BUILTIN_PRESETS enthaelt jetzt DP-Varianten mit palette + dp_mode."""
+    """BUILTIN_PRESETS enthaelt DP-Varianten, die per Palette auf DP springen."""
     from pysticky.ui.dialogs.image_import_presets import BUILTIN_PRESETS
 
-    dp_presets = [p for p in BUILTIN_PRESETS if p.get("dp_mode")]
+    dp_presets = [p for p in BUILTIN_PRESETS if p.get("palette") == "DMC Diamond Painting"]
     assert len(dp_presets) >= 5  # mindestens A4-A0
     for p in dp_presets:
-        assert p.get("palette") == "DMC Diamond Painting"
         assert "DP" in p["name"]
 
 

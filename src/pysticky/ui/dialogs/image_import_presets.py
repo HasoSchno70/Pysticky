@@ -49,7 +49,9 @@ BUILTIN_PRESETS = [
     },
     # Diamond-Painting-Presets: Größen passen bei 2.5mm-Drill-Pitch
     # 1:1 auf das jeweilige DIN-Format. "palette" springt automatisch auf
-    # DMC Diamond Painting, "dp_mode" markiert das Pattern als DP.
+    # DMC Diamond Painting — deren is_diamond-Flag markiert das Pattern
+    # beim Import als DP (image_import.py), ein separates dp_mode-Flag
+    # auf dem Preset ist dafür nicht nötig.
     {
         "name": "💎 DP A4 quadratisch (60×60)",
         "width": 60,
@@ -59,7 +61,6 @@ BUILTIN_PRESETS = [
         "quantization_method": "median_cut",
         "auto_backstitches": False,
         "palette": "DMC Diamond Painting",
-        "dp_mode": True,
     },
     {
         "name": "💎 DP A3 (100×100)",
@@ -70,7 +71,6 @@ BUILTIN_PRESETS = [
         "quantization_method": "median_cut",
         "auto_backstitches": False,
         "palette": "DMC Diamond Painting",
-        "dp_mode": True,
     },
     {
         "name": "💎 DP A2 (150×150)",
@@ -81,7 +81,6 @@ BUILTIN_PRESETS = [
         "quantization_method": "median_cut",
         "auto_backstitches": False,
         "palette": "DMC Diamond Painting",
-        "dp_mode": True,
     },
     {
         "name": "💎 DP A1 (200×200)",
@@ -92,7 +91,6 @@ BUILTIN_PRESETS = [
         "quantization_method": "median_cut",
         "auto_backstitches": False,
         "palette": "DMC Diamond Painting",
-        "dp_mode": True,
     },
     {
         "name": "💎 DP A0 (300×300)",
@@ -103,7 +101,6 @@ BUILTIN_PRESETS = [
         "quantization_method": "median_cut",
         "auto_backstitches": False,
         "palette": "DMC Diamond Painting",
-        "dp_mode": True,
     },
 ]
 

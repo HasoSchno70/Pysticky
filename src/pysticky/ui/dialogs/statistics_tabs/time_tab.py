@@ -4,8 +4,6 @@ Zeitschätzung-Tab für den Statistik-Dialog.
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
@@ -21,8 +19,8 @@ from PySide6.QtWidgets import (
 )
 
 from ....core.i18n import t
-from ...color_utils import to_qcolor
 from ...widgets.statistics_widgets import StatCard
+from ._table_helpers import color_swatch_item, sortable_count_item
 
 if TYPE_CHECKING:
     from ....core import Pattern
@@ -54,7 +52,8 @@ class TimeTab(QWidget):
 
         settings_layout.addWidget(QLabel(t("Stickerfahrung:")))
         self._skill_combo = QComboBox()
-        self._skill_combo.addItems(list(self.SECONDS_PER_STITCH.keys()))
+        for skill in self.SECONDS_PER_STITCH:
+            self._skill_combo.addItem(t(skill), skill)
         self._skill_combo.setCurrentIndex(1)  # Fortgeschritten
         self._skill_combo.currentIndexChanged.connect(self._recalculate_time)
         settings_layout.addWidget(self._skill_combo)
@@ -116,7 +115,7 @@ class TimeTab(QWidget):
         if self._pattern is None:
             return
 
-        skill = self._skill_combo.currentText()
+        skill = self._skill_combo.currentData()
         seconds_per_stitch = self.SECONDS_PER_STITCH.get(skill, 5)
         hours_per_day = self._hours_spin.value()
 
@@ -166,18 +165,13 @@ class TimeTab(QWidget):
 
         for row, entry in enumerate(entries_to_stitch):
             # Farbe
-            color = to_qcolor(entry.thread.color)
-            color_item = QTableWidgetItem()
-            color_item.setBackground(QBrush(color))
-            self._time_table.setItem(row, 0, color_item)
+            self._time_table.setItem(row, 0, color_swatch_item(entry.thread.color))
 
             # Name
             self._time_table.setItem(row, 1, QTableWidgetItem(entry.thread.name))
 
             # Stiche
-            stitch_item = QTableWidgetItem()
-            stitch_item.setData(Qt.ItemDataRole.DisplayRole, entry.stitch_count)
-            self._time_table.setItem(row, 2, stitch_item)
+            self._time_table.setItem(row, 2, sortable_count_item(entry.stitch_count))
 
             # Zeit
             color_seconds = entry.stitch_count * seconds_per_stitch

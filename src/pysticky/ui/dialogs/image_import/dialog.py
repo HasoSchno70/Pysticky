@@ -256,9 +256,31 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self._import_worker.error.connect(self._on_import_error)
         self._import_worker.finished.connect(self._import_thread.quit)
         self._import_worker.error.connect(self._import_thread.quit)
+        self._import_worker.finished.connect(self._import_worker.deleteLater)
+        self._import_worker.error.connect(self._import_worker.deleteLater)
         self._import_thread.finished.connect(self._import_thread.deleteLater)
 
         self._import_thread.start()
+
+    def _import_running(self) -> bool:
+        thread = getattr(self, "_import_thread", None)
+        return thread is not None and thread.isRunning()
+
+    def reject(self) -> None:
+        """Verhindert das Schließen, während der Hintergrund-Import läuft."""
+        if self._import_running():
+            return
+        super().reject()
+
+    def closeEvent(self, event) -> None:
+        """Verhindert das Schließen (z.B. per Fenster-X), während der
+        Hintergrund-Import läuft -- sonst könnte ein später feuerndes
+        finished/error-Signal auf ein bereits zerstörtes Dialog-Objekt
+        zugreifen."""
+        if self._import_running():
+            event.ignore()
+            return
+        super().closeEvent(event)
 
     def _on_import_finished(self, pattern: Pattern) -> None:
         """Callback wenn Import erfolgreich."""

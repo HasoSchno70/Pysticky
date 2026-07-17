@@ -86,10 +86,6 @@ class PresetsMixin:
             if palette_index >= 0:
                 self.combo_palette.setCurrentIndex(palette_index)
 
-        # DP-Modus-Flag: wird im _get_settings ausgewertet und beim Import
-        # an das Pattern weitergegeben.
-        self._preset_dp_mode = preset.get("dp_mode", False)
-
     def _on_save_preset(self: "ImageImportDialog") -> None:
         """Speichert die aktuellen Einstellungen als User-Preset."""
         name, ok = QInputDialog.getText(

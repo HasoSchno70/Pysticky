@@ -105,7 +105,7 @@ class ShoppingTab(QWidget):
         self._layout.addWidget(table, 1)
 
         summary = QLabel(
-            f"<b>{total_to_buy}</b> Stränge insgesamt zu kaufen"
+            f"<b>{total_to_buy}</b> {t('Stränge insgesamt zu kaufen')}"
             if total_to_buy > 0
             else t("✓ Du hast alles im Vorrat!")
         )

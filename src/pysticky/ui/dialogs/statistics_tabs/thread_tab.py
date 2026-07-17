@@ -5,8 +5,6 @@ Garnverbrauch-Rechner-Tab für den Statistik-Dialog.
 import math
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
@@ -25,9 +23,9 @@ from PySide6.QtWidgets import (
 
 from ....core.constants import COMMON_FABRIC_COUNTS
 from ....core.i18n import t
-from ...color_utils import to_qcolor
 from ...styles import THEME
 from ._constants import STITCHES_PER_SKEIN
+from ._table_helpers import color_swatch_item, sortable_count_item
 
 if TYPE_CHECKING:
     from ....core import Pattern
@@ -165,18 +163,13 @@ class ThreadTab(QWidget):
 
         for row, entry in enumerate(entries):
             # Farbe
-            color = to_qcolor(entry.thread.color)
-            color_item = QTableWidgetItem()
-            color_item.setBackground(QBrush(color))
-            self._thread_table.setItem(row, 0, color_item)
+            self._thread_table.setItem(row, 0, color_swatch_item(entry.thread.color))
 
             # Name
             self._thread_table.setItem(row, 1, QTableWidgetItem(entry.thread.name))
 
             # Stiche
-            stitch_item = QTableWidgetItem()
-            stitch_item.setData(Qt.ItemDataRole.DisplayRole, entry.stitch_count)
-            self._thread_table.setItem(row, 2, stitch_item)
+            self._thread_table.setItem(row, 2, sortable_count_item(entry.stitch_count))
 
             # Stränge (genau)
             if entry.stitch_count > 0:
