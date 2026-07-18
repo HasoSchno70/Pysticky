@@ -189,6 +189,13 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         # Symbole basierend auf LOD
         show_symbols = self._show_symbols and not skip_symbols
 
+        # Aida-Textur/DP-Klebegrund einmal pro Frame ermitteln statt pro
+        # Chunk -- gleiche Bedingung wie im Direkt-Rendering-Pfad
+        # (RenderingMixin._draw_all_cells).
+        diamond_view = getattr(self, "_diamond_view", False)
+        use_fabric_texture = not diamond_view and self._show_fabric_texture and self._cell_size >= 6
+        fabric_pixmap = self._get_fabric_pixmap() if use_fabric_texture else None
+
         for cy in range(start_cy, end_cy):
             for cx in range(start_cx, end_cx):
                 # Cache prüfen
@@ -201,6 +208,8 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                     show_symbols,
                     self._show_only_active_layer,
                     self._dim_other_layers,
+                    use_fabric_texture,
+                    diamond_view,
                 )
 
                 if pixmap is None:
@@ -218,8 +227,21 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                         self._dim_other_layers,
                         self._cache._color_cache if hasattr(self._cache, "_color_cache") else {},
                         self._get_symbol_font(),
+                        fabric_pixmap,
+                        diamond_view,
                     )
-                    self._perf_manager.cache_chunk(cx, cy, pixmap)
+                    self._perf_manager.cache_chunk(
+                        cx,
+                        cy,
+                        pixmap,
+                        self._cell_size,
+                        self._show_colors,
+                        show_symbols,
+                        self._show_only_active_layer,
+                        self._dim_other_layers,
+                        use_fabric_texture,
+                        diamond_view,
+                    )
 
                 # Chunk zeichnen
                 if pixmap and not pixmap.isNull():

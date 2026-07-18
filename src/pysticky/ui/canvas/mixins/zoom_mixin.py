@@ -61,6 +61,14 @@ class ZoomMixin:
         old_size = self._cell_size
         self._cell_size = size
 
+        if size != old_size:
+            # Gecachte Chunk-Pixmaps (OptimizedCrossStitchCanvas) sind bei der
+            # alten Zellgröße gerendert -- der Cache-Key kennt nur
+            # (chunk_x, chunk_y), nicht cell_size. Ohne Invalidierung würde
+            # nach dem Zoomen ein alt-skalierter Pixmap an der neuen
+            # Bildschirmposition gezeichnet: falsch große, verschobene Blöcke.
+            self.invalidate_all()
+
         if self._pattern:
             # Zoom um Bildschirmmitte
             center_x = self.width() // 2

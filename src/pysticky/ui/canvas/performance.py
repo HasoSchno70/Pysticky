@@ -103,7 +103,12 @@ class PerformanceManager:
     def __init__(self, canvas: "CrossStitchCanvas") -> None:
         self._canvas = canvas
         self._enabled = False
-        self._chunk_cache: dict[tuple[int, int], QPixmap] = {}
+        # Wert ist (Pixmap, Render-Parameter) -- die Parameter werden bei
+        # jedem Zugriff mit den aktuellen verglichen, damit z.B. ein
+        # Zoom-Wechsel (cell_size) oder "Nur aktive Ebene"/"Andere Ebenen
+        # abdunkeln" nicht einen bei anderen Einstellungen gerenderten,
+        # falsch skalierten oder inhaltlich falschen Pixmap wiederverwendet.
+        self._chunk_cache: dict[tuple[int, int], tuple[QPixmap, tuple]] = {}
         self._dirty_chunks: set[tuple[int, int]] = set()
         self._chunk_size = 64  # Zellen pro Chunk
         self._stats = {
@@ -196,6 +201,8 @@ class PerformanceManager:
         show_symbols: bool,
         show_only_active: bool,
         dim_other_layers: bool,
+        fabric_texture: bool = False,
+        diamond_view: bool = False,
     ) -> QPixmap | None:
         """
         Gibt den gecachten Chunk zurück, oder None wenn er neu gerendert werden muss.
@@ -204,6 +211,15 @@ class PerformanceManager:
             return None
 
         key = (chunk_x, chunk_y)
+        params = (
+            cell_size,
+            show_colors,
+            show_symbols,
+            show_only_active,
+            dim_other_layers,
+            fabric_texture,
+            diamond_view,
+        )
 
         # Dirty?
         if key in self._dirty_chunks:
@@ -213,20 +229,46 @@ class PerformanceManager:
             self._stats["cache_misses"] += 1
             return None
 
-        # Im Cache?
+        # Im Cache -- aber nur gültig, wenn mit denselben Render-Parametern
+        # erzeugt (siehe Kommentar an _chunk_cache oben).
         if key in self._chunk_cache:
-            self._stats["cache_hits"] += 1
-            return self._chunk_cache[key]
+            cached_pixmap, cached_params = self._chunk_cache[key]
+            if cached_params == params:
+                self._stats["cache_hits"] += 1
+                return cached_pixmap
+            del self._chunk_cache[key]
 
         self._stats["cache_misses"] += 1
         return None
 
-    def cache_chunk(self, chunk_x: int, chunk_y: int, pixmap: QPixmap) -> None:
-        """Speichert einen Chunk im Cache."""
+    def cache_chunk(
+        self,
+        chunk_x: int,
+        chunk_y: int,
+        pixmap: QPixmap,
+        cell_size: int = 0,
+        show_colors: bool = True,
+        show_symbols: bool = True,
+        show_only_active: bool = False,
+        dim_other_layers: bool = False,
+        fabric_texture: bool = False,
+        diamond_view: bool = False,
+    ) -> None:
+        """Speichert einen Chunk im Cache, zusammen mit den Render-Parametern
+        gegen die spätere get_cached_chunk()-Aufrufe validieren."""
         if not self._enabled:
             return
 
-        self._chunk_cache[(chunk_x, chunk_y)] = pixmap
+        params = (
+            cell_size,
+            show_colors,
+            show_symbols,
+            show_only_active,
+            dim_other_layers,
+            fabric_texture,
+            diamond_view,
+        )
+        self._chunk_cache[(chunk_x, chunk_y)] = (pixmap, params)
         self._stats["chunks_rendered"] += 1
 
     def get_stats(self) -> dict:
@@ -265,6 +307,8 @@ def render_chunk_to_pixmap(
     dim_other_layers: bool,
     color_cache: dict[int, QColor],
     symbol_font,
+    fabric_pixmap: QPixmap | None = None,
+    diamond_view: bool = False,
 ) -> QPixmap:
     """
     Rendert einen Chunk als QPixmap.
@@ -281,6 +325,10 @@ def render_chunk_to_pixmap(
         dim_other_layers: Andere Layer abdunkeln
         color_cache: QColor-Cache
         symbol_font: Font für Symbole
+        fabric_pixmap: Aida-Textur-Tile (canvas._get_fabric_pixmap()), oder
+            None für eine flache Farbfüllung. Chunk-Grenzen liegen immer
+            auf Zellgrenzen, daher kachelt die Textur ohne Transform-Offset.
+        diamond_view: DP-Klebegrund-Hintergrund statt Aida-Textur.
 
     Returns:
         QPixmap mit dem gerenderten Chunk
@@ -298,10 +346,19 @@ def render_chunk_to_pixmap(
     pixel_width = width * cell_size
     pixel_height = height * cell_size
     pixmap = QPixmap(pixel_width, pixel_height)
-    pixmap.fill(empty_color)
+
+    if diamond_view:
+        pixmap.fill(QColor(235, 232, 220))
+    else:
+        pixmap.fill(empty_color)
 
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
+    if not diamond_view and fabric_pixmap is not None and not fabric_pixmap.isNull():
+        from PySide6.QtGui import QBrush
+
+        painter.fillRect(pixmap.rect(), QBrush(fabric_pixmap))
 
     if show_symbols and cell_size >= 12:
         painter.setFont(symbol_font)

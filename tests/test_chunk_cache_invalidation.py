@@ -53,7 +53,7 @@ def test_apply_changes_invalidates_chunk_cache(qtbot):
         {},
         canvas._get_symbol_font(),
     )
-    canvas._perf_manager.cache_chunk(0, 0, pixmap)
+    canvas._perf_manager.cache_chunk(0, 0, pixmap, canvas._cell_size, True, True, False, False)
     assert (
         canvas._perf_manager.get_cached_chunk(
             0, 0, canvas._pattern, canvas._cell_size, True, True, False, False
@@ -121,6 +121,102 @@ def test_invalidate_all_clears_chunk_cache(qtbot):
     canvas.invalidate_all()
 
     assert len(canvas._perf_manager._chunk_cache) == 0
+
+
+def test_get_cached_chunk_rejects_pixmap_rendered_at_different_cell_size(qtbot):
+    """Ein bei alter Zellgröße gerenderter Chunk-Pixmap darf nach einem
+    Zoom-Wechsel nicht mehr als gültig gelten -- sonst zeichnet
+    _draw_cells_chunked() ihn falsch skaliert an der neuen Bildschirm-
+    position (die 'verschobene, falsch große Blöcke'-Artefakte beim Zoomen)."""
+    from PySide6.QtGui import QPixmap
+
+    from pysticky.ui.canvas import OptimizedCrossStitchCanvas
+
+    canvas = OptimizedCrossStitchCanvas()
+    qtbot.addWidget(canvas)
+    canvas.set_pattern(_large_pattern())
+
+    canvas._perf_manager.cache_chunk(0, 0, QPixmap(1, 1), 20, True, True, False, False)
+    assert (
+        canvas._perf_manager.get_cached_chunk(0, 0, canvas._pattern, 20, True, True, False, False)
+        is not None
+    )
+
+    # Andere Zellgröße (Zoom-Wechsel) -- derselbe (cx, cy)-Key, aber der
+    # gecachte Pixmap passt nicht mehr zur angeforderten Skalierung.
+    assert (
+        canvas._perf_manager.get_cached_chunk(0, 0, canvas._pattern, 7, True, True, False, False)
+        is None
+    )
+
+
+def test_set_cell_size_invalidates_chunk_cache_on_zoom(qtbot):
+    """_set_cell_size() (zoom_in/zoom_out/set_zoom/zoom_fit/zoom_reset) muss
+    den Chunk-Cache verwerfen, wenn sich die Zellgröße tatsächlich ändert."""
+    from PySide6.QtGui import QPixmap
+
+    from pysticky.ui.canvas import OptimizedCrossStitchCanvas
+
+    canvas = OptimizedCrossStitchCanvas()
+    qtbot.addWidget(canvas)
+    canvas.set_pattern(_large_pattern())
+    canvas._perf_manager.cache_chunk(
+        0, 0, QPixmap(1, 1), canvas._cell_size, True, True, False, False
+    )
+    assert len(canvas._perf_manager._chunk_cache) == 1
+
+    canvas.zoom_in()
+
+    assert len(canvas._perf_manager._chunk_cache) == 0
+
+
+def test_chunked_render_path_draws_fabric_texture(qtbot):
+    """render_chunk_to_pixmap() (chunk-cache-Pfad, aktiv bei großen Mustern)
+    füllte leere Zellen bisher immer mit einer flachen Farbe -- die
+    Aida-Textur, die der Direkt-Renderpfad (_draw_all_cells) für leere
+    Zellen zeichnet, fehlte dort komplett. Chunk-Pixmap mit Textur muss sich
+    optisch von einer flachen Füllung unterscheiden (nicht uniform)."""
+    from PySide6.QtGui import QColor, QFont, QImage
+
+    from pysticky.ui.canvas.performance import render_chunk_to_pixmap
+
+    pattern = _large_pattern()
+    empty_color = QColor(60, 60, 90)
+    font = QFont()
+    flat = render_chunk_to_pixmap(
+        pattern, 0, 0, 8, 20, empty_color, True, True, False, False, {}, font
+    )
+
+    fabric_tile = QImage(20, 20, QImage.Format.Format_ARGB32)
+    fabric_tile.fill(empty_color)
+    from PySide6.QtGui import QPainter as _QPainter
+
+    p = _QPainter(fabric_tile)
+    p.fillRect(4, 4, 4, 4, QColor(180, 170, 150, 200))
+    p.end()
+
+    from PySide6.QtGui import QPixmap
+
+    textured = render_chunk_to_pixmap(
+        pattern,
+        0,
+        0,
+        8,
+        20,
+        empty_color,
+        True,
+        True,
+        False,
+        False,
+        {},
+        font,
+        QPixmap.fromImage(fabric_tile),
+        False,
+    )
+
+    flat_img = flat.toImage()
+    textured_img = textured.toImage()
+    assert flat_img.pixelColor(4, 4) != textured_img.pixelColor(4, 4)
 
 
 def test_notify_panels_visual_and_palette_invalidate_canvas(qtbot):
