@@ -15,6 +15,7 @@ from ...utils import get_logger
 from ..color_utils import to_qcolor
 
 if TYPE_CHECKING:
+    from ...core import Pattern
     from ..main_window import MainWindow
 
 logger = get_logger(__name__)
@@ -90,6 +91,14 @@ class FileHandlersMixin:
             if settings["template_name"]:
                 pattern.name = settings["template_name"]
 
+            # Ein neues Muster ganz ohne Farbe ist eine Falle: alle
+            # Zeichenwerkzeuge sind sofort aktiv, verwenden aber Farbindex 0 --
+            # ohne eine tatsaechlich vorhandene Farbe an diesem Index wird
+            # (seit dem Farbindex-Validierungs-Fix) gar nichts gezeichnet.
+            # Eine erste Farbe aus der konfigurierten Standard-Palette
+            # vorzubelegen macht "Neu -> sofort loszeichnen" wieder moeglich.
+            self._seed_first_color(pattern, is_dp)
+
             self.set_pattern(pattern)
             self._mark_saved()
 
@@ -98,6 +107,35 @@ class FileHandlersMixin:
             if settings["template_name"]:
                 msg = f"Neues Muster: {settings['template_name']}"
             self.status_bar.showMessage(msg, self._status_timeout_ms)
+
+    def _seed_first_color(self: "MainWindow", pattern: "Pattern", is_dp: bool) -> None:
+        """Legt die erste Farbe der konfigurierten Standard-Palette ins neue
+        Muster (Index 0 -- der Default-Zeichenfarbindex von Canvas/ColorBar).
+        Diamond-Modus bekommt die erste verfügbare Diamond-Palette statt der
+        normalen Garn-Standardpalette, da Garnfarben dort nicht als Drill
+        gerendert werden."""
+        from ...core import get_palette_manager
+
+        pm = get_palette_manager()
+        pm.load_all()
+
+        if is_dp:
+            palette_name = next(
+                (
+                    name
+                    for name in sorted(pm.available_palettes)
+                    if (p := pm.get_palette(name)) and p.is_diamond
+                ),
+                None,
+            )
+        else:
+            palette_name = self._settings.value("default_palette", "Anchor", type=str)
+            if not pm.get_palette(palette_name):
+                palette_name = "Anchor"
+
+        palette = pm.get_palette(palette_name) if palette_name else None
+        if palette and palette.threads:
+            pattern.add_color(palette.threads[0])
 
     def _on_open(self: "MainWindow") -> None:
         """Muster öffnen."""
