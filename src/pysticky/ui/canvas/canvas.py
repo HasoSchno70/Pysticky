@@ -140,6 +140,20 @@ class CrossStitchCanvas(
         # Verschiebt die aus cell_size abgeleitete Basisgroesse (zoom-
         # reaktiv) um einen festen Betrag -- 0 = unveraendertes Verhalten.
         self._symbol_size_offset: int = 0
+        # Analog fuer Rueckstich-Linienbreite (Einstellungen → Werkzeuge →
+        # Rueckstich → "Linienbreite"); Default-Einstellwert 2 entspricht
+        # dem bisherigen fest codierten Minimum, Offset 0 = unveraendert.
+        self._backstitch_width_offset: int = 0
+
+        # Marching Ants: animierter Versatz fuer die Auswahl-Umrandung
+        # (Einstellungen → Werkzeuge → Auswahl → "Laufende Ameisen"). Timer
+        # laeuft nur, wenn die Einstellung aktiv ist (siehe
+        # marching_ants_enabled-Property in properties_mixin.py).
+        self._marching_ants_offset: int = 0
+        self._marching_ants_enabled: bool = True
+        self._marching_ants_timer = QTimer(self)
+        self._marching_ants_timer.setInterval(120)
+        self._marching_ants_timer.timeout.connect(self._tick_marching_ants)
 
         # Ansichts-Optionen
         self._show_grid: bool = True
@@ -468,6 +482,18 @@ class CrossStitchCanvas(
         """Führt das aufgeschobene Update aus."""
         self._pending_update = False
         self.update()
+
+    # =========================================================================
+    # Marching Ants
+    # =========================================================================
+
+    def _tick_marching_ants(self) -> None:
+        """Rueckt den Auswahl-Rand-Versatz weiter -- nur reales Repaint,
+        wenn das Auswahl-Werkzeug gerade aktiv ist (spart Zyklen bei allen
+        anderen Werkzeugen, wo die Animation ohnehin nicht sichtbar waere)."""
+        self._marching_ants_offset = (self._marching_ants_offset + 1) % 8
+        if self._tool_manager.current_tool in (Tool.SELECT, Tool.SELECT_LASSO):
+            self.update()
 
     # =========================================================================
     # Font-Cache

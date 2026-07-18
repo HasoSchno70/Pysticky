@@ -56,6 +56,14 @@ class BackstitchTool(BaseTool):
         self._snap_to_grid = True  # Snap zu Ecken/Mitten
         self._pending_action: BackstitchAction | None = None
 
+    @property
+    def snap_to_grid(self) -> bool:
+        return self._snap_to_grid
+
+    @snap_to_grid.setter
+    def snap_to_grid(self, value: bool) -> None:
+        self._snap_to_grid = value
+
     def activate(self) -> None:
         """Wird aufgerufen wenn das Werkzeug ausgewählt wird."""
         self._start_x = None

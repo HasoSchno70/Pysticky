@@ -89,11 +89,6 @@ class ToolsTab(QWidget):
         # === Auswahl ===
         group_select, form = make_section_form("Auswahl", "⬚")
 
-        self.combo_select_mode = QComboBox()
-        self.combo_select_mode.addItems([t("Ersetzen"), t("Hinzufügen"), t("Subtrahieren")])
-        self.combo_select_mode.setToolTip(t("Standard-Modus für neue Auswahlen"))
-        form.addRow(t("Standard-Modus:"), self.combo_select_mode)
-
         self.chk_marching_ants = QCheckBox(t("Laufende Ameisen"))
         self.chk_marching_ants.setToolTip(t("Animierte Auswahlkanten"))
         form.addRow(self.chk_marching_ants)
@@ -156,15 +151,16 @@ class ToolsTab(QWidget):
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
-        tool_index = settings.value("default_tool", 0, type=int)
-        if 0 <= tool_index < self.combo_default_tool.count():
-            self.combo_default_tool.setCurrentIndex(tool_index)
+        tool_name = settings.value("default_tool", Tool.PENCIL.name, type=str)
+        for i in range(self.combo_default_tool.count()):
+            if self.combo_default_tool.itemData(i).name == tool_name:
+                self.combo_default_tool.setCurrentIndex(i)
+                break
         self.chk_remember_tool.setChecked(settings.value("remember_tool", False, type=bool))
         self.combo_pipette_behavior.setCurrentIndex(settings.value("pipette_behavior", 0, type=int))
         self.chk_pipette_show_info.setChecked(settings.value("pipette_show_info", True, type=bool))
         self.chk_fill_diagonal.setChecked(settings.value("fill_diagonal", False, type=bool))
         self.spin_fill_tolerance.setValue(settings.value("fill_tolerance", 0, type=int))
-        self.combo_select_mode.setCurrentIndex(settings.value("select_mode", 0, type=int))
         self.chk_marching_ants.setChecked(settings.value("marching_ants", True, type=bool))
         self.spin_backstitch_width.setValue(settings.value("backstitch_width", 2, type=int))
         self.chk_backstitch_snap.setChecked(settings.value("backstitch_snap", True, type=bool))
@@ -178,13 +174,12 @@ class ToolsTab(QWidget):
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
-        settings.setValue("default_tool", self.combo_default_tool.currentIndex())
+        settings.setValue("default_tool", self.combo_default_tool.currentData().name)
         settings.setValue("remember_tool", self.chk_remember_tool.isChecked())
         settings.setValue("pipette_behavior", self.combo_pipette_behavior.currentIndex())
         settings.setValue("pipette_show_info", self.chk_pipette_show_info.isChecked())
         settings.setValue("fill_diagonal", self.chk_fill_diagonal.isChecked())
         settings.setValue("fill_tolerance", self.spin_fill_tolerance.value())
-        settings.setValue("select_mode", self.combo_select_mode.currentIndex())
         settings.setValue("marching_ants", self.chk_marching_ants.isChecked())
         settings.setValue("backstitch_width", self.spin_backstitch_width.value())
         settings.setValue("backstitch_snap", self.chk_backstitch_snap.isChecked())
@@ -194,13 +189,12 @@ class ToolsTab(QWidget):
 
     def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
-        self.combo_default_tool.setCurrentIndex(0)
+        self.combo_default_tool.setCurrentIndex(0)  # Tool.PENCIL, erster Eintrag
         self.chk_remember_tool.setChecked(False)
         self.combo_pipette_behavior.setCurrentIndex(0)
         self.chk_pipette_show_info.setChecked(True)
         self.chk_fill_diagonal.setChecked(False)
         self.spin_fill_tolerance.setValue(0)
-        self.combo_select_mode.setCurrentIndex(0)
         self.chk_marching_ants.setChecked(True)
         self.spin_backstitch_width.setValue(2)
         self.chk_backstitch_snap.setChecked(True)

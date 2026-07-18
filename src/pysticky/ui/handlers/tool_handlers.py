@@ -11,6 +11,24 @@ if TYPE_CHECKING:
 class ToolHandlersMixin:
     """Mixin für Werkzeug-bezogene Handler."""
 
+    def _apply_default_tool(self: "MainWindow") -> None:
+        """Wählt das Start-Werkzeug (Einstellungen → Werkzeuge): entweder
+        das zuletzt verwendete (wenn "Letztes Werkzeug merken" aktiv und
+        vorhanden) oder das konfigurierte Standard-Werkzeug. Nur beim
+        App-Start aufrufen, siehe MainWindow.__init__."""
+        from ..tools.tool_enum import Tool
+
+        tool_name = None
+        if self._settings.value("remember_tool", False, type=bool):
+            tool_name = self._settings.value("last_tool", None, type=str)
+        if not tool_name:
+            tool_name = self._settings.value("default_tool", Tool.PENCIL.name, type=str)
+        try:
+            tool = Tool[tool_name]
+        except KeyError:
+            tool = Tool.PENCIL
+        self.tool_bar.select_tool(tool)
+
     def _on_tool_changed(self: "MainWindow", tool) -> None:
         """Werkzeug geändert."""
         from ...core.i18n import t
@@ -19,6 +37,10 @@ class ToolHandlersMixin:
         name = t(tool.display_name)
         self.label_tool.setText(f"🛠 {name}")
         self.canvas.set_tool(tool)
+
+        # Einstellungen → Werkzeuge → "Letztes Werkzeug merken"
+        if self._settings.value("remember_tool", False, type=bool):
+            self._settings.setValue("last_tool", tool.name)
 
         self.text_options_dock.setVisible(tool == Tool.TEXT)
         self.gradient_options_dock.setVisible(tool == Tool.GRADIENT)

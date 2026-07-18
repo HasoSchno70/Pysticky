@@ -524,6 +524,11 @@ class ViewHandlersMixin:
         """Position auf Canvas hat sich geändert."""
         self.label_position.setText(f"X: {x}  Y: {y}")
 
+        # Einstellungen → Werkzeuge → Pipette → "Farbinfo in Statusleiste"
+        if not self._settings.value("pipette_show_info", True, type=bool):
+            self._clear_color_info()
+            return
+
         color_idx = self.current_pattern.get_stitch(x, y)
         if color_idx is not None:
             entry = self.current_pattern.get_color_entry(color_idx)

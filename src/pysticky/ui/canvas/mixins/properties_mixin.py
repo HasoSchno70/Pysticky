@@ -190,6 +190,29 @@ class PropertiesMixin:
         self.update()
 
     @property
+    def marching_ants_enabled(self: "CrossStitchCanvas") -> bool:
+        return self._marching_ants_enabled
+
+    @marching_ants_enabled.setter
+    def marching_ants_enabled(self: "CrossStitchCanvas", value: bool) -> None:
+        self._marching_ants_enabled = value
+        if value:
+            self._marching_ants_timer.start()
+        else:
+            self._marching_ants_timer.stop()
+            self._marching_ants_offset = 0
+            self.update()
+
+    @property
+    def backstitch_width_offset(self: "CrossStitchCanvas") -> int:
+        return self._backstitch_width_offset
+
+    @backstitch_width_offset.setter
+    def backstitch_width_offset(self: "CrossStitchCanvas", value: int) -> None:
+        self._backstitch_width_offset = value
+        self.update()
+
+    @property
     def bg_color(self: "CrossStitchCanvas") -> QColor:
         return self._bg_color
 

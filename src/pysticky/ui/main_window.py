@@ -167,6 +167,12 @@ class MainWindow(
         # auseinanderdriften.
         self._apply_settings_from_dialog()
 
+        # Start-Werkzeug: nur beim App-Start, NICHT Teil von
+        # _apply_settings_from_dialog() -- sonst würde jedes Schließen des
+        # Einstellungen-Dialogs (z.B. nur Theme geändert) das aktuell
+        # benutzte Werkzeug zurücksetzen.
+        self._apply_default_tool()
+
         self._update_title()
         self._update_status()
         self._update_undo_actions()

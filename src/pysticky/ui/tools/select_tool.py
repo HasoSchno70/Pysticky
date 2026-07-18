@@ -643,9 +643,12 @@ class SelectTool(BaseTool):
             fill_color.setAlpha(40)
             painter.fillRect(sx1, sy1, width, height, fill_color)
 
-        # Marching Ants
+        # Marching Ants -- animierter Versatz (Einstellungen → Werkzeuge →
+        # Auswahl → "Laufende Ameisen"), 0 wenn deaktiviert.
+        ants_offset = getattr(ctx.canvas, "_marching_ants_offset", 0)
         pen = QPen(QColor(THEME.text_primary), 2, Qt.PenStyle.DashLine)
         pen.setDashPattern([4, 4])
+        pen.setDashOffset(ants_offset)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRect(sx1, sy1, width, height)
@@ -653,7 +656,7 @@ class SelectTool(BaseTool):
         if not preview:
             pen2 = QPen(QColor(THEME.bg_dark), 2, Qt.PenStyle.DashLine)
             pen2.setDashPattern([4, 4])
-            pen2.setDashOffset(4)
+            pen2.setDashOffset(4 + ants_offset)
             painter.setPen(pen2)
             painter.drawRect(sx1, sy1, width, height)
 

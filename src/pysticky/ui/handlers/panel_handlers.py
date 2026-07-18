@@ -262,8 +262,18 @@ class PanelHandlersMixin:
         if 0 <= color_index < len(self.current_pattern.color_entries):
             self.canvas.set_current_color(color_index)
             self.color_bar.select_color(color_index)
-            entry = self.current_pattern.color_entries[color_index]
-            self.status_bar.showMessage(
-                f"Farbe aufgenommen: {entry.thread.name} ({entry.symbol})", 3000
-            )
-            self.tool_bar.select_tool(Tool.PENCIL)
+            if self._settings.value("pipette_show_info", True, type=bool):
+                entry = self.current_pattern.color_entries[color_index]
+                self.status_bar.showMessage(
+                    f"Farbe aufgenommen: {entry.thread.name} ({entry.symbol})",
+                    self._status_timeout_ms,
+                )
+            # Einstellungen → Werkzeuge → "Nach Aufnahme": 0=Stift (Default,
+            # bisheriges Verhalten), 1=beim Werkzeug bleiben, 2=Auswahl.
+            behavior = self._settings.value("pipette_behavior", 0, type=int)
+            if behavior == 1:
+                pass  # Pipette bleibt aktiv
+            elif behavior == 2:
+                self.tool_bar.select_tool(Tool.SELECT)
+            else:
+                self.tool_bar.select_tool(Tool.PENCIL)

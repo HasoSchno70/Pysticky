@@ -37,8 +37,20 @@ class FillTool(BaseTool):
         if not self._is_valid_pos(ctx, ctx.grid_x, ctx.grid_y):
             return []
 
-        tolerance_pct = QSettings().value("fill_tolerance", 0, type=int)
+        settings = QSettings()
+        tolerance_pct = settings.value("fill_tolerance", 0, type=int)
         max_delta_e = _MAX_TOLERANCE_DELTA_E * (tolerance_pct / 100)
+
+        # Einstellungen → Werkzeuge → Füllen → "Diagonal füllen": der
+        # Scanline-Algorithmus ist strukturell 4-fach verbunden (scannt nur
+        # links/rechts + direkt darueber/darunter) -- fuer 8-fach-
+        # Konnektivitaet (auch diagonale Nachbarn) eine separate, simplere
+        # BFS-Variante, die den schnellen Scanline-Pfad im Default-Fall
+        # (False) unangetastet laesst.
+        if settings.value("fill_diagonal", False, type=bool):
+            return self._diagonal_fill(
+                ctx, ctx.grid_x, ctx.grid_y, ctx.current_color_index, max_delta_e
+            )
 
         # Flood Fill ausführen
         return self._scanline_fill(
@@ -156,5 +168,70 @@ class FillTool(BaseTool):
                 if y < height - 1 and (fill_x, y + 1) not in visited:
                     if matches(layer.get_stitch(fill_x, y + 1)):
                         queue.append((fill_x, y + 1))
+
+        return changes
+
+    def _diagonal_fill(
+        self,
+        ctx: ToolContext,
+        start_x: int,
+        start_y: int,
+        new_color_idx: int,
+        max_delta_e: float = 0.0,
+    ) -> list[tuple[int, int, int | None]]:
+        """8-fach verbundener Flood-Fill (inkl. diagonaler Nachbarn) per BFS.
+
+        Einfacher, aber langsamer als der Scanline-Algorithmus -- nur
+        aktiv, wenn "Diagonal füllen" eingeschaltet ist.
+        """
+        layer = ctx.pattern.active_layer
+        if not layer:
+            return []
+
+        target_color = layer.get_stitch(start_x, start_y)
+        if target_color == new_color_idx:
+            return []
+
+        target_rgb = None
+        if max_delta_e > 0 and target_color is not None:
+            target_entry = ctx.pattern.get_color_entry(target_color)
+            if target_entry:
+                target_rgb = target_entry.thread.color.to_tuple()
+
+        def matches(idx: int | None) -> bool:
+            if idx == target_color:
+                return True
+            if target_rgb is None or idx is None:
+                return False
+            entry = ctx.pattern.get_color_entry(idx)
+            if not entry:
+                return False
+            return delta_e(target_rgb, entry.thread.color.to_tuple()) <= max_delta_e
+
+        width = ctx.pattern.width
+        height = ctx.pattern.height
+
+        changes = []
+        visited = {(start_x, start_y)}
+        queue = deque([(start_x, start_y)])
+
+        while queue:
+            x, y = queue.popleft()
+            if not matches(layer.get_stitch(x, y)):
+                continue
+            changes.append((x, y, new_color_idx))
+
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    nx, ny = x + dx, y + dy
+                    if not (0 <= nx < width and 0 <= ny < height):
+                        continue
+                    if (nx, ny) in visited:
+                        continue
+                    if matches(layer.get_stitch(nx, ny)):
+                        visited.add((nx, ny))
+                        queue.append((nx, ny))
 
         return changes

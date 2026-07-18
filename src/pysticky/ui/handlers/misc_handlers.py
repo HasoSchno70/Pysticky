@@ -793,6 +793,16 @@ class MiscHandlersMixin:
         )
         self.color_bar.swatch_size = self._settings.value("color_bar_size", 48, type=int)
 
+        # Werkzeuge-Tab: Laufende Ameisen (Timer laeuft nur, wenn aktiv)
+        self.canvas.marching_ants_enabled = self._settings.value("marching_ants", True, type=bool)
+
+        # Werkzeuge-Tab: Rückstich-Linienbreite + Einrasten
+        backstitch_width = self._settings.value("backstitch_width", 2, type=int)
+        self.canvas.backstitch_width_offset = backstitch_width - 2
+        backstitch_tool = self.canvas._tool_manager.get_backstitch_tool()
+        if backstitch_tool:
+            backstitch_tool.snap_to_grid = self._settings.value("backstitch_snap", True, type=bool)
+
         # Tastenkürzel (live, ohne Neustart)
         from ..shortcuts_registry import apply_saved_overrides
 

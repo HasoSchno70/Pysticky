@@ -838,10 +838,11 @@ class RenderingMixin:
             y2 = bs.y2 * half_cell + self._offset_y
 
             # Schatten
+            line_width = max(2, self._cell_size // 6) + self._backstitch_width_offset
             painter.setPen(
                 QPen(
                     QColor(0, 0, 0, 100),
-                    max(3, self._cell_size // 5 + 2),
+                    max(3, self._cell_size // 5 + 2) + self._backstitch_width_offset,
                     Qt.PenStyle.SolidLine,
                     Qt.PenCapStyle.RoundCap,
                 )
@@ -852,7 +853,7 @@ class RenderingMixin:
             painter.setPen(
                 QPen(
                     color,
-                    max(2, self._cell_size // 6),
+                    line_width,
                     Qt.PenStyle.SolidLine,
                     Qt.PenCapStyle.RoundCap,
                 )
