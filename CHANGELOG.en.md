@@ -5,10 +5,41 @@
 All notable changes to PySticky are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-versioning based on [Semantic Versioning](https://semver.org/) (pre-1.0:
-`0.MINOR.PATCH`, breaking changes possible within 0.x).
+versioning based on [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+## [1.0.0] — 2026-07-18
+
+### Fixed
+
+- **Critical:** on large patterns (> 200×200 cells, e.g. wall-hanging
+  designs), newly drawn stitches stayed invisible on the canvas — the
+  chunk pixmap cache never knew a cell had changed and kept showing the
+  old (mostly empty) rendered chunk
+- Zooming on a large pattern afterwards showed wrongly scaled, shifted
+  blocks — the same chunk cache never invalidated on zoom either; fixed
+  by actually checking render parameters instead of just cell coordinates
+- Aida fabric texture was missing entirely on large patterns (the chunk
+  cache path drew empty cells as a flat color instead of the fabric look)
+- Grid lines were practically invisible against the empty-cell background
+  color (WCAG contrast ~1.0–1.4:1) — now automatically contrast-safe for
+  any chosen color combination
+- Default empty-cell color was accidentally dark navy instead of the
+  intended cream fabric tone
+- Drawing on a pattern with no added color created invisible stitches
+  that still counted toward the stitch count (canvas stayed empty) — now
+  rejected instead of silently producing wrong data
+- "New" created a pattern with no color at all, so drawing immediately
+  did nothing — a new pattern now automatically seeds the first color
+  from the configured default palette
+- Status bar contrast: text on several pills used the same accent color
+  as the background tint and was barely readable
+- Colors, General, Files, Tools, and Canvas settings tabs: 39 settings
+  were dead UI (wrote to QSettings but were never read back) — now fully
+  wired up. Settings with no feasible implementation (PDF quality, HTML
+  inline CSS, selection add/subtract) were removed from the UI instead of
+  being faked
 
 ## [0.9.0] — 2026-07-17
 

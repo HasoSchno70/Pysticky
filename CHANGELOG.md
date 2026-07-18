@@ -5,10 +5,44 @@
 Alle nennenswerten Änderungen an PySticky werden hier dokumentiert.
 
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
-Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (solange
-vor 1.0: `0.MINOR.PATCH`, Breaking Changes möglich innerhalb 0.x).
+Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
+
+## [1.0.0] — 2026-07-18
+
+### Behoben
+
+- **Kritisch:** auf großen Mustern (> 200×200 Zellen, z.B. Wandbilder)
+  blieben neu gezeichnete Stiche auf dem Canvas unsichtbar — der
+  Chunk-Pixmap-Cache wusste nie, dass sich eine Zelle geändert hatte, und
+  zeigte weiterhin den alten (meist leeren) gerenderten Chunk
+- Zoomen auf einem großen Muster zeigte danach falsch skalierte,
+  verschobene Blöcke — derselbe Chunk-Cache invalidierte sich auch beim
+  Zoomen nie; behoben durch echte Kontrolle der Render-Parameter statt nur
+  der Zellkoordinaten
+- Aida-Stoff-Textur fehlte komplett auf großen Mustern (Chunk-Cache-Pfad
+  zeichnete leere Zellen nur einfarbig statt mit der Stoff-Optik)
+- Gitterlinien waren gegen die Hintergrundfarbe leerer Zellen praktisch
+  unsichtbar (WCAG-Kontrast ~1,0–1,4:1) — jetzt automatisch kontrastsicher
+  für jede gewählte Farbkombination
+- Standardfarbe für leere Zellen war versehentlich dunkelblau statt der
+  vorgesehenen Stoff-Cremefarbe
+- Zeichnen auf einem Muster ohne hinzugefügte Farbe erzeugte unsichtbare,
+  aber mitgezählte Stiche (Stich-Zähler stieg, Canvas blieb leer) — wird
+  jetzt abgelehnt statt lautlos falsche Daten zu erzeugen
+- "Neu" legte ein Muster ganz ohne Farbe an, sodass sofortiges Zeichnen
+  nichts bewirkte — ein neues Muster startet jetzt automatisch mit der
+  ersten Farbe der konfigurierten Standardpalette
+- Statusleisten-Kontrast: Text nutzte auf mehreren Pills dieselbe
+  Akzentfarbe wie der Hintergrund-Tint und war kaum lesbar
+- Farben-, Allgemein-, Dateien-, Werkzeuge- und Canvas-Settings-Tab: 39
+  Einstellungen waren totes UI (schrieben nur in QSettings, wurden nie
+  gelesen) — jetzt vollständig verdrahtet. Nicht sinnvoll umsetzbare
+  Optionen (PDF-Qualität, HTML-Inline-CSS, Auswahl-Hinzufügen/Subtrahieren)
+  wurden stattdessen aus der Oberfläche entfernt statt vorgetäuscht
+
+## [0.9.0] — 2026-07-17
 
 ## [0.9.0] — 2026-07-17
 
