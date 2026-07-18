@@ -44,6 +44,7 @@ def test_max_recent_files_limits_list(qtbot, tmp_path):
 
     s = _qsettings_with_scope()
     old = s.value("max_recent_files")
+    old_recent = s.value("recent_files")
     try:
         s.setValue("max_recent_files", 2)
         w = MainWindow()
@@ -66,6 +67,10 @@ def test_max_recent_files_limits_list(qtbot, tmp_path):
             s.remove("max_recent_files")
         else:
             s.setValue("max_recent_files", old)
+        if old_recent is None:
+            s.remove("recent_files")
+        else:
+            s.setValue("recent_files", old_recent)
 
 
 def test_restore_window_disabled_ignores_saved_geometry(qtbot):
@@ -107,6 +112,7 @@ def test_autosave_backup_creates_bak_file(qtbot, tmp_path, monkeypatch):
 
     s = _qsettings_with_scope()
     old = s.value("autosave_backup")
+    old_recent = s.value("recent_files")
     try:
         s.setValue("autosave_backup", True)
         w = MainWindow()
@@ -130,6 +136,10 @@ def test_autosave_backup_creates_bak_file(qtbot, tmp_path, monkeypatch):
             s.remove("autosave_backup")
         else:
             s.setValue("autosave_backup", old)
+        if old_recent is None:
+            s.remove("recent_files")
+        else:
+            s.setValue("recent_files", old_recent)
 
 
 def test_confirm_exit_blocks_close_on_no(qtbot, monkeypatch):
