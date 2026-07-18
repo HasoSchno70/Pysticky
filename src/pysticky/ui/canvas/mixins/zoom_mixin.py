@@ -16,12 +16,15 @@ class ZoomMixin:
     """Mixin für Zoom-Funktionalität."""
 
     def zoom_in(self: "CrossStitchCanvas") -> None:
-        """Vergrößert die Ansicht."""
-        self._set_cell_size(min(self._cell_size + 2, self.MAX_CELL_SIZE))
+        """Vergrößert die Ansicht multiplikativ um ZOOM_STEP (mind. +1px,
+        damit kleine Zellgrößen bei ZOOM_STEP nahe 1.0 nicht steckenbleiben)."""
+        target = max(self._cell_size + 1, round(self._cell_size * self.ZOOM_STEP))
+        self._set_cell_size(min(target, self.MAX_CELL_SIZE))
 
     def zoom_out(self: "CrossStitchCanvas") -> None:
-        """Verkleinert die Ansicht."""
-        self._set_cell_size(max(self._cell_size - 2, self.MIN_CELL_SIZE))
+        """Verkleinert die Ansicht multiplikativ um ZOOM_STEP (mind. -1px)."""
+        target = min(self._cell_size - 1, round(self._cell_size / self.ZOOM_STEP))
+        self._set_cell_size(max(target, self.MIN_CELL_SIZE))
 
     def zoom_fit(self: "CrossStitchCanvas") -> None:
         """Passt die Ansicht an das Fenster an."""

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QMessageBox
 
 from ...core.i18n import t
@@ -728,6 +729,39 @@ class MiscHandlersMixin:
 
         # Stoff-Textur (Aida-Optik)
         self.canvas.show_fabric_texture = self._settings.value("fabric_texture", True, type=bool)
+
+        # Weitere Grid-Einstellungen (Intervalle + Farben) -- vorher totes UI,
+        # das nur in QSettings schrieb, aber nie zurueckgelesen wurde.
+        self.canvas.major_grid_interval = self._settings.value(
+            "major_grid_interval", CANVAS_CONFIG.major_grid_interval, type=int
+        )
+        self.canvas.minor_grid_interval = self._settings.value(
+            "minor_grid_interval", CANVAS_CONFIG.minor_grid_interval, type=int
+        )
+        self.canvas.grid_major_color = QColor(self._settings.value("grid_color_major", "#404060"))
+        self.canvas.grid_minor_color = QColor(self._settings.value("grid_color_minor", "#303050"))
+
+        # Zellgroessen-Grenzen (wirken erst beim naechsten Zoom-Reset bzw.
+        # neuen Muster -- die aktuell offene Ansicht wird nicht rueckwirkend
+        # umskaliert, genau wie bei einem Theme-Wechsel).
+        self.canvas.MIN_CELL_SIZE = self._settings.value(
+            "min_cell_size", CANVAS_CONFIG.min_cell_size, type=int
+        )
+        self.canvas.MAX_CELL_SIZE = self._settings.value(
+            "max_cell_size", CANVAS_CONFIG.max_cell_size, type=int
+        )
+        self.canvas.DEFAULT_CELL_SIZE = self._settings.value(
+            "default_cell_size", CANVAS_CONFIG.default_cell_size, type=int
+        )
+
+        # Zoom-Geschwindigkeit: Slider-Wert 10-50 zeigt "1.0x".."5.0x" an,
+        # deckungsgleich mit dem multiplikativen ZOOM_STEP-Faktor.
+        zoom_speed = self._settings.value("zoom_speed", 12, type=int)
+        self.canvas.ZOOM_STEP = max(1.01, zoom_speed / 10)
+
+        # Canvas-Hintergrund / leere Zellen
+        self.canvas.bg_color = QColor(self._settings.value("canvas_bg", "#1a1a2e"))
+        self.canvas.empty_cell_color = QColor(self._settings.value("empty_cell_color", "#2a2a4a"))
 
         # Tastenkürzel (live, ohne Neustart)
         from ..shortcuts_registry import apply_saved_overrides

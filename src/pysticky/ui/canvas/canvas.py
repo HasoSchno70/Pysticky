@@ -96,9 +96,13 @@ class CrossStitchCanvas(
     batch_ended = Signal()
 
     # === Konstanten (aus config.py) ===
+    # Alle vier sind bewusst Instanz-ueberschreibbar (kein Final/ClassVar) --
+    # _apply_settings_from_dialog() in misc_handlers.py setzt sie pro
+    # MainWindow-Instanz aus den gespeicherten Einstellungen neu.
     MIN_CELL_SIZE: int = CANVAS_CONFIG.min_cell_size
     MAX_CELL_SIZE: int = CANVAS_CONFIG.max_cell_size
     DEFAULT_CELL_SIZE: int = CANVAS_CONFIG.default_cell_size
+    ZOOM_STEP: float = CANVAS_CONFIG.zoom_step
 
     # Farben als RGB-Tuple (für Cache-Lookup)
     _BG_COLOR_RGB = (26, 26, 46)  # THEME.bg_dark

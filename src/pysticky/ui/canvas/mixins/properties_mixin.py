@@ -172,6 +172,24 @@ class PropertiesMixin:
         self.update()
 
     @property
+    def bg_color(self: "CrossStitchCanvas") -> QColor:
+        return self._bg_color
+
+    @bg_color.setter
+    def bg_color(self: "CrossStitchCanvas", value: QColor) -> None:
+        self._bg_color = value
+        self.update()
+
+    @property
+    def empty_cell_color(self: "CrossStitchCanvas") -> QColor:
+        return self._empty_color
+
+    @empty_cell_color.setter
+    def empty_cell_color(self: "CrossStitchCanvas", value: QColor) -> None:
+        self._empty_color = value
+        self.update()
+
+    @property
     def snap_to_grid(self: "CrossStitchCanvas") -> bool:
         return self._snap_to_grid
 

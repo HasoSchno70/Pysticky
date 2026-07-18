@@ -158,8 +158,11 @@ class MainWindow(
         if saved_state is not None:
             self.restoreState(saved_state)
 
-        # Persistente Canvas-Einstellungen initial anwenden
-        self.canvas.show_fabric_texture = self._settings.value("fabric_texture", True, type=bool)
+        # Persistente Einstellungen initial anwenden (Grid, Snap, Zoom,
+        # Canvas-Farben, ...) -- dieselbe Methode, die auch beim Schliessen
+        # des Einstellungen-Dialogs laeuft, damit beide Pfade nicht
+        # auseinanderdriften.
+        self._apply_settings_from_dialog()
 
         self._update_title()
         self._update_status()
