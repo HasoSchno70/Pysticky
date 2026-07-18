@@ -122,11 +122,12 @@ class ColorsTab(QWidget):
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
-        palette_index = settings.value("default_palette", 0, type=int)
-        if 0 <= palette_index < self.combo_default_palette.count():
-            self.combo_default_palette.setCurrentIndex(palette_index)
+        palette_name = settings.value("default_palette", "Anchor", type=str)
+        index = self.combo_default_palette.findText(palette_name)
+        if index >= 0:
+            self.combo_default_palette.setCurrentIndex(index)
         self.chk_show_catalog.setChecked(settings.value("show_catalog", True, type=bool))
-        font_family = settings.value("symbol_font", "Arial")
+        font_family = settings.value("symbol_font", "Segoe UI Symbol")
         self.combo_symbol_font.setCurrentFont(QFont(font_family))
         self.spin_symbol_size.setValue(settings.value("symbol_size", 10, type=int))
         self.chk_auto_symbols.setChecked(settings.value("auto_symbols", True, type=bool))
@@ -134,11 +135,11 @@ class ColorsTab(QWidget):
         self.chk_highlight_selected.setChecked(
             settings.value("highlight_selected", True, type=bool)
         )
-        self.spin_color_bar_size.setValue(settings.value("color_bar_size", 32, type=int))
+        self.spin_color_bar_size.setValue(settings.value("color_bar_size", 48, type=int))
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""
-        settings.setValue("default_palette", self.combo_default_palette.currentIndex())
+        settings.setValue("default_palette", self.combo_default_palette.currentText())
         settings.setValue("show_catalog", self.chk_show_catalog.isChecked())
         settings.setValue("symbol_font", self.combo_symbol_font.currentFont().family())
         settings.setValue("symbol_size", self.spin_symbol_size.value())
@@ -149,11 +150,11 @@ class ColorsTab(QWidget):
 
     def reset_to_defaults(self) -> None:
         """Setzt auf Standardwerte zurück."""
-        self.combo_default_palette.setCurrentIndex(0)
+        self.combo_default_palette.setCurrentText("Anchor")
         self.chk_show_catalog.setChecked(True)
-        self.combo_symbol_font.setCurrentFont(QFont("Arial"))
+        self.combo_symbol_font.setCurrentFont(QFont("Segoe UI Symbol"))
         self.spin_symbol_size.setValue(10)
         self.chk_auto_symbols.setChecked(True)
         self.combo_color_display.setCurrentIndex(0)
         self.chk_highlight_selected.setChecked(True)
-        self.spin_color_bar_size.setValue(32)
+        self.spin_color_bar_size.setValue(48)

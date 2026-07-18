@@ -172,6 +172,24 @@ class PropertiesMixin:
         self.update()
 
     @property
+    def symbol_font_family(self: "CrossStitchCanvas") -> str:
+        return self._symbol_font_family
+
+    @symbol_font_family.setter
+    def symbol_font_family(self: "CrossStitchCanvas", value: str) -> None:
+        self._symbol_font_family = value
+        self.update()
+
+    @property
+    def symbol_size_offset(self: "CrossStitchCanvas") -> int:
+        return self._symbol_size_offset
+
+    @symbol_size_offset.setter
+    def symbol_size_offset(self: "CrossStitchCanvas", value: int) -> None:
+        self._symbol_size_offset = value
+        self.update()
+
+    @property
     def bg_color(self: "CrossStitchCanvas") -> QColor:
         return self._bg_color
 

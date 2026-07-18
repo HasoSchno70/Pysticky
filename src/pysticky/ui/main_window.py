@@ -720,7 +720,10 @@ class MainWindow(
             if palette is not None:
                 is_bead = palette.is_beads
                 is_diamond = palette.is_diamond
-        index = self.current_pattern.add_color(thread, is_bead=is_bead, is_diamond=is_diamond)
+        auto_symbol = self._settings.value("auto_symbols", True, type=bool)
+        index = self.current_pattern.add_color(
+            thread, is_bead=is_bead, is_diamond=is_diamond, auto_symbol=auto_symbol
+        )
         self.color_bar.set_pattern(self.current_pattern)
         self.info_panel.update_info(self.current_pattern)
         return index

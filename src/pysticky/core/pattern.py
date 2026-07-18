@@ -389,11 +389,17 @@ class Pattern:
         self.mode = target_mode
         return changed or current_mode != target_mode
 
-    def add_color(self, thread: Thread, is_bead: bool = False, is_diamond: bool = False) -> int:
+    def add_color(
+        self,
+        thread: Thread,
+        is_bead: bool = False,
+        is_diamond: bool = False,
+        auto_symbol: bool = True,
+    ) -> int:
         """
         Fügt eine neue Farbe zur Palette hinzu.
 
-        Weist automatisch das nächste freie Symbol zu.
+        Weist automatisch das nächste freie Symbol zu (sofern auto_symbol).
 
         Args:
             thread: Das hinzuzufügende Garn (Thread-Objekt)
@@ -401,6 +407,12 @@ class Pattern:
                      Stiche dieser Farbe werden automatisch als BEAD platziert.
             is_diamond: True wenn die Farbe aus einer Diamond-Painting-Palette
                         stammt. Stiche werden automatisch als DIAMOND platziert.
+            auto_symbol: Wenn False, wird kein Symbol automatisch vergeben
+                        (Platzhalter "?" statt eines echten Unicode-Symbols) --
+                        gedacht fuer manuelle Einzel-Zuweisung ueber den
+                        Symbol-Editor. Bulk-Importe (Bildimport etc.) wollen
+                        immer auto_symbol=True, sonst waere jede importierte
+                        Farbe ununterscheidbar.
 
         Returns:
             Index der neuen Farbe in color_entries
@@ -409,13 +421,16 @@ class Pattern:
             >>> index = pattern.add_color(Thread.from_hex("Blau", "#0000FF"))
             >>> pattern.set_stitch(10, 10, color_index=index)
         """
-        # Nächstes freies Symbol finden
-        used_symbols = {entry.symbol for entry in self.color_entries}
-        symbol = "?"
-        for s in SYMBOLS:
-            if s not in used_symbols:
-                symbol = s
-                break
+        if auto_symbol:
+            # Nächstes freies Symbol finden
+            used_symbols = {entry.symbol for entry in self.color_entries}
+            symbol = "?"
+            for s in SYMBOLS:
+                if s not in used_symbols:
+                    symbol = s
+                    break
+        else:
+            symbol = "?"
 
         entry = ColorEntry(
             thread=thread,

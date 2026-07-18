@@ -763,6 +763,26 @@ class MiscHandlersMixin:
         self.canvas.bg_color = QColor(self._settings.value("canvas_bg", "#1a1a2e"))
         self.canvas.empty_cell_color = QColor(self._settings.value("empty_cell_color", "#2a2a4a"))
 
+        # Farben-Tab -- ebenfalls vorher komplett totes UI (8 von 8 Einstellungen).
+        self.canvas.symbol_font_family = self._settings.value(
+            "symbol_font", "Segoe UI Symbol", type=str
+        )
+        symbol_size = self._settings.value("symbol_size", 10, type=int)
+        self.canvas.symbol_size_offset = symbol_size - 10
+
+        # Anzeige-Modus: 0=Nur Farbe, 1=Farbe+Symbol, 2=Nur Symbol,
+        # 3=Farbe+Name (Name-Rendering existiert nicht -- faellt auf
+        # Farbe+Symbol zurueck, das Symbol bleibt die kompakte Kennung).
+        color_display = self._settings.value("color_display", 0, type=int)
+        self.canvas.show_colors = color_display in (0, 1, 3)
+        self.canvas.show_symbols = color_display in (1, 2, 3)
+
+        self.palette_panel.show_catalog = self._settings.value("show_catalog", True, type=bool)
+        self.palette_panel.default_palette_name = self._settings.value(
+            "default_palette", "Anchor", type=str
+        )
+        self.color_bar.swatch_size = self._settings.value("color_bar_size", 48, type=int)
+
         # Tastenkürzel (live, ohne Neustart)
         from ..shortcuts_registry import apply_saved_overrides
 

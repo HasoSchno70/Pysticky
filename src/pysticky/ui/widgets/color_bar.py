@@ -55,7 +55,13 @@ class ColorSwatch(QWidget):
     context_menu_requested = Signal(int, object)  # index, QPoint
     swap_dropped = Signal(int, int)  # source_index, target_index
 
-    def __init__(self, index: int, entry: ColorEntry, parent=None) -> None:
+    # Referenzgroesse (Breite, Hoehe), auf die alle relativen paintEvent-
+    # Positionen abgestimmt sind -- size_wh skaliert proportional dazu.
+    BASE_SIZE = (48, 62)
+
+    def __init__(
+        self, index: int, entry: ColorEntry, parent=None, size_wh: tuple[int, int] | None = None
+    ) -> None:
         super().__init__(parent)
         self._index = index
         self._entry = entry
@@ -68,7 +74,7 @@ class ColorSwatch(QWidget):
         # Im Diamond-Modus zeigt das Swatch die Drill-Nummer statt des Symbols.
         self._mode: str = "stitch"
 
-        self.setFixedSize(48, 62)
+        self.setFixedSize(*(size_wh or self.BASE_SIZE))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(self._create_tooltip())
         self.setMouseTracking(True)
@@ -444,10 +450,24 @@ class ColorBar(QWidget):
         # Modus beeinflusst die Beschriftung unter den Swatches: Sticken
         # zeigt das Unicode-Symbol, Diamond Painting die DMC-Drill-Nummer.
         self._mode: str = "stitch"
+        # Breite der Swatches; Hoehe wird proportional zu ColorSwatch.BASE_SIZE
+        # mitskaliert, damit paintEvent's relative Positionierung stimmig bleibt.
+        self._swatch_width: int = ColorSwatch.BASE_SIZE[0]
 
         self.setObjectName("colorBarWidget")
         self.setAcceptDrops(True)
         self._setup_ui()
+
+    @property
+    def swatch_size(self) -> int:
+        return self._swatch_width
+
+    @swatch_size.setter
+    def swatch_size(self, value: int) -> None:
+        if value == self._swatch_width:
+            return
+        self._swatch_width = value
+        self._rebuild_swatches()
 
     def set_mode(self, mode: str) -> None:
         """Wechselt zwischen Stitch- und Diamond-Beschriftung der Swatches."""
@@ -581,8 +601,10 @@ class ColorBar(QWidget):
                 self._container_layout.addStretch()
                 return
 
+            base_w, base_h = ColorSwatch.BASE_SIZE
+            size_wh = (self._swatch_width, round(base_h * self._swatch_width / base_w))
             for i, entry in enumerate(self._pattern.color_entries):
-                swatch = ColorSwatch(i, entry, self._container)
+                swatch = ColorSwatch(i, entry, self._container, size_wh=size_wh)
                 swatch.set_mode(self._mode)
                 swatch.clicked.connect(self._on_swatch_clicked)
                 swatch.double_clicked.connect(self._on_swatch_double_clicked)

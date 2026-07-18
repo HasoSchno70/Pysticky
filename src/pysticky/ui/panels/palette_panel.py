@@ -47,12 +47,38 @@ class PalettePanel(QWidget):
         super().__init__(parent)
         self._palette_manager = get_palette_manager()
         self._current_palette_name: str = "Anchor"
+        # Fallback-Palette beim ersten Laden ohne Pattern-Kontext (Einstellungen
+        # → Farben → Standard-Palette); "Anchor" bleibt Default fuer Alt-Verhalten.
+        self._default_palette_name: str = "Anchor"
+        self._show_catalog: bool = True
         self._current_palette_threads: list[Thread] = []
         self._current_pattern: Pattern | None = None
         self._used_thread_keys: set[str] = set()
         self._drag_start_pos = None
         self._setup_ui()
         self._load_palettes()
+
+    @property
+    def show_catalog(self) -> bool:
+        return self._show_catalog
+
+    @show_catalog.setter
+    def show_catalog(self, value: bool) -> None:
+        self._show_catalog = value
+        self._refresh_color_list()
+
+    @property
+    def default_palette_name(self) -> str:
+        return self._default_palette_name
+
+    @default_palette_name.setter
+    def default_palette_name(self, value: str) -> None:
+        self._default_palette_name = value
+        # Panel wird meist vor _apply_settings_from_dialog() erzeugt --
+        # ohne echtes Pattern (noch kein source_palette_name) die
+        # Vorauswahl nachtraeglich auf den neuen Default umstellen.
+        if self._current_pattern is None:
+            self._select_default_palette()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -242,13 +268,18 @@ class PalettePanel(QWidget):
         _add_group(diamond_palettes, "💎")
         _add_group(bead_palettes, "🔮")
 
-        # Default-Auswahl: Anchor (Garn). Suche via userData, nicht Text,
-        # weil Text jetzt das Icon enthält.
-        for i in range(self.combo_palette.count()):
-            if self.combo_palette.itemData(i) == "Anchor":
-                self.combo_palette.setCurrentIndex(i)
-                break
+        self._select_default_palette()
         self._refresh_color_list()
+
+    def _select_default_palette(self) -> None:
+        """Waehlt die konfigurierte Standard-Palette im Dropdown (Suche via
+        userData, nicht Text, weil Text ein Typ-Icon enthaelt). Faellt auf
+        Anchor zurueck, falls die konfigurierte Palette nicht existiert."""
+        for target in (self._default_palette_name, "Anchor"):
+            for i in range(self.combo_palette.count()):
+                if self.combo_palette.itemData(i) == target:
+                    self.combo_palette.setCurrentIndex(i)
+                    return
 
     def set_pattern(self, pattern: Pattern | None) -> None:
         """Setzt das aktuelle Muster für die Markierung verwendeter Farben."""
@@ -446,7 +477,11 @@ class PalettePanel(QWidget):
 
             icon = self._create_color_icon(thread, is_used)
             catalog = thread.catalog_number or "-"
-            text = f"✓ {catalog}  •  {thread.name}" if is_used else f"{catalog}  •  {thread.name}"
+            if self._show_catalog:
+                label = f"{catalog}  •  {thread.name}"
+            else:
+                label = thread.name
+            text = f"✓ {label}" if is_used else label
 
             item = QListWidgetItem(text)
             item.setIcon(icon)

@@ -136,6 +136,10 @@ class CrossStitchCanvas(
         # Font-Cache
         self._symbol_font: QFont | None = None
         self._last_font_size: int = 0
+        self._symbol_font_family: str = "Segoe UI Symbol"
+        # Verschiebt die aus cell_size abgeleitete Basisgroesse (zoom-
+        # reaktiv) um einen festen Betrag -- 0 = unveraendertes Verhalten.
+        self._symbol_size_offset: int = 0
 
         # Ansichts-Optionen
         self._show_grid: bool = True
@@ -471,9 +475,13 @@ class CrossStitchCanvas(
 
     def _get_symbol_font(self) -> QFont:
         """Gibt den gecachten Symbol-Font zurück."""
-        target_size = max(8, self._cell_size - 6)
-        if self._symbol_font is None or self._last_font_size != target_size:
-            self._symbol_font = QFont("Segoe UI Symbol", target_size)
+        target_size = max(8, self._cell_size - 6 + self._symbol_size_offset)
+        if (
+            self._symbol_font is None
+            or self._last_font_size != target_size
+            or self._symbol_font.family() != self._symbol_font_family
+        ):
+            self._symbol_font = QFont(self._symbol_font_family, target_size)
             self._last_font_size = target_size
         return self._symbol_font
 

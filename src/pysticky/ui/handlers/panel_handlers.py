@@ -25,6 +25,11 @@ class PanelHandlersMixin:
         # InfoPanel-Farbübersicht: aktive Farbe markieren
         if hasattr(self.info_panel, "set_selected_color"):
             self.info_panel.set_selected_color(index)
+        # Einstellungen → Farben → "Ausgewählte Farbe hervorheben": isoliert
+        # automatisch jede neu zum Zeichnen gewaehlte Farbe (gleicher Effekt
+        # wie Strg+H, nur automatisch statt manuell ausgeloest).
+        if self._settings.value("highlight_selected", True, type=bool):
+            self._on_isolate_color(index)
 
     def _on_info_color_clicked(self: "MainWindow", index: int) -> None:
         """Klick auf eine Farbe in der Info-Panel-Übersicht."""
