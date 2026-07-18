@@ -524,10 +524,16 @@ class RenderingMixin:
         offset_x = self._offset_x
         offset_y = self._offset_y
 
-        # Pens einmal vorbereiten
-        normal_pen = QPen(self._grid_color, 1)
-        minor_pen = QPen(self._grid_minor_color, 1)
-        major_pen = QPen(self._grid_major_color, 2)
+        # Pens einmal vorbereiten -- gegen die Hintergrundfarbe leerer Zellen
+        # kontrastgeprüft (siehe color_utils.ensure_contrast): grid_color,
+        # empty_cell_color und die Gitterfarben-Einstellungen sind alle
+        # unabhängig voneinander frei konfigurierbar und können sich sonst
+        # gegenseitig unsichtbar machen.
+        from ...color_utils import ensure_contrast
+
+        normal_pen = QPen(ensure_contrast(self._grid_color, self._empty_color), 1)
+        minor_pen = QPen(ensure_contrast(self._grid_minor_color, self._empty_color), 1)
+        major_pen = QPen(ensure_contrast(self._grid_major_color, self._empty_color), 2)
 
         # Bereichsgrenzen
         left = visible_rect.left() * cell_size + offset_x

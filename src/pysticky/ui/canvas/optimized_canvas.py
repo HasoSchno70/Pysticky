@@ -126,17 +126,21 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         if self._show_backstitches:
             self._draw_backstitches(painter)
 
-        # Grid mit LOD
+        # Grid mit LOD -- kontrastgeprüft gegen die Hintergrundfarbe leerer
+        # Zellen, siehe RenderingMixin._draw_grid (Direkt-Pfad) für den
+        # gleichen Grund.
         if self._show_grid and not skip_grid:
+            from ..color_utils import ensure_contrast
+
             draw_optimized_grid(
                 painter,
                 visible_rect,
                 self._cell_size,
                 self._offset_x,
                 self._offset_y,
-                self._grid_color,
-                self._grid_minor_color,
-                self._grid_major_color,
+                ensure_contrast(self._grid_color, self._empty_color),
+                ensure_contrast(self._grid_minor_color, self._empty_color),
+                ensure_contrast(self._grid_major_color, self._empty_color),
                 self._major_grid_interval,
                 self._minor_grid_interval,
                 self._show_minor_grid,

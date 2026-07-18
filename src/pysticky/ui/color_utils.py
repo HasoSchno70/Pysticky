@@ -23,6 +23,36 @@ def from_qcolor(qcolor: QColor) -> ThreadColor:
     return ThreadColor(qcolor.red(), qcolor.green(), qcolor.blue())
 
 
+def _relative_luminance(color: QColor) -> float:
+    """BT.601-Luminanz (konsistent mit ThreadColor.luminance)."""
+    return (0.299 * color.red() + 0.587 * color.green() + 0.114 * color.blue()) / 255.0
+
+
+def _wcag_contrast_ratio(lum_a: float, lum_b: float) -> float:
+    lighter, darker = max(lum_a, lum_b), min(lum_a, lum_b)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def ensure_contrast(color: QColor, background: QColor, min_ratio: float = 2.0) -> QColor:
+    """Gibt `color` unverändert zurück, wenn sie ausreichend Kontrast gegen
+    `background` hat -- sonst eine helle/dunkle Alternative je nach
+    Hintergrund-Helligkeit.
+
+    Gitterlinienfarben sind seit der Canvas-Settings-Verdrahtung
+    (canvas-settings-wiring-2026-07) frei einstellbar, ebenso die
+    Hintergrundfarbe leerer Zellen (empty_cell_color) -- eine feste, einmal
+    gegen einen hellen Default abgestimmte Gitterfarbe (siehe
+    grid-contrast-fix-2026-07) kann seitdem mit jeder beliebigen
+    Hintergrundfarbe kollidieren. Diese Funktion macht die Wahl
+    self-healing statt nur den einen Default-Fall zu fixen.
+    """
+    bg_lum = _relative_luminance(background)
+    color_lum = _relative_luminance(color)
+    if _wcag_contrast_ratio(bg_lum, color_lum) >= min_ratio:
+        return color
+    return QColor(210, 210, 210) if bg_lum < 0.5 else QColor(55, 55, 55)
+
+
 def color_swatch_icon(
     color: ThreadColor | QColor,
     size: int = 16,
