@@ -54,11 +54,26 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self._crop: tuple[float, float, float, float] = (0, 0, 1, 1)
         self._prefer_diamond = prefer_diamond
         self._setup_ui()
+        self._apply_default_settings()
         self._connect_signals()
         self._check_dependencies()
         if seed_pattern is not None:
             self._seed_from_pattern(seed_pattern)
         self._auto_size_to_content()
+
+    def _apply_default_settings(self) -> None:
+        """Wendet die in Einstellungen → Dateien → "Import" konfigurierten
+        Vorgaben an (Max. Farben, Dithering). Läuft vor _connect_signals(),
+        damit keine Live-Vorschau durch das Setzen ausgelöst wird, und vor
+        einem eventuellen _seed_from_pattern()-Aufruf, der Wizard-Recall-
+        Werte Vorrang geben soll."""
+        from PySide6.QtCore import QSettings
+
+        from ....config import APP_NAME, ORG_NAME
+
+        settings = QSettings(ORG_NAME, APP_NAME)
+        self.spin_colors.setValue(settings.value("import_max_colors", 20, type=int))
+        self.combo_dithering.setCurrentIndex(settings.value("dither_method", 0, type=int))
 
     def _seed_from_pattern(self, pattern: Pattern) -> None:
         """Befüllt den Dialog aus einem bereits importierten Muster

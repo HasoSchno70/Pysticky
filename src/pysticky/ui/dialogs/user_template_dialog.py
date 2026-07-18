@@ -44,9 +44,18 @@ class UserTemplate:
 
 
 def get_templates_path() -> Path:
-    """Gibt den Pfad zum Templates-Verzeichnis zurück."""
-    # Im Benutzerverzeichnis speichern
-    templates_dir = Path.home() / ".pysticky" / "templates"
+    """Gibt den Pfad zum Templates-Verzeichnis zurück.
+
+    Nutzt den in Einstellungen → Dateien → "Templates" konfigurierten
+    Ordner, falls gesetzt -- sonst den bisherigen Default im
+    Benutzerverzeichnis.
+    """
+    from PySide6.QtCore import QSettings
+
+    from ...config import APP_NAME, ORG_NAME
+
+    configured = QSettings(ORG_NAME, APP_NAME).value("templates_path", "", type=str).strip()
+    templates_dir = Path(configured) if configured else Path.home() / ".pysticky" / "templates"
     templates_dir.mkdir(parents=True, exist_ok=True)
     return templates_dir
 

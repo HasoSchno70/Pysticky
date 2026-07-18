@@ -86,11 +86,23 @@ class PatternLibraryDialog(QDialog):
         self._load_library()
 
     def _get_library_path(self) -> Path:
-        """Gibt den Pfad zur Bibliotheks-Datei zurück."""
-        # Im Anwendungsverzeichnis
-        app_dir = Path(__file__).parent.parent.parent.parent.parent
-        library_dir = app_dir / "Muster"
-        library_dir.mkdir(exist_ok=True)
+        """Gibt den Pfad zur Bibliotheks-Datei zurück.
+
+        Nutzt den in Einstellungen → Dateien → "Bibliothek" konfigurierten
+        Ordner, falls gesetzt -- sonst den bisherigen Default im
+        Anwendungsverzeichnis.
+        """
+        from PySide6.QtCore import QSettings
+
+        from ...config import APP_NAME, ORG_NAME
+
+        configured = QSettings(ORG_NAME, APP_NAME).value("library_path", "", type=str).strip()
+        if configured:
+            library_dir = Path(configured)
+        else:
+            app_dir = Path(__file__).parent.parent.parent.parent.parent
+            library_dir = app_dir / "Muster"
+        library_dir.mkdir(exist_ok=True, parents=True)
         # Thumbnail-Cache Ordner
         self._thumbnails_dir = library_dir / ".thumbnails"
         self._thumbnails_dir.mkdir(exist_ok=True)

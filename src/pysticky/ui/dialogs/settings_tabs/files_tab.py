@@ -80,23 +80,13 @@ class FilesTab(QWidget):
         # === Export ===
         group_export, form = make_section_form("Export", "📤")
 
-        self.combo_pdf_quality = QComboBox()
-        self.combo_pdf_quality.addItems(
-            [t("Niedrig (72 dpi)"), t("Mittel (150 dpi)"), t("Hoch (300 dpi)")]
-        )
-        self.combo_pdf_quality.setCurrentIndex(2)
-        self.combo_pdf_quality.setToolTip(t("Qualität für PDF-Export"))
-        form.addRow(t("PDF-Qualität:"), self.combo_pdf_quality)
-
         self.spin_pdf_cells_per_page = QSpinBox()
         self.spin_pdf_cells_per_page.setRange(20, 60)
         self.spin_pdf_cells_per_page.setValue(40)
-        self.spin_pdf_cells_per_page.setToolTip(t("Zellen pro Seite im PDF"))
+        self.spin_pdf_cells_per_page.setToolTip(
+            t("Zellen pro Seite im PDF (nur A4/Letter -- andere Formate haben eigene Standards)")
+        )
         form.addRow(t("Zellen/Seite:"), self.spin_pdf_cells_per_page)
-
-        self.chk_html_inline_css = QCheckBox(t("CSS inline einbetten"))
-        self.chk_html_inline_css.setToolTip(t("Bettet CSS direkt in die HTML-Datei ein"))
-        form.addRow(self.chk_html_inline_css)
 
         # Working-Chart-Page-Overlap für HTML/PDF (0 = aus)
         self.spin_page_overlap = QSpinBox()
@@ -207,13 +197,11 @@ class FilesTab(QWidget):
         )
         self.edit_library_path.setText(settings.value("library_path", ""))
         self.edit_templates_path.setText(settings.value("templates_path", ""))
-        self.combo_pdf_quality.setCurrentIndex(settings.value("pdf_quality", 2, type=int))
         self.spin_pdf_cells_per_page.setValue(settings.value("pdf_cells_per_page", 40, type=int))
-        self.chk_html_inline_css.setChecked(settings.value("html_inline_css", True, type=bool))
         self.spin_import_max_colors.setValue(
             settings.value("import_max_colors", DEFAULT_MAX_IMPORT_COLORS, type=int)
         )
-        self.combo_dither_method.setCurrentIndex(settings.value("dither_method", 1, type=int))
+        self.combo_dither_method.setCurrentIndex(settings.value("dither_method", 0, type=int))
         # Cross-Reference: gespeichert als CSV-String
         cross_ref_csv = settings.value("export/cross_ref_palettes", "", type=str)
         self._set_cross_ref_selection([p.strip() for p in cross_ref_csv.split(",") if p.strip()])
@@ -225,9 +213,7 @@ class FilesTab(QWidget):
         settings.setValue("default_path", self.edit_default_path.text())
         settings.setValue("library_path", self.edit_library_path.text())
         settings.setValue("templates_path", self.edit_templates_path.text())
-        settings.setValue("pdf_quality", self.combo_pdf_quality.currentIndex())
         settings.setValue("pdf_cells_per_page", self.spin_pdf_cells_per_page.value())
-        settings.setValue("html_inline_css", self.chk_html_inline_css.isChecked())
         settings.setValue("import_max_colors", self.spin_import_max_colors.value())
         settings.setValue("dither_method", self.combo_dither_method.currentIndex())
         settings.setValue(
@@ -242,11 +228,9 @@ class FilesTab(QWidget):
         self.edit_default_path.setText(str(Path.home() / "Documents"))
         self.edit_library_path.setText("")
         self.edit_templates_path.setText("")
-        self.combo_pdf_quality.setCurrentIndex(2)
         self.spin_pdf_cells_per_page.setValue(40)
-        self.chk_html_inline_css.setChecked(True)
         self.spin_import_max_colors.setValue(DEFAULT_MAX_IMPORT_COLORS)
-        self.combo_dither_method.setCurrentIndex(1)
+        self.combo_dither_method.setCurrentIndex(0)
         self._set_cross_ref_selection([])
         self.spin_page_overlap.setValue(0)
         self.chk_mystery_mode.setChecked(False)

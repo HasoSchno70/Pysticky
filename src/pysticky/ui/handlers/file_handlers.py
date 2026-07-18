@@ -23,6 +23,16 @@ logger = get_logger(__name__)
 class FileHandlersMixin:
     """Mixin-Klasse für Datei-Operationen."""
 
+    def _default_file_dialog_dir(self: "MainWindow") -> str:
+        """Liest den in Einstellungen → Dateien → "Speicherort" konfigurierten
+        Standard-Ordner für Öffnen/Speichern-Dialoge. Leerer String (Qt-
+        Default: aktuelles Arbeitsverzeichnis bzw. zuletzt genutzter Ordner)
+        wenn nichts konfiguriert oder der Ordner nicht mehr existiert."""
+        configured = self._settings.value("default_path", "", type=str).strip()
+        if configured and Path(configured).is_dir():
+            return configured
+        return ""
+
     def _check_save_changes(self: "MainWindow") -> bool:
         """
         Prüft ob ungespeicherte Änderungen vorhanden sind.
@@ -95,7 +105,10 @@ class FileHandlersMixin:
             return
 
         path, _ = QFileDialog.getOpenFileName(
-            self, t("Muster öffnen"), "", "PySticky (*.pxs);;Alle (*.*)"
+            self,
+            t("Muster öffnen"),
+            self._default_file_dialog_dir(),
+            "PySticky (*.pxs);;Alle (*.*)",
         )
 
         if path:
@@ -280,8 +293,11 @@ class FileHandlersMixin:
             safe = re.sub(r"[^a-zA-Z0-9_\- ]+", "_", self.current_pattern.name).strip()
             default_name = f"{safe}.pxs"
 
+        default_dir = self._default_file_dialog_dir()
+        initial_path = str(Path(default_dir) / default_name) if default_dir else default_name
+
         path, _ = QFileDialog.getSaveFileName(
-            self, t("Muster speichern"), default_name, "PySticky (*.pxs);;Alle (*.*)"
+            self, t("Muster speichern"), initial_path, "PySticky (*.pxs);;Alle (*.*)"
         )
 
         if path:

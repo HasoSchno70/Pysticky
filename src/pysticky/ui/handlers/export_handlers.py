@@ -34,6 +34,7 @@ class ExportWorker(QObject):
         page_overlap_stitches: int = 0,
         pdf_protection: dict | None = None,
         mystery_mode: bool = False,
+        pdf_cells_per_page: int | None = None,
     ) -> None:
         super().__init__()
         self._pattern = pattern
@@ -41,6 +42,7 @@ class ExportWorker(QObject):
         self._page_overlap = max(0, int(page_overlap_stitches))
         self._pdf_protection = pdf_protection or {}
         self._mystery_mode = mystery_mode
+        self._pdf_cells_per_page = pdf_cells_per_page
 
     def _run_export(
         self, export_type: str, filepath: str, page_format: str, notes: str = ""
@@ -61,6 +63,7 @@ class ExportWorker(QObject):
                     allow_printing=self._pdf_protection.get("allow_printing", True),
                     allow_copying=self._pdf_protection.get("allow_copying", True),
                     mystery_mode=self._mystery_mode,
+                    cells_per_page=self._pdf_cells_per_page,
                 )
                 success = exporter.export(filepath)
             elif export_type == "html":
@@ -412,6 +415,16 @@ class ExportHandlersMixin:
         page_overlap = s.value("export/page_overlap_stitches", 0, type=int)
         mystery_mode = s.value("export/mystery_mode", False, type=bool)
 
+        # pdf_cells_per_page (Einstellungen → Dateien → "Zellen/Seite"): nur
+        # fuer A4/Letter anwenden, deren eingebauter Formatstandard (40)
+        # zufaellig mit dem Tab-Default uebereinstimmt. Bei A3/A2/A1/A0
+        # haette ein blindes Ueberschreiben mit 40 deren deutlich groessere,
+        # bewusst gewaehlte Formatstandards (60/90/130/190) unterlaufen,
+        # obwohl der User diese Einstellung nie angefasst hat.
+        pdf_cells_per_page = None
+        if page_format in ("A4", "Letter"):
+            pdf_cells_per_page = s.value("pdf_cells_per_page", 40, type=int)
+
         # PDF-Schutz aus dem letzten _on_export_pdf-Aufruf (None wenn HTML/Bundle)
         pdf_protection = getattr(self, "_pending_pdf_protection", None) or {}
         # Verbrauchen — nächste Export-Runde startet ohne Schutz, falls
@@ -425,6 +438,7 @@ class ExportHandlersMixin:
             page_overlap_stitches=page_overlap,
             pdf_protection=pdf_protection,
             mystery_mode=mystery_mode,
+            pdf_cells_per_page=pdf_cells_per_page,
         )
         self._export_worker.moveToThread(self._export_thread)
 

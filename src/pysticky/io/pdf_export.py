@@ -108,6 +108,7 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         allow_printing: bool = True,
         allow_copying: bool = True,
         mystery_mode: bool = False,
+        cells_per_page: int | None = None,
     ) -> None:
         if not REPORTLAB_AVAILABLE:
             raise ImportError(
@@ -158,8 +159,12 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
             self.STITCHES_PER_PAGE_X = max(1, stitches_x)
             self.STITCHES_PER_PAGE_Y = max(1, stitches_y)
         else:
-            self.STITCHES_PER_PAGE_X = fmt["stitches_x"]
-            self.STITCHES_PER_PAGE_Y = fmt["stitches_y"]
+            # cells_per_page (Einstellungen → Dateien → "Zellen/Seite")
+            # ueberschreibt die Format-Vorgabe uniform -- nur fuer normale
+            # Kreuzstich-Seiten sinnvoll; der DP-1:1-Druckmassstab oben
+            # bleibt physikalisch an den Drill-Pitch gebunden.
+            self.STITCHES_PER_PAGE_X = cells_per_page or fmt["stitches_x"]
+            self.STITCHES_PER_PAGE_Y = cells_per_page or fmt["stitches_y"]
 
         self._notes = notes
 
