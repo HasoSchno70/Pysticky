@@ -54,12 +54,17 @@ class MiscHandlersMixin:
     # Recent Files
     # =========================================================================
 
-    def _load_recent_files(self: "MainWindow") -> list[str]:
-        """Lädt die Liste der zuletzt geöffneten Dateien."""
+    def _max_recent_files(self: "MainWindow") -> int:
+        """Liest die konfigurierte Recent-Files-Obergrenze (Einstellungen →
+        Allgemein → "Max. Recent Files")."""
         from ...config import FILE_CONFIG
 
+        return self._settings.value("max_recent_files", FILE_CONFIG.max_recent_files, type=int)
+
+    def _load_recent_files(self: "MainWindow") -> list[str]:
+        """Lädt die Liste der zuletzt geöffneten Dateien."""
         files = self._settings.value("recent_files", [], type=list)
-        return [f for f in files if Path(f).exists()][: FILE_CONFIG.max_recent_files]
+        return [f for f in files if Path(f).exists()][: self._max_recent_files()]
 
     def _save_recent_files(self: "MainWindow") -> None:
         """Speichert die Liste der zuletzt geöffneten Dateien."""
@@ -67,13 +72,11 @@ class MiscHandlersMixin:
 
     def _add_recent_file(self: "MainWindow", path: str) -> None:
         """Fügt eine Datei zur Liste hinzu."""
-        from ...config import FILE_CONFIG
-
         path = str(Path(path).resolve())
         if path in self._recent_files:
             self._recent_files.remove(path)
         self._recent_files.insert(0, path)
-        self._recent_files = self._recent_files[: FILE_CONFIG.max_recent_files]
+        self._recent_files = self._recent_files[: self._max_recent_files()]
         self._save_recent_files()
         self._update_recent_menu()
 
@@ -119,7 +122,7 @@ class MiscHandlersMixin:
             self.set_pattern(pattern)
             self._mark_saved()
             self._add_recent_file(path)
-            self.status_bar.showMessage(f"Geöffnet: {path}", 3000)
+            self.status_bar.showMessage(f"Geöffnet: {path}", self._status_timeout_ms)
         except (OSError, ValueError) as e:
             logger.exception("Recent-Datei konnte nicht geöffnet werden: %s", path)
             QMessageBox.critical(self, t("Fehler"), f"Datei konnte nicht geöffnet werden:\n{e}")
@@ -151,7 +154,9 @@ class MiscHandlersMixin:
                 templates = load_user_templates()
                 templates.append(template)
                 if save_user_templates(templates):
-                    self.status_bar.showMessage(f"Template '{template.name}' gespeichert", 3000)
+                    self.status_bar.showMessage(
+                        f"Template '{template.name}' gespeichert", self._status_timeout_ms
+                    )
                 else:
                     QMessageBox.warning(
                         self, t("Fehler"), t("Template konnte nicht gespeichert werden.")
@@ -617,7 +622,7 @@ class MiscHandlersMixin:
                 return
 
         mgr.save_profile(name, self)
-        self.status_bar.showMessage(f"Arbeitsbereich '{name}' gespeichert", 3000)
+        self.status_bar.showMessage(f"Arbeitsbereich '{name}' gespeichert", self._status_timeout_ms)
 
     def _on_load_workspace(self: "MainWindow") -> None:
         """Lädt ein gespeichertes Layout-Profil."""
@@ -629,7 +634,9 @@ class MiscHandlersMixin:
         profiles = mgr.list_profiles()
 
         if not profiles:
-            self.status_bar.showMessage(t("Keine gespeicherten Arbeitsbereiche"), 3000)
+            self.status_bar.showMessage(
+                t("Keine gespeicherten Arbeitsbereiche"), self._status_timeout_ms
+            )
             return
 
         name, ok = QInputDialog.getItem(
@@ -644,7 +651,7 @@ class MiscHandlersMixin:
             return
 
         if mgr.load_profile(name, self):
-            self.status_bar.showMessage(f"Arbeitsbereich '{name}' geladen", 3000)
+            self.status_bar.showMessage(f"Arbeitsbereich '{name}' geladen", self._status_timeout_ms)
 
     def _on_reset_workspace(self: "MainWindow") -> None:
         """Setzt das Layout auf den Standard zurück."""
@@ -658,7 +665,7 @@ class MiscHandlersMixin:
             dock.setVisible(True)
             dock.setFloating(False)
 
-        self.status_bar.showMessage(t("Layout zurückgesetzt"), 3000)
+        self.status_bar.showMessage(t("Layout zurückgesetzt"), self._status_timeout_ms)
 
     # =========================================================================
     # Einstellungen
@@ -673,13 +680,16 @@ class MiscHandlersMixin:
 
         if dialog.exec():
             self._apply_settings_from_dialog()
-            self.status_bar.showMessage(t("Einstellungen gespeichert"), 3000)
+            self.status_bar.showMessage(t("Einstellungen gespeichert"), self._status_timeout_ms)
 
     def _apply_settings_from_dialog(self: "MainWindow") -> None:
         """Wendet die Einstellungen aus dem Dialog auf die UI an."""
         from ...config import CANVAS_CONFIG, FILE_CONFIG
 
         self._settings.sync()
+
+        # Dauer von Statusmeldungen (Einstellungen → Allgemein → Benachrichtigungen)
+        self._status_timeout_ms = self._settings.value("status_timeout", 3, type=int) * 1000
 
         # Theme-Wechsel (live, ohne Neustart)
         from ..styles import get_current_theme_name, reapply_theme, set_theme

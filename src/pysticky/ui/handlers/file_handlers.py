@@ -87,7 +87,7 @@ class FileHandlersMixin:
             msg = f"Neues Muster: {settings['width']}×{settings['height']} {unit}"
             if settings["template_name"]:
                 msg = f"Neues Muster: {settings['template_name']}"
-            self.status_bar.showMessage(msg, 3000)
+            self.status_bar.showMessage(msg, self._status_timeout_ms)
 
     def _on_open(self: "MainWindow") -> None:
         """Muster öffnen."""
@@ -122,7 +122,7 @@ class FileHandlersMixin:
             self.set_pattern(pattern)
             self._mark_saved()
             self._add_recent_file(str(path))
-            self.status_bar.showMessage(f"Geöffnet: {path}", 3000)
+            self.status_bar.showMessage(f"Geöffnet: {path}", self._status_timeout_ms)
             return True
         except FileNotFoundError:
             logger.warning("Datei nicht gefunden: %s", path)
@@ -191,7 +191,7 @@ class FileHandlersMixin:
             self.current_file = None
             self.set_pattern(pattern)
             self._mark_unsaved()  # Nicht-Native-Datei -> als "ungespeichert" markieren
-            self.status_bar.showMessage(f"Importiert: {path.name}", 3000)
+            self.status_bar.showMessage(f"Importiert: {path.name}", self._status_timeout_ms)
             return True
         except (OSError, ValueError) as e:
             logger.exception("Externer Import fehlgeschlagen: %s", path)
@@ -207,7 +207,7 @@ class FileHandlersMixin:
             return
         if dialog.apply_to_pattern():
             self._mark_unsaved()
-            self.status_bar.showMessage(t("Eigenschaften aktualisiert"), 3000)
+            self.status_bar.showMessage(t("Eigenschaften aktualisiert"), self._status_timeout_ms)
 
     def _on_pattern_versions(self: "MainWindow") -> None:
         """Öffnet den Versionen-Dialog (Snapshot-History)."""
@@ -227,7 +227,7 @@ class FileHandlersMixin:
         self.current_file = None
         self._mark_unsaved()
         self._update_title()
-        self.status_bar.showMessage(f"Version geladen: {path.name}", 3000)
+        self.status_bar.showMessage(f"Version geladen: {path.name}", self._status_timeout_ms)
 
     def _on_save(self: "MainWindow") -> None:
         """Muster speichern."""
@@ -235,10 +235,24 @@ class FileHandlersMixin:
 
         if self.current_file:
             try:
+                # Einstellungen → Allgemein → "Backup vor Überschreiben
+                # erstellen": .bak ist die vorherige Datei-Version, nicht
+                # das Autosave-Recovery (das ist ein separater Mechanismus).
+                if (
+                    self._settings.value("autosave_backup", True, type=bool)
+                    and self.current_file.exists()
+                ):
+                    import shutil
+
+                    backup_path = self.current_file.with_suffix(self.current_file.suffix + ".bak")
+                    shutil.copy2(self.current_file, backup_path)
+
                 save_pattern(self.current_pattern, self.current_file)
                 self._mark_saved()
                 self._add_recent_file(str(self.current_file))
-                self.status_bar.showMessage(f"Gespeichert: {self.current_file}", 3000)
+                self.status_bar.showMessage(
+                    f"Gespeichert: {self.current_file}", self._status_timeout_ms
+                )
                 # Bei manuellem Save ist ein Snapshot besonders wertvoll —
                 # rate-limit-respektierend, damit nicht jeder Save eine Version erzeugt.
                 if hasattr(self, "_maybe_create_snapshot"):
@@ -274,6 +288,19 @@ class FileHandlersMixin:
             if not path.endswith(".pxs"):
                 path += ".pxs"
 
+            # Einstellungen → Allgemein → "Vor Überschreiben warnen" --
+            # zusaetzliche Sicherheitsabfrage ueber den nativen
+            # Dateidialog-Schutz hinaus (der nicht auf jeder Plattform greift).
+            if Path(path).exists() and self._settings.value("confirm_overwrite", True, type=bool):
+                reply = QMessageBox.question(
+                    self,
+                    t("Überschreiben bestätigen"),
+                    f"{t('Datei existiert bereits:')}\n{path}\n\n{t('Überschreiben?')}",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    return
+
             try:
                 save_pattern(self.current_pattern, path)
                 self.current_file = Path(path)
@@ -281,7 +308,7 @@ class FileHandlersMixin:
                 self._mark_saved()
                 self._update_title()
                 self._add_recent_file(path)
-                self.status_bar.showMessage(f"Gespeichert: {path}", 3000)
+                self.status_bar.showMessage(f"Gespeichert: {path}", self._status_timeout_ms)
             except (OSError, TypeError, ValueError) as e:
                 # json.dump wirft bei nicht-serialisierbarem Zustand TypeError/ValueError,
                 # nicht nur OSError — ohne breiten Catch crasht die App beim Speichern.

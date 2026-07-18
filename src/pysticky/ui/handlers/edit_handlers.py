@@ -74,18 +74,22 @@ class EditHandlersMixin:
                 self.canvas.update()
                 self.info_panel.update_info(self.current_pattern)
                 if len(mapping) == 1:
-                    self.status_bar.showMessage(f"{len(changes)} Stiche ersetzt", 3000)
+                    self.status_bar.showMessage(
+                        f"{len(changes)} Stiche ersetzt", self._status_timeout_ms
+                    )
                 else:
                     self.status_bar.showMessage(
                         f"{len(changes)} Stiche in {len(mapping)} Farben ersetzt", 3000
                     )
             else:
-                self.status_bar.showMessage(t("Keine Stiche zum Ersetzen gefunden"), 3000)
+                self.status_bar.showMessage(
+                    t("Keine Stiche zum Ersetzen gefunden"), self._status_timeout_ms
+                )
 
     def _on_swap_colors(self: "MainWindow") -> None:
         """Zeigt den Dialog zum Tauschen zweier Farben."""
         if len(self.current_pattern.color_entries) < 2:
-            self.status_bar.showMessage(t("Mindestens 2 Farben benötigt"), 3000)
+            self.status_bar.showMessage(t("Mindestens 2 Farben benötigt"), self._status_timeout_ms)
             return
 
         from ..dialogs import SwapColorsDialog
@@ -115,7 +119,7 @@ class EditHandlersMixin:
 
         total = len(a_positions) + len(b_positions)
         if total == 0:
-            self.status_bar.showMessage(t("Keine Stiche zum Tauschen"), 3000)
+            self.status_bar.showMessage(t("Keine Stiche zum Tauschen"), self._status_timeout_ms)
             return
 
         self.canvas.batch_started.emit(t("Farben tauschen"))
@@ -137,7 +141,7 @@ class EditHandlersMixin:
         from ..dialogs import SimilarColorsDialog
 
         if len(self.current_pattern.color_entries) < 2:
-            self.status_bar.showMessage(t("Mindestens 2 Farben benötigt"), 3000)
+            self.status_bar.showMessage(t("Mindestens 2 Farben benötigt"), self._status_timeout_ms)
             return
 
         dialog = SimilarColorsDialog(self.current_pattern, self)
@@ -148,7 +152,9 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage(t("Ähnliche Farben zusammengeführt"), 3000)
+            self.status_bar.showMessage(
+                t("Ähnliche Farben zusammengeführt"), self._status_timeout_ms
+            )
 
     def _on_manage_colors(self: "MainWindow") -> None:
         """Zeigt den Dialog zur Farbpaletten-Verwaltung."""
@@ -162,7 +168,7 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage(t("Farbpalette aktualisiert"), 3000)
+            self.status_bar.showMessage(t("Farbpalette aktualisiert"), self._status_timeout_ms)
 
     def _on_screen_eyedropper(self: "MainWindow") -> None:
         """Öffnet den Vollbild-Screen-Eyedropper."""
@@ -212,7 +218,7 @@ class EditHandlersMixin:
             self.canvas.update()
             self._update_status()
             self._mark_unsaved()
-            self.status_bar.showMessage(t("Plugin ausgeführt"), 3000)
+            self.status_bar.showMessage(t("Plugin ausgeführt"), self._status_timeout_ms)
 
     def _on_blend_threads(self: "MainWindow") -> None:
         """Zeigt den Dialog zur Erzeugung eines Tweed-Blends."""
@@ -263,7 +269,9 @@ class EditHandlersMixin:
         result = self.current_pattern.auto_crop()
 
         if result is None:
-            self.status_bar.showMessage(t("Keine leeren Ränder zum Entfernen"), 3000)
+            self.status_bar.showMessage(
+                t("Keine leeren Ränder zum Entfernen"), self._status_timeout_ms
+            )
             return
 
         left, top, right, bottom = result
@@ -530,7 +538,7 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
-            self.status_bar.showMessage(t("Palette konvertiert"), 3000)
+            self.status_bar.showMessage(t("Palette konvertiert"), self._status_timeout_ms)
 
     # === Stickpfad-Optimierung ===
 
@@ -556,4 +564,6 @@ class EditHandlersMixin:
         dialog = StitchPathDialog(self.current_pattern, self)
         dialog.exec()
 
-        self.status_bar.showMessage(t("Stickpfad-Optimierung abgeschlossen"), 3000)
+        self.status_bar.showMessage(
+            t("Stickpfad-Optimierung abgeschlossen"), self._status_timeout_ms
+        )

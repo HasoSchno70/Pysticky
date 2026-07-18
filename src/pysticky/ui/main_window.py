@@ -114,6 +114,9 @@ class MainWindow(
 
         # Einstellungen (Namen aus config.py)
         self._settings = QSettings(ORG_NAME, APP_NAME)
+        # Vor _create_status_bar() gesetzt, da erste showMessage()-Aufrufe
+        # schon waehrend des UI-Aufbaus laufen koennen.
+        self._status_timeout_ms: int = self._settings.value("status_timeout", 3, type=int) * 1000
         self._recent_files: list[str] = self._load_recent_files()
         self._autosave_interval: int = self._settings.value(
             "autosave_interval", FILE_CONFIG.autosave_interval_minutes, type=int
@@ -188,8 +191,10 @@ class MainWindow(
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
 
-        # Gespeicherte Fenstergeometrie wiederherstellen
-        saved_geometry = self._settings.value("window/geometry")
+        # Gespeicherte Fenstergeometrie wiederherstellen (Einstellungen →
+        # Allgemein → "Fensterposition wiederherstellen").
+        restore_window = self._settings.value("restore_window", True, type=bool)
+        saved_geometry = self._settings.value("window/geometry") if restore_window else None
         if saved_geometry is not None:
             self.restoreGeometry(saved_geometry)
         else:
@@ -797,13 +802,30 @@ class MainWindow(
             if elapsed > 0:
                 self._mark_unsaved()
 
-        if self._check_save_changes():
-            # Fenstergeometrie und Layout speichern
-            self._settings.setValue("window/geometry", self.saveGeometry())
-            self._settings.setValue("window/state", self.saveState())
-            event.accept()
-        else:
+        if not self._check_save_changes():
             event.ignore()
+            return
+
+        # Einstellungen → Allgemein → "Vor Beenden bestätigen" -- zusaetzlich
+        # zur ungespeicherte-Aenderungen-Abfrage oben, auch wenn nichts
+        # Ungespeichertes vorliegt.
+        if self._settings.value("confirm_exit", False, type=bool):
+            from ..core.i18n import t
+
+            reply = QMessageBox.question(
+                self,
+                t("Beenden bestätigen"),
+                t("PySticky wirklich beenden?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
+
+        # Fenstergeometrie und Layout speichern
+        self._settings.setValue("window/geometry", self.saveGeometry())
+        self._settings.setValue("window/state", self.saveState())
+        event.accept()
 
     # =========================================================================
     # Start-Aktion
@@ -832,9 +854,9 @@ class MainWindow(
             # Default: Welcome-Screen zeigen
             if not _already_loaded():
                 self.canvas_container.show_welcome(True, recent_files=self._recent_files)
-                self.status_bar.showMessage(t("Willkommen bei PySticky"), 3000)
+                self.status_bar.showMessage(t("Willkommen bei PySticky"), self._status_timeout_ms)
             else:
-                self.status_bar.showMessage(t("Bereit"), 3000)
+                self.status_bar.showMessage(t("Bereit"), self._status_timeout_ms)
         elif start_action == 1:
             # Neues Projekt Dialog öffnen
             self._unsaved_changes = False
@@ -849,7 +871,9 @@ class MainWindow(
                     self._open_recent_file(last_file)
                     opened = True
                 else:
-                    self.status_bar.showMessage(t("Letzte Datei nicht gefunden"), 3000)
+                    self.status_bar.showMessage(
+                        t("Letzte Datei nicht gefunden"), self._status_timeout_ms
+                    )
             if not opened and not _already_loaded():
                 self.canvas_container.show_welcome(True, recent_files=self._recent_files)
         elif start_action == 3:

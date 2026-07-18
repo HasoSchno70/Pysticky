@@ -54,7 +54,7 @@ class AutosaveHandlersMixin:
                 autosave_path.unlink()
             temp_path.rename(autosave_path)
 
-            self.status_bar.showMessage(f"Autosave: {autosave_path.name}", 3000)
+            self.status_bar.showMessage(f"Autosave: {autosave_path.name}", self._status_timeout_ms)
         except (OSError, TypeError, ValueError) as e:
             # json.dump kann auch TypeError/ValueError werfen — Autosave darf
             # die App nie crashen, aber der Fehler muss im Log sichtbar sein.

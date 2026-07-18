@@ -255,7 +255,7 @@ class MenuBuilderMixin:
                 combo.setCurrentIndex(target_index)
                 combo.blockSignals(False)
 
-        self.status_bar.showMessage(f"Stichtyp: {label}", 3000)
+        self.status_bar.showMessage(f"Stichtyp: {label}", self._status_timeout_ms)
 
     def _create_colorblind_actions(self: "MainWindow", menu) -> None:
         """Erstellt die Farbblindheits-Simulations-Aktionen."""
@@ -284,7 +284,7 @@ class MenuBuilderMixin:
         """Wechselt den Farbblindheits-Modus."""
         self.canvas.colorblind_mode = cb_type
         name = cb_type.value if cb_type.value != "none" else "keine"
-        self.status_bar.showMessage(f"Farbblindheits-Simulation: {name}", 3000)
+        self.status_bar.showMessage(f"Farbblindheits-Simulation: {name}", self._status_timeout_ms)
 
     def _create_help_menu(self: "MainWindow", menubar) -> None:
         """Erstellt das Hilfe-Menü."""

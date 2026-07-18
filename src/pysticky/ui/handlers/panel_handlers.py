@@ -142,7 +142,7 @@ class PanelHandlersMixin:
             self.info_panel.update_info(self.current_pattern)
             self._mark_unsaved()
             msg = f"Farbe '{entry.thread.name}' wird {'nicht ' if skip else ''}gestickt"
-            self.status_bar.showMessage(msg, 3000)
+            self.status_bar.showMessage(msg, self._status_timeout_ms)
 
     def _on_color_harmony(self: "MainWindow", index: int) -> None:
         """Öffnet den Farb-Harmonien-Dialog."""
@@ -175,7 +175,9 @@ class PanelHandlersMixin:
             self.color_bar.refresh()
             self.info_panel.update_info(self.current_pattern)
             self._mark_unsaved()
-            self.status_bar.showMessage(f"{added} harmonische Farbe(n) hinzugefügt", 3000)
+            self.status_bar.showMessage(
+                f"{added} harmonische Farbe(n) hinzugefügt", self._status_timeout_ms
+            )
 
     def _on_replace_color_for(self: "MainWindow", index: int) -> None:
         """Ersetzt eine bestimmte Farbe."""
@@ -205,7 +207,7 @@ class PanelHandlersMixin:
         self.palette_panel.refresh_used_colors()
         self.info_panel.update_info(self.current_pattern)
         self._mark_unsaved()
-        self.status_bar.showMessage(f"Farbe hinzugefügt: {thread.name}", 3000)
+        self.status_bar.showMessage(f"Farbe hinzugefügt: {thread.name}", self._status_timeout_ms)
 
     def _on_color_dropped(self: "MainWindow", thread) -> None:
         """Farbe per Drag&Drop hinzugefügt."""

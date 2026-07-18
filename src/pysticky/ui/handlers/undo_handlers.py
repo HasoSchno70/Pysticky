@@ -191,7 +191,7 @@ class UndoHandlersMixin:
             self._mark_unsaved()
             self._update_progress_displays()
             self.canvas.update()
-            self.status_bar.showMessage("Fortschritt zurückgesetzt", 3000)
+            self.status_bar.showMessage("Fortschritt zurückgesetzt", self._status_timeout_ms)
 
     def _update_progress_displays(self: "MainWindow") -> None:
         """Aktualisiert alle UI-Elemente die den Fortschritt anzeigen."""

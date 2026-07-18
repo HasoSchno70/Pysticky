@@ -96,9 +96,11 @@ class ToolHandlersMixin:
                         self.canvas.stitch_placed.emit(x, y, color_idx)
                     self.canvas.batch_ended.emit()
                     self.canvas.update()
-                    self.status_bar.showMessage(f"Text platziert: {len(changes)} Stiche", 3000)
+                    self.status_bar.showMessage(
+                        f"Text platziert: {len(changes)} Stiche", self._status_timeout_ms
+                    )
         else:
-            self.status_bar.showMessage("Kein Text zum Platzieren", 3000)
+            self.status_bar.showMessage("Kein Text zum Platzieren", self._status_timeout_ms)
 
     def _on_text_cancel(self: "MainWindow") -> None:
         from ..tools.tool_enum import Tool

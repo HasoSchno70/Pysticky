@@ -65,7 +65,7 @@ class SelectionHandlersMixin:
                 self.canvas.stitch_placed.emit(x, y, color_idx)
         self.canvas.batch_ended.emit()
         self.canvas.update()
-        self.status_bar.showMessage(status_template.format(n=len(changes)), 3000)
+        self.status_bar.showMessage(status_template.format(n=len(changes)), self._status_timeout_ms)
 
     # =========================================================================
     # Selection-Operationen (Change-produzierend)
@@ -128,7 +128,7 @@ class SelectionHandlersMixin:
         if ctx and select_tool.copy_selection(ctx):
             w = select_tool.selection.width()
             h = select_tool.selection.height()
-            self.status_bar.showMessage(f"Kopiert: {w} × {h}", 3000)
+            self.status_bar.showMessage(f"Kopiert: {w} × {h}", self._status_timeout_ms)
 
     def _on_selection_paste(self: "MainWindow") -> None:
         """Startet das Einfügen — wechselt ggf. auf das Select-Tool."""
@@ -148,7 +148,7 @@ class SelectionHandlersMixin:
                 self.canvas.update()
                 self.status_bar.showMessage("Klicke zum Einfügen...", 5000)
             else:
-                self.status_bar.showMessage("Nichts zum Einfügen", 3000)
+                self.status_bar.showMessage("Nichts zum Einfügen", self._status_timeout_ms)
 
     # =========================================================================
     # Spiegel-Aktionen (operieren auf gesamtem Muster, nicht Auswahl)

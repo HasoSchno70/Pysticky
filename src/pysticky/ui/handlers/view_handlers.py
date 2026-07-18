@@ -106,7 +106,7 @@ class ViewHandlersMixin:
                     6000,
                 )
             else:
-                self.status_bar.showMessage("Sticken-Modus beendet", 3000)
+                self.status_bar.showMessage("Sticken-Modus beendet", self._status_timeout_ms)
 
         # Statusbar-Pill aktualisieren
         if hasattr(self, "_update_stitch_mode_indicator"):
