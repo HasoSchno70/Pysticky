@@ -384,28 +384,33 @@ class MainWindow(
         purple_bg = QColor(THEME.accent_purple)
         purple_bg.setAlpha(50)
 
+        # Text bewusst NICHT in der Akzentfarbe der Pill: Text und
+        # Hintergrund-Tint im selben Farbton begrenzen den erreichbaren
+        # Kontrast strukturell (gemessen: nur 2.7:1-4.5:1 statt der WCAG-AA-
+        # Mindestforderung 4.5:1, in beiden Themes). text_secondary auf allen
+        # getönten Hintergründen liegt durchgehend über 5:1.
         self.label_tool.setStyleSheet(
             pill(
                 f"rgba({primary_bg.red()}, {primary_bg.green()}, {primary_bg.blue()}, {primary_bg.alpha()})",
-                THEME.accent_primary,
+                THEME.text_secondary,
             )
         )
         self.label_stitch_type.setStyleSheet(
             pill(
                 f"rgba({secondary_bg.red()}, {secondary_bg.green()}, {secondary_bg.blue()}, {secondary_bg.alpha()})",
-                THEME.accent_secondary,
+                THEME.text_secondary,
             )
         )
         self.label_position.setStyleSheet(
             pill(
                 f"rgba({info_bg.red()}, {info_bg.green()}, {info_bg.blue()}, {info_bg.alpha()})",
-                THEME.info,
+                THEME.text_secondary,
             )
         )
         self.label_layer.setStyleSheet(
             pill(
                 f"rgba({purple_bg.red()}, {purple_bg.green()}, {purple_bg.blue()}, {purple_bg.alpha()})",
-                THEME.accent_purple,
+                THEME.text_secondary,
             )
         )
         muted_style = pill(THEME.bg_light, THEME.text_secondary)
@@ -414,7 +419,7 @@ class MainWindow(
         self.label_stitches.setStyleSheet(
             pill(
                 f"rgba({primary_bg.red()}, {primary_bg.green()}, {primary_bg.blue()}, {primary_bg.alpha()})",
-                THEME.accent_primary,
+                THEME.text_secondary,
             )
         )
         self.label_undo.setStyleSheet(muted_style)
