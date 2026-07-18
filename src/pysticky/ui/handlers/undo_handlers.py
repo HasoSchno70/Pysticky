@@ -55,6 +55,18 @@ class UndoHandlersMixin:
         """Stich platziert."""
         from ...core import PlaceStitchCommand
 
+        # Werkzeuge kennen nur canvas._current_color_index, nicht ob die
+        # Palette ueberhaupt eine Farbe an diesem Index hat (z.B. neues
+        # Muster ohne hinzugefuegte Farbe). Ohne diese Pruefung landet ein
+        # Stich mit ungueltigem Farbindex im Layer-Grid: er zaehlt zur
+        # Stichzahl, wird aber nirgends gerendert -- "leere Zeichnung" trotz
+        # steigendem Stich-Zaehler.
+        if not (0 <= color_index < len(self.current_pattern.color_entries)):
+            self.status_bar.showMessage(
+                t("Bitte zuerst eine Farbe aus der Palette hinzufügen"), self._status_timeout_ms
+            )
+            return
+
         layer_index = self.current_pattern.layer_stack.active_index
         stitch_type = getattr(self.canvas, "_active_stitch_type", 0)
         self._execute_command(

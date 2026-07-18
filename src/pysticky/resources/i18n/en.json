@@ -974,6 +974,7 @@
   "PySticky wirklich beenden?": "Really quit PySticky?",
   "Überschreiben bestätigen": "Confirm Overwrite",
   "Datei existiert bereits:": "File already exists:",
+  "Bitte zuerst eine Farbe aus der Palette hinzufügen": "Please add a color from the palette first",
   "Keine gespeicherten Arbeitsbereiche": "No saved workspaces",
   "Arbeitsbereich laden": "Load workspace",
   "Arbeitsbereich auswählen:": "Select workspace:",
