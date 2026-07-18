@@ -65,6 +65,7 @@ class ProgressTab(QWidget):
         overall_layout.addWidget(self._progress_bar)
 
         self._progress_label = QLabel(t("0 / 0 Stiche gestickt"))
+        self._diamond = False
         self._progress_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._progress_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 12px;")
         overall_layout.addWidget(self._progress_label)
@@ -108,6 +109,7 @@ class ProgressTab(QWidget):
     def update_stats(self, pattern: "Pattern", stats: dict) -> None:
         """Berechnet den Fortschritt."""
         progress = pattern.get_progress_statistics()
+        self._diamond = pattern.mode == "diamond"
 
         total = progress["total_stitches"]
         completed = progress["completed_stitches"]
@@ -116,7 +118,8 @@ class ProgressTab(QWidget):
         # Gesamt-Fortschrittsbalken
         self._progress_bar.setValue(int(percent * 10))
         self._progress_bar.setFormat(f"{percent:.1f}%")
-        self._progress_label.setText(f"{completed:,} / {total:,} Stiche gestickt")
+        unit = t("Diamanten gesetzt") if self._diamond else t("Stiche gestickt")
+        self._progress_label.setText(f"{completed:,} / {total:,} {unit}")
 
         # Karten
         self._card_progress_done.set_value(f"{completed:,}")

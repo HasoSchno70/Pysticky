@@ -86,9 +86,10 @@ class PatternStatisticsDialog(QDialog):
         self._colors_tab = ColorsTab()
         tabs.addTab(self._colors_tab, t("🎨 Farben"))
 
-        # Tab 3: Garnverbrauch-Rechner
+        # Tab 3: Garnverbrauch-Rechner (nur Kreuzstich — DP kennt keine
+        # Strang-/Skein-Einheit, Diamanten werden stückweise verbraucht)
         self._thread_tab = ThreadTab()
-        tabs.addTab(self._thread_tab, t("🧵 Garnverbrauch"))
+        thread_idx = tabs.addTab(self._thread_tab, t("🧵 Garnverbrauch"))
 
         # Tab 4: Zeitschätzung
         self._time_tab = TimeTab()
@@ -98,9 +99,13 @@ class PatternStatisticsDialog(QDialog):
         self._progress_tab = ProgressTab()
         tabs.addTab(self._progress_tab, t("✅ Fortschritt"))
 
-        # Tab 6: Einkaufsliste (aus Garn-Vorrat)
+        # Tab 6: Einkaufsliste (aus Garn-Vorrat) — ebenfalls nur Kreuzstich
         self._shopping_tab = ShoppingTab()
-        tabs.addTab(self._shopping_tab, t("🛒 Einkaufsliste"))
+        shopping_idx = tabs.addTab(self._shopping_tab, t("🛒 Einkaufsliste"))
+
+        if self._pattern.mode == "diamond":
+            tabs.setTabVisible(thread_idx, False)
+            tabs.setTabVisible(shopping_idx, False)
 
         self._tab_widgets: list[QWidget] = [
             self._overview_tab,

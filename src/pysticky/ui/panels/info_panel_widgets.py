@@ -351,12 +351,14 @@ class _ColorListItem(QFrame):
 
         # Tooltip aktualisieren
         thread = entry.thread
+        unit = t("Drills:") if self._mode == "diamond" else t("Stiche:")
+        symbol_line = "" if self._mode == "diamond" else f"{t('Symbol:')} {entry.symbol}<br>"
         self.setToolTip(
             f"<b>{thread.name}</b><br>"
             f"{thread.manufacturer or '—'} {thread.catalog_number or ''}<br>"
-            f"{t('Symbol:')} {entry.symbol}<br>"
-            f"{t('Stiche:')} {entry.stitch_count}"
-            + ("<br><i>Wird nicht gestickt</i>" if skip else "")
+            f"{symbol_line}"
+            f"{unit} {entry.stitch_count}"
+            + (f"<br><i>{t('Wird nicht gestickt')}</i>" if skip else "")
         )
         self.update()
 

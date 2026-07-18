@@ -256,6 +256,21 @@ class ViewHandlersMixin:
                 progress_dock.setFloating(False)
             progress_dock.setVisible(not diamond)
 
+        # Sticken-Modus (Stich abhaken) hat im DP keinen etablierten
+        # Workflow (s.o.) — Action mit abschalten statt nur den Dock zu
+        # verstecken, sonst bleibt Ctrl+M aktiv ohne sichtbaren Effekt.
+        action_stitch_mode = getattr(self, "action_stitch_mode", None)
+        if action_stitch_mode is not None:
+            if diamond and action_stitch_mode.isChecked():
+                action_stitch_mode.setChecked(False)
+            action_stitch_mode.setEnabled(not diamond)
+
+        # Tweed-Blend kombiniert zwei Garn-Stränge — Diamanten sind
+        # Einzelfarben, kein Mehrstrang-Konzept.
+        action_blend_threads = getattr(self, "action_blend_threads", None)
+        if action_blend_threads is not None:
+            action_blend_threads.setEnabled(not diamond)
+
         # Symbol-Toggle: zeigt in beiden Modi dasselbe Farb-Symbol an
         # (Diamant-Farben bekommen seit Kurzem dasselbe Symbol wie
         # Garnfarben), daher keine modusabhängige Umlabelung mehr nötig.

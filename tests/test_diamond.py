@@ -450,6 +450,28 @@ def test_info_panel_color_item_hides_symbol_in_diamond_mode(qtbot, pattern_with_
         assert it.lbl_symbol.isHidden() is True
 
 
+def test_info_panel_color_item_tooltip_stays_diamond_after_update(qtbot, pattern_with_colors):
+    """update_entry() (Live-Update-Pfad bei stitch_placed) muss denselben
+    Modus respektieren wie _setup_ui — Regression: die Tooltip fiel nach dem
+    ersten Update auf Kreuzstich-Wortlaut ("Symbol:"/"Stiche:") zurueck."""
+    from pysticky.ui.panels.info_panel import InfoPanel, _ColorListItem
+
+    panel = InfoPanel()
+    qtbot.addWidget(panel)
+    panel.show()
+    panel.set_mode("diamond")
+    panel.update_info(pattern_with_colors)
+    # Zweiter Aufruf mit gleicher Farbanzahl geht ueber update_entry()
+    # statt Neuerstellung (Phantom-Top-Level-Window-Vermeidung).
+    panel.update_info(pattern_with_colors)
+
+    items = [it for it in panel._color_items if isinstance(it, _ColorListItem)]
+    assert len(items) > 0
+    for it in items:
+        assert "Drills:" in it.toolTip()
+        assert "Symbol:" not in it.toolTip()
+
+
 def test_palette_panel_dropdown_uses_icon_prefix(qtbot):
     """Combo-Items haben Typ-Icons im Anzeigetext, userData=reiner Name."""
     from pysticky.ui.panels.palette_panel import PalettePanel
@@ -1315,3 +1337,71 @@ def test_canvas_diamond_view_renders_full_stitches_as_drills(qtbot, pattern_with
     canvas.resize(400, 300)
     canvas.diamond_view = True
     canvas.repaint()
+
+
+# ---------------------------------------------------------------------------
+# DP/Sticken-Workflow-Parity (2026-07-18)
+# ---------------------------------------------------------------------------
+
+
+def test_diamond_mode_disables_stitch_mode_and_blend_threads_actions(qtbot):
+    """Sticken-Modus (Fortschritt-abhaken) und Tweed-Blend ergeben in DP
+    keinen Sinn (kein Stich-Workflow, keine Mehrstrang-Garne) -- beide
+    Actions muessen beim Umschalten auf Diamond deaktiviert werden, und
+    ein bereits aktiver Sticken-Modus muss dabei ausgeschaltet werden."""
+    from pysticky.ui.main_window import MainWindow
+
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w._check_save_changes = lambda: True
+    w._autosave_timer.stop()
+
+    w.action_stitch_mode.trigger()  # checkable QAction: trigger() toggles + emits triggered
+    assert w.action_stitch_mode.isChecked() is True
+
+    w.action_diamond_view.trigger()  # -> _on_toggle_diamond_view -> _apply_pattern_mode
+
+    assert w.action_stitch_mode.isEnabled() is False
+    assert w.action_stitch_mode.isChecked() is False
+    assert w.action_blend_threads.isEnabled() is False
+
+    w.action_diamond_view.trigger()
+
+    assert w.action_stitch_mode.isEnabled() is True
+    assert w.action_blend_threads.isEnabled() is True
+
+
+def test_statistics_dialog_hides_thread_and_shopping_tabs_in_diamond_mode(qtbot):
+    """Garnverbrauch/Einkaufsliste rechnen in Straengen (Skeins) -- fuer
+    Diamond Painting (Einzel-Drills) sinnlos, daher in DP ausgeblendet."""
+    from pysticky.core.pattern import Pattern
+    from pysticky.ui.dialogs.statistics_dialog import PatternStatisticsDialog
+
+    stitch_pattern = Pattern(width=5, height=5, mode="stitch")
+    dialog = PatternStatisticsDialog(stitch_pattern)
+    qtbot.addWidget(dialog)
+    assert dialog._tabs.isTabVisible(dialog._tabs.indexOf(dialog._thread_tab)) is True
+    assert dialog._tabs.isTabVisible(dialog._tabs.indexOf(dialog._shopping_tab)) is True
+
+    diamond_pattern = Pattern(width=5, height=5, mode="diamond")
+    dp_dialog = PatternStatisticsDialog(diamond_pattern)
+    qtbot.addWidget(dp_dialog)
+    assert dp_dialog._tabs.isTabVisible(dp_dialog._tabs.indexOf(dp_dialog._thread_tab)) is False
+    assert dp_dialog._tabs.isTabVisible(dp_dialog._tabs.indexOf(dp_dialog._shopping_tab)) is False
+
+
+def test_statistics_progress_tab_wording_matches_mode(qtbot):
+    """Fortschritt-Label sagt "Diamanten gesetzt" in DP statt "Stiche
+    gestickt" (vorher hart auf Kreuzstich-Wortlaut fixiert)."""
+    from pysticky.core.pattern import Pattern
+    from pysticky.ui.dialogs.statistics_dialog import PatternStatisticsDialog
+
+    stitch_pattern = Pattern(width=5, height=5, mode="stitch")
+    dialog = PatternStatisticsDialog(stitch_pattern)
+    qtbot.addWidget(dialog)
+    assert "gestickt" in dialog._progress_tab._progress_label.text()
+
+    diamond_pattern = Pattern(width=5, height=5, mode="diamond")
+    dp_dialog = PatternStatisticsDialog(diamond_pattern)
+    qtbot.addWidget(dp_dialog)
+    assert "Diamanten gesetzt" in dp_dialog._progress_tab._progress_label.text()
