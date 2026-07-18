@@ -125,7 +125,7 @@ class CanvasTab(QWidget):
         self.btn_canvas_bg.setToolTip(t("Hintergrundfarbe des Canvas"))
         form.addRow(t("Canvas-Hintergrund:"), self.btn_canvas_bg)
 
-        self.btn_empty_cell = ColorButton("#2a2a4a")
+        self.btn_empty_cell = ColorButton("#fafaf5")
         self.btn_empty_cell.setToolTip(t("Farbe leerer Zellen"))
         form.addRow(t("Leere Zellen:"), self.btn_empty_cell)
 
@@ -159,7 +159,7 @@ class CanvasTab(QWidget):
         self.chk_snap_enabled.setChecked(settings.value("snap_enabled", False, type=bool))
         self.spin_snap_interval.setValue(settings.value("snap_interval", 5, type=int))
         self.btn_canvas_bg.color = settings.value("canvas_bg", "#1a1a2e")
-        self.btn_empty_cell.color = settings.value("empty_cell_color", "#2a2a4a")
+        self.btn_empty_cell.color = settings.value("empty_cell_color", "#fafaf5")
         self.chk_fabric_texture.setChecked(settings.value("fabric_texture", True, type=bool))
 
     def save_settings(self, settings: QSettings) -> None:
@@ -193,5 +193,5 @@ class CanvasTab(QWidget):
         self.chk_snap_enabled.setChecked(False)
         self.spin_snap_interval.setValue(5)
         self.btn_canvas_bg.color = "#1a1a2e"
-        self.btn_empty_cell.color = "#2a2a4a"
+        self.btn_empty_cell.color = "#fafaf5"
         self.chk_fabric_texture.setChecked(True)

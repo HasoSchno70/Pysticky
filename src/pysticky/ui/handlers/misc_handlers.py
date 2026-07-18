@@ -769,9 +769,12 @@ class MiscHandlersMixin:
         zoom_speed = self._settings.value("zoom_speed", 12, type=int)
         self.canvas.ZOOM_STEP = max(1.01, zoom_speed / 10)
 
-        # Canvas-Hintergrund / leere Zellen
+        # Canvas-Hintergrund / leere Zellen -- Default #fafaf5 (Cremeweiß)
+        # bewusst, damit leere Zellen wie echter Aida-Stoff aussehen (nicht
+        # das dunkle App-Theme) -- muss mit canvas_tab.py's Default gleich
+        # bleiben, siehe grid-contrast-fix Folgebug in dieser Session.
         self.canvas.bg_color = QColor(self._settings.value("canvas_bg", "#1a1a2e"))
-        self.canvas.empty_cell_color = QColor(self._settings.value("empty_cell_color", "#2a2a4a"))
+        self.canvas.empty_cell_color = QColor(self._settings.value("empty_cell_color", "#fafaf5"))
 
         # Farben-Tab -- ebenfalls vorher komplett totes UI (8 von 8 Einstellungen).
         self.canvas.symbol_font_family = self._settings.value(
