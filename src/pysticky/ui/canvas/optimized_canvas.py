@@ -71,6 +71,11 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         self._perf_manager.invalidate_region(rect)
         super().invalidate_region(rect)
 
+    def invalidate_all(self) -> None:
+        """Verwirft den gesamten Chunk-Cache."""
+        self._perf_manager.invalidate_all()
+        super().invalidate_all()
+
     def paintEvent(self, event) -> None:
         """Überschriebenes paintEvent mit Performance-Optimierungen."""
         start_time = time.perf_counter()

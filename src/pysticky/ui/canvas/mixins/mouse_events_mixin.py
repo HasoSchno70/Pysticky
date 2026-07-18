@@ -79,6 +79,7 @@ class MouseEventsMixin:
                     self.batch_started.emit("Löschen")
 
                 for mx, my in self.get_mirrored_positions(ctx.grid_x, ctx.grid_y):
+                    self.invalidate_cell(mx, my)
                     self.stitch_removed.emit(mx, my)
                 self.update()
             return

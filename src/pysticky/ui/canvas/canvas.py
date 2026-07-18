@@ -472,6 +472,12 @@ class CrossStitchCanvas(
         """Markiert einen Bereich für Neuzeichnung."""
         self._request_update()
 
+    def invalidate_all(self) -> None:
+        """Markiert das gesamte Pattern für Neuzeichnung (z.B. nach Undo/Redo,
+        Farbe ersetzen, Einfügen -- Operationen, die beliebige Zellen ohne
+        bekannte Koordinatenliste ändern können)."""
+        self._request_update()
+
     def _request_update(self) -> None:
         """Fordert ein verzögertes Update an (Batching)."""
         if not self._pending_update:
@@ -542,6 +548,11 @@ class CrossStitchCanvas(
     def _apply_changes(self, changes: list[tuple[int, int, int | None]]) -> None:
         """Wendet Änderungen an (ohne Spiegelung)."""
         for x, y, color_index in changes:
+            # Chunk-Cache (OptimizedCrossStitchCanvas) muss die betroffene
+            # Zelle als dirty kennen, sonst zeigt der nächste paintEvent
+            # weiterhin den alten gecachten Chunk-Pixmap -- neue Stiche
+            # blieben dadurch bei großen Mustern (>200x200) unsichtbar.
+            self.invalidate_cell(x, y)
             if color_index is None:
                 self.stitch_removed.emit(x, y)
             else:
@@ -555,6 +566,7 @@ class CrossStitchCanvas(
 
         for x, y, color_index in changes:
             for mx, my in self.get_mirrored_positions(x, y):
+                self.invalidate_cell(mx, my)
                 if color_index is None:
                     self.stitch_removed.emit(mx, my)
                 else:

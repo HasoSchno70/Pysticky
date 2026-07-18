@@ -560,6 +560,11 @@ class MainWindow(
             self.info_panel.update_info(p)
             self.color_bar.update_swatches()
         elif scope == "visual":
+            # invalidate_all(): Bulk-Operationen (Undo/Redo, Einfügen, ...)
+            # aendern beliebige Zellen ohne bekannte Koordinatenliste -- der
+            # Chunk-Cache des OptimizedCrossStitchCanvas kennt sie sonst nicht
+            # als dirty und zeigt weiterhin die alten gecachten Chunks.
+            self.canvas.invalidate_all()
             self.canvas.update()
             self.minimap_panel.refresh()
             self.tile_preview_panel.refresh()
@@ -569,6 +574,7 @@ class MainWindow(
             self._update_status()
             self._update_undo_actions()
         elif scope == "palette":
+            self.canvas.invalidate_all()
             self.canvas.update()
             self.color_bar.refresh()
             self.info_panel.update_info(p)
