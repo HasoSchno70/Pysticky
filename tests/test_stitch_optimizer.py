@@ -114,6 +114,42 @@ class TestStitchPathOptimizer:
             assert len(path.steps) == path.stitch_count
 
 
+class TestNearestNeighborGridCorrectness:
+    """Regression: die Grid-beschleunigte Ring-Suche in
+    `_optimize_nearest_neighbor_fast` (>100 Punkte) verglich frueher ein
+    quadriertes `nearest_dist` mit einem linearen Ring-Radius -- der
+    Abbruch-Check griff dadurch faktisch nie, was die Grid-Optimierung fuer
+    genau den grossen/verstreuten Fall aushebelte, fuer den sie gedacht ist.
+    Ergebnis blieb dabei zufaellig korrekt (nur langsamer), aber der Fix an
+    der Ring-Abbruchbedingung koennte das leicht kaputt machen -- daher hier
+    explizit gegen den bewusst ungekuerzten `_simple`-Bruteforce auf
+    identischen, verstreuten Punkten verglichen (gleiche Gesamtdistanz =
+    beide finden denselben optimalen Greedy-Pfad)."""
+
+    def _scattered_positions(self, count: int) -> list[tuple[int, int]]:
+        import random
+
+        rng = random.Random(42)
+        return [(rng.randint(0, 5000), rng.randint(0, 5000)) for _ in range(count)]
+
+    def test_fast_grid_matches_bruteforce_on_scattered_points(self, empty_pattern):
+        optimizer = StitchPathOptimizer(empty_pattern)
+        positions = self._scattered_positions(150)  # > 100 -> Grid-Pfad
+
+        fast_result = optimizer._optimize_nearest_neighbor_fast(positions)
+        simple_result = optimizer._optimize_nearest_neighbor_simple(positions)
+
+        assert set(fast_result) == set(positions)  # keine Punkte verloren/dupliziert
+
+        def total_distance(ordered):
+            return sum(
+                optimizer._distance_fast(x1, y1, x2, y2)
+                for (x1, y1), (x2, y2) in zip(ordered, ordered[1:])
+            )
+
+        assert total_distance(fast_result) == pytest.approx(total_distance(simple_result))
+
+
 class TestCompareStrategies:
     """Tests für Strategievergleich."""
 

@@ -100,23 +100,23 @@ def _color_variety_heatmap(composite: np.ndarray, block_size: int) -> np.ndarray
     return variety.astype(np.float32) / float(max_var)
 
 
-def _intensity_to_rgb(t: float) -> tuple[int, int, int]:
-    """Mapped t in [0,1] auf blau -> cyan -> grün -> gelb -> rot."""
-    if t <= 0.0:
+def _intensity_to_rgb(intensity: float) -> tuple[int, int, int]:
+    """Mapped intensity in [0,1] auf blau -> cyan -> grün -> gelb -> rot."""
+    if intensity <= 0.0:
         return (20, 20, 60)  # fast schwarz für leere Blöcke
-    t = clamp(t, 0.0, 1.0)
+    intensity = clamp(intensity, 0.0, 1.0)
     # 4 Segmente
-    if t < 0.25:
-        u = t / 0.25
+    if intensity < 0.25:
+        u = intensity / 0.25
         r, g, b = 0, int(255 * u), 255
-    elif t < 0.5:
-        u = (t - 0.25) / 0.25
+    elif intensity < 0.5:
+        u = (intensity - 0.25) / 0.25
         r, g, b = 0, 255, int(255 * (1 - u))
-    elif t < 0.75:
-        u = (t - 0.5) / 0.25
+    elif intensity < 0.75:
+        u = (intensity - 0.5) / 0.25
         r, g, b = int(255 * u), 255, 0
     else:
-        u = (t - 0.75) / 0.25
+        u = (intensity - 0.75) / 0.25
         r, g, b = 255, int(255 * (1 - u)), 0
     return (r, g, b)
 
@@ -131,10 +131,10 @@ def _heatmap_to_qimage(values: np.ndarray, cell_px: int) -> QImage:
     rgb_cache: dict[int, int] = {}
     for by in range(bh):
         for bx in range(bw):
-            t = float(values[by, bx])
-            bucket = int(t * 1000)
+            intensity = float(values[by, bx])
+            bucket = int(intensity * 1000)
             if bucket not in rgb_cache:
-                r, g, b = _intensity_to_rgb(t)
+                r, g, b = _intensity_to_rgb(intensity)
                 rgb_cache[bucket] = (0xFF << 24) | (r << 16) | (g << 8) | b
             color = rgb_cache[bucket]
             x0 = bx * cell_px

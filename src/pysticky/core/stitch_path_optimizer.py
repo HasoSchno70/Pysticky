@@ -366,9 +366,16 @@ class StitchPathOptimizer:
             nearest_dist = float("inf")
 
             for radius in range(max(width, height) // cell_size + 2):
-                if nearest is not None and radius > nearest_dist / cell_size + 1:
-                    # Wir haben einen Punkt gefunden und sind weit genug gesucht
-                    break
+                if nearest is not None:
+                    # Ring `radius` deckt nur Punkte ab, die mindestens
+                    # (radius-1) * cell_size entfernt sind. Sobald das schon
+                    # weiter ist als der bisher beste (quadrierte!) Kandidat,
+                    # kann kein näherer Punkt mehr folgen -- beide Seiten
+                    # quadriert vergleichen, `nearest_dist` ist bereits ein
+                    # Quadrat (siehe `_distance_squared`).
+                    min_ring_dist = max(0, (radius - 1) * cell_size)
+                    if min_ring_dist * min_ring_dist > nearest_dist:
+                        break
 
                 # Alle Zellen im Ring durchsuchen
                 for dx in range(-radius, radius + 1):
@@ -387,11 +394,6 @@ class StitchPathOptimizer:
                             if dist < nearest_dist:
                                 nearest_dist = dist
                                 nearest = p
-
-                if nearest is not None:
-                    # Wir haben einen Kandidaten, aber prüfen noch einen Ring weiter
-                    # um sicher zu sein
-                    pass
 
             if nearest is None:
                 # Fallback: Brute-Force für verbleibende Punkte
@@ -514,9 +516,6 @@ class StitchPathOptimizer:
         dx = x2 - x1
         dy = y2 - y1
         return dx * dx + dy * dy
-
-    # Alias für Kompatibilität
-    _distance = _distance_fast
 
     def get_statistics(self, result: OptimizationResult) -> dict:
         """Erstellt Statistiken für das Optimierungsergebnis."""
