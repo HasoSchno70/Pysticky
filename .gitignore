@@ -39,8 +39,11 @@ coverage.xml
 *.spec
 !pysticky.spec
 
-# pystarter build output (PySticky.spec/setup.iss + dist/installer)
+# pystarter build output (altes, ungenutztes Scaffolding-Tool)
 pystarter_output/
+
+# Inno-Setup-Installer-Output (setup.iss ist bewusst versioniert)
+installer_output/
 
 # Persoenliche Arbeitsdateien / grosse Beispiel-Exporte (nicht im Repo)
 Muster/

@@ -85,22 +85,33 @@ jobs:
         run: |
           pyinstaller pysticky.spec
 
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup -y
+
+      - name: Build installer with Inno Setup
+        run: |
+          $version = python -c "from pysticky.config import APP_VERSION; print(APP_VERSION)"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$version setup.iss
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: PySticky-Windows
-          path: dist/
+          path: |
+            dist/PySticky.exe
+            installer_output/PySticky-Setup.exe
 
       # Nur bei Versions-Tags (v1.2.3): baut nicht nur, sondern veroeffentlicht
-      # die .exe direkt als herunterladbares GitHub-Release-Asset. Ohne dies
-      # gaebe es nur das temporaere Actions-Artifact oben (verfaellt, nur mit
-      # Repo-Zugriff sichtbar) statt eines oeffentlichen Download-Links.
+      # .exe UND Installer direkt als herunterladbare GitHub-Release-Assets.
+      # Ohne dies gaebe es nur das temporaere Actions-Artifact oben (verfaellt,
+      # nur mit Repo-Zugriff sichtbar) statt oeffentlicher Download-Links.
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" "dist/PySticky.exe" `
+          gh release create "${{ github.ref_name }}" "dist/PySticky.exe" "installer_output/PySticky-Setup.exe" `
             --repo "${{ github.repository }}" `
             --title "PySticky ${{ github.ref_name }}" `
             --generate-notes
