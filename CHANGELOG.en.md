@@ -9,6 +9,26 @@ versioning based on [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-07-19
+
+### Added
+
+- Windows installer (`PySticky-Setup.exe`) as an additional download option
+  alongside the portable `.exe` — with Start Menu entry, optional desktop
+  icon, and uninstaller
+
+### Fixed
+
+- Diamond Painting mode: the info-panel tooltip fell back to cross-stitch
+  wording after the first stitch update instead of staying in Diamond mode
+- Statistics dialog now hides the thread-usage/shopping-list tabs in
+  Diamond Painting mode (skein math doesn't apply to diamonds); the
+  progress tab says "diamonds placed" instead of "stitches stitched"
+- "Stitch mode" (Ctrl+M) and "Generate tweed blend" are now disabled in
+  Diamond Painting mode instead of staying clickable with no effect
+- CI workflow: the test job's `GITHUB_TOKEN` had no restricted permissions
+  (CodeQL finding, CWE-275) — now explicitly scoped to read-only
+
 ## [1.0.0] — 2026-07-18
 
 ### Fixed

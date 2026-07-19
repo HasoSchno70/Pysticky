@@ -9,6 +9,29 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-07-19
+
+### Hinzugefügt
+
+- Windows-Installer (`PySticky-Setup.exe`) als zusätzliche Download-Option
+  neben der portablen `.exe` — mit Start-Menü-Eintrag, optionalem
+  Desktop-Icon und Deinstaller
+
+### Behoben
+
+- Diamond-Painting-Modus: Info-Panel-Tooltip fiel nach dem ersten
+  Stich-Update auf Kreuzstich-Wortlaut zurück statt im Diamond-Modus zu
+  bleiben
+- Statistik-Dialog blendet Garnverbrauch-/Einkaufsliste-Tabs jetzt im
+  Diamond-Painting-Modus aus (Strang-Berechnung ergibt für Diamanten
+  keinen Sinn); Fortschritt-Tab sagt "Diamanten gesetzt" statt "Stiche
+  gestickt"
+- "Sticken-Modus" (Ctrl+M) und "Tweed-Blend erzeugen" sind im
+  Diamond-Painting-Modus jetzt deaktiviert statt wirkungslos anklickbar
+  zu bleiben
+- CI-Workflow: `GITHUB_TOKEN` des Test-Jobs hatte keine eingeschränkten
+  Rechte (CodeQL-Fund, CWE-275) — jetzt explizit auf Lesezugriff begrenzt
+
 ## [1.0.0] — 2026-07-18
 
 ### Behoben
