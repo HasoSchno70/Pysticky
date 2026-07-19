@@ -7,6 +7,12 @@ on:
   pull_request:
     branches: [main]
 
+# Least-privilege-Default fuer den GITHUB_TOKEN -- der test-Job braucht nur
+# Lesezugriff (Checkout + Tests/Lint), der build-Job hebt das gezielt auf
+# contents: write an (fuers Release-Erstellen), siehe dort.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
