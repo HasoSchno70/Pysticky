@@ -430,15 +430,6 @@ class ProgressPanel(QWidget):
 
         return row
 
-    def clear_progress(self) -> None:
-        """Setzt die Anzeige zurück."""
-        self.overall_progress.setValue(0)
-        self.lbl_counts.setText("0 / 0 Stiche")
-        for widget in self._color_widgets:
-            widget.setParent(None)
-            widget.deleteLater()
-        self._color_widgets.clear()
-
     def set_stitch_mode_active(self, active: bool) -> None:
         """Synchronisiert den Toggle-Button mit dem MainWindow-State."""
         if self.btn_stitch_mode.isChecked() != active:

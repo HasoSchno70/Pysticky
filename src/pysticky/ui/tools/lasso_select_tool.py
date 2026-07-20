@@ -268,7 +268,17 @@ class LassoSelectTool(BaseTool):
                 self._is_moving = False
                 self._active = False
 
-                if self._selection_content and self._selected_pixels and self._original_bounds:
+                # Nur anwenden, wenn sich die Auswahl tatsaechlich bewegt hat
+                # -- ein reiner Klick ohne Drag erzeugte sonst einen no-op
+                # "Verschieben"-Undo-Eintrag (Loeschen+Wiedereinfuegen
+                # derselben Pixel). Pendant zum gleichwertigen Check in
+                # select_tool.py (Vergleich der topLeft()-Position).
+                moved = (
+                    self._original_bounds is not None
+                    and self._selection_bounds is not None
+                    and self._selection_bounds.topLeft() != self._original_bounds.topLeft()
+                )
+                if moved and self._selection_content and self._selected_pixels:
                     changes = self._apply_move(ctx)
                     self._content_captured = False
                     self._selection_content = None

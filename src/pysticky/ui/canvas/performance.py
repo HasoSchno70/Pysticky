@@ -25,10 +25,10 @@ from ...core.stitch_shapes import (
     is_french_knot,
     normalized_partial_stitch_shape,
 )
-from ..color_utils import to_qcolor
 
 if TYPE_CHECKING:
     from ...core import Pattern
+    from ...core.color_blindness import ColorBlindType
     from .canvas import CrossStitchCanvas
 
 
@@ -203,6 +203,8 @@ class PerformanceManager:
         dim_other_layers: bool,
         fabric_texture: bool = False,
         diamond_view: bool = False,
+        empty_color: QColor | None = None,
+        colorblind_mode: "ColorBlindType | None" = None,
     ) -> QPixmap | None:
         """
         Gibt den gecachten Chunk zurück, oder None wenn er neu gerendert werden muss.
@@ -219,6 +221,8 @@ class PerformanceManager:
             dim_other_layers,
             fabric_texture,
             diamond_view,
+            empty_color.name() if empty_color is not None else None,
+            colorblind_mode,
         )
 
         # Dirty?
@@ -253,6 +257,8 @@ class PerformanceManager:
         dim_other_layers: bool = False,
         fabric_texture: bool = False,
         diamond_view: bool = False,
+        empty_color: QColor | None = None,
+        colorblind_mode: "ColorBlindType | None" = None,
     ) -> None:
         """Speichert einen Chunk im Cache, zusammen mit den Render-Parametern
         gegen die spätere get_cached_chunk()-Aufrufe validieren."""
@@ -267,6 +273,8 @@ class PerformanceManager:
             dim_other_layers,
             fabric_texture,
             diamond_view,
+            empty_color.name() if empty_color is not None else None,
+            colorblind_mode,
         )
         self._chunk_cache[(chunk_x, chunk_y)] = (pixmap, params)
         self._stats["chunks_rendered"] += 1
@@ -309,6 +317,7 @@ def render_chunk_to_pixmap(
     symbol_font,
     fabric_pixmap: QPixmap | None = None,
     diamond_view: bool = False,
+    colorblind_mode: "ColorBlindType | None" = None,
 ) -> QPixmap:
     """
     Rendert einen Chunk als QPixmap.
@@ -329,6 +338,9 @@ def render_chunk_to_pixmap(
             None für eine flache Farbfüllung. Chunk-Grenzen liegen immer
             auf Zellgrenzen, daher kachelt die Textur ohne Transform-Offset.
         diamond_view: DP-Klebegrund-Hintergrund statt Aida-Textur.
+        colorblind_mode: Farbblindheits-Simulation (wie im Direkt-Render-
+            Pfad, `RenderingMixin`) -- ohne das blieb die Simulation auf
+            großen (Performance-Mode-)Mustern wirkungslos.
 
     Returns:
         QPixmap mit dem gerenderten Chunk
@@ -396,13 +408,19 @@ def render_chunk_to_pixmap(
 
                 # Farbe
                 thread_color = entry.thread.color
+                tr, tg, tb = thread_color.r, thread_color.g, thread_color.b
+
+                # Farbblindheits-Simulation (wie RenderingMixin._draw_all_cells)
+                if colorblind_mode is not None and colorblind_mode.value != "none":
+                    from ...core.color_blindness import simulate_color
+
+                    tr, tg, tb = simulate_color(tr, tg, tb, colorblind_mode)
+
                 alpha = int(opacity * 255)
-                color_key = (
-                    (thread_color.r << 24) | (thread_color.g << 16) | (thread_color.b << 8) | alpha
-                )
+                color_key = (tr << 24) | (tg << 16) | (tb << 8) | alpha
 
                 if color_key not in color_cache:
-                    color_cache[color_key] = to_qcolor(thread_color, alpha)
+                    color_cache[color_key] = QColor(tr, tg, tb, alpha)
 
                 fill_color = color_cache[color_key]
 

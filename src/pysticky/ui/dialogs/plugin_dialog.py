@@ -25,17 +25,19 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
+from ...core.undo import LayerSnapshotCommand
 from ...plugins import Plugin, PluginError, discover_plugins, run_plugin
 
 
 class PluginDialog(QDialog):
     """Dialog zur Auswahl und Ausführung eines Plugins."""
 
-    def __init__(self, pattern, parent=None) -> None:
+    def __init__(self, pattern, undo_manager, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle(t("Plugin ausführen"))
         self.setMinimumSize(560, 420)
         self._pattern = pattern
+        self._undo_manager = undo_manager
         self._plugins: list[Plugin] = []
         self._executed = False  # True wenn ein Plugin gelaufen ist (UI muss neu rendern)
 
@@ -129,7 +131,17 @@ class PluginDialog(QDialog):
             return
 
         try:
-            run_plugin(plugin, self._pattern, self)
+            # Snapshot-Command statt direktem Aufruf -- Plugins koennen
+            # beliebig viele Zellen aendern, ohne dass vorher bekannt ist
+            # welche. So bleibt Ctrl+Z fuer Plugin-Laeufe funktionsfaehig
+            # (vorher: kompletter Bypass des Undo-Systems).
+            cmd = LayerSnapshotCommand(
+                self._pattern,
+                layer_index=self._pattern.layer_stack.active_index,
+                action=lambda: run_plugin(plugin, self._pattern, self),
+                description_text=f"Plugin: {plugin.name}",
+            )
+            self._undo_manager.execute(cmd)
             self._executed = True
         except PluginError as e:
             QMessageBox.critical(self, t("Plugin-Fehler"), str(e))

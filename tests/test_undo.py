@@ -8,6 +8,7 @@ import pytest
 from pysticky.core import (
     AddBackstitchCommand,
     BatchStitchCommand,
+    LayerSnapshotCommand,
     Pattern,
     PlaceStitchCommand,
     RemoveBackstitchCommand,
@@ -186,6 +187,83 @@ class TestBackstitchCommands:
 
         assert len(pattern.backstitches) == 1
         assert pattern.backstitches[0] is bs
+
+
+class TestLayerSnapshotCommand:
+    """Regression: Plugins mutierten das Pattern komplett am Undo-System
+    vorbei (direkter pattern.set_stitch()-Aufruf ohne jeden Command).
+    LayerSnapshotCommand kapselt eine beliebige Aktion snapshot-basiert,
+    damit auch nicht vorhersehbare Bulk-Mutationen undo-faehig werden."""
+
+    def test_wraps_arbitrary_mutation_and_undoes_it(self):
+        from pysticky.core import Thread
+
+        pattern = Pattern(width=3, height=3)
+        pattern.add_color(Thread.from_hex("Zweite Farbe", "#00FF00"))  # Index 1
+
+        def action():
+            for x in range(3):
+                for y in range(3):
+                    pattern.set_stitch(x, y, (x + y) % 2)
+
+        cmd = LayerSnapshotCommand(
+            pattern, layer_index=pattern.layer_stack.active_index, action=action
+        )
+        cmd.execute()
+
+        layer = pattern.layer_stack.active_layer
+        assert layer.get_stitch(0, 0) == 0
+        assert layer.get_stitch(1, 0) == 1
+        assert sum(e.stitch_count for e in pattern.color_entries) == 9
+
+        cmd.undo()
+
+        assert all(layer.get_stitch(x, y) is None for x in range(3) for y in range(3))
+        assert sum(e.stitch_count for e in pattern.color_entries) == 0
+
+    def test_redo_does_not_rerun_action(self):
+        """Bei Redo darf `action` NICHT erneut aufgerufen werden -- sonst
+        wuerde z.B. ein interaktives Plugin ein zweites Mal nach Eingaben
+        fragen (und potenziell eine andere Antwort bekommen)."""
+        pattern = Pattern(width=3, height=3)
+        call_count = 0
+
+        def action():
+            nonlocal call_count
+            call_count += 1
+            pattern.set_stitch(0, 0, 0)
+
+        cmd = LayerSnapshotCommand(
+            pattern, layer_index=pattern.layer_stack.active_index, action=action
+        )
+        cmd.execute()  # erster Lauf
+        assert call_count == 1
+        cmd.undo()
+        cmd.execute()  # Redo
+
+        assert call_count == 1  # action() NICHT erneut aufgerufen
+        assert pattern.layer_stack.active_layer.get_stitch(0, 0) == 0
+
+    def test_rolls_back_on_action_error(self):
+        """Stuerzt `action` nach teilweiser Mutation ab, darf das Pattern
+        nicht in einem halb-veraenderten Zustand ohne Undo-Moeglichkeit
+        haengen bleiben."""
+        pattern = Pattern(width=3, height=3)
+        pattern.set_stitch(1, 1, 0)  # bereits vorhandener Stich
+
+        def crashing_action():
+            pattern.set_stitch(0, 0, 0)  # partielle Mutation
+            raise RuntimeError("boom")
+
+        cmd = LayerSnapshotCommand(
+            pattern, layer_index=pattern.layer_stack.active_index, action=crashing_action
+        )
+        with pytest.raises(RuntimeError):
+            cmd.execute()
+
+        layer = pattern.layer_stack.active_layer
+        assert layer.get_stitch(0, 0) is None  # zurueckgerollt
+        assert layer.get_stitch(1, 1) == 0  # unveraendert erhalten
 
 
 if __name__ == "__main__":

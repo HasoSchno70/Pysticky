@@ -228,6 +228,13 @@ class PropertiesMixin:
     @empty_cell_color.setter
     def empty_cell_color(self: "CrossStitchCanvas", value: QColor) -> None:
         self._empty_color = value
+        # Die Aida-Textur-Tile (_get_fabric_pixmap()) backt die Farbe beim
+        # Erzeugen fest ein und war bisher nur nach cell_size gecacht --
+        # ohne dieses Invalidieren blieb die alte Farbe bis zum naechsten
+        # Zoom-Wechsel sichtbar. Der Chunk-Pixmap-Cache invalidiert sich ueber
+        # den geaenderten Parameter in get_cached_chunk()/cache_chunk() bereits
+        # automatisch (empty_color ist Teil der Cache-Key-Parameter).
+        self._invalidate_fabric_pixmap()
         self.update()
 
     @property

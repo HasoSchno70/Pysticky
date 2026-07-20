@@ -210,7 +210,7 @@ class EditHandlersMixin:
         """Zeigt den Plugin-Picker- und -Runner-Dialog."""
         from ..dialogs import PluginDialog
 
-        dialog = PluginDialog(self.current_pattern, self)
+        dialog = PluginDialog(self.current_pattern, self.undo_manager, self)
         dialog.exec()
         if dialog.executed:
             # Pattern wurde mutiert — UI neu rendern

@@ -22,7 +22,7 @@ Example:
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
@@ -221,6 +221,7 @@ class RemoveStitchCommand(Command):
         self._y = y
         self._layer_index = layer_index
         self._old_color_index: int | None = None
+        self._old_stitch_type: int = 0
 
     def execute(self) -> None:
         """Entfernt den Stich und speichert die vorherige Farbe."""
@@ -229,6 +230,11 @@ class RemoveStitchCommand(Command):
 
         if old_stitch is not None:
             self._old_color_index = old_stitch
+            # Stich-Typ (Halb-/Viertelstich etc.) merken -- sonst kommt beim
+            # Undo immer ein FULL-Stich zurück, egal welche Ausrichtung der
+            # entfernte Stich hatte (vgl. PlaceStitchCommand, das das schon
+            # richtig macht).
+            self._old_stitch_type = layer.get_stitch_type(self._x, self._y)
             layer.remove_stitch(self._x, self._y)
             # Stichzahl reduzieren
             if 0 <= old_stitch < len(self._pattern.color_entries):
@@ -238,7 +244,9 @@ class RemoveStitchCommand(Command):
         """Stellt den entfernten Stich wieder her."""
         if self._old_color_index is not None:
             layer = self._pattern.layer_stack[self._layer_index]
-            layer.set_stitch(self._x, self._y, self._old_color_index)
+            layer.set_stitch(
+                self._x, self._y, self._old_color_index, stitch_type=self._old_stitch_type
+            )
             # Stichzahl wiederherstellen
             if 0 <= self._old_color_index < len(self._pattern.color_entries):
                 self._pattern.color_entries[self._old_color_index].stitch_count += 1
@@ -406,6 +414,96 @@ class RemoveBackstitchCommand(Command):
         """Gibt 'Rückstich entfernt (x1,y1)->(x2,y2)' zurück."""
         bs = self._backstitch
         return f"Rückstich entfernt ({bs.x1},{bs.y1})->({bs.x2},{bs.y2})"
+
+
+class LayerSnapshotCommand(Command):
+    """
+    Command für Operationen, die eine unbekannte Anzahl Zellen einer Ebene
+    auf nicht vorhersehbare Weise verändern (z.B. Plugins) -- snapshot-
+    basiert statt zellweise, weil die genauen Änderungen vor der
+    Ausführung nicht bekannt sind.
+
+    Nimmt vor der Ausführung einen Snapshot von Grid/Stitch-Type/
+    Completion der Ziel-Ebene sowie der stitch_count-Werte aller Farben,
+    ruft dann `action` auf und stellt bei undo() den kompletten Vorher-
+    Zustand wieder her. Bei Redo wird NICHT `action` erneut aufgerufen
+    (das würde z.B. bei einem interaktiven Plugin erneut nach Eingaben
+    fragen) -- stattdessen wird der beim ersten execute() aufgezeichnete
+    Nachher-Zustand einfach wiederhergestellt.
+
+    Bekannte Einschränkung: geht davon aus, dass `action` weder Farben
+    hinzufügt/entfernt noch Ebenen hinzufügt/entfernt -- gilt für alle
+    aktuellen Builtin-Plugins (die nur `pattern.set_stitch()` aufrufen).
+
+    Example:
+        >>> cmd = LayerSnapshotCommand(pattern, layer_index=0,
+        ...     action=lambda: run_plugin(plugin, pattern, ctx),
+        ...     description_text="Plugin: Schachbrett")
+        >>> undo_manager.execute(cmd)
+    """
+
+    def __init__(
+        self,
+        pattern: "Pattern",
+        layer_index: int,
+        action: Callable[[], Any],
+        description_text: str = "Aktion",
+    ) -> None:
+        self._pattern = pattern
+        self._layer_index = layer_index
+        self._action = action
+        self._description_text = description_text
+        self._before: tuple[np.ndarray, np.ndarray, np.ndarray, list[int]] | None = None
+        self._after: tuple[np.ndarray, np.ndarray, np.ndarray, list[int]] | None = None
+        self.result: Any = None
+
+    def _snapshot(self, layer) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[int]]:
+        return (
+            layer.grid.copy(),
+            layer.stitch_type_grid.copy(),
+            layer.completion_grid.copy(),
+            [e.stitch_count for e in self._pattern.color_entries],
+        )
+
+    def _restore(
+        self, layer, snapshot: tuple[np.ndarray, np.ndarray, np.ndarray, list[int]]
+    ) -> None:
+        grid, stitch_type_grid, completion_grid, stitch_counts = snapshot
+        layer.grid[:] = grid
+        layer.stitch_type_grid[:] = stitch_type_grid
+        layer.completion_grid[:] = completion_grid
+        for entry, count in zip(self._pattern.color_entries, stitch_counts):
+            entry.stitch_count = count
+
+    def execute(self) -> None:
+        """Erster Aufruf: führt `action` aus. Bei Redo: stellt nur den
+        aufgezeichneten Nachher-Zustand wieder her (kein erneuter Aufruf)."""
+        layer = self._pattern.layer_stack[self._layer_index]
+        if self._before is None:
+            self._before = self._snapshot(layer)
+            try:
+                self.result = self._action()
+            except Exception:
+                # `action` (z.B. ein Plugin) kann nach teilweiser Mutation
+                # abstuerzen -- ohne Rollback bliebe das Pattern in einem
+                # halb-veraenderten Zustand haengen, ohne dass ein Undo-
+                # Eintrag existiert, der das rueckgaengig machen koennte.
+                self._restore(layer, self._before)
+                raise
+            self._after = self._snapshot(layer)
+        else:
+            assert self._after is not None
+            self._restore(layer, self._after)
+
+    def undo(self) -> None:
+        """Stellt den Zustand vor `action` wieder her."""
+        assert self._before is not None
+        layer = self._pattern.layer_stack[self._layer_index]
+        self._restore(layer, self._before)
+
+    @property
+    def description(self) -> str:
+        return self._description_text
 
 
 class ClearLayerCommand(Command):

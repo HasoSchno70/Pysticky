@@ -72,7 +72,20 @@ class Inventory:
         if isinstance(raw, dict):
             stock = raw.get("stock", raw)  # Backward-compat: flat oder wrapped
             if isinstance(stock, dict):
-                self._data = {str(k): int(v) for k, v in stock.items() if v is not None}
+                data: dict[str, int] = {}
+                for k, v in stock.items():
+                    if v is None:
+                        continue
+                    try:
+                        data[str(k)] = int(v)
+                    except (TypeError, ValueError):
+                        # Einzelner kaputter Wert (z.B. hand-editierte Datei
+                        # mit "abc" statt einer Zahl) ueberspringen statt die
+                        # ganze Vorratsliste an einem Eintrag scheitern zu
+                        # lassen -- vorher liess ein ungueltiger Wert den
+                        # Statistik-Dialog/Einkaufsliste-Tab komplett crashen.
+                        continue
+                self._data = data
 
     def save(self) -> None:
         """Schreibt die Inventory zurück auf die Platte."""

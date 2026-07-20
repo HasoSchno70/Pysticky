@@ -48,6 +48,30 @@ def test_stop_with_negative_delta_clamps_to_zero(empty_pattern):
     assert session_timer.get_total_seconds(empty_pattern) == 0
 
 
+def test_stop_discards_implausibly_long_stale_session(empty_pattern):
+    """Regression: stop_session() wird nur ueber closeEvent()/den Sticken-
+    Modus-Toggle aufgerufen -- ein Crash dazwischen laesst last_session_start
+    im Pattern stehen. Wird die Datei Tage spaeter geoeffnet und die Session
+    dann regulaer beendet, darf diese riesige (unplausible) Differenz NICHT
+    als echte Stickzeit in die Gesamtsumme einfliessen."""
+    session_timer.start_session(empty_pattern, now=0.0)
+    two_days_later = 2 * 24 * 3600
+    elapsed = session_timer.stop_session(empty_pattern, now=two_days_later)
+    assert elapsed == 0
+    assert session_timer.get_total_seconds(empty_pattern) == 0
+    assert not session_timer.is_session_active(empty_pattern)  # trotzdem sauber geschlossen
+
+
+def test_stop_accepts_session_just_under_plausible_cap(empty_pattern):
+    """Grenzfall: eine sehr lange, aber noch plausible Sitzung (< 12h) wird
+    weiterhin normal gezaehlt -- die Kappung darf nicht zu aggressiv sein."""
+    session_timer.start_session(empty_pattern, now=0.0)
+    just_under_cap = session_timer.MAX_PLAUSIBLE_SESSION_SECONDS - 1
+    elapsed = session_timer.stop_session(empty_pattern, now=just_under_cap)
+    assert elapsed == just_under_cap
+    assert session_timer.get_total_seconds(empty_pattern) == just_under_cap
+
+
 @pytest.mark.parametrize(
     "seconds,expected",
     [

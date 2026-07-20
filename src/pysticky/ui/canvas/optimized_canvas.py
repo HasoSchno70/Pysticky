@@ -200,6 +200,8 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         use_fabric_texture = not diamond_view and self._show_fabric_texture and self._cell_size >= 6
         fabric_pixmap = self._get_fabric_pixmap() if use_fabric_texture else None
 
+        colorblind_mode = getattr(self, "_colorblind_mode", None)
+
         for cy in range(start_cy, end_cy):
             for cx in range(start_cx, end_cx):
                 # Cache prüfen
@@ -214,6 +216,8 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                     self._dim_other_layers,
                     use_fabric_texture,
                     diamond_view,
+                    self._empty_color,
+                    colorblind_mode,
                 )
 
                 if pixmap is None:
@@ -233,6 +237,7 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                         self._get_symbol_font(),
                         fabric_pixmap,
                         diamond_view,
+                        colorblind_mode,
                     )
                     self._perf_manager.cache_chunk(
                         cx,
@@ -245,6 +250,8 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                         self._dim_other_layers,
                         use_fabric_texture,
                         diamond_view,
+                        self._empty_color,
+                        colorblind_mode,
                     )
 
                 # Chunk zeichnen

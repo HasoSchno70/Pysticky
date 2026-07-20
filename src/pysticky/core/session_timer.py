@@ -25,6 +25,14 @@ if TYPE_CHECKING:
 META_TOTAL = "total_stitch_seconds"
 META_START = "last_session_start"
 
+# stop_session() läuft nur über closeEvent()/den Sticken-Modus-Toggle. Ein
+# Crash/Kill dazwischen lässt META_START im gespeicherten Pattern stehen;
+# beim nächsten echten stop_session() (Tage später) würde die Differenz
+# sonst als riesige, aber komplett unplausible Dauer in total_stitch_seconds
+# einfließen. Eine einzelne Sitzung länger als das hier ist praktisch immer
+# ein Hinweis auf genau diesen Fall, nicht auf echte Stickzeit.
+MAX_PLAUSIBLE_SESSION_SECONDS = 12 * 3600  # 12h
+
 
 def get_total_seconds(pattern: "Pattern") -> int:
     """Liefert die kumulierte Stick-Zeit (ohne aktuelle laufende Session)."""
@@ -54,6 +62,11 @@ def stop_session(pattern: "Pattern", now: float | None = None) -> int:
         return 0
     end = float(now if now is not None else time.time())
     elapsed = max(0, int(end - float(start)))
+    if elapsed > MAX_PLAUSIBLE_SESSION_SECONDS:
+        # Vermutlich ein liegen gebliebener Zeitstempel aus einem
+        # abgestürzten Prozess, keine echte Stickzeit -- verwerfen statt
+        # eine Bogus-Dauer in die Gesamtsumme einzurechnen.
+        return 0
     pattern.metadata[META_TOTAL] = get_total_seconds(pattern) + elapsed
     return elapsed
 

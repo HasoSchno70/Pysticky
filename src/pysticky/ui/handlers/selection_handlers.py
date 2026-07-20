@@ -58,11 +58,12 @@ class SelectionHandlersMixin:
             return
 
         self.canvas.batch_started.emit(batch_message)
-        for x, y, color_idx in changes:
-            if color_idx is None:
-                self.canvas.stitch_removed.emit(x, y)
-            else:
-                self.canvas.stitch_placed.emit(x, y, color_idx)
+        # _apply_changes() statt manuellem Signal-Loop -- ruft u.a.
+        # invalidate_cell() auf. Ohne das blieb der Chunk-Pixmap-Cache
+        # (OptimizedCrossStitchCanvas, >200x200 Muster) fuer Rotate/Flip/
+        # Fill/Delete/Cut auf einer Auswahl stur beim alten Chunk-Bild,
+        # obwohl Daten + Undo-Historie korrekt waren.
+        self.canvas._apply_changes(changes)
         self.canvas.batch_ended.emit()
         self.canvas.update()
         self.status_bar.showMessage(status_template.format(n=len(changes)), self._status_timeout_ms)
