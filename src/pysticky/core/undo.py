@@ -26,9 +26,13 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 
+from ..utils.logging import get_logger
+
 if TYPE_CHECKING:
     from .backstitch_manager import Backstitch
     from .pattern import Pattern
+
+logger = get_logger(__name__)
 
 
 class Command(ABC):
@@ -762,6 +766,18 @@ class UndoManager:
         Note:
             Muss mit end_batch() oder cancel_batch() beendet werden.
         """
+        if self._batch_command is not None:
+            # Re-entranter Aufruf: die vorige Batch wurde nie mit
+            # end_batch()/cancel_batch() beendet. Ohne das hier wuerden
+            # deren bereits ausgefuehrte Sub-Commands (add_to_batch()
+            # fuehrt sofort aus) komplett aus der Undo-Historie
+            # verschwinden, obwohl ihre Grid-Mutationen laengst passiert
+            # sind -- also die alte Batch zuerst regulaer committen.
+            logger.warning(
+                "begin_batch() re-entrant aufgerufen, waehrend eine Batch "
+                "noch offen war -- vorige Batch wird jetzt committet."
+            )
+            self.end_batch()
         if self._pattern:
             self._batch_command = BatchStitchCommand(self._pattern, description)
 

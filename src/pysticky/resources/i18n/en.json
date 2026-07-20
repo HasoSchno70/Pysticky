@@ -1097,6 +1097,7 @@
   "Ebenen vereinen": "Merge layers",
   "Gesperrte Ebenen können nicht vereint werden.\n\nBitte entsperre zuerst die betroffene(n) Ebene(n).": "Locked layers cannot be merged.\n\nPlease unlock the affected layer(s) first.",
   "Mindestens eine Ebene erforderlich.": "At least one layer is required.",
+  "Dies leert außerdem den Rückgängig-Verlauf.": "This also clears the undo history.",
   "Ebene löschen": "Delete layer",
   "Leeren": "Clear",
   "Ebene leeren": "Clear layer",

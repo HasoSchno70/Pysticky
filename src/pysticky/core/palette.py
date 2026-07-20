@@ -141,6 +141,21 @@ class PaletteManager:
         if not data:
             return
 
+        # Struktur validieren, BEVOR data[0]/first_entry.keys() darauf
+        # zugreifen -- eine strukturell falsch geformte (aber syntaktisch
+        # gueltige) JSON-Datei (z.B. ein Objekt statt einer Liste, oder eine
+        # Liste mit Nicht-Dict-Eintraegen) wuerde sonst mit KeyError/
+        # AttributeError/TypeError abstuerzen, was load_all()'s except-
+        # Tuple nicht faengt -- und dabei das GESAMTE Laden weiterer
+        # Palettendateien in derselben glob()-Schleife abbrechen, nicht nur
+        # diese eine Datei (gleiche Fehlerklasse wie der pat_import.py-
+        # Groessenlimit- und Inventory._load-Fund).
+        if not isinstance(data, list) or not all(isinstance(entry, dict) for entry in data):
+            raise ValueError(
+                f"Erwartete Liste von Farb-Objekten in {file_path.name}, "
+                f"bekam: {type(data).__name__}"
+            )
+
         # Herstellernamen aus Dateinamen extrahieren
         filename = file_path.stem
         # "DMC_Farben" -> "DMC"

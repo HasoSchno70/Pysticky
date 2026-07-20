@@ -16,6 +16,7 @@ Format-Versionen:
     - 1.3: Stichtypen pro Layer (stitch_types)
     - 1.4: Layer-Notizen (note); Pattern-Metadaten total_stitch_seconds
            und last_session_start für Sticken-Modus-Sessions
+    - 1.5: Pattern.mode ("stitch"/"diamond"); Diamond-Stitch-Type (11)
 
 Example:
     >>> from pysticky.core import save_pattern, load_pattern, Pattern
@@ -25,6 +26,7 @@ Example:
 """
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -36,7 +38,7 @@ from .pattern import ColorEntry, Pattern
 from .thread import Thread
 
 # Dateiformat-Version
-FORMAT_VERSION = "1.4"
+FORMAT_VERSION = "1.5"
 """Aktuelle Version des .pxs Dateiformats."""
 
 
@@ -67,8 +69,24 @@ def save_pattern(pattern: Pattern, filepath: Path | str) -> None:
         "pattern": _pattern_to_dict(pattern),
     }
 
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    # Atomar schreiben: erst in eine Temp-Datei, dann per os.replace() (auf
+    # POSIX UND Windows atomar, anders als os.rename()) an die Zielposition
+    # verschieben. Ohne das wuerde ein Crash/Stromausfall mitten in
+    # json.dump() die eigentliche Musterdatei truncated/korrupt
+    # zuruecklassen -- Autosave (autosave_handlers.py) hat dieses Risiko
+    # schon lange vermieden, der manuelle Speichern/Speichern-unter-Pfad
+    # (der weitaus meistgenutzte) bislang nicht.
+    temp_path = filepath.with_name(filepath.name + ".tmp")
+    try:
+        with open(temp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(temp_path, filepath)
+    except BaseException:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
 
 
 def load_pattern(filepath: Path | str) -> Pattern:

@@ -311,6 +311,34 @@ class TestPaletteManager:
         results = manager.find_color_across_palettes(red, max_per_palette=2)
         assert len(results) > 0
 
+    def test_malformed_palette_file_does_not_abort_loading_other_files(self, tmp_path):
+        """Regression: eine strukturell falsch geformte (aber syntaktisch
+        gueltige) Palettendatei -- z.B. ein Objekt statt einer Liste --
+        stuerzte load_all() mit KeyError/AttributeError ab, was das except-
+        Tuple nicht fing. Das brach die komplette glob()-Schleife ab und
+        liess ALLE nachfolgenden Palettendateien unladen, nicht nur die
+        kaputte."""
+        import json
+
+        (tmp_path / "Kaputt_Farben.json").write_text(
+            json.dumps({"not": "a list"}), encoding="utf-8"
+        )
+        (tmp_path / "Auch_Kaputt_Farben.json").write_text(
+            json.dumps(["not", "dicts"]), encoding="utf-8"
+        )
+        (tmp_path / "Gut_Farben.json").write_text(
+            json.dumps([{"Name": "Rot", "Number": "1", "Color": {"R": 255, "G": 0, "B": 0}}]),
+            encoding="utf-8",
+        )
+
+        manager = PaletteManager()
+        manager._palettes_dir = tmp_path
+        manager.load_all()  # darf NICHT crashen
+
+        assert manager.get_palette("Gut") is not None
+        assert manager.get_palette("Kaputt") is None
+        assert manager.get_palette("Auch Kaputt") is None
+
 
 class TestPaletteManagerSingleton:
     """Tests für den Singleton."""

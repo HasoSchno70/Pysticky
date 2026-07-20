@@ -169,6 +169,46 @@ class TestFileIO:
         with pytest.raises(Exception):  # json.JSONDecodeError oder ähnlich
             load_pattern(str(filepath))
 
+    def test_save_is_atomic_no_leftover_tmp_file(self, tmp_path):
+        """Regression: save_pattern() schrieb frueher direkt in die
+        Zieldatei -- ein Crash mitten in json.dump() haette die echte
+        Musterdatei truncated/korrupt zurueckgelassen. Jetzt: Temp-Datei +
+        os.replace(), kein sichtbares .tmp nach erfolgreichem Speichern."""
+        pattern = Pattern(name="Atomic-Test", width=10, height=10)
+        filepath = tmp_path / "atomic.pxs"
+
+        save_pattern(pattern, str(filepath))
+
+        assert filepath.exists()
+        assert not filepath.with_name(filepath.name + ".tmp").exists()
+
+    def test_save_failure_leaves_original_file_untouched(self, tmp_path, monkeypatch):
+        """Schlaegt der Schreibvorgang fehl (z.B. Platte voll mitten im
+        json.dump), muss die bereits vorhandene Datei unveraendert bleiben --
+        NICHT truncated/korrupt sein. Simuliert per monkeypatch auf
+        os.replace(), das erst nach vollstaendigem Schreiben der Temp-Datei
+        aufgerufen wird."""
+        import os as os_module
+
+        pattern = Pattern(name="Original", width=10, height=10)
+        filepath = tmp_path / "existing.pxs"
+        save_pattern(pattern, str(filepath))
+        original_content = filepath.read_text(encoding="utf-8")
+
+        def boom(*args, **kwargs):
+            raise OSError("Platte voll (simuliert)")
+
+        monkeypatch.setattr(os_module, "replace", boom)
+
+        modified_pattern = Pattern(name="Sollte nie ankommen", width=10, height=10)
+        with pytest.raises(OSError):
+            save_pattern(modified_pattern, str(filepath))
+
+        # Originaldatei unveraendert -- kein Datenverlust
+        assert filepath.read_text(encoding="utf-8") == original_content
+        # Keine liegen gebliebene Temp-Datei
+        assert not filepath.with_name(filepath.name + ".tmp").exists()
+
 
 class TestPatternMetadata:
     """Tests für Muster-Metadaten."""

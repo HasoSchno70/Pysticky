@@ -505,6 +505,14 @@ class LayerPanel(QWidget):
 
     layer_selected = Signal(int)
     layers_changed = Signal()
+    # Eigenes Signal fuer Struktur-Aenderungen (Ebene hinzugefuegt/entfernt/
+    # dupliziert/verschoben/vereint) -- anders als layers_changed (auch fuer
+    # harmlose Property-Aenderungen wie Deckkraft/Notiz/Sichtbarkeit) aendert
+    # das die Layer-Indizes im Stack, gegen die bereits ausgefuehrte Undo-
+    # Commands (PlaceStitchCommand etc.) einen festen `layer_index` halten.
+    # MainWindow muss darauf den Undo-Stack leeren, sonst zeigt ein spaeteres
+    # Undo/Redo auf eine falsche oder nicht mehr existierende Ebene.
+    layer_structure_changed = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -732,6 +740,7 @@ class LayerPanel(QWidget):
         if self._layer_stack.move_layer_to(from_actual, to_actual):
             self._refresh_list()
             self.layers_changed.emit()
+            self.layer_structure_changed.emit()
 
     def _on_layers_merge_requested(self, source_display: int, target_display: int) -> None:
         """Handler für Layer-Zusammenführung per Drag & Drop."""
@@ -758,7 +767,8 @@ class LayerPanel(QWidget):
             self,
             t("Ebenen vereinen"),
             f"'{source_layer.name}' mit '{target_layer.name}' vereinen?\n\n"
-            f"Die Stiche von '{source_layer.name}' werden auf '{target_layer.name}' übertragen.",
+            f"Die Stiche von '{source_layer.name}' werden auf '{target_layer.name}' übertragen.\n\n"
+            + t("Dies leert außerdem den Rückgängig-Verlauf."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -766,6 +776,7 @@ class LayerPanel(QWidget):
             if self._layer_stack.merge_layers(source_actual, target_actual):
                 self._refresh_list()
                 self.layers_changed.emit()
+                self.layer_structure_changed.emit()
 
     def _on_selection_changed(self, display_index: int) -> None:
         """Handler für Auswahländerung in der Layer-Liste."""
@@ -849,6 +860,7 @@ class LayerPanel(QWidget):
             self._layer_stack.add_layer(name)
             self._refresh_list()
             self.layers_changed.emit()
+            self.layer_structure_changed.emit()
 
     def _on_remove_layer(self) -> None:
         """Entfernt die ausgewählte Ebene."""
@@ -863,13 +875,14 @@ class LayerPanel(QWidget):
         reply = QMessageBox.question(
             self,
             t("Ebene löschen"),
-            f"'{layer.name}' löschen?",
+            f"'{layer.name}' löschen?\n\n" + t("Dies leert außerdem den Rückgängig-Verlauf."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
             self._layer_stack.remove_layer(actual_idx)
             self._refresh_list()
             self.layers_changed.emit()
+            self.layer_structure_changed.emit()
 
     def _on_duplicate_layer(self) -> None:
         """Dupliziert die ausgewählte Ebene."""
@@ -880,6 +893,7 @@ class LayerPanel(QWidget):
         self._layer_stack.duplicate_layer(actual_idx)
         self._refresh_list()
         self.layers_changed.emit()
+        self.layer_structure_changed.emit()
 
     def _show_context_menu(self, pos: QPoint) -> None:
         """Zeigt das Kontextmenü für die Layer-Liste."""

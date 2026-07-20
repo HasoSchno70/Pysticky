@@ -134,6 +134,36 @@ class TestBatchCommand:
 
         assert batch.is_empty is False
 
+    def test_reentrant_begin_batch_commits_previous_batch_instead_of_losing_it(self):
+        """Regression: ruft begin_batch() ein zweites Mal auf, WAEHREND eine
+        vorige Batch noch offen ist (nie mit end_batch()/cancel_batch()
+        beendet), ueberschrieb das frueher stillschweigend die Referenz auf
+        die alte Batch -- deren bereits ausgefuehrte Sub-Commands (via
+        add_to_batch()) verschwanden komplett aus der Undo-Historie, obwohl
+        ihre Grid-Mutation laengst passiert war."""
+        pattern = Pattern(width=10, height=10)
+        undo = UndoManager()
+        undo.set_pattern(pattern)
+
+        undo.begin_batch("Erste Batch")
+        undo.add_to_batch(PlaceStitchCommand(pattern, 0, 0, 0, 0))
+        assert pattern.active_layer.get_stitch(0, 0) == 0  # sofort ausgefuehrt
+
+        undo.begin_batch("Zweite Batch")  # re-entrant, ohne end_batch() dazwischen
+        undo.add_to_batch(PlaceStitchCommand(pattern, 1, 1, 0, 0))
+        undo.end_batch()
+
+        # Beide Batches muessen in der Historie sein (die erste committet
+        # durch den Re-Entrant-Guard, die zweite regulaer durch end_batch).
+        assert undo.undo_count == 2
+
+        undo.undo()  # macht die zweite Batch rueckgaengig
+        assert pattern.active_layer.get_stitch(1, 1) is None
+        assert pattern.active_layer.get_stitch(0, 0) == 0  # erste Batch bleibt bestehen
+
+        undo.undo()  # macht die erste Batch rueckgaengig
+        assert pattern.active_layer.get_stitch(0, 0) is None
+
 
 class TestBackstitchCommands:
     """Tests für Rückstich-Commands."""

@@ -255,6 +255,20 @@ class PanelHandlersMixin:
         self._notify_panels(NotifyScope.VISUAL)
         self._mark_unsaved()
 
+    def _on_layer_structure_changed(self: "MainWindow") -> None:
+        """Ebene hinzugefügt/entfernt/dupliziert/verschoben/vereint.
+
+        Bereits ausgeführte Undo-Commands (PlaceStitchCommand etc.) halten
+        einen fest eingebrannten `layer_index` und würden nach einer
+        Struktur-Änderung entweder auf eine falsche Ebene zeigen (bei
+        Verschieben/Hinzufügen/Duplizieren) oder mit IndexError crashen (bei
+        Entfernen/Vereinen, wenn der Stack dadurch kürzer wird) -- Undo-
+        Verlauf muss daher geleert werden, exakt wie bei "Ebenen vereinen"
+        (misc_handlers.py::_on_flatten_layers) bereits gehandhabt.
+        """
+        self.undo_manager.clear()
+        self._update_undo_actions()
+
     def _on_color_picked(self: "MainWindow", color_index: int) -> None:
         """Farbe mit Pipette aufgenommen."""
         from ..tools.tool_enum import Tool
