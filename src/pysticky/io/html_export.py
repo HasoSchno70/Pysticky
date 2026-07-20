@@ -196,9 +196,17 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
         # Statistiken aufbauen
         self._total_stitches = 0
         self._total_skeins = 0
+        # Stiche/Farben ohne die als "nicht sticken" markierten (Stofffarbe)
+        # -- PDF-Export hatte diese Unterscheidung schon (pdf_export.py),
+        # HTML fehlte sie komplett: eine übersprungene Farbe wurde bisher
+        # als ganz normale Farbe exportiert, voll in Summen/Prozenten
+        # gezählt, ohne jede optische Kennzeichnung.
+        self._stitches_to_do = 0
+        self._skipped_colors = 0
 
         for i, entry in enumerate(self.pattern.color_entries):
             count = stitch_counts.get(i, 0)
+            skip = entry.skip_stitching
             # Bead-Farben werden NICHT als Stränge gerechnet — Beads sind Perlen,
             # keine Garn-Stränge. Sie kommen in eine eigene Bead-Sektion.
             if entry.is_bead:
@@ -209,21 +217,28 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
                         "thread": entry.thread,
                         "count": count,
                         "skeins": 0,
+                        "skip": skip,
                         "is_bead": True,
                     }
                 )
                 continue
 
-            if is_dp:
+            if skip:
+                skeins = 0
+                if count > 0:
+                    self._skipped_colors += 1
+            elif is_dp:
                 # Drill-Bedarf = Stiche * 1.10 (10% Reserve für Verluste).
                 # Wir nutzen weiterhin das `skeins`-Feld, damit die HTML/PDF-
                 # Templates nicht mit zwei Datenmodellen rechnen müssen —
                 # die Templates beschriften es modus-spezifisch.
                 skeins = int(count * 1.10) if count > 0 else 0
+                self._stitches_to_do += count
             else:
                 skeins = ceil(count / stitches_per_skein) if count > 0 else 0
                 if count > 1000:
                     skeins += 1  # Extra Strang bei vielen Stichen
+                self._stitches_to_do += count
 
             self._color_stats.append(
                 {
@@ -232,6 +247,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
                     "thread": entry.thread,
                     "count": count,
                     "skeins": skeins,
+                    "skip": skip,
                     "is_bead": False,
                 }
             )

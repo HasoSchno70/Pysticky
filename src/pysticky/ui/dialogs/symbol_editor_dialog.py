@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QVBoxLayout,
@@ -394,7 +395,10 @@ class SymbolEditorDialog(QDialog):
 
     def _on_custom_symbol(self, text: str) -> None:
         """Eigenes Symbol eingegeben."""
-        if text:
+        # Nur Leerzeichen wird sonst als "gueltiges" Symbol akzeptiert und
+        # rendert dann optisch identisch zu einer leeren/nicht gestickten
+        # Zelle -- genauso verwerfen wie einen leeren String.
+        if text and not text.isspace():
             self._selected_symbol = text
             self._preview.set_symbol(text)
 
@@ -405,6 +409,24 @@ class SymbolEditorDialog(QDialog):
     def _on_accept(self) -> None:
         """Änderung übernehmen."""
         if self._selected_symbol != self._entry.symbol:
+            # Kein anderes Symbol im Pattern darf dasselbe Symbol tragen --
+            # dieselbe Invariante, die Pattern.add_color() beim automatischen
+            # Zuweisen schon durchsetzt (used_symbols-Check). Der Editor war
+            # bisher der einzige Weg, sie zu verletzen.
+            duplicate = any(
+                i != self._color_index and entry.symbol == self._selected_symbol
+                for i, entry in enumerate(self._pattern.color_entries)
+            )
+            if duplicate:
+                QMessageBox.warning(
+                    self,
+                    t("Symbol bereits vergeben"),
+                    t(
+                        'Das Symbol "{symbol}" wird schon von einer anderen '
+                        "Farbe verwendet. Bitte ein anderes Symbol wählen."
+                    ).format(symbol=self._selected_symbol),
+                )
+                return
             # Symbol im Pattern ändern
             self._entry.symbol = self._selected_symbol
             self.symbol_changed.emit(self._color_index, self._selected_symbol)

@@ -35,6 +35,8 @@ class _ExportBase:
     _color_stats: list[dict]
     _total_stitches: int
     _total_skeins: int
+    _skipped_colors: int
+    _stitches_to_do: int
     STITCHES_PER_PAGE_X: int
     STITCHES_PER_PAGE_Y: int
 
@@ -74,8 +76,6 @@ class _PDFExportBase(_ExportBase):
     """Zusatz-Interface, das die PDF-Mixins voraussetzen."""
 
     _styles: Any
-    _skipped_colors: int
-    _stitches_to_do: int
     _available_width: float
     _available_height: float
     _page_format_name: str

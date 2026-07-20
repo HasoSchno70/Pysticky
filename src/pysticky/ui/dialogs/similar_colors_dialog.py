@@ -228,6 +228,30 @@ class SimilarColorsDialog(QDialog):
             )
             return
 
+        # Widersprüchliche Auswahl abfangen: taucht dieselbe Farbe (idx_b)
+        # als "wird ersetzt" in mehreren ausgewählten Paaren auf (z.B. Farbe
+        # 5 ist sowohl zu Farbe 0 als auch zu Farbe 3 ähnlich, beide
+        # angehakt), würde die spätere Dedup-Logik eines der beiden lautlos
+        # verwerfen, ohne dass der User das je erfährt.
+        seen_as_source = set()
+        conflicting = False
+        for row in selected:
+            if row.idx_b in seen_as_source:
+                conflicting = True
+                break
+            seen_as_source.add(row.idx_b)
+        if conflicting:
+            QMessageBox.warning(
+                self,
+                t("Widersprüchliche Auswahl"),
+                t(
+                    "Mindestens eine Farbe ist in mehreren ausgewählten Paaren "
+                    "als zu ersetzende Farbe markiert. Bitte pro Farbe nur ein "
+                    "Paar auswählen und erneut versuchen."
+                ),
+            )
+            return
+
         count = len(selected)
         reply = QMessageBox.question(
             self,

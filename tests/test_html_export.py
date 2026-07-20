@@ -149,3 +149,42 @@ def test_html_export_mystery_mode_diamond_cells_have_no_background(tmp_path):
     cell_bg = "background:rgb(255,0,0);'"
     assert cell_bg in normal_content
     assert cell_bg not in mystery_content
+
+
+def test_html_export_marks_skip_stitching_colors(pattern_with_stitches, tmp_path):
+    """Regression: HTML-Export ignorierte skip_stitching komplett (PDF hatte
+    die Unterscheidung schon) -- eine als 'Stofffarbe' markierte Farbe muss
+    in der Legende gekennzeichnet sein und nicht in die 'zu sticken'-Summe
+    einfliessen."""
+    pattern_with_stitches.color_entries[0].skip_stitching = True
+
+    target = tmp_path / "skip.html"
+    HTMLExporter(pattern_with_stitches).export(target)
+    content = target.read_text(encoding="utf-8")
+
+    assert "[⊘]" in content
+    assert "Stofffarbe" in content
+    # "Zu sticken:" statt "Gesamt:" in der Legenden-Summenzeile, sobald
+    # mindestens eine Farbe uebersprungen wird.
+    assert "Zu sticken:" in content
+
+
+def test_html_export_no_skip_marker_when_nothing_skipped(pattern_with_stitches, tmp_path):
+    """Kein Skip-Marker/Footnote, wenn keine Farbe uebersprungen wird (keine
+    falsch-positive Kennzeichnung)."""
+    target = tmp_path / "noskip.html"
+    HTMLExporter(pattern_with_stitches).export(target)
+    content = target.read_text(encoding="utf-8")
+
+    assert "[⊘]" not in content
+    assert "wird nicht gestickt" not in content
+
+
+def test_html_export_stats_base_has_skip_fields():
+    """_ExportBase deklariert jetzt _skipped_colors/_stitches_to_do fuer
+    BEIDE Exporter (vorher nur fuer PDF) -- reiner Typing-/Attribut-Check."""
+    from pysticky.io._export_base import _ExportBase
+
+    assert hasattr(_ExportBase, "__annotations__")
+    assert "_skipped_colors" in _ExportBase.__annotations__
+    assert "_stitches_to_do" in _ExportBase.__annotations__

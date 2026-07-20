@@ -40,11 +40,15 @@ class PDFSectionsMixin(_Base):
         elements = []
 
         from ..core.i18n import t
+        from .export_common import is_diamond_mode
+
+        is_dp = is_diamond_mode(self.pattern)
 
         elements.append(Spacer(1, 30 * mm))
 
-        # Titel
-        elements.append(Paragraph(t("✂ KREUZSTICH-MUSTER"), self._styles["Title1"]))
+        # Titel — modusabhaengig, wie beim HTML-Export (html_export_sections.py)
+        cover_title = t("💎 DIAMOND-PAINTING-VORLAGE") if is_dp else t("✂ KREUZSTICH-MUSTER")
+        elements.append(Paragraph(cover_title, self._styles["Title1"]))
         elements.append(Paragraph(title, self._styles["Title2"]))
 
         # Wasserzeichen (Author + Copyright)
@@ -74,12 +78,15 @@ class PDFSectionsMixin(_Base):
         elements.append(Spacer(1, 15 * mm))
 
         # Info-Tabelle (Terminologie aus export_common)
-        from .export_common import fabric_label_for, is_diamond_mode, terms_for
+        from .export_common import fabric_label_for, terms_for
 
         terms = terms_for(self.pattern)
-        is_dp = is_diamond_mode(self.pattern)
         fabric_name = fabric_label_for(self.pattern)
-        backstitch_count = 0 if is_dp else len(self.pattern.backstitches)
+        # Mystery-Modus: die reine Rückstich-ANZAHL verrät schon Konturen des
+        # Motivs, genau wie beim HTML-Export (html_export_sections.py) ---
+        # deshalb hier ebenfalls unterdrücken, nicht nur im DP-Modus.
+        mystery_mode = getattr(self, "mystery_mode", False)
+        backstitch_count = 0 if (is_dp or mystery_mode) else len(self.pattern.backstitches)
 
         # Farben-Info mit übersprungenen
         colors_text = t("{n} verschiedene").format(n=len(self._color_stats))
@@ -176,8 +183,9 @@ class PDFSectionsMixin(_Base):
         if preview:
             elements.append(preview)
 
-        # Rückstich-Hinweis nur im Stick-Modus
-        if not is_dp and self.pattern.backstitches:
+        # Rückstich-Hinweis nur im Stick-Modus, und nicht im Mystery-Modus
+        # (die Anzahl allein wuerde schon Konturen des Motivs verraten).
+        if not is_dp and not getattr(self, "mystery_mode", False) and self.pattern.backstitches:
             elements.append(Spacer(1, 5 * mm))
             elements.append(
                 Paragraph(

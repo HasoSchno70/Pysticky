@@ -100,3 +100,53 @@ def test_pdf_export_mystery_mode_stitch_and_diamond(tmp_path):
     ok_dp = PDFExporter(dp_pattern, mystery_mode=True, include_path_preview=False).export(target_dp)
     assert ok_dp is True
     assert target_dp.stat().st_size > 0
+
+
+def test_pdf_cover_title_matches_pattern_mode():
+    """Regression: das Deckblatt zeigte immer 'KREUZSTICH-MUSTER', auch im
+    Diamond-Painting-Modus (der HTML-Export unterschied das schon)."""
+    from pysticky.core import Pattern, Thread
+
+    stitch_pattern = Pattern(width=5, height=5)
+    stitch_pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    exp = PDFExporter(stitch_pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    title = exp._create_cover("Titel", "2026-07-19", 10.0, 10.0, 1)[1].text
+    assert "KREUZSTICH" in title
+    assert "DIAMOND-PAINTING" not in title
+
+    dp_pattern = Pattern(width=5, height=5)
+    dp_pattern.mode = "diamond"
+    dp_pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    exp_dp = PDFExporter(dp_pattern, include_path_preview=False)
+    exp_dp._calculate_statistics()
+    title_dp = exp_dp._create_cover("Titel", "2026-07-19", 10.0, 10.0, 1)[1].text
+    assert "DIAMOND-PAINTING" in title_dp
+    assert "KREUZSTICH" not in title_dp
+
+
+def test_pdf_mystery_mode_hides_backstitch_count(tmp_path):
+    """Regression: Mystery-Modus zeigte im PDF (anders als im HTML-Export)
+    weiterhin die exakte Rueckstich-Anzahl auf Deckblatt + Vorschau-Seite --
+    das allein verraet schon Konturen des Motivs."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    pattern.add_backstitch(0, 0, 4, 4, 0)
+    pattern.add_backstitch(0, 4, 4, 0, 0)
+
+    exp = PDFExporter(pattern, mystery_mode=True, include_path_preview=False)
+    exp._calculate_statistics()
+    cover_elements = exp._create_cover("Titel", "2026-07-19", 10.0, 10.0, 1)
+    cover_text = "".join(getattr(e, "text", "") for e in cover_elements)
+    assert "Linien" not in cover_text  # "N Linien" fuer Rueckstiche waere hier
+
+    preview_elements = exp._create_preview("Titel", 10.0, 10.0)
+    preview_text = "".join(getattr(e, "text", "") for e in preview_elements)
+    assert "Linien" not in preview_text

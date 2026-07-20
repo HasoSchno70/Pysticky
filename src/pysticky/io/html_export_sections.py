@@ -317,6 +317,18 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         )
         totals_text = terms["totals_template"].format(n=self._total_stitches)
 
+        # Stofffarben ("nicht sticken") -- PDF-Export unterscheidet Gesamt
+        # (alle Stiche) von "zu sticken" (ohne Stofffarbe); HTML fehlte das.
+        skip_info_row = ""
+        if self._skipped_colors > 0:
+            action_label = t("Zu kleben:") if is_dp else t("Zu sticken:")
+            skip_info_row = (
+                f"<tr><td>&#10010; {action_label}</td>"
+                f"<td>{self._stitches_to_do:,}</td></tr>"
+                f"<tr><td>&#128683; {t('Stofffarbe')}</td>"
+                f"<td>{t('{n} Farbe(n), wird nicht gestickt').format(n=self._skipped_colors)}</td></tr>"
+            )
+
         preview_label_suffix = t(" (inkl. R&uuml;ckstiche)") if backstitch_count > 0 else ""
         backstitch_stat_tile = (
             t(
@@ -363,6 +375,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 <tr><td>&#128207; {t("Fertige Gr&ouml;&szlig;e")}</td><td>{t("{w} &times; {h} cm").format(w=f"{phys_width:.1f}", h=f"{phys_height:.1f}")}</td></tr>
 <tr><td>&#127912; {t("Anzahl Farben")}</td><td>{t("{n} verschiedene Farben").format(n=len(self._color_stats))}</td></tr>
 <tr><td>&#10010; {t("Gesamt")}</td><td>{totals_text}</td></tr>
+{skip_info_row}
 {backstitch_info}
 <tr><td>{terms["supply_icon"]} {terms["supply_label"]}</td><td>{t("ca. {n} {unit}").format(n=self._total_skeins, unit=stats_supply_label)}</td></tr>
 <tr><td>&#128196; {t("Musterseiten")}</td><td>{t("{n} Seiten").format(n=total_pages)}</td></tr>
@@ -495,9 +508,26 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         rows = []
         for i, stat in enumerate(thread_stats, 1):
             thread = stat["thread"]
-            percent = (
-                (stat["count"] * 100.0 / self._total_stitches) if self._total_stitches > 0 else 0
-            )
+            skip = stat.get("skip", False)
+
+            # Prozent nur für nicht-übersprungene Farben, gegen _stitches_to_do
+            # (nicht _total_stitches) -- sonst würden Stofffarben-Stiche den
+            # Nenner verzerren. Gleiche Logik wie der PDF-Export.
+            if skip:
+                percent_str = "-"
+                skeins_str = "-"
+                name_suffix = " [⊘]"
+                row_style = " style='opacity:0.55;'"
+            else:
+                percent = (
+                    (stat["count"] * 100.0 / self._stitches_to_do)
+                    if self._stitches_to_do > 0
+                    else 0
+                )
+                percent_str = f"{percent:.1f}%"
+                skeins_str = str(stat["skeins"])
+                name_suffix = ""
+                row_style = ""
 
             # Cross-Reference-Zellen (eine Spalte pro Ziel-Palette)
             cross_cells = ""
@@ -529,15 +559,15 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             else:
                 thread_label = f"{thread.manufacturer or ''} {thread.catalog_number or ''}".strip()
 
-            rows.append(f"""<tr>
+            rows.append(f"""<tr{row_style}>
 <td>{i}</td>
 <td style='text-align:center;font-size:14px;'><b>{_html_encode(stat["symbol"])}</b></td>
 <td><div class='color-box' style='background:{css_rgb(thread.color.to_tuple())}'></div></td>
 <td><b>{_html_encode(thread_label)}</b></td>
-<td>{_html_encode(thread.name)}</td>
+<td>{_html_encode(thread.name)}{name_suffix}</td>
 {cross_cells}<td style='text-align:right;'>{stat["count"]}</td>
-<td style='text-align:right;'>{percent:.1f}%</td>
-<td style='text-align:center;font-weight:bold;'>{stat["skeins"]}</td>
+<td style='text-align:right;'>{percent_str}</td>
+<td style='text-align:center;font-weight:bold;'>{skeins_str}</td>
 </tr>""")
 
         # Summenzeile wird unten modus-spezifisch separat angehängt
@@ -627,19 +657,35 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         rows_html = "".join(rows)
         summary_colspan = 5 + len(cross_ref_palettes)
 
-        # Summary-Row neu bauen (wir brauchen modus-spezifischen colspan)
+        # Summary-Row neu bauen (wir brauchen modus-spezifischen colspan).
+        # Bei Stofffarben zeigt die Zeile "Zu sticken:"/_stitches_to_do statt
+        # "Gesamt:"/_total_stitches -- gleiche Logik wie der PDF-Export.
+        if self._skipped_colors > 0:
+            summary_label = t("Zu kleben:") if is_dp else t("Zu sticken:")
+            summary_stitches = self._stitches_to_do
+        else:
+            summary_label = t("Gesamt:")
+            summary_stitches = self._total_stitches
+
         summary_row = f"""<tr style='background:#e8f4fc;font-weight:bold;'>
-<td colspan='{summary_colspan}' style='text-align:right;'>{t("Gesamt:")}</td>
-<td style='text-align:right;'>{self._total_stitches}</td>
+<td colspan='{summary_colspan}' style='text-align:right;'>{summary_label}</td>
+<td style='text-align:right;'>{summary_stitches}</td>
 <td style='text-align:right;'>100%</td>
 <td style='text-align:center;'>{self._total_skeins}</td>
 </tr>"""
+
+        skip_footnote = (
+            f"<p style='color:#ff9800;font-size:12px;'>&#8856; = "
+            f"{t('Stofffarbe, wird nicht gestickt')}</p>"
+            if self._skipped_colors > 0
+            else ""
+        )
 
         legend_summary_line = t(
             "{n} Farben &middot; {stitches} {unit} &middot; ca. {supply_n} {supply_unit} ben&ouml;tigt"
         ).format(
             n=len(thread_stats),
-            stitches=self._total_stitches,
+            stitches=summary_stitches,
             unit=unit_col,
             supply_n=self._total_skeins,
             supply_unit=supply_col,
@@ -655,6 +701,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 {rows_html}
 {summary_row}
 </table>
+{skip_footnote}
 {backstitch_section}
 {bead_section}
 </div>"""
@@ -758,8 +805,16 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             page_cells.append("</tr>")
 
         overview_summary_line = t(
-            "{total} Musterseiten &middot; {px} Spalten &times; {py} Zeilen &middot; je 40&times;40 {unit}"
-        ).format(total=total_pages, px=pages_x, py=pages_y, unit=overview_unit_label)
+            "{total} Musterseiten &middot; {px} Spalten &times; {py} Zeilen &middot; "
+            "je {psx}&times;{psy} {unit}"
+        ).format(
+            total=total_pages,
+            px=pages_x,
+            py=pages_y,
+            psx=self.STITCHES_PER_PAGE_X,
+            psy=self.STITCHES_PER_PAGE_Y,
+            unit=overview_unit_label,
+        )
 
         overview_backstitch_note = (
             t(
@@ -768,6 +823,12 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             ).format(n=len(self.pattern.backstitches))
             if self.pattern.backstitches
             else ""
+        )
+
+        page_format_text = t(
+            "Jede Seite zeigt einen Bereich von {psx}&times;{psy} {unit} mit 10er-Rasterlinien."
+        ).format(
+            psx=self.STITCHES_PER_PAGE_X, psy=self.STITCHES_PER_PAGE_Y, unit=overview_unit_label
         )
 
         return f"""
@@ -801,7 +862,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
 
 <div class='overview-info'>
 <p><strong>&#128161; {t("Tipp:")}</strong> {t("Klicken Sie auf eine Seitennummer um direkt zur entsprechenden Musterseite zu springen.")}</p>
-<p><strong>&#128209; {t("Seitenformat:")}</strong> {t("Jede Seite zeigt einen Bereich von 40&times;40 Stichen mit 10er-Rasterlinien.")}</p>
+<p><strong>&#128209; {t("Seitenformat:")}</strong> {page_format_text}</p>
 {overview_backstitch_note}
 </div>
 </div>"""
