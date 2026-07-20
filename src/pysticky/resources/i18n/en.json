@@ -937,6 +937,8 @@
   "Alle konvertieren": "Convert all",
   "Ändern": "Change",
   "Fehlende Zuordnungen": "Missing assignments",
+  "Mehrfachzuordnung": "Duplicate assignment",
+  "Mehrere Quellfarben werden auf dieselbe Zielfarbe abgebildet:\n\n{details}\n\nDas Muster enthält danach nicht mehr unterscheidbare Farbeinträge. Trotzdem fortfahren?": "Multiple source colors map to the same target color:\n\n{details}\n\nThe pattern will then contain color entries that are no longer distinguishable. Continue anyway?",
   "Schlechte Zuordnungen": "Poor assignments",
   "Vereinen": "Flatten",
   "Alle Ebenen vereinen?\nDies kann nicht rückgängig gemacht werden.": "Flatten all layers?\nThis cannot be undone.",

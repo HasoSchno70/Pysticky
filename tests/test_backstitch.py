@@ -66,6 +66,24 @@ class TestBackstitchManager:
         fake = Backstitch(99, 99, 99, 99, 99)
         assert mgr.remove(fake) is False
 
+    def test_remove_uses_identity_not_value_equality(self):
+        """Regression: zwei wertgleiche, aber unterschiedliche Backstitch-
+        Instanzen (z.B. zweimal dieselbe Linie gezeichnet) muessen von
+        remove() unterschieden werden -- remove(bs_a) darf NICHT
+        stattdessen die wertgleiche bs_b loeschen (list.remove()/`in`
+        nutzen sonst Backstitch's automatisch generiertes wertbasiertes
+        __eq__, nicht Objekt-Identitaet)."""
+        mgr = BackstitchManager()
+        bs_a = mgr.add(0, 0, 4, 4, 0)
+        bs_b = Backstitch(0, 0, 4, 4, 0)  # wertgleich zu bs_a, aber eigenes Objekt
+        mgr._backstitches.append(bs_b)
+        assert mgr.count() == 2
+
+        assert mgr.remove(bs_a) is True
+
+        assert mgr.count() == 1
+        assert mgr.backstitches[0] is bs_b  # bs_b muss ueberleben, nicht bs_a
+
     def test_remove_at(self):
         """Test: Backstitch an Position entfernen."""
         mgr = BackstitchManager()

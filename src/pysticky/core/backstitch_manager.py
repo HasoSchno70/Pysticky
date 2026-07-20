@@ -173,10 +173,22 @@ class BackstitchManager:
 
         Returns:
             True wenn gefunden und entfernt, False wenn nicht gefunden
+
+        Note:
+            Vergleicht per Objekt-Identität, nicht per Wert. `Backstitch`
+            ist ein normales (nicht-frozen) Dataclass mit wertbasiertem
+            `__eq__` -- `in`/`list.remove()` haetten zwei Rueckstiche mit
+            identischen Koordinaten+Farbe (z.B. zweimal dieselbe Linie
+            gezeichnet) nicht unterscheiden koennen und potenziell die
+            FALSCHE, aber wertgleiche Instanz geloescht. Beide Aufrufer
+            (undo.py) uebergeben ohnehin immer die exakte Instanz, die sie
+            selbst zuvor erhalten haben -- Identitaet ist hier die
+            eigentlich gemeinte Semantik.
         """
-        if backstitch in self._backstitches:
-            self._backstitches.remove(backstitch)
-            return True
+        for i, existing in enumerate(self._backstitches):
+            if existing is backstitch:
+                del self._backstitches[i]
+                return True
         return False
 
     def remove_at(self, x: int, y: int, tolerance: int = 1) -> Backstitch | None:

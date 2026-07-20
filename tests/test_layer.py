@@ -267,6 +267,16 @@ class TestLayerStackAdvanced:
         assert flat.get_stitch(0, 0) == 1
         assert flat.get_stitch(2, 2) == 3
 
+    def test_flatten_preserves_stitch_type(self):
+        """Regression: flatten() kopierte grid+completion_grid, aber nicht
+        stitch_type_grid -- ein Halb-/Viertelstich wurde beim Zusammenführen
+        stillschweigend zu einem vollen Stich (Typ 0)."""
+        stack = LayerStack(10, 10)
+        stack.layers[0].set_stitch(0, 0, 1, stitch_type=2)  # HALF_TR_BL o.ae.
+
+        flat = stack.flatten()
+        assert flat.get_stitch_type(0, 0) == 2
+
     def test_replace_all_layers(self):
         """Test: Alle Ebenen ersetzen."""
         stack = LayerStack(10, 10)
@@ -298,6 +308,26 @@ class TestLayerStackAdvanced:
         assert len(stack) == 1
         assert stack.layers[0].get_stitch(0, 0) == 1
         assert stack.layers[0].get_stitch(1, 1) == 2
+
+    def test_merge_down_preserves_stitch_type(self):
+        """Regression: merge_down() kopierte grid+completion_grid, aber
+        nicht stitch_type_grid vom oberen aufs untere Layer."""
+        stack = LayerStack(10, 10)
+        stack.add_layer("Oben")
+        stack.layers[1].set_stitch(1, 1, 2, stitch_type=3)
+        stack.merge_down(1)
+        assert stack.layers[0].get_stitch_type(1, 1) == 3
+
+    def test_merge_layers_preserves_stitch_type(self):
+        """Regression: merge_layers() (Drag&Drop-Vereinen im UI, siehe
+        layer_panel.py) kopierte grid+completion_grid, aber nicht
+        stitch_type_grid vom Source aufs Target-Layer."""
+        stack = LayerStack(10, 10)
+        stack.add_layer("Ziel")
+        stack.layers[0].set_stitch(3, 3, 1, stitch_type=1)
+        result = stack.merge_layers(source_index=0, target_index=1)
+        assert result is True
+        assert stack.layers[0].get_stitch_type(3, 3) == 1
 
     def test_get_composite_grid(self):
         """Test: Composite Grid erstellen."""

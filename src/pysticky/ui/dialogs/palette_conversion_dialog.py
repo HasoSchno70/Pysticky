@@ -458,6 +458,35 @@ class PaletteConversionDialog(QDialog):
             )
             return
 
+        # Mehrfachzuordnung warnen: mehrere Quellfarben auf dasselbe Zielgarn
+        # gemappt ergibt zwei nicht mehr unterscheidbare Farbeintraege im
+        # Muster -- gleiche Lehre wie similar_colors_dialog.py's Merge-
+        # Konflikt-Check (dort schon gefixt, hier nie ergaenzt worden).
+        targets_seen: dict[tuple, list[str]] = {}
+        for m in self._mapping:
+            target = m["target_thread"]
+            if target is None:
+                continue
+            key = (target.manufacturer, target.catalog_number, target.name)
+            targets_seen.setdefault(key, []).append(m["entry"].thread.name)
+
+        collisions = [names for names in targets_seen.values() if len(names) > 1]
+        if collisions:
+            details = "\n".join(f"- {', '.join(names)}" for names in collisions)
+            reply = QMessageBox.question(
+                self,
+                t("Mehrfachzuordnung"),
+                t(
+                    "Mehrere Quellfarben werden auf dieselbe Zielfarbe abgebildet:\n\n"
+                    "{details}\n\n"
+                    "Das Muster enthält danach nicht mehr unterscheidbare "
+                    "Farbeinträge. Trotzdem fortfahren?"
+                ).format(details=details),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
         # Schlechte Zuordnungen warnen
         poor = sum(1 for m in self._mapping if m["distance"] > 60)
         if poor:

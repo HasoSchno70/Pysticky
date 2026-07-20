@@ -569,6 +569,11 @@ class LayerStack:
         target.grid[mask] = source.grid[mask]
         # Completion vom Source übernehmen (wo Source Stiche hat)
         target.completion_grid[mask] = source.completion_grid[mask]
+        # Stich-Typ (Halb-/Viertelstich etc.) übernehmen -- ohne das würde
+        # jede übernommene Zelle stillschweigend zu einem vollen Stich,
+        # weil sie im Target-Grid an dieser Stelle vorher meist FULL (0)
+        # oder leer war.
+        target.stitch_type_grid[mask] = source.stitch_type_grid[mask]
 
         # Source-Layer entfernen
         self._layers.pop(source_index)
@@ -605,6 +610,8 @@ class LayerStack:
         lower.grid[mask] = upper.grid[mask]
         # Completion vom oberen Layer übernehmen
         lower.completion_grid[mask] = upper.completion_grid[mask]
+        # Stich-Typ uebernehmen -- siehe merge_layers() fuer die Begruendung.
+        lower.stitch_type_grid[mask] = upper.stitch_type_grid[mask]
 
         # Oberes Layer entfernen
         self._layers.pop(index)
@@ -628,6 +635,10 @@ class LayerStack:
                 result.grid[mask] = layer.grid[mask]
                 # Completion übernehmen (oberstes sichtbares Layer gewinnt)
                 result.completion_grid[mask] = layer.completion_grid[mask]
+                # Stich-Typ uebernehmen -- siehe merge_layers() fuer die
+                # Begruendung (sonst wird jeder uebernommene Halb-/Viertel-
+                # stich stillschweigend zu einem vollen Stich).
+                result.stitch_type_grid[mask] = layer.stitch_type_grid[mask]
 
         return result
 
