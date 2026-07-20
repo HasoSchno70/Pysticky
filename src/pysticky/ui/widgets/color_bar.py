@@ -446,6 +446,15 @@ class ColorBar(QWidget):
         self._pattern: Pattern | None = None
         self._swatches: list[ColorSwatch] = []
         self._current_index: int = 0
+        # Merkt sich die ausgewaehlte Farbe zusaetzlich per Objekt-Identitaet
+        # (nicht nur per Index) -- Pattern.remove_color() verschiebt hoehere
+        # Indizes nach unten, behaelt aber dieselben ColorEntry-Objekte fuer
+        # die ueberlebenden Farben. Ohne das wuerde refresh()/_rebuild_swatches()
+        # nach dem Loeschen einer Farbe VOR der aktuell ausgewaehlten den
+        # gleichen Zahlen-Index weiter als "ausgewaehlt" markieren -- der
+        # jetzt aber auf eine ANDERE Farbe zeigt (Canvas' current_color_index
+        # bleibt dabei auf der urspruenglich gemeinten Farbe stehen).
+        self._current_entry: ColorEntry | None = None
         self._isolated_index: int | None = None
         # Modus beeinflusst die Beschriftung unter den Swatches: Sticken
         # zeigt das Unicode-Symbol, Diamond Painting die DMC-Drill-Nummer.
@@ -555,6 +564,7 @@ class ColorBar(QWidget):
     def set_pattern(self, pattern: Pattern) -> None:
         self._pattern = pattern
         self._current_index = 0
+        self._current_entry = pattern.color_entries[0] if pattern.color_entries else None
         self._isolated_index = None  # Isolation gilt pro Pattern
         self._rebuild_swatches()
         self._update_current_color_label()
@@ -601,6 +611,19 @@ class ColorBar(QWidget):
                 self._container_layout.addStretch()
                 return
 
+            # Ausgewaehlte Farbe per Objekt-Identitaet wiederfinden, statt
+            # den alten Zahlen-Index einfach weiterzuverwenden -- wurde eine
+            # Farbe VOR der ausgewaehlten geloescht, verschieben sich alle
+            # nachfolgenden Indizes um 1, der alte Index zeigt dann auf eine
+            # ANDERE Farbe. Nur falls die ausgewaehlte Farbe selbst geloescht
+            # wurde (nicht mehr auffindbar), faellt das auf den alten Index
+            # zurueck (weiter unten geklemmt).
+            if self._current_entry is not None:
+                for i, entry in enumerate(self._pattern.color_entries):
+                    if entry is self._current_entry:
+                        self._current_index = i
+                        break
+
             base_w, base_h = ColorSwatch.BASE_SIZE
             size_wh = (self._swatch_width, round(base_h * self._swatch_width / base_w))
             for i, entry in enumerate(self._pattern.color_entries):
@@ -625,6 +648,7 @@ class ColorBar(QWidget):
             self._current_index = 0
         if self._swatches:
             self._swatches[self._current_index].selected = True
+            self._current_entry = self._pattern.color_entries[self._current_index]
 
     def update_swatches(self) -> None:
         if not self._pattern:
@@ -638,6 +662,11 @@ class ColorBar(QWidget):
             if 0 <= self._current_index < len(self._swatches):
                 self._swatches[self._current_index].selected = False
             self._current_index = index
+            self._current_entry = (
+                self._pattern.color_entries[index]
+                if self._pattern and index < len(self._pattern.color_entries)
+                else None
+            )
             self._swatches[index].selected = True
             self._scroll.ensureWidgetVisible(self._swatches[index])
             self._update_current_color_label()

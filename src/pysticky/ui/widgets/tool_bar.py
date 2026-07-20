@@ -198,6 +198,16 @@ class ToggleToolButton(ToolButton):
         self.toggled_state.emit(self._is_filled)
         self.update()
 
+    def set_filled(self, filled: bool) -> None:
+        """Setzt Umriss/Gefüllt EXPLIZIT auf den gewünschten Zustand (statt
+        relativ zum aktuellen umzuschalten). Für die programmatische Auswahl
+        eines bestimmten Werkzeugs (z.B. `select_tool(Tool.RECT_FILLED)`
+        beim Wiederherstellen des zuletzt verwendeten Werkzeugs) -- anders
+        als ein echter Button-Klick, der immer relativ zum bisherigen
+        Zustand umschalten soll (siehe `toggle_fill_state()`)."""
+        if filled != self._is_filled:
+            self.toggle_fill_state()
+
     @property
     def is_filled(self) -> bool:
         return self._is_filled
@@ -620,7 +630,17 @@ class ToolBar(QWidget):
             btn.setChecked(True)
 
             if isinstance(btn, ToggleToolButton):
-                self._on_toggle_clicked(btn)
+                # Explizit auf das ANGEFORDERTE Tool setzen, nicht relativ
+                # zum vorherigen `_current_tool` toggeln (das ist nur für
+                # echte Button-Klicks richtig, siehe _on_toggle_clicked).
+                # Regression: beim Wiederherstellen des zuletzt genutzten
+                # Werkzeugs (z.B. RECT_FILLED) nach App-Start war
+                # `_current_tool` noch PENCIL -- die Toggle-Heuristik griff
+                # nie, das Tool wurde lautlos auf die Umriss-Variante
+                # zurückgesetzt.
+                btn.set_filled(tool == btn._tool_filled)
+                self._current_tool = btn.tool
+                self.tool_changed.emit(btn.tool)
             else:
                 self._on_tool_clicked(tool, btn)
 

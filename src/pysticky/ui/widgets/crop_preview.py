@@ -129,10 +129,21 @@ class CropPreviewWidget(QLabel):
     def set_crop(self, x1: float, y1: float, x2: float, y2: float) -> None:
         """Setzt den Ausschnitt programmatisch (normalisiert 0-1), z.B. beim
         Vorbefüllen des Import-Dialogs aus einem bereits importierten Muster."""
-        self._crop_x1 = clamp(x1, 0.0, 1.0)
-        self._crop_y1 = clamp(y1, 0.0, 1.0)
-        self._crop_x2 = clamp(x2, 0.0, 1.0)
-        self._crop_y2 = clamp(y2, 0.0, 1.0)
+        x1, y1, x2, y2 = (
+            clamp(x1, 0.0, 1.0),
+            clamp(y1, 0.0, 1.0),
+            clamp(x2, 0.0, 1.0),
+            clamp(y2, 0.0, 1.0),
+        )
+        # x1<=x2/y1<=y2 erzwingen (der Maus-Drag-Pfad haelt das immer ein,
+        # dieser programmatische Pfad bisher nicht) -- eine invertierte
+        # source_image_crop aus einer beschaedigten/handbearbeiteten .pxs-
+        # Datei (file_io.py laedt das ohne Validierung) wuerde sonst
+        # unbemerkt bis zu core/image_import.py durchgereicht, wo ein
+        # max(right, left+1)-Fallback das nur noch stillschweigend auf
+        # einen 1px-Streifen zusammenstaucht statt einen Fehler zu zeigen.
+        self._crop_x1, self._crop_x2 = min(x1, x2), max(x1, x2)
+        self._crop_y1, self._crop_y2 = min(y1, y2), max(y1, y2)
         self._update_crop_rect()
         self._emit_crop_changed()
         self.update()

@@ -106,6 +106,55 @@ def test_restore_window_disabled_ignores_saved_geometry(qtbot):
             s.setValue("window/geometry", old_geo)
 
 
+def test_restore_window_falls_back_when_saved_geometry_is_off_screen(qtbot):
+    """Regression: restoreGeometry() kann erfolgreich sein, obwohl das
+    Ergebnis auf keinem aktuell angeschlossenen Bildschirm mehr sichtbar
+    ist (z.B. Geometrie von einem inzwischen abgesteckten zweiten Monitor).
+    MainWindow muss in dem Fall auf die zentrierte Standard-Groesse
+    zurueckfallen statt das Fenster unerreichbar off-screen zu lassen."""
+    from PySide6.QtCore import QByteArray
+
+    from pysticky.ui.main_window import MainWindow
+
+    s = _qsettings_with_scope()
+    old_restore = s.value("restore_window")
+    old_geo = s.value("window/geometry")
+    try:
+        w1 = MainWindow()
+        qtbot.addWidget(w1)
+        w1._check_save_changes = lambda: True
+        w1._autosave_timer.stop()
+        # Weit ausserhalb jedes realistischen Bildschirms platzieren, dann
+        # die Geometrie DORT speichern (saveGeometry() serialisiert die
+        # aktuelle Fenster-Position/-Groesse).
+        w1.move(500_000, 500_000)
+        off_screen_geometry: QByteArray = w1.saveGeometry()
+
+        s.setValue("restore_window", True)
+        s.setValue("window/geometry", off_screen_geometry)
+
+        w2 = MainWindow()
+        qtbot.addWidget(w2)
+        w2._check_save_changes = lambda: True
+        w2._autosave_timer.stop()
+
+        from PySide6.QtGui import QGuiApplication
+
+        frame = w2.frameGeometry()
+        assert any(
+            screen.availableGeometry().intersects(frame) for screen in QGuiApplication.screens()
+        )
+    finally:
+        if old_restore is None:
+            s.remove("restore_window")
+        else:
+            s.setValue("restore_window", old_restore)
+        if old_geo is None:
+            s.remove("window/geometry")
+        else:
+            s.setValue("window/geometry", old_geo)
+
+
 def test_autosave_backup_creates_bak_file(qtbot, tmp_path, monkeypatch):
     from pysticky.core import Pattern
     from pysticky.ui.main_window import MainWindow

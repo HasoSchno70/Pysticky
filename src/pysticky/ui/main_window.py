@@ -24,7 +24,7 @@ Builder-Mixins (ui/builders/):
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QColor, QIcon
+from PySide6.QtGui import QColor, QGuiApplication, QIcon
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -201,9 +201,25 @@ class MainWindow(
         # Allgemein → "Fensterposition wiederherstellen").
         restore_window = self._settings.value("restore_window", True, type=bool)
         saved_geometry = self._settings.value("window/geometry") if restore_window else None
+        restored_ok = False
         if saved_geometry is not None:
-            self.restoreGeometry(saved_geometry)
-        else:
+            restored_ok = bool(self.restoreGeometry(saved_geometry))
+            if restored_ok:
+                # restoreGeometry() kann erfolgreich sein, obwohl das
+                # Ergebnis auf keinem aktuell angeschlossenen Bildschirm mehr
+                # sichtbar ist -- z.B. wenn die Geometrie mit einem zweiten
+                # Monitor gespeichert wurde, der inzwischen abgesteckt ist.
+                # Ohne diesen Check bliebe das Fenster komplett ausserhalb
+                # des sichtbaren Desktops haengen (fuer den User nicht mehr
+                # erreichbar, ausser per Taskleiste-Verschieben).
+                frame = self.frameGeometry()
+                visible_on_some_screen = any(
+                    s.availableGeometry().intersects(frame) for s in QGuiApplication.screens()
+                )
+                if not visible_on_some_screen:
+                    restored_ok = False
+
+        if not restored_ok:
             # Standard-Position und -Größe
             screen = self.screen().availableGeometry()
             width = min(UI_CONFIG.default_window_width, int(screen.width() * 0.92))

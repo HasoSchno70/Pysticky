@@ -254,10 +254,29 @@ class PatternStatisticsDialog(QDialog):
             return
 
         try:
-            with open(path, "w", encoding="utf-8") as f:
-                # Header
-                f.write(
-                    "Symbol,Name,Hersteller,Katalognummer,Stiche,Prozent,Stränge,Kosten,Nicht sticken\n"
+            import csv
+            import math
+
+            # newline="" ist bei csv.writer Pflicht (siehe csv-Modul-Doku) --
+            # sonst schreibt Windows zusaetzliche Leerzeilen zwischen jeder
+            # Datenzeile. csv.writer quotet/escaped Kommas/Anfuehrungszeichen
+            # in Farbnamen automatisch -- die vorige rohe f-String-
+            # Verkettung verschob bei einem Komma im Namen/Hersteller
+            # stillschweigend alle folgenden Spalten.
+            with open(path, "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(
+                    [
+                        "Symbol",
+                        "Name",
+                        "Hersteller",
+                        "Katalognummer",
+                        "Stiche",
+                        "Prozent",
+                        "Stränge",
+                        "Kosten",
+                        "Nicht sticken",
+                    ]
                 )
 
                 # Daten (Rechner-Einstellungen aus dem Garnverbrauch-Tab)
@@ -271,13 +290,11 @@ class PatternStatisticsDialog(QDialog):
                     or 1
                 )
 
-                import math
-
                 for entry in self._pattern.color_entries:
                     if entry.skip_stitching:
                         percent = "-"
                         with_waste = 0
-                        cost = 0
+                        cost = 0.0
                     else:
                         percent = f"{(entry.stitch_count / total) * 100:.1f}%"
                         exact_skeins = entry.stitch_count / stitches_per_skein
@@ -288,12 +305,18 @@ class PatternStatisticsDialog(QDialog):
 
                     skip_flag = "Ja" if entry.skip_stitching else "Nein"
 
-                    f.write(
-                        f"{entry.symbol},{entry.thread.name},"
-                        f"{entry.thread.manufacturer or '-'},"
-                        f"{entry.thread.catalog_number or '-'},"
-                        f"{entry.stitch_count},{percent},"
-                        f"{with_waste},{cost:.2f},{skip_flag}\n"
+                    writer.writerow(
+                        [
+                            entry.symbol,
+                            entry.thread.name,
+                            entry.thread.manufacturer or "-",
+                            entry.thread.catalog_number or "-",
+                            entry.stitch_count,
+                            percent,
+                            with_waste,
+                            f"{cost:.2f}",
+                            skip_flag,
+                        ]
                     )
 
             QMessageBox.information(
