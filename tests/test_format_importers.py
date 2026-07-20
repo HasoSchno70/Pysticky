@@ -169,6 +169,62 @@ def test_pat_import_error_is_exception():
     assert issubclass(PATImportError, Exception)
 
 
+def _build_pat_legacy_header(
+    version: int, width: int, height: int, color_count: int = 0, fabric_count: int = 14
+) -> bytes:
+    """
+    Baut einen minimalen Legacy-PAT-Header (Version < 8).
+
+    Struktur: 3-Byte-Signatur "PAT", 1 Byte Version, 4 Bytes Width/Height,
+    2 Bytes color_count, 1 Byte fabric_count, 1 Byte Reserved, dann je
+    32 Bytes Title/Author/Copyright (null-terminierte Fixed-Strings).
+    """
+    return (
+        b"PAT"
+        + struct.pack("<B", version)
+        + struct.pack("<HH", width, height)
+        + struct.pack("<H", color_count)
+        + struct.pack("B", fabric_count)
+        + b"\x00"  # Reserved
+        + b"\x00" * 32  # Title
+        + b"\x00" * 32  # Author
+        + b"\x00" * 32  # Copyright
+    )
+
+
+def test_pat_import_oversized_pattern_produces_warning(tmp_path):
+    """Patterns > 1000 in einer Dimension geben eine Warnung, scheitern
+    aber noch nicht (Konsistenz mit dem gleichwertigen XSD-Verhalten)."""
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_legacy_header(version=5, width=1500, height=10))
+    importer = PATImporter()
+    importer.import_file(f)
+    assert any("Gro" in w or "gro" in w for w in importer.warnings)
+
+
+def test_pat_import_rejects_pattern_above_hard_limit(tmp_path):
+    """Regression: width/height kommen aus einem ungeprueften
+    struct.unpack (max. 65535 je Achse) -- ohne harte Obergrenze koennte
+    eine beschaedigte Datei eine Multi-Milliarden-Zellen-Allokation
+    versuchen. Muss wie der native .pxs-Loader bei > 2000x2000 fehlschlagen."""
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_legacy_header(version=5, width=40000, height=10))
+    importer = PATImporter()
+    result = importer.import_file(f)
+    assert result is None
+    assert any("zu gro" in e.lower() for e in importer.errors)
+
+
+def test_pat_import_accepts_pattern_at_hard_limit_boundary(tmp_path):
+    """Exakt 2000x2000 ist noch erlaubt (nur > 2000 wird abgelehnt)."""
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_legacy_header(version=5, width=2000, height=2000))
+    importer = PATImporter()
+    result = importer.import_file(f)
+    assert result is not None
+    assert result.width == 2000 and result.height == 2000
+
+
 # ============================================================================
 # XSD: can_import
 # ============================================================================

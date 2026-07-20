@@ -323,7 +323,12 @@ class StitchPathDialog(QDialog):
             self._on_comparison_finished, Qt.ConnectionType.QueuedConnection
         )
 
-        # Thread-Cleanup
+        # Worker/Thread-Cleanup. deleteLater() muss hier verbunden werden
+        # (waehrend der Worker-Thread noch laeuft), nicht erst spaeter in
+        # _cleanup_worker() nach thread.quit()+wait() -- ein bereits
+        # gestoppter Thread verarbeitet keine DeferredDelete-Events mehr.
+        self._worker.finished.connect(self._worker.deleteLater)
+        self._worker.comparison_finished.connect(self._worker.deleteLater)
         self._thread.finished.connect(self._thread.deleteLater)
         self._thread.start()
 

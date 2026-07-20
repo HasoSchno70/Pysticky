@@ -399,7 +399,7 @@ class RemoveBackstitchCommand(Command):
 
     def undo(self) -> None:
         """Fügt den entfernten Rückstich wieder hinzu."""
-        self._pattern.backstitches.append(self._backstitch)
+        self._pattern.restore_backstitch(self._backstitch)
 
     @property
     def description(self) -> str:

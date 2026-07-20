@@ -169,7 +169,14 @@ class TestBackstitchCommands:
         assert len(pattern.backstitches) == 0
 
     def test_remove_backstitch_undo(self):
-        """Test: Entfernen rückgängig machen."""
+        """Test: Entfernen rückgängig machen.
+
+        Prüft auch Objekt-Identität: undo() muss das exakt gleiche
+        Backstitch-Objekt wiederherstellen (via restore_backstitch()),
+        nicht ein neu konstruiertes gleichwertiges Objekt -- sonst würde
+        eine anderswo gehaltene Referenz (z.B. eine Selektion) auf das
+        entfernte Objekt nach einem Undo ins Leere zeigen.
+        """
         pattern = Pattern(width=10, height=10)
         bs = pattern.add_backstitch(0, 0, 4, 4, 0)
 
@@ -178,6 +185,7 @@ class TestBackstitchCommands:
         cmd.undo()
 
         assert len(pattern.backstitches) == 1
+        assert pattern.backstitches[0] is bs
 
 
 if __name__ == "__main__":

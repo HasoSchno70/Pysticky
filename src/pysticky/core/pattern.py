@@ -822,6 +822,11 @@ class Pattern:
         """
         return self.backstitch_manager.remove(backstitch)
 
+    def restore_backstitch(self, backstitch: Backstitch) -> None:
+        """Fügt einen bereits existierenden (zuvor entfernten) Rückstich
+        wieder hinzu, ohne ein neues Objekt zu konstruieren (Undo)."""
+        self.backstitch_manager.restore(backstitch)
+
     def remove_backstitch_at(self, x: int, y: int, tolerance: int = 1) -> Backstitch | None:
         """
         Entfernt einen Rückstich an einer Position.

@@ -137,6 +137,18 @@ class PATImporter:
         if header.width < 1 or header.height < 1:
             raise PATImportError(f"Ungültige Dimensionen: {header.width}x{header.height}")
 
+        # Width/Height kommen aus einem ungeprüften struct.unpack ("<HH",
+        # max. 65535 je Achse) -- ohne Obergrenze könnte eine beschädigte
+        # Datei eine ~4,3-Milliarden-Zellen-Allokation auslösen. Gleiche
+        # Grenzen wie file_io.py (harte Grenze) und xsd_import.py (Warnung).
+        if header.width > 2000 or header.height > 2000:
+            raise PATImportError(
+                f"Mustergröße zu groß: {header.width}x{header.height} (max. 2000x2000)"
+            )
+
+        if header.width > 1000 or header.height > 1000:
+            self.warnings.append(f"Große Muster-Dimensionen: {header.width}x{header.height}")
+
         # Pattern erstellen
         pattern = Pattern(
             name=header.title or name,

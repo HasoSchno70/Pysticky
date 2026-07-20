@@ -449,6 +449,11 @@ class ExportHandlersMixin:
         self._export_worker.finished.connect(
             self._on_export_finished, Qt.ConnectionType.QueuedConnection
         )
+        # deleteLater() hier verbinden (waehrend der Worker-Thread noch
+        # laeuft), nicht erst nach thread.quit()+wait() in
+        # _on_export_finished() -- ein bereits gestoppter Thread verarbeitet
+        # keine DeferredDelete-Events mehr.
+        self._export_worker.finished.connect(self._export_worker.deleteLater)
         self._export_thread.finished.connect(self._export_thread.deleteLater)
 
         self._pending_export_type = export_type

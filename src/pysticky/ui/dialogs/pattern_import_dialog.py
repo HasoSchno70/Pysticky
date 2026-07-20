@@ -262,9 +262,31 @@ class PatternImportDialog(QDialog):
         self._load_worker.error.connect(self._on_load_error)
         self._load_worker.finished.connect(self._load_thread.quit)
         self._load_worker.error.connect(self._load_thread.quit)
+        self._load_worker.finished.connect(self._load_worker.deleteLater)
+        self._load_worker.error.connect(self._load_worker.deleteLater)
         self._load_thread.finished.connect(self._load_thread.deleteLater)
 
         self._load_thread.start()
+
+    def _load_running(self) -> bool:
+        thread = getattr(self, "_load_thread", None)
+        return thread is not None and thread.isRunning()
+
+    def reject(self) -> None:
+        """Verhindert das Schließen, während der Hintergrund-Import läuft."""
+        if self._load_running():
+            return
+        super().reject()
+
+    def closeEvent(self, event) -> None:
+        """Verhindert das Schließen (z.B. per Fenster-X), während der
+        Hintergrund-Import läuft -- sonst könnte ein später feuerndes
+        finished/error-Signal auf ein bereits zerstörtes Dialog-Objekt
+        zugreifen."""
+        if self._load_running():
+            event.ignore()
+            return
+        super().closeEvent(event)
 
     def _on_load_finished(
         self,

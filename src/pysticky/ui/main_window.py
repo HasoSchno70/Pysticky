@@ -803,6 +803,15 @@ class MainWindow(
 
     def closeEvent(self, event) -> None:
         """Fenster-Schließen-Event."""
+        # Verhindert Schliessen waehrend ein Export (PDF/HTML/Bundle) im
+        # Hintergrund laeuft -- sonst koennte das spaeter feuernde
+        # finished-Signal auf ein bereits zerstoertes MainWindow zugreifen
+        # (Qt "QThread: Destroyed while thread is still running").
+        export_thread = getattr(self, "_export_thread", None)
+        if export_thread is not None and export_thread.isRunning():
+            event.ignore()
+            return
+
         # Laufende Stick-Session vor dem Save-Check stoppen, damit die
         # gemessene Zeit noch in der zu speichernden Datei landet.
         from ..core import session_timer

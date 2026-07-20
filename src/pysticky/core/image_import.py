@@ -90,9 +90,15 @@ def import_image(
     image_path = Path(image_path)
 
     try:
-        # Basistyp annotieren: open() liefert ImageFile, spätere convert()-
-        # Zuweisungen liefern Image.Image (Basisklasse) — sonst Typkonflikt.
-        image: Image.Image = Image.open(str(image_path))
+        # `with` + `.copy()`: laedt die Pixeldaten vollstaendig und schliesst
+        # den Datei-Handle deterministisch beim with-Exit, statt ihn bis zum
+        # naechsten GC-Lauf offenzuhalten -- hielt auf Windows sonst einen
+        # Datei-Lock auf dem Quellbild (z.B. bei "Bildimport wiederholen",
+        # das denselben Pfad spaeter erneut oeffnet).
+        with Image.open(str(image_path)) as opened:
+            # Basistyp annotieren: copy() liefert Image.Image (Basisklasse),
+            # spaetere convert()-Zuweisungen ebenfalls — sonst Typkonflikt.
+            image: Image.Image = opened.copy()
     except OSError as e:
         raise ValueError(f"Bild konnte nicht geöffnet werden: {e}")
 
@@ -717,13 +723,13 @@ def get_image_info(image_path: Path | str) -> dict:
     if not HAS_PILLOW:
         raise ImportError("Pillow ist erforderlich")
 
-    image = Image.open(str(image_path))
-    return {
-        "width": image.width,
-        "height": image.height,
-        "format": image.format or "Unknown",
-        "mode": image.mode,
-    }
+    with Image.open(str(image_path)) as image:
+        return {
+            "width": image.width,
+            "height": image.height,
+            "format": image.format or "Unknown",
+            "mode": image.mode,
+        }
 
 
 def create_preview(

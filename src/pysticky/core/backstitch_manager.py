@@ -152,6 +152,18 @@ class BackstitchManager:
         self._backstitches.append(backstitch)
         return backstitch
 
+    def restore(self, backstitch: Backstitch) -> None:
+        """
+        Fügt einen bereits existierenden Backstitch wieder hinzu (Undo einer
+        Entfernung). Anders als add() wird KEIN neues Objekt konstruiert --
+        wichtig falls anderer Code (z.B. eine Selektion) noch die exakte
+        Objektidentität des entfernten Backstitch referenziert.
+
+        Args:
+            backstitch: Der wiederherzustellende Backstitch
+        """
+        self._backstitches.append(backstitch)
+
     def remove(self, backstitch: Backstitch) -> bool:
         """
         Entfernt einen bestimmten Rückstich.
