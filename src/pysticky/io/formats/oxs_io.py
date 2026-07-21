@@ -142,6 +142,9 @@ class OXSImporter:
         except OXSImportError as e:
             self.errors.append(str(e))
             return None
+        except Exception as e:  # catch-all: fremde OXS-Dateien koennen unerwartet geformt sein
+            self.errors.append(f"Unerwarteter Fehler: {e}")
+            return None
 
     def _parse_chart(self, root: ET.Element, default_name: str) -> Pattern:
         if root.tag != "chart":
@@ -160,6 +163,13 @@ class OXSImporter:
 
         if width < 1 or height < 1:
             raise OXSImportError(f"Ungueltige Dimensionen: {width}x{height}")
+
+        # chartwidth/chartheight kommen ungeprueft aus fremdem XML -- ohne
+        # Obergrenze koennte eine manipulierte/beschaedigte Datei eine
+        # riesige Allokation ausloesen. Gleiche harte Grenze wie
+        # pat_import.py und file_io.py (nativer .pxs-Loader).
+        if width > 2000 or height > 2000:
+            raise OXSImportError(f"Mustergroesse zu gross: {width}x{height} (max. 2000x2000)")
 
         # Pattern aufsetzen
         pattern = Pattern(

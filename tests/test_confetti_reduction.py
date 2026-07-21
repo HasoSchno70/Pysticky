@@ -147,6 +147,45 @@ def test_realistic_photo_pattern():
     assert confetti_after < confetti_before
 
 
+def test_alternating_row_converges_to_single_color():
+    """Regression: bei einer alternierenden Farbfolge (1,2,1,2,...) --
+    genau das Rauschmuster, das Floyd-Steinberg-/Ordered-Dithering an
+    Farbgrenzen erzeugt -- waren ALLE Cluster gleichzeitig Groesse 1 und
+    absorbierten sich gegenseitig zur jeweils anderen Farbe: die Zeile
+    flippte bei jeder Iteration nur zwischen (1,2,1,2) und (2,1,2,1) hin
+    und her, ohne je zu konvergieren (0% Fortschritt trotz max_iterations).
+    Nach Fix (sequentielle statt simultane Cluster-Verarbeitung pro
+    Iteration) konvergiert eine kleine alternierende Sequenz auf eine
+    einzige Farbe."""
+    grid = np.array([[1, 2, 1, 2]], dtype=np.int16)
+    result = reduce_confetti(grid, min_run_size=2, max_iterations=5)
+    assert len(np.unique(result)) == 1
+
+
+def test_alternating_row_makes_monotonic_progress_each_iteration():
+    """Auch wenn eine laengere alternierende Sequenz nicht in einer
+    einzigen Iteration vollstaendig konvergiert, muss jede Iteration
+    echten Fortschritt machen (weniger wechselnde Farbuebergaenge), statt
+    wie vor dem Fix ewig zwischen zwei Zustaenden zu oszillieren."""
+    from pysticky.core.confetti_reduction import _reduce_once
+
+    grid = np.array([[1, 2] * 10], dtype=np.int16)
+
+    def count_transitions(g):
+        row = g[0]
+        return int(np.sum(row[:-1] != row[1:]))
+
+    before = count_transitions(grid)
+    step1, changed1 = _reduce_once(grid, min_run_size=2)
+    assert changed1
+    after1 = count_transitions(step1)
+    assert after1 < before  # echter Fortschritt, keine reine Farbvertauschung
+
+    step2, changed2 = _reduce_once(step1, min_run_size=2)
+    if changed2:
+        assert count_transitions(step2) <= after1  # kein Rueckschritt
+
+
 def test_integration_with_image_import_settings():
     """ImportSettings akzeptiert confetti_min_run_size-Parameter."""
     from pysticky.core.image_import import ImportSettings

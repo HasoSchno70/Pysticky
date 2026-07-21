@@ -299,6 +299,58 @@ def test_import_rejects_invalid_dimensions(tmp_path):
     assert any("Dimensionen" in e for e in errors)
 
 
+def test_import_rejects_oversized_dimensions(tmp_path):
+    """Regression: chartwidth/chartheight hatten keine Obergrenze -- eine
+    manipulierte/beschaedigte Datei mit riesigen Werten haette eine
+    Multi-Gigabyte-Grid-Allokation ausgeloest (MemoryError statt
+    kontrolliertem Fehler). Gleiche 2000x2000-Grenze wie pat_import.py."""
+    from pysticky.io.formats import import_oxs
+
+    bad = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="200000" /><chartheight value="200000" /></chart_info>
+  <palette></palette>
+</chart>
+"""
+    f = tmp_path / "huge.oxs"
+    f.write_text(bad, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is None
+    assert any("gross" in e or "groß" in e for e in errors)
+
+
+def test_import_catches_unexpected_parse_errors(tmp_path, monkeypatch):
+    """Regression: import_file() fing nur OXSImportError -- jeder andere
+    unerwartete Fehler beim Parsen (z.B. ein Bug in einer Hilfsfunktion,
+    oder frueher: ein MemoryError bei riesigen Dimensionen) propagierte
+    ungefangen aus import_file() heraus, statt als kontrollierter Fehler
+    in der errors-Liste zu landen."""
+    from pysticky.io.formats.oxs_io import OXSImporter
+
+    oxs_content = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="0" name="cloth" color="FFFFFF" />
+  </palette>
+</chart>
+"""
+    f = tmp_path / "boom.oxs"
+    f.write_text(oxs_content, encoding="utf-8")
+
+    importer = OXSImporter()
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("simulierter unerwarteter Fehler")
+
+    monkeypatch.setattr(importer, "_read_palette", boom)
+
+    pattern = importer.import_file(f)
+    assert pattern is None
+    assert any("Unerwarteter Fehler" in e for e in importer.errors)
+
+
 def test_import_rejects_non_oxs_root(tmp_path):
     """Importer lehnt XML mit anderem Root-Tag ab."""
     from pysticky.io.formats import import_oxs

@@ -67,6 +67,43 @@ def test_create_multiple_snapshots_sorted_newest_first(
     assert snaps[1] == s1
 
 
+def test_create_snapshot_same_second_collision_stays_parseable(
+    isolated_snapshot_root, pattern_with_stitches, monkeypatch
+):
+    """Regression: bei zwei Snapshots innerhalb derselben Sekunde haengte
+    create_snapshot() frueher einen "_1"-Suffix an den Dateinamen an
+    (z.B. "v_2026-05-13_14-30-00_1.pxs"). parse_snapshot_timestamp()s
+    striktes Format erkennt das NICHT -> der Snapshot verschwindet
+    dauerhaft aus list_snapshots() (unsichtbar in der Versions-Historie)
+    UND aus der max_keep-Zaehlung von _cleanup_old_snapshots() (wird nie
+    aufgeraeumt) -- ein Datei-Leck. Jetzt wird bei einer Kollision der
+    Zeitstempel um 1s vorgerueckt statt ein Suffix anzuhaengen, der
+    Dateiname bleibt also immer parsebar."""
+    from pysticky.core import snapshots as snapshots_mod
+
+    pdir = snapshots_mod.get_pattern_dir("collision_key")
+    existing = pdir / "v_2026-05-13_14-30-00.pxs"
+    existing.write_bytes(b"dummy")
+
+    from datetime import datetime as _dt
+
+    class _FixedDatetime(_dt):
+        @classmethod
+        def now(cls, tz=None):
+            return _dt(2026, 5, 13, 14, 30, 0)
+
+    monkeypatch.setattr(snapshots_mod, "datetime", _FixedDatetime)
+    snap = create_snapshot(pattern_with_stitches, "collision_key")
+
+    assert snap != existing
+    assert snap.name == "v_2026-05-13_14-30-01.pxs"  # 1s vorgerueckt, nicht "_1"-Suffix
+    assert parse_snapshot_timestamp(snap) is not None
+
+    snaps = list_snapshots("collision_key")
+    assert snap in snaps  # sichtbar in der Versions-Historie
+    assert existing in snaps
+
+
 def test_cleanup_keeps_only_max_snapshots(isolated_snapshot_root, pattern_with_stitches):
     # 5 Snapshots, max_keep=3
     paths = []

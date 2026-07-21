@@ -12,7 +12,7 @@ Verzeichnis-Layout:
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -125,14 +125,17 @@ def create_snapshot(
     from .file_io import save_pattern
 
     pdir = get_pattern_dir(pattern_key)
-    filename = _snapshot_filename()
-    target = pdir / filename
-    # Falls innerhalb derselben Sekunde mehrere Snapshots — Suffix anhängen
-    if target.exists():
-        i = 1
-        while target.exists():
-            target = pdir / f"{filename[:-4]}_{i}.pxs"
-            i += 1
+    when = datetime.now()
+    target = pdir / _snapshot_filename(when)
+    # Falls innerhalb derselben Sekunde mehrere Snapshots — Zeitstempel um
+    # je 1s vorrücken statt einen "_1"-Suffix anzuhängen. Ein Suffix würde
+    # von parse_snapshot_timestamp() (striktes %Y-%m-%d_%H-%M-%S) nicht
+    # erkannt und den Snapshot dauerhaft unsichtbar in der Versions-Historie
+    # UND von _cleanup_old_snapshots()s max_keep-Zählung ausgeschlossen
+    # machen — ein Datei-Leck, das nie wieder aufgeräumt wird.
+    while target.exists():
+        when += timedelta(seconds=1)
+        target = pdir / _snapshot_filename(when)
 
     save_pattern(pattern, target)
     _cleanup_old_snapshots(pdir, max_keep=max_keep)

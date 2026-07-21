@@ -96,9 +96,22 @@ def _reduce_once(
     for y, x in np.argwhere(small_mask):
         cluster_pixels.setdefault(int(labels[y, x]), []).append((int(y), int(x)))
 
+    # Nachbarn werden aus new_grid gelesen, nicht aus dem eingefrorenen
+    # grid: cluster_pixels erhält seine Reihenfolge von np.argwhere (Raster-
+    # Scan, oben-links -> unten-rechts) via setdefault-Insertion-Order,
+    # also verarbeiten wir Cluster sequentiell in dieser Reihenfolge und
+    # schreiben sofort in new_grid zurück. Ein bereits in diesem Durchlauf
+    # umgefärbter Nachbar-Cluster wird dadurch von später verarbeiteten
+    # Clustern schon als neue Farbe gesehen (Gauss-Seidel-artig). Bei
+    # gleichzeitigem Lesen aus dem eingefrorenen grid (Jacobi-artig, vorher)
+    # konnten zwei benachbarte Ein-Pixel-Cluster sich gegenseitig als
+    # "dominante Nachbarfarbe" wählen und bei jeder Iteration die Farben
+    # tauschen, ohne je zu konvergieren -- exakt das Alternierungsmuster,
+    # das Floyd-Steinberg/Ordered-Dithering an Farbgrenzen erzeugt (siehe
+    # core/image_import.py, der einzige Aufrufer).
     for cluster_id, pixels in cluster_pixels.items():
         # Dominante Nachbarfarbe finden (8-Nachbarschaft, andere Farbe)
-        own_color = int(grid[pixels[0]])
+        own_color = int(new_grid[pixels[0]])
         neighbor_counts: dict[int, int] = {}
         for py, px in pixels:
             for dy in (-1, 0, 1):
@@ -107,7 +120,7 @@ def _reduce_once(
                         continue
                     ny, nx = py + dy, px + dx
                     if 0 <= ny < h and 0 <= nx < w:
-                        nc = int(grid[ny, nx])
+                        nc = int(new_grid[ny, nx])
                         if nc != NO_STITCH and nc != own_color:
                             neighbor_counts[nc] = neighbor_counts.get(nc, 0) + 1
 
