@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, Callable
 import numpy as np
 
 from ..utils.logging import get_logger
+from .i18n import t
 
 if TYPE_CHECKING:
     from .backstitch_manager import Backstitch
@@ -211,7 +212,7 @@ class PlaceStitchCommand(Command):
     @property
     def description(self) -> str:
         """Gibt 'Stich bei (x, y)' zurück."""
-        return f"Stich bei ({self._x}, {self._y})"
+        return t("Stich bei ({x}, {y})").format(x=self._x, y=self._y)
 
 
 class RemoveStitchCommand(Command):
@@ -282,7 +283,7 @@ class RemoveStitchCommand(Command):
     @property
     def description(self) -> str:
         """Gibt 'Stich entfernt bei (x, y)' zurück."""
-        return f"Stich entfernt bei ({self._x}, {self._y})"
+        return t("Stich entfernt bei ({x}, {y})").format(x=self._x, y=self._y)
 
 
 class BatchStitchCommand(Command):
@@ -341,8 +342,19 @@ class BatchStitchCommand(Command):
 
     @property
     def description(self) -> str:
-        """Gibt 'Beschreibung (n)' zurück, wobei n die Anzahl der Commands ist."""
-        return f"{self._description_text} ({len(self._commands)})"
+        """Gibt 'Beschreibung (n)' zurück, wobei n die Anzahl der Commands ist.
+
+        t() wird hier auf _description_text angewendet, nicht am Default-
+        Parameterwert oder beim Aufrufer -- Default-Parameter werden nur
+        EINMAL beim Modulimport ausgewertet, ein dort gebackenes t() haette
+        die Uebersetzung dauerhaft auf die beim Start aktive Sprache
+        eingefroren. Ist _description_text bereits ein uebersetzter String
+        (Aufrufer hat selbst schon t() aufgerufen), findet t() hier keinen
+        Treffer und liefert per Identitaets-Fallback denselben String zurueck.
+        """
+        return t("{description} ({count})").format(
+            description=t(self._description_text), count=len(self._commands)
+        )
 
     @property
     def is_empty(self) -> bool:
@@ -403,7 +415,9 @@ class AddBackstitchCommand(Command):
     @property
     def description(self) -> str:
         """Gibt 'Rückstich (x1,y1)->(x2,y2)' zurück."""
-        return f"Rückstich ({self._x1},{self._y1})->({self._x2},{self._y2})"
+        return t("Rückstich ({x1},{y1})->({x2},{y2})").format(
+            x1=self._x1, y1=self._y1, x2=self._x2, y2=self._y2
+        )
 
 
 class RemoveBackstitchCommand(Command):
@@ -441,7 +455,9 @@ class RemoveBackstitchCommand(Command):
     def description(self) -> str:
         """Gibt 'Rückstich entfernt (x1,y1)->(x2,y2)' zurück."""
         bs = self._backstitch
-        return f"Rückstich entfernt ({bs.x1},{bs.y1})->({bs.x2},{bs.y2})"
+        return t("Rückstich entfernt ({x1},{y1})->({x2},{y2})").format(
+            x1=bs.x1, y1=bs.y1, x2=bs.x2, y2=bs.y2
+        )
 
 
 class LayerSnapshotCommand(Command):
@@ -531,7 +547,12 @@ class LayerSnapshotCommand(Command):
 
     @property
     def description(self) -> str:
-        return self._description_text
+        # t()-Fallback: falls _description_text der unuebersetzte Default
+        # ("Aktion") oder ein sonst nie durch t() geschickter String ist,
+        # wird er hier live uebersetzt statt beim Modulimport eingefroren
+        # zu werden (siehe BatchStitchCommand.description fuer die
+        # ausfuehrliche Begruendung).
+        return t(self._description_text)
 
 
 class ClearLayerCommand(Command):
@@ -620,7 +641,7 @@ class ClearLayerCommand(Command):
     def description(self) -> str:
         """Gibt 'Ebene 'Name' geleert' zurück."""
         layer = self._pattern.layer_stack[self._layer_index]
-        return f"Ebene '{layer.name}' geleert"
+        return t("Ebene '{name}' geleert").format(name=layer.name)
 
 
 class MarkStitchCompletedCommand(Command):
@@ -656,7 +677,7 @@ class MarkStitchCompletedCommand(Command):
 
     @property
     def description(self) -> str:
-        return f"Stich erledigt bei ({self._x}, {self._y})"
+        return t("Stich erledigt bei ({x}, {y})").format(x=self._x, y=self._y)
 
 
 class UnmarkStitchCompletedCommand(Command):
@@ -690,7 +711,7 @@ class UnmarkStitchCompletedCommand(Command):
 
     @property
     def description(self) -> str:
-        return f"Stich nicht erledigt bei ({self._x}, {self._y})"
+        return t("Stich nicht erledigt bei ({x}, {y})").format(x=self._x, y=self._y)
 
 
 class MarkColorCompletedCommand(Command):
@@ -725,7 +746,7 @@ class MarkColorCompletedCommand(Command):
 
     @property
     def description(self) -> str:
-        return f"Alle Stiche Farbe {self._color_index} erledigt"
+        return t("Alle Stiche Farbe {color} erledigt").format(color=self._color_index)
 
 
 class UndoManager:

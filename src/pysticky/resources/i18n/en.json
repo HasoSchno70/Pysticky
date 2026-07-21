@@ -1384,5 +1384,20 @@
   "Fortgeschritten": "Intermediate",
   "Erfahren": "Experienced",
   "Profi": "Expert",
-  "Weihnachten": "Christmas"
+  "Weihnachten": "Christmas",
+  "Stich bei ({x}, {y})": "Stitch at ({x}, {y})",
+  "Stich entfernt bei ({x}, {y})": "Stitch removed at ({x}, {y})",
+  "{description} ({count})": "{description} ({count})",
+  "Rückstich ({x1},{y1})->({x2},{y2})": "Backstitch ({x1},{y1})->({x2},{y2})",
+  "Rückstich entfernt ({x1},{y1})->({x2},{y2})": "Backstitch removed ({x1},{y1})->({x2},{y2})",
+  "Ebene '{name}' geleert": "Layer '{name}' cleared",
+  "Stich erledigt bei ({x}, {y})": "Stitch marked done at ({x}, {y})",
+  "Stich nicht erledigt bei ({x}, {y})": "Stitch marked not done at ({x}, {y})",
+  "Alle Stiche Farbe {color} erledigt": "All stitches of color {color} marked done",
+  "Fortschritt markieren": "Mark Progress",
+  "Keine Auswahl zum Spiegeln": "No selection to mirror",
+  "Klicke zum Einfügen...": "Click to paste...",
+  "Mehrere Stiche": "Multiple Stitches",
+  "Nichts zum Einfügen": "Nothing to paste",
+  "Kopiert: {w} × {h}": "Copied: {w} × {h}"
 }

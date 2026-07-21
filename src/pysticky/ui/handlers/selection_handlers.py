@@ -4,6 +4,8 @@ Auswahl-bezogene Handler für MainWindow.
 
 from typing import TYPE_CHECKING
 
+from ...core.i18n import t
+
 if TYPE_CHECKING:
     from ..main_window import MainWindow
 
@@ -57,7 +59,7 @@ class SelectionHandlersMixin:
         if not changes:
             return
 
-        self.canvas.batch_started.emit(batch_message)
+        self.canvas.batch_started.emit(t(batch_message))
         # _apply_changes() statt manuellem Signal-Loop -- ruft u.a.
         # invalidate_cell() auf. Ohne das blieb der Chunk-Pixmap-Cache
         # (OptimizedCrossStitchCanvas, >200x200 Muster) fuer Rotate/Flip/
@@ -66,7 +68,9 @@ class SelectionHandlersMixin:
         self.canvas._apply_changes(changes)
         self.canvas.batch_ended.emit()
         self.canvas.update()
-        self.status_bar.showMessage(status_template.format(n=len(changes)), self._status_timeout_ms)
+        self.status_bar.showMessage(
+            t(status_template).format(n=len(changes)), self._status_timeout_ms
+        )
 
     # =========================================================================
     # Selection-Operationen (Change-produzierend)
@@ -129,7 +133,9 @@ class SelectionHandlersMixin:
         if ctx and select_tool.copy_selection(ctx):
             w = select_tool.selection.width()
             h = select_tool.selection.height()
-            self.status_bar.showMessage(f"Kopiert: {w} × {h}", self._status_timeout_ms)
+            self.status_bar.showMessage(
+                t("Kopiert: {w} × {h}").format(w=w, h=h), self._status_timeout_ms
+            )
 
     def _on_selection_paste(self: "MainWindow") -> None:
         """Startet das Einfügen — wechselt ggf. auf das Select-Tool."""
@@ -147,9 +153,9 @@ class SelectionHandlersMixin:
         if ctx:
             if select_tool.start_paste(ctx):
                 self.canvas.update()
-                self.status_bar.showMessage("Klicke zum Einfügen...", 5000)
+                self.status_bar.showMessage(t("Klicke zum Einfügen..."), 5000)
             else:
-                self.status_bar.showMessage("Nichts zum Einfügen", self._status_timeout_ms)
+                self.status_bar.showMessage(t("Nichts zum Einfügen"), self._status_timeout_ms)
 
     # =========================================================================
     # Spiegel-Aktionen (operieren auf gesamtem Muster, nicht Auswahl)
@@ -162,9 +168,9 @@ class SelectionHandlersMixin:
             self.canvas.update()
             self.minimap_panel.refresh()
             self.tile_preview_panel.refresh()
-            self.status_bar.showMessage("Horizontal gespiegelt", 2000)
+            self.status_bar.showMessage(t("Horizontal gespiegelt"), 2000)
         else:
-            self.status_bar.showMessage("Keine Auswahl zum Spiegeln", 2000)
+            self.status_bar.showMessage(t("Keine Auswahl zum Spiegeln"), 2000)
 
     def _on_mirror_v(self: "MainWindow") -> None:
         """Vertikal spiegeln."""
@@ -173,6 +179,6 @@ class SelectionHandlersMixin:
             self.canvas.update()
             self.minimap_panel.refresh()
             self.tile_preview_panel.refresh()
-            self.status_bar.showMessage("Vertikal gespiegelt", 2000)
+            self.status_bar.showMessage(t("Vertikal gespiegelt"), 2000)
         else:
-            self.status_bar.showMessage("Keine Auswahl zum Spiegeln", 2000)
+            self.status_bar.showMessage(t("Keine Auswahl zum Spiegeln"), 2000)

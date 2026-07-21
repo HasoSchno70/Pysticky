@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 
+from ....core.i18n import t
 from ...tools.tool_enum import Tool
 
 if TYPE_CHECKING:
@@ -71,7 +72,7 @@ class KeyboardEventsMixin:
                     cx, cy = self._stitch_cursor
                     if not self._batch_active:
                         self._batch_active = True
-                        self.batch_started.emit("Fortschritt markieren")
+                        self.batch_started.emit(t("Fortschritt markieren"))
                     self.stitch_marked_completed.emit(cx, cy)
                     self._batch_active = False
                     self.batch_ended.emit()

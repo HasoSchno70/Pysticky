@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QMouseEvent, QWheelEvent
 
+from ....core.i18n import t
 from ...tools.progress_tool import MARK_COMPLETED, UNMARK_COMPLETED
 from ...tools.tool_enum import Tool
 
@@ -57,7 +58,7 @@ class MouseEventsMixin:
         if is_progress_tool:
             if not self._batch_active:
                 self._batch_active = True
-                self.batch_started.emit("Fortschritt markieren")
+                self.batch_started.emit(t("Fortschritt markieren"))
             changes = self._tool_manager.on_mouse_press(ctx, event)
             for x, y, marker in changes:
                 if marker == MARK_COMPLETED:
@@ -76,7 +77,7 @@ class MouseEventsMixin:
             if self._is_valid_grid_pos(ctx.grid_x, ctx.grid_y):
                 if not self._batch_active:
                     self._batch_active = True
-                    self.batch_started.emit("Löschen")
+                    self.batch_started.emit(t("Löschen"))
 
                 for mx, my in self.get_mirrored_positions(ctx.grid_x, ctx.grid_y):
                     self.invalidate_cell(mx, my)
@@ -92,7 +93,7 @@ class MouseEventsMixin:
             and not is_backstitch_tool
         ):
             self._batch_active = True
-            self.batch_started.emit(current_tool.batch_description)
+            self.batch_started.emit(t(current_tool.batch_description))
 
         # Werkzeug-Event
         changes = self._tool_manager.on_mouse_press(ctx, event)
@@ -101,12 +102,12 @@ class MouseEventsMixin:
         if is_polygon_tool and changes:
             if not self._batch_active:
                 self._batch_active = True
-                self.batch_started.emit("Polygon")
+                self.batch_started.emit(t("Polygon"))
             self._apply_changes_with_mirror(changes)
             self._batch_active = False
             self.batch_ended.emit()
         elif is_select_tool and changes:
-            self.batch_started.emit("Einfügen")
+            self.batch_started.emit(t("Einfügen"))
             self._apply_changes(changes)
             self.batch_ended.emit()
         else:
@@ -209,7 +210,7 @@ class MouseEventsMixin:
             changes = self._tool_manager.on_mouse_release(ctx, event)
 
             if is_select_tool and changes:
-                self.batch_started.emit("Verschieben")
+                self.batch_started.emit(t("Verschieben"))
                 self._apply_changes(changes)
                 self.batch_ended.emit()
             else:

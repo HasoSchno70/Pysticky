@@ -426,5 +426,64 @@ class TestLayerSnapshotCommand:
         assert layer.get_stitch(1, 1) == 0  # unveraendert erhalten
 
 
+class TestDescriptionTranslation:
+    """Regression (Runde 19): jedes Command.description war ein rohes
+    deutsches f-String, nie durch t() geschickt -- ein Undo/Redo-Menuepunkt
+    zeigte im Englisch-Modus dauerhaft einen deutschen Beschreibungstext
+    nach dem uebersetzten "Undo:"/"Redo:"-Praefix. Diese Tests pruefen im
+    ECHTEN Englisch-Modus (nicht dem deutschen Default, wo t() per
+    Identitaets-Fallback sowieso den Quellstring zurueckgibt und einen
+    fehlenden t()-Aufruf gar nicht auffallen wuerde)."""
+
+    @pytest.fixture(autouse=True)
+    def _english_language(self):
+        from pysticky.core.i18n import set_language
+
+        set_language("en")
+        try:
+            yield
+        finally:
+            set_language("de")
+
+    def test_place_stitch_description_is_translated(self):
+        pattern = Pattern(width=10, height=10)
+        cmd = PlaceStitchCommand(pattern, 5, 5, 0, 0)
+        cmd.execute()
+        assert cmd.description == "Stitch at (5, 5)"
+
+    def test_remove_stitch_description_is_translated(self):
+        from pysticky.core import RemoveStitchCommand
+
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(5, 5, 0)
+        cmd = RemoveStitchCommand(pattern, 5, 5, 0)
+        cmd.execute()
+        assert cmd.description == "Stitch removed at (5, 5)"
+
+    def test_clear_layer_description_is_translated(self):
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.name = "Background"
+        cmd = ClearLayerCommand(pattern, 0)
+        assert cmd.description == "Layer 'Background' cleared"
+
+    def test_batch_stitch_description_translates_default_text(self):
+        """Der Default-Parameterwert "Mehrere Stiche" darf NICHT beim
+        Modulimport eingefroren werden -- description muss die aktuell
+        aktive Sprache widerspiegeln, auch fuer den Default."""
+        pattern = Pattern(width=10, height=10)
+        batch = BatchStitchCommand(pattern)
+        assert batch.description == "Multiple Stitches (0)"
+
+    def test_batch_stitch_description_translates_custom_text(self):
+        pattern = Pattern(width=10, height=10)
+        batch = BatchStitchCommand(pattern, description_text="Löschen")
+        assert batch.description == "Delete (0)"
+
+    def test_layer_snapshot_description_translates_default_text(self):
+        pattern = Pattern(width=3, height=3)
+        cmd = LayerSnapshotCommand(pattern, layer_index=0, action=lambda: None)
+        assert cmd.description == "Action"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

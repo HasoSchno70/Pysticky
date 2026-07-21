@@ -95,6 +95,35 @@ def test_discover_skips_invalid_manifest(tmp_path):
     assert not bad_ids
 
 
+@pytest.mark.parametrize("root_value", [None, [], 42, "just a string"])
+def test_discover_skips_manifest_with_non_dict_root(tmp_path, root_value):
+    """manifest.json ist syntaktisch gueltiges JSON, aber die Wurzel ist kein
+    Objekt (z.B. null/Liste/Zahl) -- PluginManifest.from_dict() darf hier
+    NICHT mit einem unabgefangenen TypeError abstuerzen (der den gesamten
+    Plugin-Dialog fuer alle Plugins mitreisst), sondern muss wie ein
+    normales kaputtes Manifest uebersprungen werden."""
+    from pysticky.plugins import discover_plugins
+
+    bad_dir = tmp_path / "bad_root_plugin"
+    bad_dir.mkdir()
+    (bad_dir / "manifest.json").write_text(json.dumps(root_value), encoding="utf-8")
+
+    plugins = discover_plugins(extra_dirs=[tmp_path])
+    bad_ids = {p.id for p in plugins if "bad_root" in str(p.directory).lower()}
+    assert not bad_ids
+
+
+def test_manifest_from_dict_rejects_non_dict_root():
+    """Direkter Unit-Test fuer PluginManifest.from_dict() ohne den
+    discover_plugins()-Umweg: muss PluginError werfen, nicht TypeError."""
+    from pysticky.plugins.api import PluginError, PluginManifest
+
+    with pytest.raises(PluginError):
+        PluginManifest.from_dict(None)  # type: ignore[arg-type]
+    with pytest.raises(PluginError):
+        PluginManifest.from_dict([])  # type: ignore[arg-type]
+
+
 def test_discover_deduplicates_by_id(tmp_path):
     """Doppelte Plugin-IDs werden nur einmal geliefert."""
     from pysticky.plugins import discover_plugins

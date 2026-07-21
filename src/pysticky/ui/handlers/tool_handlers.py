@@ -107,13 +107,15 @@ class ToolHandlersMixin:
             self.canvas.update()
 
     def _on_text_confirm(self: "MainWindow") -> None:
+        from ...core.i18n import t
+
         text_tool = self.canvas._tool_manager.get_text_tool()
         if text_tool and text_tool.has_preview:
             ctx = self.canvas._create_tool_context(0, 0)
             if ctx:
                 changes = text_tool.confirm_text(ctx)
                 if changes:
-                    self.canvas.batch_started.emit("Text")
+                    self.canvas.batch_started.emit(t("Text"))
                     # _apply_changes() statt manuellem Signal-Loop -- siehe
                     # edit_handlers.py::_on_replace_color.
                     self.canvas._apply_changes(changes)

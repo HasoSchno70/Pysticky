@@ -40,6 +40,16 @@ class PluginManifest:
 
     @classmethod
     def from_dict(cls, data: dict) -> "PluginManifest":
+        if not isinstance(data, dict):
+            # manifest.json ist syntaktisch gueltiges JSON, aber die Wurzel
+            # ist kein Objekt (z.B. null, eine Liste oder eine Zahl) -- ohne
+            # diese Pruefung wirft `k not in data` ein TypeError, das
+            # discover_plugins() nicht abfaengt und den gesamten Plugin-
+            # Dialog fuer ALLE Plugins abstuerzen laesst, nicht nur das
+            # kaputte.
+            raise PluginError(
+                f"Manifest muss ein JSON-Objekt sein, ist aber: {type(data).__name__}"
+            )
         missing = [k for k in ("id", "name", "version") if k not in data]
         if missing:
             raise PluginError(f"Manifest fehlen Pflichtfelder: {missing}")
