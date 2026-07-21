@@ -211,7 +211,11 @@ class CrossStitchCanvas(
         # Pfeiltasten-Navigation gesteuert wird. Unabhängig vom Hover-Cursor.
         self._stitch_cursor: tuple[int, int] | None = None
 
-        # Auswahl
+        # Auswahl (Rechteck in Grid-Koordinaten). Wird von MirrorMixin
+        # (mirror_selection_horizontal/_vertical) gelesen -- die
+        # öffentliche `selection`-Property und `clear_selection()` wurden
+        # entfernt (kein Aufrufer), aber dieses Attribut selbst wird direkt
+        # gebraucht, nicht nur in Tests.
         self._selection: QRect | None = None
 
         # Tablet-Pressure: aktuelle Stiftstärke (0.0-1.0). 0.0 bedeutet
@@ -315,7 +319,16 @@ class CrossStitchCanvas(
     def set_pattern(self, pattern: Pattern) -> None:
         """Setzt das anzuzeigende Pattern."""
         self._pattern = pattern
-        # Per-Pattern-State zurücksetzen
+        # Per-Pattern-State zurücksetzen. _current_color_index gehörte
+        # bisher NICHT dazu -- ColorBar.set_pattern() setzt ihre eigene
+        # Anzeige lautlos auf Index 0 zurück, ohne dabei ein Signal zu
+        # emittieren, also blieb der Canvas beim alten numerischen Index des
+        # VORHERIGEN Patterns hängen. Existierte dieser Index zufällig auch
+        # im neuen Pattern, wurde beim nächsten Klick lautlos mit der
+        # falschen Farbe gezeichnet; existierte er nicht, landete ein
+        # verwaister Farbindex ohne passenden Paletten-Eintrag im Grid
+        # (Layer.set_stitch() validiert den Index nicht).
+        self._current_color_index = 0
         self._isolate_color_index = None
         self._stitch_cursor = None
         self._center_pattern()
@@ -443,16 +456,6 @@ class CrossStitchCanvas(
     def current_tool(self) -> Tool:
         """Gibt das aktuelle Werkzeug zurück."""
         return self._tool_manager.current_tool
-
-    @property
-    def selection(self) -> QRect | None:
-        """Gibt die aktuelle Auswahl zurück."""
-        return self._selection
-
-    def clear_selection(self) -> None:
-        """Löscht die aktuelle Auswahl."""
-        self._selection = None
-        self.update()
 
     def set_offset(self, x: int, y: int) -> None:
         """Setzt den Canvas-Offset (für Minimap-Navigation)."""

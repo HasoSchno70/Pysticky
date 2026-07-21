@@ -72,8 +72,14 @@ class ProjectList:
             logger.warning("Projektliste konnte nicht gespeichert werden: %s", self._path)
 
     def add(self, path: str | Path) -> bool:
-        """Fügt einen Pfad hinzu. Gibt False zurück, wenn schon vorhanden."""
-        p = str(Path(path))
+        """Fügt einen Pfad hinzu. Gibt False zurück, wenn schon vorhanden.
+
+        Normalisiert per resolve() (wie misc_handlers.py::_add_recent_file
+        das schon für die Zuletzt-geöffnet-Liste tut) -- sonst würde
+        derselbe Pfad relativ vs. absolut, oder mit "../"-Segmenten, als
+        zwei unterschiedliche Einträge geführt.
+        """
+        p = str(Path(path).resolve())
         if p in self._paths:
             return False
         self._paths.append(p)
@@ -81,7 +87,7 @@ class ProjectList:
 
     def remove(self, path: str | Path) -> None:
         """Entfernt einen Pfad, falls vorhanden."""
-        p = str(Path(path))
+        p = str(Path(path).resolve())
         if p in self._paths:
             self._paths.remove(p)
 

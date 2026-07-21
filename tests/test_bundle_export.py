@@ -99,6 +99,35 @@ def test_bundle_handles_missing_source_image(pattern_with_stitches, tmp_path):
     assert out.exists()  # Bundle wurde trotzdem erzeugt
 
 
+def test_bundle_survives_source_image_copy_failure(pattern_with_stitches, tmp_path, monkeypatch):
+    """Regression: ein Kopierfehler beim Originalbild (Berechtigungen,
+    Platte voll, Datei gerade gesperrt) brach frueher den GESAMTEN
+    export_bundle()-Aufruf ab -- kein Bundle wurde erzeugt, obwohl alle
+    anderen Bestandteile (HTML/PNG/CSV/README) laengst fertig waren. Die
+    anderen optionalen Schritte waren schon immer fehlertolerant (landen
+    in "skipped" statt zu crashen), dieser eine war es nicht."""
+    from PySide6.QtGui import QColor, QImage
+
+    src = tmp_path / "source.png"
+    img = QImage(10, 10, QImage.Format.Format_RGB32)
+    img.fill(QColor("red"))
+    img.save(str(src), "PNG")
+    pattern_with_stitches.source_image_path = str(src)
+
+    import shutil
+
+    def boom(*args, **kwargs):
+        raise OSError("Platte voll (simuliert)")
+
+    monkeypatch.setattr(shutil, "copy2", boom)
+
+    out = tmp_path / "test_bundle.zip"
+    result = export_bundle(pattern_with_stitches, out, include_pdf=False)
+
+    assert out.exists()  # Bundle trotzdem erzeugt
+    assert any("original" in s for s in result["skipped"])
+
+
 def test_bundle_safe_basename_handles_special_chars(tmp_path):
     """Pattern-Namen mit Sonderzeichen produzieren saubere Dateinamen im ZIP."""
     from pysticky.core import Pattern

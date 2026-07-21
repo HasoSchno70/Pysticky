@@ -60,6 +60,31 @@ def test_canvas_set_and_paint_pattern(qtbot, pattern_with_stitches):
     assert canvas._pattern is pattern_with_stitches
 
 
+def test_canvas_set_pattern_resets_current_color_index(qtbot, pattern_with_colors):
+    """Regression: set_pattern() setzte _isolate_color_index/_stitch_cursor
+    zurück, aber NIE _current_color_index -- ein Pattern-Wechsel bei
+    ausgewählter Nicht-Null-Farbe liess den Canvas beim alten numerischen
+    Index des VORHERIGEN Patterns hängen. Existierte der Index zufällig
+    auch im neuen Pattern, wurde lautlos mit der falschen Farbe gezeichnet;
+    sonst landete ein verwaister Index ohne Paletten-Eintrag im Grid."""
+    from pysticky.ui.canvas import CrossStitchCanvas
+
+    canvas = CrossStitchCanvas()
+    qtbot.addWidget(canvas)
+    canvas.set_pattern(pattern_with_colors)
+    canvas.set_current_color(2)
+    assert canvas._current_color_index == 2
+
+    from pysticky.core import Pattern, Thread
+
+    new_pattern = Pattern(width=5, height=5)
+    new_pattern.color_entries.clear()
+    new_pattern.add_color(Thread.from_hex("Nur eine Farbe", "#123456"))
+    canvas.set_pattern(new_pattern)
+
+    assert canvas._current_color_index == 0
+
+
 def test_optimized_canvas_paint_with_no_pattern(qtbot):
     """Selbiges fuer die optimierte Variante."""
     from pysticky.ui.canvas import OptimizedCrossStitchCanvas

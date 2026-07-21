@@ -164,17 +164,24 @@ def export_bundle(
         _write_thread_csv(pattern, csv_path)
         files_in_zip.append(csv_path.name)
 
-        # 6. Originalbild — falls vorhanden
+        # 6. Originalbild — falls vorhanden. Wie die anderen optionalen
+        # Bestandteile (HTML/PNG/PDF) fehlertolerant: ein Kopierfehler
+        # (Berechtigungen, Platte voll, Datei gerade gesperrt) darf nicht
+        # das gesamte Bundle verhindern, nur diesen einen Bestandteil
+        # überspringen.
         source_dir_relative: str | None = None
         if pattern.source_image_path:
             src = Path(pattern.source_image_path)
             if src.exists():
-                src_dir = tmp / "original"
-                src_dir.mkdir()
-                dest = src_dir / src.name
-                shutil.copy2(src, dest)
-                source_dir_relative = f"original/{src.name}"
-                files_in_zip.append(source_dir_relative)
+                try:
+                    src_dir = tmp / "original"
+                    src_dir.mkdir()
+                    dest = src_dir / src.name
+                    shutil.copy2(src, dest)
+                    source_dir_relative = f"original/{src.name}"
+                    files_in_zip.append(source_dir_relative)
+                except OSError as exc:
+                    skipped.append(f"original ({exc})")
             else:
                 skipped.append(f"original ({src.name} nicht gefunden)")
 
