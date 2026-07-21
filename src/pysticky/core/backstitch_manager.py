@@ -229,10 +229,20 @@ class BackstitchManager:
 
         Returns:
             Der entfernte Backstitch oder None wenn keiner gefunden
+
+        Note:
+            Loescht per Index aus derselben Iteration, NICHT per
+            self._backstitches.remove(bs) (das waere ein erneuter, wert-
+            basierter Scan von vorn -- bei zwei Rueckstichen mit
+            identischen Koordinaten+Farbe koennte das eine ANDERE, aber
+            wertgleiche Instanz treffen als die hier tatsaechlich
+            gefundene). Gleiche Identitaets-Semantik wie remove() oben
+            (Runde 8), hier aber nie mitgefixt, weil remove_at() aktuell
+            keinen echten Aufrufer im Programm hat.
         """
-        for bs in self._backstitches:
+        for i, bs in enumerate(self._backstitches):
             if self._point_on_line(x, y, bs.x1, bs.y1, bs.x2, bs.y2, tolerance):
-                self._backstitches.remove(bs)
+                del self._backstitches[i]
                 return bs
         return None
 

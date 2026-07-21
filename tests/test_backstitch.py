@@ -100,6 +100,24 @@ class TestBackstitchManager:
         assert removed is None
         assert mgr.count() == 1
 
+    def test_remove_at_deletes_the_exact_scanned_instance(self):
+        """Regression (Runde 18): remove_at() loeschte per
+        self._backstitches.remove(bs) -- ein erneuter, wertbasierter Scan
+        von vorn, statt die waehrend der eigenen Positions-Suche bereits
+        gefundene Instanz per Index zu entfernen. Gleiche Identitaets-
+        Semantik wie remove() (Runde 8): remove_at() gibt jetzt garantiert
+        exakt die Instanz zurueck, die auch tatsaechlich aus der Liste
+        entfernt wurde."""
+        mgr = BackstitchManager()
+        bs_a = mgr.add(0, 0, 10, 10, 0)
+        bs_b = mgr.add(20, 20, 30, 30, 0)
+
+        removed = mgr.remove_at(5, 5, tolerance=2)
+
+        assert removed is bs_a
+        assert mgr.count() == 1
+        assert mgr.backstitches[0] is bs_b
+
     def test_find_at(self):
         """Test: Backstitch an Position finden."""
         mgr = BackstitchManager()
