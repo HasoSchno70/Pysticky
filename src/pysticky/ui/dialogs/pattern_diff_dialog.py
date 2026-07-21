@@ -163,12 +163,12 @@ class PatternDiffDialog(QDialog):
         img_array = np.full((h, w, 3), 235, dtype=np.uint8)
         new_grid = new.layer_stack.get_composite_grid()
         for i, entry in enumerate(new.color_entries):
-            if i >= len(new.color_entries):
-                break
-            mask = (new_grid == i) if (i < new.width and h >= new.height) else None
-            # vorsichtige Bounds
-            if mask is None or mask.shape != new_grid.shape:
-                continue
+            # Bounds-Check gegen die tatsaechliche Canvas-Groesse (h, w) --
+            # NICHT gegen i (der Farbindex), das war ein Tippfehler: bei
+            # Mustern mit mehr Farben als Breite (i >= new.width) wurde die
+            # Maske faelschlich uebersprungen und die betroffenen Zellen
+            # blieben im Diff-Overlay grau statt farbig getoent.
+            mask = new_grid == i
             if new.height <= h and new.width <= w:
                 # Im Bounding-Bereich einfärben (etwas heller)
                 c = entry.thread.color

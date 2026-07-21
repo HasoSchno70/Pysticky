@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...config import UI_CONFIG
-from ...core.constants import COMMON_FABRIC_COUNTS, MAX_PATTERN_SIZE
+from ...core.constants import MAX_PATTERN_SIZE
 from ...core.i18n import t
 from ..styles import THEME, Styles
 from .user_template_dialog import load_user_templates
@@ -553,16 +553,21 @@ class NewProjectDialog(QDialog):
 
         fabric_layout.addWidget(QLabel(t("Stoffart:")))
         self._fabric_combo = QComboBox()
-        self._fabric_combo.addItems(
-            [
-                t("Aida 11 (4,3 St/cm)"),
-                t("Aida 14 (5,5 St/cm)"),
-                t("Aida 16 (6,3 St/cm)"),
-                t("Aida 18 (7,1 St/cm)"),
-                t("Evenweave 28 (11 St/cm)"),
-                t("Leinen 32 (12,6 St/cm)"),
-            ]
-        )
+        # itemData traegt den echten Stoffzaehlungswert -- NICHT per
+        # currentIndex() gegen COMMON_FABRIC_COUNTS nachschlagen (das war
+        # ein Off-by-one-Bug: diese Liste hatte 6 Eintraege ohne "22",
+        # COMMON_FABRIC_COUNTS aber 7 mit "22" dazwischen, siehe
+        # ui/panels/info_panel.py fuer das schon immer korrekte Muster).
+        _fabric_labels = [
+            (11, t("Aida 11 (4,3 St/cm)")),
+            (14, t("Aida 14 (5,5 St/cm)")),
+            (16, t("Aida 16 (6,3 St/cm)")),
+            (18, t("Aida 18 (7,1 St/cm)")),
+            (28, t("Evenweave 28 (11 St/cm)")),
+            (32, t("Leinen 32 (12,6 St/cm)")),
+        ]
+        for count, label in _fabric_labels:
+            self._fabric_combo.addItem(label, count)
         self._fabric_combo.setCurrentIndex(1)  # Aida 14 als Standard
         self._fabric_combo.currentIndexChanged.connect(self._update_size_info)
         fabric_layout.addWidget(self._fabric_combo, 1)
@@ -658,6 +663,12 @@ class NewProjectDialog(QDialog):
 
     def _on_category_changed(self, id: int) -> None:
         """Kategorie gewechselt."""
+        # Ein zuvor gewaehltes DP-Preset gilt nicht mehr, sobald der User zu
+        # einer normalen Kategorie/Template wechselt -- sonst blieb
+        # get_settings() faelschlich bei dp_mode=True haengen, obwohl
+        # laengst ein gewoehnliches Kreuzstich-Template gewaehlt wurde.
+        self._dp_mode_selected = False
+
         # Alle Template-Cards entfernen
         for card in self._template_cards:
             card.deleteLater()
@@ -803,8 +814,7 @@ class NewProjectDialog(QDialog):
 
     def _update_size_info(self) -> None:
         """Größen-Info aktualisieren."""
-        fabric_counts = COMMON_FABRIC_COUNTS
-        fabric_count = fabric_counts[self._fabric_combo.currentIndex()]
+        fabric_count = self._fabric_combo.currentData()
 
         # Berechnung der physischen Größe
         stitches_per_cm = fabric_count / 2.54
@@ -843,12 +853,10 @@ class NewProjectDialog(QDialog):
 
     def get_settings(self) -> dict:
         """Gibt die gewählten Einstellungen zurück."""
-        fabric_counts = COMMON_FABRIC_COUNTS
-
         return {
             "width": self._width_spin.value(),
             "height": self._height_spin.value(),
-            "fabric_count": fabric_counts[self._fabric_combo.currentIndex()],
+            "fabric_count": self._fabric_combo.currentData(),
             "template_name": self._selected_template["name"] if self._selected_template else None,
             # True wenn ein DP-Preset gewählt wurde — der File-Handler
             # setzt entsprechend Pattern.mode='diamond' und fabric_count=10

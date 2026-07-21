@@ -827,14 +827,22 @@ class RenderingMixin:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         half_cell = self._cell_size // 2
+        cb_mode = getattr(self, "_colorblind_mode", None)
 
         # Existierende Backstitches
         for bs in self._pattern.backstitches:
             entry = self._pattern.get_color_entry(bs.color_index)
             if entry:
-                color = self._cache.get_color(
-                    entry.thread.color.r, entry.thread.color.g, entry.thread.color.b
-                )
+                tr, tg, tb = entry.thread.color.r, entry.thread.color.g, entry.thread.color.b
+                if cb_mode is not None and cb_mode.value != "none":
+                    # Gleiche Farbblindheits-Simulation wie fuer Stich-Zellen
+                    # (_draw_layer_cells) -- ohne das blieben Konturlinien in
+                    # ihrer echten (potenziell nicht unterscheidbaren) Farbe,
+                    # obwohl der Modus genau dafuer gedacht ist.
+                    from ....core.color_blindness import simulate_color
+
+                    tr, tg, tb = simulate_color(tr, tg, tb, cb_mode)
+                color = self._cache.get_color(tr, tg, tb)
             else:
                 color = QColor(0, 0, 0)
 
@@ -882,9 +890,12 @@ class RenderingMixin:
             if preview:
                 entry = self._pattern.get_color_entry(preview.color_index)
                 if entry:
-                    color = self._cache.get_color(
-                        entry.thread.color.r, entry.thread.color.g, entry.thread.color.b
-                    )
+                    tr, tg, tb = entry.thread.color.r, entry.thread.color.g, entry.thread.color.b
+                    if cb_mode is not None and cb_mode.value != "none":
+                        from ....core.color_blindness import simulate_color
+
+                        tr, tg, tb = simulate_color(tr, tg, tb, cb_mode)
+                    color = self._cache.get_color(tr, tg, tb)
                 else:
                     color = QColor(THEME.accent_primary)
 

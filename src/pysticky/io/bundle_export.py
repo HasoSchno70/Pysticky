@@ -39,16 +39,9 @@ def _write_thread_csv(pattern: "Pattern", path: Path) -> None:
     """Schreibt eine kompakte Garn-Bedarfsliste als CSV (kein UI-Code)."""
     import math
 
-    # 14ct als Default-Annahme — Bundle dient als Share-Format, für
-    # genaue Zahlen sollen User den Statistik-Dialog im UI nutzen.
-    stitches_per_skein = {
-        11: 780,
-        14: 500,
-        16: 380,
-        18: 300,
-        28: 190,
-        32: 145,
-    }.get(pattern.fabric_count, 500)
+    from ..core.constants import DEFAULT_STITCHES_PER_SKEIN, STITCHES_PER_SKEIN
+
+    stitches_per_skein = STITCHES_PER_SKEIN.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
 
     with open(path, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, delimiter=";")

@@ -37,7 +37,6 @@ from PySide6.QtWidgets import (
 
 from ...config import UI_CONFIG
 from ...core.constants import (
-    COMMON_FABRIC_COUNTS,
     DEFAULT_FABRIC_COUNT,
     DEFAULT_ZOOM_PERCENT,
     MAX_ZOOM_PERCENT,
@@ -437,9 +436,20 @@ class PatternPreviewDialog(QDialog):
         self._fabric_group_label = self._make_group_label(t("Stoff"))
         row.addWidget(self._fabric_group_label)
         self._fabric_combo = QComboBox()
-        self._fabric_combo.addItems(
-            ["Aida 11", "Aida 14", "Aida 16", "Aida 18", "Evenweave 28", "Leinen 32"]
-        )
+        # itemData traegt den echten Stoffzaehlungswert -- NICHT per
+        # currentIndex() gegen COMMON_FABRIC_COUNTS nachschlagen (das war
+        # ein Off-by-one-Bug: diese Liste hatte 6 Eintraege ohne "22",
+        # COMMON_FABRIC_COUNTS aber 7 mit "22" dazwischen, siehe
+        # ui/panels/info_panel.py fuer das schon immer korrekte Muster).
+        for count, label in (
+            (11, "Aida 11"),
+            (14, "Aida 14"),
+            (16, "Aida 16"),
+            (18, "Aida 18"),
+            (28, "Evenweave 28"),
+            (32, "Leinen 32"),
+        ):
+            self._fabric_combo.addItem(label, count)
         self._fabric_combo.setCurrentIndex(1)  # Aida 14
         self._fabric_combo.setMinimumWidth(110)
         self._fabric_combo.setToolTip(
@@ -782,9 +792,7 @@ class PatternPreviewDialog(QDialog):
         stats = self._pattern.get_statistics()
         progress = self._pattern.get_progress_statistics()
 
-        fabric_counts = COMMON_FABRIC_COUNTS
-        index = self._fabric_combo.currentIndex()
-        count = fabric_counts[index] if 0 <= index < len(fabric_counts) else DEFAULT_FABRIC_COUNT
+        count = self._fabric_combo.currentData() or DEFAULT_FABRIC_COUNT
         stitches_per_cm = count / 2.54
 
         w_cm = self._pattern.width / stitches_per_cm

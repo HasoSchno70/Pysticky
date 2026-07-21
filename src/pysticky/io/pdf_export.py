@@ -21,6 +21,7 @@ from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+from ..core.constants import DEFAULT_STITCHES_PER_SKEIN, STITCHES_PER_SKEIN
 from .export_cache import CompositeGridCache
 from .export_common import (
     count_page_colors,
@@ -83,17 +84,6 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         if REPORTLAB_AVAILABLE
         else {}
     )
-
-    # Stiche pro Strang je nach Stofftyp
-    STITCHES_PER_SKEIN = {
-        11: 2500,
-        14: 1800,
-        16: 1600,
-        18: 1400,
-        22: 1200,
-        28: 1000,
-        32: 800,
-    }
 
     def __init__(
         self,
@@ -366,7 +356,9 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         for _x, _y, color_idx in self.pattern.iterate_composite_stitches():
             stitch_counts[color_idx] = stitch_counts.get(color_idx, 0) + 1
 
-        stitches_per_skein = self.STITCHES_PER_SKEIN.get(self.pattern.fabric_count, 1800)
+        stitches_per_skein = STITCHES_PER_SKEIN.get(
+            self.pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN
+        )
         # Modus-spezifischer "Bedarf"-Wert (gleiche Logik wie HTML-Export):
         # Stitch -> Stränge, Diamond -> Drill-Anzahl + 10% Reserve.
         is_dp = getattr(self.pattern, "mode", "stitch") == "diamond"

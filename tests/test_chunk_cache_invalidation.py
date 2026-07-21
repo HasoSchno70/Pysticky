@@ -150,6 +150,85 @@ def test_get_cached_chunk_rejects_pixmap_rendered_at_different_cell_size(qtbot):
     )
 
 
+def test_get_cached_chunk_rejects_pixmap_rendered_at_different_symbol_font(qtbot):
+    """Regression (Runde 12): der Chunk-Cache-Key enthielt cell_size,
+    show_symbols etc., aber NICHT die Symbol-Schriftart/-Groesse
+    (canvas.symbol_font_family/symbol_size_offset, verdrahtet über
+    Settings -> Farben-Tab). Ein bereits gecachter Chunk blieb dadurch bei
+    der alten Schriftart/Groesse haengen, bis eine andere Aenderung
+    (Edit/Zoom) den Cache zufaellig mit-invalidierte."""
+    from PySide6.QtGui import QPixmap
+
+    from pysticky.ui.canvas import OptimizedCrossStitchCanvas
+
+    canvas = OptimizedCrossStitchCanvas()
+    qtbot.addWidget(canvas)
+    canvas.set_pattern(_large_pattern())
+
+    canvas._perf_manager.cache_chunk(
+        0,
+        0,
+        QPixmap(1, 1),
+        canvas._cell_size,
+        True,
+        True,
+        False,
+        False,
+        symbol_font_family="Segoe UI Symbol",
+        symbol_size_offset=0,
+    )
+    assert (
+        canvas._perf_manager.get_cached_chunk(
+            0,
+            0,
+            canvas._pattern,
+            canvas._cell_size,
+            True,
+            True,
+            False,
+            False,
+            symbol_font_family="Segoe UI Symbol",
+            symbol_size_offset=0,
+        )
+        is not None
+    )
+
+    # Andere Schriftart -- derselbe (cx, cy)-Key, aber der gecachte Pixmap
+    # wurde mit der alten Schriftart gerendert und ist ungueltig.
+    assert (
+        canvas._perf_manager.get_cached_chunk(
+            0,
+            0,
+            canvas._pattern,
+            canvas._cell_size,
+            True,
+            True,
+            False,
+            False,
+            symbol_font_family="Arial",
+            symbol_size_offset=0,
+        )
+        is None
+    )
+
+    # Gleiche Schriftart, andere Groessen-Verschiebung -- ebenfalls ungueltig.
+    assert (
+        canvas._perf_manager.get_cached_chunk(
+            0,
+            0,
+            canvas._pattern,
+            canvas._cell_size,
+            True,
+            True,
+            False,
+            False,
+            symbol_font_family="Segoe UI Symbol",
+            symbol_size_offset=4,
+        )
+        is None
+    )
+
+
 def test_set_cell_size_invalidates_chunk_cache_on_zoom(qtbot):
     """_set_cell_size() (zoom_in/zoom_out/set_zoom/zoom_fit/zoom_reset) muss
     den Chunk-Cache verwerfen, wenn sich die Zellgröße tatsächlich ändert."""

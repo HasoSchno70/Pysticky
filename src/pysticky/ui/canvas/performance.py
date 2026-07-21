@@ -205,6 +205,8 @@ class PerformanceManager:
         diamond_view: bool = False,
         empty_color: QColor | None = None,
         colorblind_mode: "ColorBlindType | None" = None,
+        symbol_font_family: str | None = None,
+        symbol_size_offset: int = 0,
     ) -> QPixmap | None:
         """
         Gibt den gecachten Chunk zurück, oder None wenn er neu gerendert werden muss.
@@ -223,6 +225,8 @@ class PerformanceManager:
             diamond_view,
             empty_color.name() if empty_color is not None else None,
             colorblind_mode,
+            symbol_font_family,
+            symbol_size_offset,
         )
 
         # Dirty?
@@ -259,6 +263,8 @@ class PerformanceManager:
         diamond_view: bool = False,
         empty_color: QColor | None = None,
         colorblind_mode: "ColorBlindType | None" = None,
+        symbol_font_family: str | None = None,
+        symbol_size_offset: int = 0,
     ) -> None:
         """Speichert einen Chunk im Cache, zusammen mit den Render-Parametern
         gegen die spätere get_cached_chunk()-Aufrufe validieren."""
@@ -275,6 +281,8 @@ class PerformanceManager:
             diamond_view,
             empty_color.name() if empty_color is not None else None,
             colorblind_mode,
+            symbol_font_family,
+            symbol_size_offset,
         )
         self._chunk_cache[(chunk_x, chunk_y)] = (pixmap, params)
         self._stats["chunks_rendered"] += 1

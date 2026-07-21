@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
 
 from ..utils.logging import get_logger
+from .constants import DEFAULT_STITCHES_PER_SKEIN
 
 if TYPE_CHECKING:
     from .thread import Thread
@@ -143,7 +144,7 @@ def compute_shopping_list(
     """
     from math import ceil
 
-    spk = stitches_per_skein.get(pattern.fabric_count, 1800)
+    spk = stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
     out: list[dict] = []
     for entry in pattern.color_entries:
         if entry.skip_stitching:
@@ -194,7 +195,7 @@ def compute_shopping_list_multi(
     needed_by_key: dict[str, int] = {}
     thread_by_key: dict[str, "Thread"] = {}
     for pattern in patterns:
-        spk = stitches_per_skein.get(pattern.fabric_count, 1800)
+        spk = stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
         for entry in pattern.color_entries:
             if entry.skip_stitching:
                 continue

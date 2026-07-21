@@ -15,6 +15,7 @@ from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ..core.constants import DEFAULT_STITCHES_PER_SKEIN, STITCHES_PER_SKEIN
 from ..utils.logging import get_logger
 from .export_cache import CompositeGridCache
 from .export_common import (
@@ -57,17 +58,6 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
 
     STITCHES_PER_PAGE_X = 40
     STITCHES_PER_PAGE_Y = 40
-
-    # Stiche pro Strang je nach Stofftyp
-    STITCHES_PER_SKEIN = {
-        11: 2500,  # Aida 11
-        14: 1800,  # Aida 14
-        16: 1600,  # Aida 16
-        18: 1400,  # Aida 18
-        22: 1200,  # Aida 22
-        28: 1000,  # Aida 28
-        32: 800,  # Aida 32
-    }
 
     def __init__(
         self,
@@ -191,7 +181,9 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
         # - Stitch: Stränge pro Farbe (Garn-Verbrauch)
         # - Diamond: Drill-Anzahl plus 10% Reserve (Verluste durch fallende Drills)
         is_dp = getattr(self.pattern, "mode", "stitch") == "diamond"
-        stitches_per_skein = self.STITCHES_PER_SKEIN.get(self.pattern.fabric_count, 1800)
+        stitches_per_skein = STITCHES_PER_SKEIN.get(
+            self.pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN
+        )
 
         # Statistiken aufbauen
         self._total_stitches = 0

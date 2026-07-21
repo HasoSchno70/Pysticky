@@ -19,6 +19,25 @@ MIN_FABRIC_COUNT = 6
 MAX_FABRIC_COUNT = 32
 COMMON_FABRIC_COUNTS = [11, 14, 16, 18, 22, 28, 32]
 
+# Geschätzte Vollstiche pro Standard-Strang (6-fädig, 2 Fäden benutzt) je
+# Stoffzählung -- fuer Garnbedarf-/Kosten-Schaetzungen (Statistik-Dialog,
+# Einkaufsliste/Inventory, Bundle-Export, PDF-/HTML-Muster-Legende).
+# EINZIGE Quelle: frueher hatten pdf_export.py und html_export.py eigene,
+# ~3.6x hoehere Werte als der Statistik-Dialog/Bundle-Export/Einkaufsliste
+# (die alle schon uebereinstimmten) -- gleiches Muster erschien je nach
+# Ansicht mit stark unterschiedlichem "Garnbedarf". Kein Eintrag fuer 22ct,
+# da COMMON_FABRIC_COUNTS zwar 22 kennt, aber kein Konsument bisher einen
+# eigenen Wert dafuer definiert hatte; .get(..., DEFAULT) faengt das ab.
+STITCHES_PER_SKEIN: dict[int, int] = {
+    11: 780,
+    14: 500,
+    16: 380,
+    18: 300,
+    28: 190,
+    32: 145,
+}
+DEFAULT_STITCHES_PER_SKEIN = 500
+
 # === Farben ===
 MIN_COLORS = 1
 MAX_COLORS = 100

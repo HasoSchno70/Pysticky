@@ -218,6 +218,8 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                     diamond_view,
                     self._empty_color,
                     colorblind_mode,
+                    self._symbol_font_family,
+                    self._symbol_size_offset,
                 )
 
                 if pixmap is None:
@@ -252,6 +254,8 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                         diamond_view,
                         self._empty_color,
                         colorblind_mode,
+                        self._symbol_font_family,
+                        self._symbol_size_offset,
                     )
 
                 # Chunk zeichnen

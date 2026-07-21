@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ....core.constants import COMMON_FABRIC_COUNTS
 from ....core.i18n import t
 from ...styles import THEME
 from ._constants import STITCHES_PER_SKEIN
@@ -49,16 +48,21 @@ class ThreadTab(QWidget):
 
         settings_layout.addWidget(QLabel(t("Stoffart:")), 0, 0)
         self._fabric_combo = QComboBox()
-        self._fabric_combo.addItems(
-            [
-                t("Aida 11 (4,3 St/cm)"),
-                t("Aida 14 (5,5 St/cm)"),
-                t("Aida 16 (6,3 St/cm)"),
-                t("Aida 18 (7,1 St/cm)"),
-                t("Evenweave 28 (11 St/cm)"),
-                t("Leinen 32 (12,6 St/cm)"),
-            ]
-        )
+        # itemData traegt den echten Stoffzaehlungswert -- NICHT per
+        # currentIndex() gegen COMMON_FABRIC_COUNTS nachschlagen (das war
+        # ein Off-by-one-Bug: diese Liste hatte 6 Eintraege ohne "22",
+        # COMMON_FABRIC_COUNTS aber 7 mit "22" dazwischen, siehe
+        # ui/panels/info_panel.py fuer das schon immer korrekte Muster).
+        _fabric_labels = [
+            (11, t("Aida 11 (4,3 St/cm)")),
+            (14, t("Aida 14 (5,5 St/cm)")),
+            (16, t("Aida 16 (6,3 St/cm)")),
+            (18, t("Aida 18 (7,1 St/cm)")),
+            (28, t("Evenweave 28 (11 St/cm)")),
+            (32, t("Leinen 32 (12,6 St/cm)")),
+        ]
+        for count, label in _fabric_labels:
+            self._fabric_combo.addItem(label, count)
         self._fabric_combo.setCurrentIndex(1)  # Aida 14
         self._fabric_combo.currentIndexChanged.connect(self._recalculate_thread)
         settings_layout.addWidget(self._fabric_combo, 0, 1)
@@ -140,7 +144,7 @@ class ThreadTab(QWidget):
         Returns:
             (fabric_count, waste_percent, price_per_skein)
         """
-        fabric_count = COMMON_FABRIC_COUNTS[self._fabric_combo.currentIndex()]
+        fabric_count = self._fabric_combo.currentData()
         return fabric_count, float(self._waste_spin.value()), self._price_spin.value()
 
     def _recalculate_thread(self) -> None:
@@ -148,8 +152,7 @@ class ThreadTab(QWidget):
         if self._pattern is None:
             return
 
-        fabric_counts = COMMON_FABRIC_COUNTS
-        fabric_count = fabric_counts[self._fabric_combo.currentIndex()]
+        fabric_count = self._fabric_combo.currentData()
         stitches_per_skein = STITCHES_PER_SKEIN.get(fabric_count, 500)
         waste_factor = 1 + (self._waste_spin.value() / 100)
         price = self._price_spin.value()

@@ -182,23 +182,61 @@ class TilePreviewPanel(QWidget):
         layout.setSpacing(8)
 
         # Titel
-        title = QLabel("🔲 " + t("MUSTER-KACHELN"))
-        title.setStyleSheet(Styles.section_header())
-        layout.addWidget(title)
+        self._title = QLabel("🔲 " + t("MUSTER-KACHELN"))
+        layout.addWidget(self._title)
 
         # Info
-        info = QLabel(t("Vorschau für Wiederholungsmuster und Bordüren."))
-        info.setWordWrap(True)
-        info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
-        layout.addWidget(info)
+        self._info = QLabel(t("Vorschau für Wiederholungsmuster und Bordüren."))
+        self._info.setWordWrap(True)
+        layout.addWidget(self._info)
 
         # Kachel-Anzahl
         tiles_layout = QHBoxLayout()
         tiles_layout.setSpacing(8)
 
-        lbl = QLabel(t("Kacheln:"))
-        lbl.setStyleSheet(f"color: {THEME.text_secondary};")
-        tiles_layout.addWidget(lbl)
+        self._lbl_tiles = QLabel(t("Kacheln:"))
+        tiles_layout.addWidget(self._lbl_tiles)
+
+        self._spin_x = QSpinBox()
+        self._spin_x.setRange(1, 5)
+        self._spin_x.setValue(3)
+        self._spin_x.setPrefix("X: ")
+        self._spin_x.setFixedWidth(70)
+        self._spin_x.valueChanged.connect(self._on_tiles_changed)
+        tiles_layout.addWidget(self._spin_x)
+
+        self._spin_y = QSpinBox()
+        self._spin_y.setRange(1, 5)
+        self._spin_y.setValue(3)
+        self._spin_y.setPrefix("Y: ")
+        self._spin_y.setFixedWidth(70)
+        self._spin_y.valueChanged.connect(self._on_tiles_changed)
+        tiles_layout.addWidget(self._spin_y)
+
+        tiles_layout.addStretch()
+        layout.addLayout(tiles_layout)
+
+        # Optionen
+        self._chk_borders = QCheckBox(t("Kachelgrenzen anzeigen"))
+        self._chk_borders.setChecked(True)
+        self._chk_borders.toggled.connect(self._on_borders_changed)
+        layout.addWidget(self._chk_borders)
+
+        # Vorschau-Widget
+        self._preview = TilePreviewWidget()
+        layout.addWidget(self._preview, 1)
+
+        self._apply_theme()
+
+    def _apply_theme(self) -> None:
+        """Setzt alle THEME-abhaengigen Stylesheets neu -- wird sowohl beim
+        initialen Aufbau als auch bei einem Live-Theme-Wechsel aufgerufen.
+        Vorher wurden diese Styles nur einmalig in _setup_ui() gesetzt und
+        blieben nach einem Theme-Wechsel auf den alten Farben stehen."""
+        self.setStyleSheet(f"TilePreviewPanel {{ background: {THEME.bg_medium}; }}")
+        self._title.setStyleSheet(Styles.section_header())
+        self._info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
+        self._lbl_tiles.setStyleSheet(f"color: {THEME.text_secondary};")
 
         spin_style = f"""
             QSpinBox {{
@@ -216,31 +254,9 @@ class TilePreviewPanel(QWidget):
                 background: {THEME.bg_light};
             }}
         """
-
-        self._spin_x = QSpinBox()
-        self._spin_x.setRange(1, 5)
-        self._spin_x.setValue(3)
-        self._spin_x.setPrefix("X: ")
-        self._spin_x.setFixedWidth(70)
         self._spin_x.setStyleSheet(spin_style)
-        self._spin_x.valueChanged.connect(self._on_tiles_changed)
-        tiles_layout.addWidget(self._spin_x)
-
-        self._spin_y = QSpinBox()
-        self._spin_y.setRange(1, 5)
-        self._spin_y.setValue(3)
-        self._spin_y.setPrefix("Y: ")
-        self._spin_y.setFixedWidth(70)
         self._spin_y.setStyleSheet(spin_style)
-        self._spin_y.valueChanged.connect(self._on_tiles_changed)
-        tiles_layout.addWidget(self._spin_y)
 
-        tiles_layout.addStretch()
-        layout.addLayout(tiles_layout)
-
-        # Optionen
-        self._chk_borders = QCheckBox(t("Kachelgrenzen anzeigen"))
-        self._chk_borders.setChecked(True)
         self._chk_borders.setStyleSheet(f"""
             QCheckBox {{
                 color: {THEME.text_secondary};
@@ -258,17 +274,7 @@ class TilePreviewPanel(QWidget):
                 border: 1px solid {THEME.border_medium};
             }}
         """)
-        self._chk_borders.toggled.connect(self._on_borders_changed)
-        layout.addWidget(self._chk_borders)
 
-        # Vorschau-Widget
-        self._preview = TilePreviewWidget()
-        layout.addWidget(self._preview, 1)
-
-        self.setStyleSheet(f"TilePreviewPanel {{ background: {THEME.bg_medium}; }}")
-
-    def _apply_theme(self) -> None:
-        self.setStyleSheet(f"TilePreviewPanel {{ background: {THEME.bg_medium}; }}")
         self._preview.update()
 
     def set_pattern(self, pattern: Pattern) -> None:

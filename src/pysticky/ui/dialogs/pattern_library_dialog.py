@@ -476,8 +476,8 @@ class PatternLibraryDialog(QDialog):
             widget.set_selected(widget.entry == entry)
 
         # Details anzeigen
-        w_cm = entry.width / 14 * 2.54
-        h_cm = entry.height / 14 * 2.54
+        w_cm = entry.width / entry.fabric_count * 2.54
+        h_cm = entry.height / entry.fabric_count * 2.54
 
         self._detail_label.setText(
             f"<b>{entry.name}</b> | "
@@ -732,6 +732,7 @@ class PatternLibraryDialog(QDialog):
                 height=pattern.height,
                 color_count=pattern.color_count,
                 stitch_count=pattern.total_stitches,
+                fabric_count=pattern.fabric_count,
                 categories=categories,
             )
 
