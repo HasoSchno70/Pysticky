@@ -51,3 +51,38 @@ def test_csv_export_quotes_comma_in_thread_name(qtbot, tmp_path, monkeypatch):
     assert data_row[1] == "Rot, dunkel"
     assert data_row[2] == "DMC"
     assert data_row[3] == "321"
+
+
+def test_csv_export_omits_meaningless_skein_columns_in_diamond_mode(qtbot, tmp_path, monkeypatch):
+    """Regression (Runde 17): der CSV-Export las Strang-/Kosten-Werte immer
+    vom (im DP-Modus versteckten) Garnverbrauch-Tab, das nie mit
+    pattern.fabric_count synchronisiert wird -- Diamond-Painting-Exporte
+    enthielten dadurch bedeutungslose "Stränge"/"Kosten"-Spalten, obwohl DP
+    keine Skein-Einheit kennt (siehe dp-stitch-parity-2026-07-18.md)."""
+    pattern = Pattern(width=5, height=5)
+    pattern.mode = "diamond"
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    pattern.set_stitch(0, 0, 0)
+
+    dialog = PatternStatisticsDialog(pattern)
+    qtbot.addWidget(dialog)
+
+    out_path = tmp_path / "stats_dp.csv"
+
+    import pysticky.ui.dialogs.statistics_dialog as module
+
+    monkeypatch.setattr(
+        module.QFileDialog, "getSaveFileName", staticmethod(lambda *a, **k: (str(out_path), ""))
+    )
+    monkeypatch.setattr(module.QMessageBox, "information", staticmethod(lambda *a, **k: None))
+
+    dialog._on_export_csv()
+
+    with open(out_path, newline="", encoding="utf-8") as f:
+        rows = list(csv.reader(f))
+
+    header = rows[0]
+    assert "Stränge" not in header
+    assert "Kosten" not in header
+    assert "Nicht sticken" in header  # andere Spalten bleiben unveraendert

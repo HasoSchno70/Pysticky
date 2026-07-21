@@ -5,7 +5,7 @@ Dialog zum Importieren von XSD/PAT/OXS-Dateien.
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
+from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
 from ...config import UI_CONFIG
 from ...core.i18n import t
 from ...core.pattern import Pattern
-from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -341,45 +340,48 @@ class PatternImportDialog(QDialog):
         self._preview_label.setText(t("Keine Vorschau verfügbar"))
 
     def _update_preview(self) -> None:
-        """Erstellt eine Vorschau des Musters."""
+        """Erstellt eine Vorschau des Musters.
+
+        Vektorisiert ueber eine numpy-Farb-LUT statt einer verschachtelten
+        Python-Schleife mit einem QPainter.fillRect()-Aufruf pro Zelle --
+        bei einem (durch die 2000x2000-Formatgrenze erlaubten) grossen
+        Muster waren das bis zu 4 Millionen Iterationen auf dem GUI-Thread,
+        ein spuerbares UI-Einfrieren direkt nach dem Import. Gleiches
+        Performance-Problem wurde im Bildimport-Dialog schon gefixt
+        (image_import/preview_mixin.py::_pattern_to_image), hier aber nie
+        nachgezogen.
+        """
         if not self._pattern:
             return
 
-        # Thumbnail erstellen
+        import numpy as np
+
         p = self._pattern
+        composite = p.layer_stack.get_composite_grid()
+        n_colors = len(p.color_entries)
 
-        # Skalierung berechnen
-        max_size = 180
-        scale = min(max_size / p.width, max_size / p.height, 4)
+        # Farb-LUT: Index 0..n-1 = Garnfarben, letzter Index = Hintergrund
+        # (fuer NO_STITCH und ungueltige Indizes).
+        lut = np.full((n_colors + 1, 3), 255, dtype=np.uint8)
+        for i, entry in enumerate(p.color_entries):
+            c = entry.thread.color
+            lut[i] = (c.r, c.g, c.b)
 
-        img_width = max(1, int(p.width * scale))
-        img_height = max(1, int(p.height * scale))
+        safe_idx = np.where((composite >= 0) & (composite < n_colors), composite, n_colors)
+        pixel_array = np.ascontiguousarray(lut[safe_idx])  # (height, width, 3) uint8
 
-        # QImage erstellen
-        image = QImage(img_width, img_height, QImage.Format.Format_RGB32)
-        image.fill(QColor(255, 255, 255))
-
-        painter = QPainter(image)
-
-        # Pixel setzen
-        for y in range(p.height):
-            for x in range(p.width):
-                color_idx = p.get_stitch(x, y)
-                if color_idx is not None and 0 <= color_idx < len(p.color_entries):
-                    color = p.color_entries[color_idx].thread.color
-                    qcolor = to_qcolor(color)
-
-                    px = int(x * scale)
-                    py = int(y * scale)
-                    pw = max(1, int(scale))
-                    ph = max(1, int(scale))
-
-                    painter.fillRect(px, py, pw, ph, qcolor)
-
-        painter.end()
-
-        # Anzeigen
+        h, w = pixel_array.shape[:2]
+        image = QImage(pixel_array.tobytes(), w, h, w * 3, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(image)
+
+        max_size = 180
+        pixmap = pixmap.scaled(
+            max_size,
+            max_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.FastTransformation,
+        )
+
         self._preview_label.setPixmap(pixmap)
         self._preview_label.setText("")
 

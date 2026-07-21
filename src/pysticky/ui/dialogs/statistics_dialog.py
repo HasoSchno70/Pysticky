@@ -263,26 +263,28 @@ class PatternStatisticsDialog(QDialog):
             # in Farbnamen automatisch -- die vorige rohe f-String-
             # Verkettung verschob bei einem Komma im Namen/Hersteller
             # stillschweigend alle folgenden Spalten.
+            # Diamond-Painting kennt keine Strang-/Skein-Einheit (siehe
+            # dp-stitch-parity-2026-07-18.md: Garnverbrauch-/Einkaufsliste-
+            # Tabs sind im DP-Modus komplett ausgeblendet). Der CSV-Export
+            # las trotzdem calculator_settings() vom versteckten ThreadTab
+            # (nie mit pattern.fabric_count synchronisiert, defaultet auf
+            # Aida-14) und schrieb bedeutungslose Strang-/Kosten-Werte.
+            # Diese Spalten werden im DP-Modus jetzt komplett weggelassen.
+            is_diamond = self._pattern.mode == "diamond"
+
             with open(path, "w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(
-                    [
-                        "Symbol",
-                        "Name",
-                        "Hersteller",
-                        "Katalognummer",
-                        "Stiche",
-                        "Prozent",
-                        "Stränge",
-                        "Kosten",
-                        "Nicht sticken",
-                    ]
-                )
+                header = ["Symbol", "Name", "Hersteller", "Katalognummer", "Stiche", "Prozent"]
+                if not is_diamond:
+                    header += ["Stränge", "Kosten"]
+                header.append("Nicht sticken")
+                writer.writerow(header)
 
-                # Daten (Rechner-Einstellungen aus dem Garnverbrauch-Tab)
-                fabric_count, waste_percent, price = self._thread_tab.calculator_settings()
-                stitches_per_skein = STITCHES_PER_SKEIN.get(fabric_count, 500)
-                waste_factor = 1 + (waste_percent / 100)
+                if not is_diamond:
+                    # Daten (Rechner-Einstellungen aus dem Garnverbrauch-Tab)
+                    fabric_count, waste_percent, price = self._thread_tab.calculator_settings()
+                    stitches_per_skein = STITCHES_PER_SKEIN.get(fabric_count, 500)
+                    waste_factor = 1 + (waste_percent / 100)
 
                 # Nur nicht-übersprungene für Prozent
                 total = (
@@ -297,27 +299,29 @@ class PatternStatisticsDialog(QDialog):
                         cost = 0.0
                     else:
                         percent = f"{(entry.stitch_count / total) * 100:.1f}%"
-                        exact_skeins = entry.stitch_count / stitches_per_skein
-                        with_waste = (
-                            math.ceil(exact_skeins * waste_factor) if entry.stitch_count > 0 else 0
-                        )
-                        cost = with_waste * price
+                        if not is_diamond:
+                            exact_skeins = entry.stitch_count / stitches_per_skein
+                            with_waste = (
+                                math.ceil(exact_skeins * waste_factor)
+                                if entry.stitch_count > 0
+                                else 0
+                            )
+                            cost = with_waste * price
 
                     skip_flag = "Ja" if entry.skip_stitching else "Nein"
 
-                    writer.writerow(
-                        [
-                            entry.symbol,
-                            entry.thread.name,
-                            entry.thread.manufacturer or "-",
-                            entry.thread.catalog_number or "-",
-                            entry.stitch_count,
-                            percent,
-                            with_waste,
-                            f"{cost:.2f}",
-                            skip_flag,
-                        ]
-                    )
+                    row = [
+                        entry.symbol,
+                        entry.thread.name,
+                        entry.thread.manufacturer or "-",
+                        entry.thread.catalog_number or "-",
+                        entry.stitch_count,
+                        percent,
+                    ]
+                    if not is_diamond:
+                        row += [with_waste, f"{cost:.2f}"]
+                    row.append(skip_flag)
+                    writer.writerow(row)
 
             QMessageBox.information(
                 self, t("Export erfolgreich"), f"Statistiken exportiert nach:\n{path}"

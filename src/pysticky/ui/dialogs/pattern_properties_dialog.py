@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
+from ...io.export_common import fabric_label_for
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -84,9 +85,13 @@ class PatternPropertiesDialog(QDialog):
         colors_label.setStyleSheet(value)
         info_layout.addRow(self._mk_label(t("Farben:"), muted), colors_label)
 
-        fabric_label = QLabel(f"{self._pattern.fabric_count} ct Aida")
-        fabric_label.setStyleSheet(value)
-        info_layout.addRow(self._mk_label(t("Stoff:"), muted), fabric_label)
+        # Diamond-Painting-Muster haben keine "Aida ct"-Stoffzaehlung --
+        # fabric_label_for() liefert dort die Drill-Pitch-Bezeichnung
+        # (z.B. "2.5 mm Square"), exakt wie PDF-/HTML-Export und info_panel
+        # es schon immer machen. Diese Dialog hatte das vorher hart-codiert.
+        self._fabric_label = QLabel(fabric_label_for(self._pattern))
+        self._fabric_label.setStyleSheet(value)
+        info_layout.addRow(self._mk_label(t("Stoff:"), muted), self._fabric_label)
 
         layout.addWidget(info_frame)
 
