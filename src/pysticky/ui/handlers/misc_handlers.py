@@ -806,6 +806,13 @@ class MiscHandlersMixin:
         if backstitch_tool:
             backstitch_tool.snap_to_grid = self._settings.value("backstitch_snap", True, type=bool)
 
+        # Werkzeuge-Tab: Touch-Gesten (Pinch-Zoom) -- der Tooltip verspricht
+        # "Aenderung wird sofort uebernommen", aber _apply_touch_setting()
+        # wurde bisher nur EINMAL in Canvas.__init__ aufgerufen. Ohne diesen
+        # Aufruf hatte das Umschalten der Checkbox bis zum naechsten
+        # Programmstart keine Wirkung.
+        self.canvas._apply_touch_setting()
+
         # Tastenkürzel (live, ohne Neustart)
         from ..shortcuts_registry import apply_saved_overrides
 

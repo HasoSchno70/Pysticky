@@ -235,11 +235,19 @@ class CanvasContainer(QWidget):
 
     def _on_h_scroll(self, value: int) -> None:
         self._canvas._offset_x = -value
+        # offset_changed emitten wie die Ruler-Klick-Handler direkt darunter --
+        # MainWindow haengt daran _update_minimap_viewport() (siehe
+        # mw_signals_mixin.py). Ohne das Signal blieb die Minimap-Viewport-
+        # Markierung beim Scrollbar-Ziehen an der alten Position stehen, bis
+        # eine unabhaengige Aktion (Zoom, Pan per Maus/Pfeiltaste, Undo) sie
+        # zufaellig mit-synchronisierte.
+        self._canvas.offset_changed.emit(self._canvas._offset_x, self._canvas._offset_y)
         self._update_rulers()
         self._canvas.update()
 
     def _on_v_scroll(self, value: int) -> None:
         self._canvas._offset_y = -value
+        self._canvas.offset_changed.emit(self._canvas._offset_x, self._canvas._offset_y)
         self._update_rulers()
         self._canvas.update()
 

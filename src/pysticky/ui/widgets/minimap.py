@@ -256,9 +256,9 @@ class MinimapPanel(QWidget):
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
 
-        title = QLabel("📍 " + t("ÜBERSICHT"))
-        title.setStyleSheet(Styles.section_header())
-        layout.addWidget(title)
+        self._title = QLabel("📍 " + t("ÜBERSICHT"))
+        self._title.setStyleSheet(Styles.section_header())
+        layout.addWidget(self._title)
 
         self.minimap = MinimapWidget()
         self.minimap.viewport_changed.connect(self.viewport_changed.emit)
@@ -270,6 +270,11 @@ class MinimapPanel(QWidget):
         layout.addWidget(self.info_label)
 
     def _apply_theme(self) -> None:
+        # Titel fehlte hier bisher (Runde 14) -- gleiche Bug-Klasse wie
+        # tile_preview_panel.py (Runde 12): Styles.section_header() wurde
+        # nur einmalig in _setup_ui() gesetzt und blieb nach einem Live-
+        # Theme-Wechsel auf der alten Akzentfarbe haengen.
+        self._title.setStyleSheet(Styles.section_header())
         self.minimap._apply_theme()
         self.info_label.setStyleSheet(f"font-size: 10px; color: {THEME.text_muted};")
 

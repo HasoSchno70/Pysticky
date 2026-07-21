@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QColorDialog, QPushButton, QWidget
 
+from ....core.i18n import t
 from ...styles import THEME
 
 
@@ -55,7 +56,7 @@ class ColorButton(QPushButton):
         self.setText(self._color.upper())
 
     def _pick_color(self) -> None:
-        color = QColorDialog.getColor(QColor(self._color), self, "Farbe wählen")
+        color = QColorDialog.getColor(QColor(self._color), self, t("Farbe wählen"))
         if color.isValid():
             self._color = color.name()
             self._update_style()

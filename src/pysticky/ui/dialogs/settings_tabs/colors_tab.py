@@ -37,22 +37,7 @@ class ColorsTab(QWidget):
         group_palette, form = make_section_form(t("Standard-Palette"), "🧵")
 
         self.combo_default_palette = QComboBox()
-        palettes = [
-            "DMC",
-            "Anchor",
-            "Madeira",
-            "Cosmo",
-            "Olympus",
-            "Weeks Dye Works",
-            "Valdani",
-            "Venus",
-            "Finca",
-            "Sullivans",
-            "Riolis Gamma",
-            "Classic Colorworks",
-            "Gentle Art Sampler Threads",
-        ]
-        self.combo_default_palette.addItems(palettes)
+        self.combo_default_palette.addItems(self._available_regular_palette_names())
         self.combo_default_palette.setToolTip(t("Palette, die standardmäßig geladen wird"))
         form.addRow(t("Standard:"), self.combo_default_palette)
 
@@ -158,3 +143,23 @@ class ColorsTab(QWidget):
         self.combo_color_display.setCurrentIndex(0)
         self.chk_highlight_selected.setChecked(True)
         self.spin_color_bar_size.setValue(48)
+
+    @staticmethod
+    def _available_regular_palette_names() -> list[str]:
+        """Liefert alle geladenen Garn-Paletten (ohne reine Bead-/Diamond-
+        Paletten -- fuer "Standard-Palette eines neuen Kreuzstich-Musters"
+        ergeben die keinen Sinn). Vorher war diese Liste hart-codiert und
+        hinkte dem tatsaechlichen Paletten-Bestand hinterher (z.B. "DMC
+        Diamant"/"DMC Light Effects" fehlten, obwohl beides normale
+        Garn-Paletten sind) -- gleiches dynamisches Muster wie
+        files_tab.py::_populate_cross_ref_list()."""
+        from ....core.palette import get_palette_manager
+
+        pm = get_palette_manager()
+        pm.load_all()
+        names = []
+        for name in sorted(pm.available_palettes):
+            palette = pm.get_palette(name)
+            if palette and not palette.is_beads and not palette.is_diamond:
+                names.append(name)
+        return names

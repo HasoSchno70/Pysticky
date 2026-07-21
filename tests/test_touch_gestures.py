@@ -118,3 +118,39 @@ def test_canvas_has_pinch_gesture_handler(qapp):
     canvas = _make_canvas(qapp)
     assert hasattr(canvas, "_handle_gesture")
     assert callable(canvas._handle_gesture)
+
+
+def test_settings_dialog_applies_touch_setting_live(qapp, qtbot):
+    """Regression (Runde 14): der Tooltip der Touch-Gesten-Checkbox
+    verspricht "Aenderung wird sofort uebernommen", aber
+    _apply_settings_from_dialog() (der zentrale Live-Reapply-Pfad nach
+    Settings-Dialog-OK) rief canvas._apply_touch_setting() nie auf --
+    nur Canvas.__init__ tat das, einmalig beim Programmstart. Toggle der
+    Checkbox + OK hatte dadurch bis zum Neustart keine Wirkung, obwohl
+    der Tooltip live-Wirkung versprach."""
+    from PySide6.QtCore import QSettings, Qt
+
+    from pysticky.ui.main_window import MainWindow
+
+    s = QSettings()
+    old = s.value("touch/gestures_enabled")
+    try:
+        s.setValue("touch/gestures_enabled", False)
+        s.sync()
+
+        w = MainWindow()
+        qtbot.addWidget(w)
+        w._check_save_changes = lambda: True
+        w._autosave_timer.stop()
+        assert w.canvas.testAttribute(Qt.WidgetAttribute.WA_AcceptTouchEvents) is False
+
+        s.setValue("touch/gestures_enabled", True)
+        s.sync()
+        w._apply_settings_from_dialog()
+
+        assert w.canvas.testAttribute(Qt.WidgetAttribute.WA_AcceptTouchEvents) is True
+    finally:
+        if old is None:
+            s.remove("touch/gestures_enabled")
+        else:
+            s.setValue("touch/gestures_enabled", old)

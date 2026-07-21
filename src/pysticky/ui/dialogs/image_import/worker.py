@@ -26,3 +26,14 @@ class _ImageImportWorker(QObject):
             self.finished.emit(pattern)
         except (OSError, ValueError) as e:
             self.error.emit(str(e))
+        except Exception as e:  # noqa: BLE001 - siehe unten
+            # Ohne diesen Catch-all haette JEDER unerwartete Fehler (z.B.
+            # PIL.Image.DecompressionBombError bei einem riesigen Quellbild,
+            # oder ein interner Fehler in der Dithering-/Quantisierungs-
+            # Pipeline) weder finished noch error feuern lassen -- der
+            # QThread waere nie fertig geworden und der modale
+            # Fortschrittsdialog (dialog.py::_on_import()) haette sich
+            # dauerhaft nicht mehr schliessen lassen (_import_running()
+            # bleibt True, solange der Thread laeuft). Gleiche Bug-Klasse
+            # wie bei oxs_io.py in Runde 11.
+            self.error.emit(str(e))

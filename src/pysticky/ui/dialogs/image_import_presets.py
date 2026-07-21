@@ -118,14 +118,42 @@ def load_user_presets() -> list[dict]:
     if path.exists():
         try:
             with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                raw = json.load(f)
         except (OSError, json.JSONDecodeError, ValueError):
             logger.warning("User-Presets konnten nicht geladen werden: %s", path)
+            return []
+
+        # Struktur validieren -- _populate_presets() (presets_mixin.py)
+        # greift auf p["name"] fuer jeden Eintrag zu. Ohne diese Pruefung
+        # liess eine strukturell falsche Datei (kaputtbearbeitet, aus einer
+        # aelteren/anderen Version) den kompletten Bildimport-Dialog schon
+        # beim Oeffnen mit TypeError/KeyError abstuerzen (gleiche
+        # Fehlerklasse wie die laengst gefixten PaletteManager-/Inventory-/
+        # LibraryData-Loader). Strukturell falsche Eintraege werden
+        # uebersprungen statt alles mitzureissen.
+        if not isinstance(raw, list):
+            logger.warning("User-Presets-Datei hat unerwartetes Format: %s", path)
+            return []
+
+        valid: list[dict] = []
+        for entry in raw:
+            if isinstance(entry, dict) and isinstance(entry.get("name"), str):
+                valid.append(entry)
+            else:
+                logger.warning("Ungueltiger User-Preset-Eintrag uebersprungen: %r", entry)
+        return valid
     return []
 
 
 def save_user_presets(presets: list[dict]) -> None:
     """Speichert benutzerdefinierte Import-Presets."""
     path = get_user_presets_path()
-    with open(path, "w", encoding="utf-8") as f:
+    # Atomar schreiben (Temp-Datei + os.replace()) -- wie save_pattern()
+    # seit Runde 6. Ein Crash/Stromausfall mitten in json.dump() haette
+    # sonst genau die strukturell kaputte Datei zurueckgelassen, die
+    # load_user_presets() oben jetzt zwar abfaengt, aber die den
+    # Dialog vorher komplett lahmgelegt hat.
+    temp_path = path.with_suffix(".json.tmp")
+    with open(temp_path, "w", encoding="utf-8") as f:
         json.dump(presets, f, ensure_ascii=False, indent=2)
+    temp_path.replace(path)
