@@ -14,7 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor, QImage, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
@@ -161,8 +161,28 @@ class HeatmapDialog(QDialog):
         self.setWindowTitle(t("Pattern-Heatmap"))
         self.setMinimumSize(700, 600)
 
+        # Debounce fuer resizeEvent -- _refresh_heatmap() rendert per-Pixel
+        # (siehe _heatmap_to_qimage()), ein Aufruf pro einzelnem Resize-Event
+        # waehrend eines Fenster-Zieh-Vorgangs waere unnoetig teuer.
+        self._resize_timer = QTimer()
+        self._resize_timer.setSingleShot(True)
+        self._resize_timer.setInterval(150)
+        self._resize_timer.timeout.connect(self._refresh_heatmap)
+
         self._setup_ui()
         self._refresh_heatmap()
+
+    def resizeEvent(self, event) -> None:
+        """Rendert die Heatmap bei Groessenaenderung neu.
+
+        Ohne diesen Override blieb die Heatmap dauerhaft bei der Groesse
+        haengen, die der Scroll-Viewport beim Konstruktor-Aufruf hatte --
+        Vergroessern/Maximieren des Dialogs aenderte am Bild nichts, bis
+        zufaellig Achsen-Combo oder Block-Slider angefasst wurden (beide
+        rufen _refresh_heatmap() ohnehin schon auf).
+        """
+        super().resizeEvent(event)
+        self._resize_timer.start()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)

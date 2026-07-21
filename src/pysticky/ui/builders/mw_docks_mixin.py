@@ -45,45 +45,49 @@ class DockBuilderMixin:
 
         # Layer-Panel (links)
         self.layer_panel = LayerPanel(self)
-        layer_dock = self._create_dock(t("Ebenen"), self.layer_panel)
+        layer_dock = self._create_dock(t("Ebenen"), self.layer_panel, "dock_layers")
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, layer_dock)
 
         # Paletten-Panel (rechts) — Dock-Titel wird beim Modus-Wechsel
         # angepasst (siehe view_handlers._apply_pattern_mode).
         self.palette_panel = PalettePanel(self)
-        palette_dock = self._create_dock(t("Garnpaletten"), self.palette_panel)
+        palette_dock = self._create_dock(t("Garnpaletten"), self.palette_panel, "dock_palette")
         self.palette_dock = palette_dock  # damit der View-Handler den Titel umschreiben kann
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, palette_dock)
 
         # Info-Panel (rechts, getabbed mit Palette)
         self.info_panel = InfoPanel(self)
-        info_dock = self._create_dock(t("Information"), self.info_panel)
+        info_dock = self._create_dock(t("Information"), self.info_panel, "dock_info")
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, info_dock)
         self.tabifyDockWidget(palette_dock, info_dock)
         palette_dock.raise_()
 
         # Text-Options-Panel (links, versteckt)
         self.text_options_panel = TextOptionsPanel(self)
-        self.text_options_dock = self._create_dock(t("Text-Optionen"), self.text_options_panel)
+        self.text_options_dock = self._create_dock(
+            t("Text-Optionen"), self.text_options_panel, "dock_text_options"
+        )
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.text_options_dock)
         self.text_options_dock.setVisible(False)
 
         # Gradient-Options-Panel (links, versteckt)
         self.gradient_options_panel = GradientOptionsPanel(self)
         self.gradient_options_dock = self._create_dock(
-            t("Farbverlauf"), self.gradient_options_panel
+            t("Farbverlauf"), self.gradient_options_panel, "dock_gradient_options"
         )
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.gradient_options_dock)
         self.gradient_options_dock.setVisible(False)
 
         # Minimap-Panel (links)
         self.minimap_panel = MinimapPanel(self)
-        minimap_dock = self._create_dock(t("Übersicht"), self.minimap_panel)
+        minimap_dock = self._create_dock(t("Übersicht"), self.minimap_panel, "dock_minimap")
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, minimap_dock)
 
         # Muster-Kacheln Panel (rechts, getabbed)
         self.tile_preview_panel = TilePreviewPanel(self)
-        tile_dock = self._create_dock(t("Muster-Kacheln"), self.tile_preview_panel)
+        tile_dock = self._create_dock(
+            t("Muster-Kacheln"), self.tile_preview_panel, "dock_tile_preview"
+        )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, tile_dock)
         self.tabifyDockWidget(info_dock, tile_dock)
 
@@ -95,7 +99,7 @@ class DockBuilderMixin:
         # wie Kreuzstich hat (Drills werden zonenweise platziert, nicht
         # einzeln abgehakt).
         self.progress_panel = ProgressPanel(self)
-        progress_dock = self._create_dock(t("Fortschritt"), self.progress_panel)
+        progress_dock = self._create_dock(t("Fortschritt"), self.progress_panel, "dock_progress")
         self.progress_dock = progress_dock
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, progress_dock)
         self.tabifyDockWidget(tile_dock, progress_dock)
@@ -136,9 +140,21 @@ class DockBuilderMixin:
             if tab_bar.iconSize().width() < 14:
                 tab_bar.setIconSize(QSize(14, 14))
 
-    def _create_dock(self, title: str, widget) -> QDockWidget:
-        """Erstellt ein Dock-Widget mit Standard-Einstellungen."""
+    def _create_dock(self, title: str, widget, object_name: str) -> QDockWidget:
+        """Erstellt ein Dock-Widget mit Standard-Einstellungen.
+
+        Args:
+            object_name: stabiler, sprachunabhaengiger Schluessel (NICHT der
+                uebersetzte Titel!). QMainWindow.saveState()/restoreState()
+                identifiziert Docks ueber objectName() -- ohne diesen Aufruf
+                blieb jedes Dock namenlos und restoreState() stellte lautlos
+                GAR NICHTS wieder her (kein Fehler, einfach No-Op). Betraf
+                sowohl den "Dock-Layout beim Start wiederherstellen"-Pfad
+                (main_window.py) als auch WorkspaceProfileManager (Runde 12) --
+                dessen Kernfunktion war dadurch faktisch nie wirksam.
+        """
         dock = QDockWidget(title, self)
+        dock.setObjectName(object_name)
         dock.setWidget(widget)
         dock.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
