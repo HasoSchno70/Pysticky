@@ -268,10 +268,6 @@ class Pattern:
 
         old_index = layer.get_stitch(x, y)
 
-        # Alte Farbe Stichzahl reduzieren
-        if old_index is not None and 0 <= old_index < len(self.color_entries):
-            self.color_entries[old_index].stitch_count -= 1
-
         # Bead- und Diamond-Farben werden immer als BEAD- bzw. DIAMOND-Stitch-
         # Type platziert, unabhängig vom übergebenen stitch_type. So muss
         # kein Tool explizit wissen, was eine Bead/Drill-Farbe ist — die
@@ -288,9 +284,18 @@ class Pattern:
         # Neuen Stich setzen
         success = layer.set_stitch(x, y, color_index, stitch_type=stitch_type)
 
-        # Neue Farbe Stichzahl erhöhen
-        if success and color_index is not None and 0 <= color_index < len(self.color_entries):
-            self.color_entries[color_index].stitch_count += 1
+        # Stichzahlen NUR anpassen wenn set_stitch() tatsaechlich etwas
+        # geaendert hat -- gibt False zurueck bei gesperrtem Layer oder
+        # Koordinaten ausserhalb des Grids, OHNE das Grid zu mutieren. Vorher
+        # wurde die alte Farbe schon VOR diesem Aufruf unbedingt dekrementiert
+        # (Zeile weiter oben, jetzt entfernt) -- bei einem gesperrten Layer
+        # driftete dadurch stitch_count bei jedem Versuch um 1 nach unten,
+        # obwohl sich am Grid nichts aenderte.
+        if success:
+            if old_index is not None and 0 <= old_index < len(self.color_entries):
+                self.color_entries[old_index].stitch_count -= 1
+            if color_index is not None and 0 <= color_index < len(self.color_entries):
+                self.color_entries[color_index].stitch_count += 1
 
         return success
 

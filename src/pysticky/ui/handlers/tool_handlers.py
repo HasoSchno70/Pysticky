@@ -114,8 +114,9 @@ class ToolHandlersMixin:
                 changes = text_tool.confirm_text(ctx)
                 if changes:
                     self.canvas.batch_started.emit("Text")
-                    for x, y, color_idx in changes:
-                        self.canvas.stitch_placed.emit(x, y, color_idx)
+                    # _apply_changes() statt manuellem Signal-Loop -- siehe
+                    # edit_handlers.py::_on_replace_color.
+                    self.canvas._apply_changes(changes)
                     self.canvas.batch_ended.emit()
                     self.canvas.update()
                     self.status_bar.showMessage(

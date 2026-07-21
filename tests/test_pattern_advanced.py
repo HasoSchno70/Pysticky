@@ -94,6 +94,27 @@ class TestPatternStitches:
         p.set_stitch(5, 5, 0)
         assert p.get_stitch(5, 5) == 0
 
+    def test_set_stitch_on_locked_layer_does_not_corrupt_stitch_count(self):
+        """Regression (Runde 13): Pattern.set_stitch() dekrementierte die
+        alte Farbe unbedingt VOR dem Aufruf von layer.set_stitch() -- bei
+        einem gesperrten Layer gibt dieser False zurueck (Grid unveraendert),
+        aber die Dekrementierung war schon passiert. Jeder Versuch, auf
+        einem gesperrten Layer zu zeichnen, liess stitch_count um 1 driften,
+        obwohl sich am Grid nichts aenderte (Garnverbrauch/Fortschritt/
+        Einkaufsliste lesen alle stitch_count)."""
+        p = Pattern(width=10, height=10)
+        p.color_entries.clear()
+        p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        p.set_stitch(5, 5, 0)
+        assert p.color_entries[0].stitch_count == 1
+
+        p.active_layer.locked = True
+        result = p.set_stitch(5, 5, 0)
+
+        assert result is False
+        assert p.get_stitch(5, 5) == 0  # Grid unveraendert
+        assert p.color_entries[0].stitch_count == 1  # NICHT auf 0 gefallen
+
     def test_total_stitches(self):
         """Test: Gesamtzahl Stiche."""
         p = Pattern(width=10, height=10)

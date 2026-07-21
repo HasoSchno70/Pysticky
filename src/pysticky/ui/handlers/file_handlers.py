@@ -174,6 +174,11 @@ class FileHandlersMixin:
             self._mark_saved()
             self._add_recent_file(str(path))
             self.status_bar.showMessage(f"Geöffnet: {path}", self._status_timeout_ms)
+            # Datei-spezifische Autosave (von _on_autosave neben dieser Datei
+            # abgelegt, falls die App seit dem letzten manuellen Speichern
+            # abgestürzt ist) anbieten -- überschreibt bei "Ja" das gerade
+            # geladene Pattern mit dem Autosave-Stand.
+            self._check_autosave_recovery(path.with_suffix(".pxs.autosave"))
             return True
         except FileNotFoundError:
             logger.warning("Datei nicht gefunden: %s", path)
@@ -356,6 +361,18 @@ class FileHandlersMixin:
                     return
 
             try:
+                # Gleicher Backup-Schutz wie _on_save() -- Speichern-unter
+                # auf eine EXISTIERENDE Datei ist genauso ein Ueberschreiben
+                # wie ein normales Speichern, hatte diesen Schutz aber nie
+                # bekommen (Confirm-Overwrite-Abfrage oben ist unabhaengig
+                # von der "Backup vor Ueberschreiben"-Einstellung und kann
+                # sogar deaktiviert sein).
+                if self._settings.value("autosave_backup", True, type=bool) and Path(path).exists():
+                    import shutil
+
+                    backup_path = Path(path).with_suffix(Path(path).suffix + ".bak")
+                    shutil.copy2(path, backup_path)
+
                 save_pattern(self.current_pattern, path)
                 self.current_file = Path(path)
                 self.current_pattern.name = self.current_file.stem

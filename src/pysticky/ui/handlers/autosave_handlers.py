@@ -87,19 +87,27 @@ class AutosaveHandlersMixin:
             # damit ein dauerhaft fehlschlagender Snapshot nicht unsichtbar bleibt.
             logger.exception("Snapshot konnte nicht erzeugt werden")
 
-    def _check_autosave_recovery(self: "MainWindow") -> None:
+    def _check_autosave_recovery(self: "MainWindow", autosave_path: Path | None = None) -> None:
         """
-        Prüft beim Start ob eine Autosave-Datei existiert und bietet Recovery an.
+        Prüft ob eine Autosave-Datei existiert und bietet Recovery an.
 
-        Wird von _perform_start_action aufgerufen.
+        Ohne Argument: prüft die Temp-Autosave eines nie gespeicherten
+        Patterns (wird von _perform_start_action beim Start aufgerufen).
+        Mit `autosave_path`: prüft die datei-spezifische `<name>.pxs.autosave`
+        neben einer geöffneten Datei (wird von _load_pattern_file nach dem
+        Öffnen aufgerufen — _on_autosave schreibt genau dorthin, wenn
+        current_file gesetzt ist, aber vorher prüfte NICHTS diesen Pfad
+        beim nächsten Öffnen wieder, die datei-spezifische Autosave war
+        also faktisch nie wiederherstellbar).
         """
-        import tempfile
-
         from ...core import load_pattern
 
-        temp_autosave = Path(tempfile.gettempdir()) / "pysticky_autosave.pxs"
+        if autosave_path is None:
+            import tempfile
 
-        if not temp_autosave.exists():
+            autosave_path = Path(tempfile.gettempdir()) / "pysticky_autosave.pxs"
+
+        if not autosave_path.exists():
             return
 
         reply = QMessageBox.question(
@@ -113,7 +121,7 @@ class AutosaveHandlersMixin:
         )
         if reply == QMessageBox.StandardButton.Yes:
             try:
-                pattern = load_pattern(str(temp_autosave))
+                pattern = load_pattern(str(autosave_path))
                 self.set_pattern(pattern)
                 self._mark_unsaved()
                 self.status_bar.showMessage(t("Autosave wiederhergestellt"), 5000)
@@ -126,6 +134,6 @@ class AutosaveHandlersMixin:
                 )
         # Autosave-Datei nach Entscheidung aufräumen
         try:
-            temp_autosave.unlink()
+            autosave_path.unlink()
         except OSError:
-            logger.warning("Autosave-Datei konnte nicht entfernt werden: %s", temp_autosave)
+            logger.warning("Autosave-Datei konnte nicht entfernt werden: %s", autosave_path)

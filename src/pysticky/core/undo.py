@@ -153,21 +153,31 @@ class PlaceStitchCommand(Command):
         self._old_color_index: int | None = None
         self._old_stitch_type: int = 0
         self._had_stitch = False
+        # True nur wenn layer.set_stitch() im execute() tatsaechlich etwas
+        # geaendert hat (False bei gesperrtem Layer/Out-of-bounds) -- ohne
+        # diesen Guard wurden die Stichzahlen bei einem gesperrten Layer bei
+        # jedem Versuch verfaelscht, obwohl sich am Grid nichts aenderte.
+        self._applied = False
 
     def execute(self) -> None:
         """Platziert den Stich und speichert den vorherigen Zustand."""
         layer = self._pattern.layer_stack[self._layer_index]
         old_stitch = layer.get_stitch(self._x, self._y)
+        old_stitch_type = layer.get_stitch_type(self._x, self._y) if old_stitch is not None else 0
+
+        self._applied = layer.set_stitch(
+            self._x, self._y, self._color_index, stitch_type=self._stitch_type
+        )
+        if not self._applied:
+            return
 
         if old_stitch is not None:
             self._had_stitch = True
             self._old_color_index = old_stitch
-            self._old_stitch_type = layer.get_stitch_type(self._x, self._y)
+            self._old_stitch_type = old_stitch_type
             # Alte Stichzahl reduzieren
             if 0 <= old_stitch < len(self._pattern.color_entries):
                 self._pattern.color_entries[old_stitch].stitch_count -= 1
-
-        layer.set_stitch(self._x, self._y, self._color_index, stitch_type=self._stitch_type)
 
         # Neue Stichzahl erhöhen
         if 0 <= self._color_index < len(self._pattern.color_entries):
@@ -175,21 +185,28 @@ class PlaceStitchCommand(Command):
 
     def undo(self) -> None:
         """Entfernt den Stich und stellt den vorherigen Zustand wieder her."""
+        if not self._applied:
+            return
+
         layer = self._pattern.layer_stack[self._layer_index]
+
+        if self._had_stitch and self._old_color_index is not None:
+            reverted = layer.set_stitch(
+                self._x, self._y, self._old_color_index, stitch_type=self._old_stitch_type
+            )
+        else:
+            reverted = layer.remove_stitch(self._x, self._y)
+        if not reverted:
+            return
 
         # Aktuelle Stichzahl reduzieren
         if 0 <= self._color_index < len(self._pattern.color_entries):
             self._pattern.color_entries[self._color_index].stitch_count -= 1
 
         if self._had_stitch and self._old_color_index is not None:
-            layer.set_stitch(
-                self._x, self._y, self._old_color_index, stitch_type=self._old_stitch_type
-            )
             # Alte Stichzahl wiederherstellen
             if 0 <= self._old_color_index < len(self._pattern.color_entries):
                 self._pattern.color_entries[self._old_color_index].stitch_count += 1
-        else:
-            layer.remove_stitch(self._x, self._y)
 
     @property
     def description(self) -> str:
@@ -233,13 +250,18 @@ class RemoveStitchCommand(Command):
         old_stitch = layer.get_stitch(self._x, self._y)
 
         if old_stitch is not None:
-            self._old_color_index = old_stitch
             # Stich-Typ (Halb-/Viertelstich etc.) merken -- sonst kommt beim
             # Undo immer ein FULL-Stich zurück, egal welche Ausrichtung der
             # entfernte Stich hatte (vgl. PlaceStitchCommand, das das schon
             # richtig macht).
-            self._old_stitch_type = layer.get_stitch_type(self._x, self._y)
-            layer.remove_stitch(self._x, self._y)
+            old_stitch_type = layer.get_stitch_type(self._x, self._y)
+            removed = layer.remove_stitch(self._x, self._y)
+            if not removed:
+                # Gesperrter Layer -- Grid unveraendert, Stichzahl darf nicht
+                # angefasst werden (sonst driftet sie bei jedem Versuch).
+                return
+            self._old_color_index = old_stitch
+            self._old_stitch_type = old_stitch_type
             # Stichzahl reduzieren
             if 0 <= old_stitch < len(self._pattern.color_entries):
                 self._pattern.color_entries[old_stitch].stitch_count -= 1
@@ -248,9 +270,11 @@ class RemoveStitchCommand(Command):
         """Stellt den entfernten Stich wieder her."""
         if self._old_color_index is not None:
             layer = self._pattern.layer_stack[self._layer_index]
-            layer.set_stitch(
+            restored = layer.set_stitch(
                 self._x, self._y, self._old_color_index, stitch_type=self._old_stitch_type
             )
+            if not restored:
+                return
             # Stichzahl wiederherstellen
             if 0 <= self._old_color_index < len(self._pattern.color_entries):
                 self._pattern.color_entries[self._old_color_index].stitch_count += 1

@@ -92,6 +92,59 @@ class TestUndoManager:
         assert undo.can_redo is False
 
 
+class TestLockedLayerStitchCountGuard:
+    """Regression (Runde 13): PlaceStitchCommand/RemoveStitchCommand
+    dekrementierten/inkrementierten stitch_count bevor sie pruefte, ob
+    layer.set_stitch()/remove_stitch() ueberhaupt etwas geaendert hat.
+    Bei einem gesperrten Layer (set_stitch() gibt False zurueck, Grid
+    unveraendert) driftete stitch_count trotzdem bei jedem Versuch."""
+
+    def test_place_stitch_on_locked_layer_leaves_stitch_count_unchanged(self):
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(5, 5, 0)
+        pattern.color_entries[0].stitch_count = 1
+        pattern.active_layer.locked = True
+
+        cmd = PlaceStitchCommand(pattern, 5, 5, 0, 0)
+        cmd.execute()
+
+        assert pattern.active_layer.get_stitch(5, 5) == 0
+        assert pattern.color_entries[0].stitch_count == 1
+
+    def test_place_stitch_undo_on_locked_layer_is_noop(self):
+        pattern = Pattern(width=10, height=10)
+        undo = UndoManager()
+        undo.set_pattern(pattern)
+
+        cmd = PlaceStitchCommand(pattern, 5, 5, 0, 0)
+        undo.execute(cmd)
+        assert pattern.color_entries[0].stitch_count == 1
+
+        # Layer erst NACH dem execute() sperren, damit undo() auf den
+        # bereits ausgefuehrten Command trifft.
+        pattern.active_layer.locked = True
+        undo.undo()
+
+        # set_stitch() im undo() schlaegt fehl (gesperrt) -- Grid und
+        # Stichzahl duerfen dadurch NICHT veraendert werden.
+        assert pattern.active_layer.get_stitch(5, 5) == 0
+        assert pattern.color_entries[0].stitch_count == 1
+
+    def test_remove_stitch_on_locked_layer_leaves_stitch_count_unchanged(self):
+        from pysticky.core import RemoveStitchCommand
+
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(5, 5, 0)
+        pattern.color_entries[0].stitch_count = 1
+        pattern.active_layer.locked = True
+
+        cmd = RemoveStitchCommand(pattern, 5, 5, 0)
+        cmd.execute()
+
+        assert pattern.active_layer.get_stitch(5, 5) == 0
+        assert pattern.color_entries[0].stitch_count == 1
+
+
 class TestBatchCommand:
     """Tests für Batch-Operationen."""
 

@@ -191,6 +191,57 @@ def test_autosave_backup_creates_bak_file(qtbot, tmp_path, monkeypatch):
             s.setValue("recent_files", old_recent)
 
 
+def test_autosave_backup_creates_bak_file_via_save_as(qtbot, tmp_path, monkeypatch):
+    """Regression (Runde 13): _on_save_as() beim Ueberschreiben einer
+    existierenden Datei erzeugte NIE ein .bak-Backup, obwohl _on_save()
+    (normales Speichern) das schon lange respektiert -- Speichern-unter auf
+    eine existierende Datei ist genauso ein Ueberschreiben."""
+    from PySide6.QtWidgets import QFileDialog
+
+    from pysticky.core import Pattern
+    from pysticky.ui.main_window import MainWindow
+
+    s = _qsettings_with_scope()
+    old = s.value("autosave_backup")
+    old_overwrite = s.value("confirm_overwrite")
+    old_recent = s.value("recent_files")
+    try:
+        s.setValue("autosave_backup", True)
+        s.setValue("confirm_overwrite", False)  # Fokus auf Backup, nicht Confirm-Dialog
+        w = MainWindow()
+        qtbot.addWidget(w)
+        w._check_save_changes = lambda: True
+        w._autosave_timer.stop()
+
+        target = tmp_path / "existing.pxs"
+        target.write_text('{"old": "content"}', encoding="utf-8")
+
+        monkeypatch.setattr(
+            QFileDialog, "getSaveFileName", lambda *a, **k: (str(target), "PySticky (*.pxs)")
+        )
+
+        w.current_pattern = Pattern(name="Test", width=5, height=5)
+        w.current_pattern.color_entries.clear()
+        w._on_save_as()
+
+        backup = target.with_suffix(target.suffix + ".bak")
+        assert backup.exists()
+        assert backup.read_text(encoding="utf-8") == '{"old": "content"}'
+    finally:
+        if old is None:
+            s.remove("autosave_backup")
+        else:
+            s.setValue("autosave_backup", old)
+        if old_overwrite is None:
+            s.remove("confirm_overwrite")
+        else:
+            s.setValue("confirm_overwrite", old_overwrite)
+        if old_recent is None:
+            s.remove("recent_files")
+        else:
+            s.setValue("recent_files", old_recent)
+
+
 def test_confirm_exit_blocks_close_on_no(qtbot, monkeypatch):
     from pysticky.ui.main_window import MainWindow
 

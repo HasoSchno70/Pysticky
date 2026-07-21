@@ -2,7 +2,7 @@
 Bearbeiten-bezogene Handler für MainWindow.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
@@ -65,8 +65,12 @@ class EditHandlersMixin:
                 QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 try:
                     self.canvas.batch_started.emit(t("Farbe ersetzen"))
-                    for x, y, color_idx in changes:
-                        self.canvas.stitch_placed.emit(x, y, color_idx)
+                    # _apply_changes() statt manuellem Signal-Loop -- ruft
+                    # u.a. invalidate_cell() auf, sonst bleibt der
+                    # Chunk-Pixmap-Cache (>200x200 Muster) beim alten Bild
+                    # haengen (gleicher Bug wie Runde 4 bei Selection-Ops,
+                    # hier an einer bis Runde 13 uebersehenen Stelle).
+                    self.canvas._apply_changes(cast("list[tuple[int, int, int | None]]", changes))
                     self.canvas.batch_ended.emit()
                 finally:
                     QApplication.restoreOverrideCursor()
@@ -123,10 +127,9 @@ class EditHandlersMixin:
             return
 
         self.canvas.batch_started.emit(t("Farben tauschen"))
-        for x, y in a_positions:
-            self.canvas.stitch_placed.emit(x, y, b)
-        for x, y in b_positions:
-            self.canvas.stitch_placed.emit(x, y, a)
+        # _apply_changes() statt manuellem Signal-Loop -- siehe _on_replace_color.
+        changes = [(x, y, b) for x, y in a_positions] + [(x, y, a) for x, y in b_positions]
+        self.canvas._apply_changes(cast("list[tuple[int, int, int | None]]", changes))
         self.canvas.batch_ended.emit()
 
         self.canvas.update()

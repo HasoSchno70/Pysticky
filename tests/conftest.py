@@ -18,7 +18,8 @@ def _no_autosave_side_effects(monkeypatch):
     """Neutralisiert Autosave-Interaktion in ALLEN Tests.
 
     1. _check_autosave_recovery öffnet einen echten modalen QMessageBox.question,
-       wenn %TEMP%/pysticky_autosave.pxs existiert — hängt die Suite für immer.
+       wenn %TEMP%/pysticky_autosave.pxs (Start) oder <datei>.pxs.autosave
+       (nach _load_pattern_file) existiert — hängt die Suite für immer.
     2. _on_autosave schreibt bei Patterns ohne current_file genau diese Datei
        nach %TEMP% — Autosave-Timer von Test-MainWindows können während langer
        Tests (oder Hängern) feuern und so die Falle für den NÄCHSTEN Lauf legen.
@@ -32,7 +33,9 @@ def _no_autosave_side_effects(monkeypatch):
         yield
         return
 
-    monkeypatch.setattr(AutosaveHandlersMixin, "_check_autosave_recovery", lambda self: None)
+    monkeypatch.setattr(
+        AutosaveHandlersMixin, "_check_autosave_recovery", lambda self, autosave_path=None: None
+    )
     yield
 
 
