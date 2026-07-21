@@ -75,6 +75,7 @@ class SignalsConnectorMixin:
         self.layer_panel.layer_selected.connect(self._on_layer_selected)
         self.layer_panel.layers_changed.connect(self._on_layers_changed)
         self.layer_panel.layer_structure_changed.connect(self._on_layer_structure_changed)
+        self.layer_panel.clear_layer_requested.connect(self._on_clear_layer_requested)
 
     def _connect_tool_signals(self: "MainWindow") -> None:
         """Verbindet Werkzeug-Signale."""

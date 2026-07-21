@@ -513,6 +513,13 @@ class LayerPanel(QWidget):
     # MainWindow muss darauf den Undo-Stack leeren, sonst zeigt ein spaeteres
     # Undo/Redo auf eine falsche oder nicht mehr existierende Ebene.
     layer_structure_changed = Signal()
+    # Ebene leeren ist -- anders als die fuenf Struktur-Operationen oben --
+    # eine reine Inhalts-Aenderung (Layer-Indizes bleiben unveraendert), muss
+    # also NICHT den Undo-Stack leeren, sondern soll selbst normal undoable
+    # sein. Dieses Panel haelt aber nur den LayerStack, nicht das volle
+    # Pattern (fuer die stitch_count-Buchfuehrung noetig) -- MainWindow baut
+    # daher den eigentlichen ClearLayerCommand.
+    clear_layer_requested = Signal(int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -936,6 +943,8 @@ class LayerPanel(QWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
-            layer.clear()
-            self._refresh_list()
-            self.layers_changed.emit()
+            # Ueber MainWindow als ClearLayerCommand ausfuehren (undoable,
+            # respektiert layer.locked, aktualisiert stitch_count) statt
+            # layer.clear() hier direkt aufzurufen -- dieses Panel kennt nur
+            # den LayerStack, nicht das volle Pattern.
+            self.clear_layer_requested.emit(actual_idx)

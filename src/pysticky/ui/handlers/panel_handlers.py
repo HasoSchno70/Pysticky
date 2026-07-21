@@ -269,6 +269,21 @@ class PanelHandlersMixin:
         self.undo_manager.clear()
         self._update_undo_actions()
 
+    def _on_clear_layer_requested(self: "MainWindow", layer_index: int) -> None:
+        """Leert eine Ebene ueber ClearLayerCommand (undoable, respektiert
+        layer.locked, aktualisiert stitch_count) statt layer.clear() direkt
+        aus dem Panel aufzurufen -- LayerPanel kennt nur den LayerStack,
+        nicht das volle Pattern."""
+        from ...core import ClearLayerCommand
+
+        cmd = ClearLayerCommand(self.current_pattern, layer_index)
+        self.undo_manager.execute(cmd)
+        self._update_undo_actions()
+        self._mark_unsaved()
+        self.layer_panel._refresh_list()
+        self.info_panel.update_info(self.current_pattern)
+        self._notify_panels(NotifyScope.VISUAL)
+
     def _on_color_picked(self: "MainWindow", color_index: int) -> None:
         """Farbe mit Pipette aufgenommen."""
         from ..tools.tool_enum import Tool

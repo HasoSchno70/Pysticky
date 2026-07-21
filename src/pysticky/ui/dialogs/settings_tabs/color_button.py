@@ -32,6 +32,16 @@ class ColorButton(QPushButton):
         self._color = value
         self._update_style()
 
+    def _apply_theme(self) -> None:
+        """Live-Theme-Wechsel: _update_style() liest THEME ohnehin live,
+        einfach erneut aufrufen. SettingsDialog bleibt bei "Anwenden" offen,
+        _restyle_widget_tree() findet dieses Widget ueber findChildren()
+        automatisch -- ohne diese Methode blieben Grenzfarbe/Text-Farbe des
+        Buttons (border_medium/text_secondary) nach einem Theme-Wechsel auf
+        den alten Werten haengen, nur der Farbverlauf des eigentlichen
+        Farbfeldes selbst ist THEME-unabhaengig."""
+        self._update_style()
+
     def _update_style(self) -> None:
         """Aktualisiert das Button-Styling mit Farbquadrat."""
         self.setStyleSheet(f"""

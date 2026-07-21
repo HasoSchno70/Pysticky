@@ -559,25 +559,45 @@ class ClearLayerCommand(Command):
         self._layer_index = layer_index
         self._old_grid: np.ndarray | None = None
         self._old_completion_grid: np.ndarray | None = None
+        self._old_stitch_type_grid: np.ndarray | None = None
+        # True nur wenn layer.clear() im execute() tatsaechlich etwas
+        # geaendert hat (False bei gesperrtem Layer) -- ohne diesen Guard
+        # wuerden Stichzahlen bei einem gesperrten Layer verfaelscht, obwohl
+        # sich am Grid nichts aendert (gleiche Klasse wie PlaceStitchCommand/
+        # RemoveStitchCommand, Runde 13).
+        self._applied = False
 
     def execute(self) -> None:
         """Leert das Layer und speichert den vorherigen Zustand."""
         layer = self._pattern.layer_stack[self._layer_index]
 
-        # Grid und Completion als Kopie speichern (numpy-effizient)
-        self._old_grid = layer.grid.copy()
-        self._old_completion_grid = layer.completion_grid.copy()
+        # Grid, Completion UND Stich-Typ als Kopie speichern (numpy-effizient) --
+        # layer.clear() setzt alle drei zurueck, ohne stitch_type_grid mit-
+        # zusichern kaeme beim Undo jeder Halb-/Viertelstich als Vollstich
+        # zurueck (gleiche Fehlerklasse wie merge_layers()/flatten(), Runde 8).
+        old_grid = layer.grid.copy()
+        old_completion_grid = layer.completion_grid.copy()
+        old_stitch_type_grid = layer.stitch_type_grid.copy()
+        color_counts = layer.get_color_counts()
+
+        self._applied = layer.clear()
+        if not self._applied:
+            return
+
+        self._old_grid = old_grid
+        self._old_completion_grid = old_completion_grid
+        self._old_stitch_type_grid = old_stitch_type_grid
 
         # Stichzahlen reduzieren
-        color_counts = layer.get_color_counts()
         for color_index, count in color_counts.items():
             if 0 <= color_index < len(self._pattern.color_entries):
                 self._pattern.color_entries[color_index].stitch_count -= count
 
-        layer.clear()
-
     def undo(self) -> None:
         """Stellt das geleerte Layer wieder her."""
+        if not self._applied:
+            return
+
         layer = self._pattern.layer_stack[self._layer_index]
 
         if self._old_grid is not None:
@@ -592,6 +612,9 @@ class ClearLayerCommand(Command):
 
         if self._old_completion_grid is not None:
             layer.completion_grid = self._old_completion_grid.copy()
+
+        if self._old_stitch_type_grid is not None:
+            layer.stitch_type_grid = self._old_stitch_type_grid.copy()
 
     @property
     def description(self) -> str:

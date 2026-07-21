@@ -64,20 +64,13 @@ class ColorsTab(QWidget):
         self.chk_auto_symbols.setToolTip(t("Weist neuen Farben automatisch Symbole zu"))
         form.addRow(self.chk_auto_symbols)
 
-        symbol_preview = QFrame()
-        symbol_preview.setFixedHeight(40)
-        symbol_preview.setStyleSheet(f"""
-            QFrame {{
-                background: {THEME.bg_dark};
-                border: 1px solid {THEME.border_medium};
-                border-radius: 4px;
-            }}
-        """)
+        self._symbol_preview_frame = QFrame()
+        self._symbol_preview_frame.setFixedHeight(40)
         self.label_symbol_preview = QLabel("A B C 1 2 3 ● ○ ■ □ ▲ △")
         self.label_symbol_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_symbol_preview.setStyleSheet(f"color: {THEME.text_primary}; font-size: 14px;")
-        preview_layout = QHBoxLayout(symbol_preview)
+        preview_layout = QHBoxLayout(self._symbol_preview_frame)
         preview_layout.addWidget(self.label_symbol_preview)
+        symbol_preview = self._symbol_preview_frame
         form.addRow(t("Vorschau:"), symbol_preview)
 
         layout.addWidget(group_symbols)
@@ -104,6 +97,26 @@ class ColorsTab(QWidget):
 
         layout.addWidget(group_display)
         layout.addStretch()
+
+        self._apply_theme()
+
+    def _apply_theme(self) -> None:
+        """Setzt die THEME-abhaengigen Stylesheets neu.
+
+        Wird sowohl beim initialen Aufbau als auch bei einem Live-Theme-
+        Wechsel aufgerufen (SettingsDialog bleibt bei "Anwenden" offen,
+        _restyle_widget_tree() findet dieses Tab-Widget ueber
+        findChildren() automatisch). Vorher wurden Symbol-Vorschau-Rahmen
+        und -Label nur einmalig in _setup_ui() gesetzt.
+        """
+        self._symbol_preview_frame.setStyleSheet(f"""
+            QFrame {{
+                background: {THEME.bg_dark};
+                border: 1px solid {THEME.border_medium};
+                border-radius: 4px;
+            }}
+        """)
+        self.label_symbol_preview.setStyleSheet(f"color: {THEME.text_primary}; font-size: 14px;")
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""

@@ -59,11 +59,19 @@ class Layer:
         if self.stitch_type_grid is None:
             self.stitch_type_grid = np.zeros((self.height, self.width), dtype=np.uint8)
 
-    def clear(self) -> None:
-        """Leert das Layer (alle Zellen transparent)."""
+    def clear(self) -> bool:
+        """Leert das Layer (alle Zellen transparent).
+
+        Returns:
+            True wenn erfolgreich, False wenn gesperrt (Grid unveraendert) --
+            gleiche Konvention wie set_stitch()/remove_stitch().
+        """
+        if self.locked:
+            return False
         self.grid = np.full((self.height, self.width), NO_STITCH, dtype=np.int16)
         self.completion_grid = np.zeros((self.height, self.width), dtype=bool)
         self.stitch_type_grid = np.zeros((self.height, self.width), dtype=np.uint8)
+        return True
 
     def resize(self, new_width: int, new_height: int) -> None:
         """Ändert die Größe des Layers (behält vorhandene Stiche)."""

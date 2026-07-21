@@ -59,15 +59,14 @@ class ShortcutsTab(QWidget):
         layout.setSpacing(16)
 
         # Info-Label
-        info = QLabel(
+        self._info_label = QLabel(
             t(
                 "ℹ️ Hier können Sie Tastenkürzel anpassen. "
                 "Doppelklicken Sie auf ein Kürzel, um es zu ändern."
             )
         )
-        info.setWordWrap(True)
-        info.setStyleSheet(f"color: {THEME.text_muted}; padding: 8px;")
-        layout.addWidget(info)
+        self._info_label.setWordWrap(True)
+        layout.addWidget(self._info_label)
 
         # Shortcuts-Liste
         self.shortcuts_list = QListWidget()
@@ -89,6 +88,14 @@ class ShortcutsTab(QWidget):
 
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
+
+        self._apply_theme()
+
+    def _apply_theme(self) -> None:
+        """Live-Theme-Wechsel: SettingsDialog bleibt bei "Anwenden" offen,
+        _restyle_widget_tree() findet dieses Tab-Widget automatisch. Vorher
+        wurde das Info-Label nur einmalig in _setup_ui() gefaerbt."""
+        self._info_label.setStyleSheet(f"color: {THEME.text_muted}; padding: 8px;")
 
     def _populate_list(self) -> None:
         """Füllt die Liste mit Shortcuts aus der Registry."""

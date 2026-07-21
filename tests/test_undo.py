@@ -8,6 +8,7 @@ import pytest
 from pysticky.core import (
     AddBackstitchCommand,
     BatchStitchCommand,
+    ClearLayerCommand,
     LayerSnapshotCommand,
     Pattern,
     PlaceStitchCommand,
@@ -140,6 +141,82 @@ class TestLockedLayerStitchCountGuard:
 
         cmd = RemoveStitchCommand(pattern, 5, 5, 0)
         cmd.execute()
+
+        assert pattern.active_layer.get_stitch(5, 5) == 0
+        assert pattern.color_entries[0].stitch_count == 1
+
+    def test_clear_layer_on_locked_layer_leaves_grid_and_stitch_count_unchanged(self):
+        """Regression (Runde 16): ClearLayerCommand rief layer.clear() vorher
+        ohne Rueckgabewert-Pruefung auf -- gleiche Bug-Klasse wie
+        Place/RemoveStitchCommand aus Runde 13, hier fuer 'Ebene leeren'."""
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(5, 5, 0)
+        pattern.color_entries[0].stitch_count = 1
+        pattern.active_layer.locked = True
+
+        cmd = ClearLayerCommand(pattern, 0)
+        cmd.execute()
+
+        assert pattern.active_layer.get_stitch(5, 5) == 0  # unveraendert (Stich blieb)
+        assert pattern.color_entries[0].stitch_count == 1  # NICHT auf 0 gefallen
+
+
+class TestClearLayerCommand:
+    """Regression (Runde 16): ClearLayerCommand.undo() verlor den Stich-Typ
+    (Halb-/Viertelstiche kamen als Vollstich zurueck) -- gleiche Bug-Klasse
+    wie merge_layers()/flatten() aus Runde 8, hier nie mit-gefixt, weil die
+    Command-Klasse bis Runde 16 nirgendwo im Programm tatsaechlich verwendet
+    wurde (layer_panel.py::_on_clear_layer rief layer.clear() immer direkt
+    auf, komplett am Undo-System vorbei)."""
+
+    def test_execute_reduces_stitch_count(self):
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(0, 0, 0)
+        pattern.active_layer.set_stitch(1, 1, 0)
+        pattern.color_entries[0].stitch_count = 2
+
+        cmd = ClearLayerCommand(pattern, 0)
+        cmd.execute()
+
+        assert pattern.active_layer.get_stitch(0, 0) is None
+        assert pattern.active_layer.get_stitch(1, 1) is None
+        assert pattern.color_entries[0].stitch_count == 0
+
+    def test_undo_restores_grid_and_stitch_count(self):
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(0, 0, 0)
+        pattern.color_entries[0].stitch_count = 1
+
+        cmd = ClearLayerCommand(pattern, 0)
+        cmd.execute()
+        cmd.undo()
+
+        assert pattern.active_layer.get_stitch(0, 0) == 0
+        assert pattern.color_entries[0].stitch_count == 1
+
+    def test_undo_restores_stitch_type(self):
+        """Ein Halbstich muss nach Undo weiterhin ein Halbstich sein, nicht
+        stillschweigend zu einem Vollstich werden."""
+        from pysticky.core.stitch import StitchType
+
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(0, 0, 0, stitch_type=StitchType.HALF_TL_BR.value)
+
+        cmd = ClearLayerCommand(pattern, 0)
+        cmd.execute()
+        cmd.undo()
+
+        assert pattern.active_layer.get_stitch_type(0, 0) == StitchType.HALF_TL_BR.value
+
+    def test_undo_after_locked_execute_is_noop(self):
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(5, 5, 0)
+        pattern.color_entries[0].stitch_count = 1
+        pattern.active_layer.locked = True
+
+        cmd = ClearLayerCommand(pattern, 0)
+        cmd.execute()  # no-op, gesperrt
+        cmd.undo()  # muss ebenfalls no-op sein
 
         assert pattern.active_layer.get_stitch(5, 5) == 0
         assert pattern.color_entries[0].stitch_count == 1

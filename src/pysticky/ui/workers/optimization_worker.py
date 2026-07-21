@@ -15,6 +15,9 @@ from ...core import (
     StitchPathOptimizer,
     compare_strategies,
 )
+from ...utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class OptimizationWorker(QObject):
@@ -53,18 +56,38 @@ class OptimizationWorker(QObject):
             self._pattern, progress_callback=self._report_progress, cancel_check=self._is_cancelled
         )
 
-        result = optimizer.optimize(strategy, fabric_count)
+        try:
+            result = optimizer.optimize(strategy, fabric_count)
+        except Exception:
+            # Ohne diesen Catch-all haette ein unerwarteter Fehler in
+            # optimize() weder finished noch comparison_finished feuern
+            # lassen -- der QThread waere nie fertig geworden und
+            # stitch_path_dialog.py haette dauerhaft im "laeuft"-Zustand
+            # (Buttons deaktiviert, Fortschrittsbalken sichtbar) haengen
+            # bleiben, ohne Moeglichkeit zum Abbrechen. Gleiche Bug-Klasse
+            # wie oxs_io.py (Runde 11) und der Bildimport-Worker (Runde 14),
+            # hier aber komplett ohne jede Fehlerbehandlung. `finished(None)`
+            # ist bereits ein dokumentierter, vom Aufrufer behandelter Wert.
+            logger.exception("Stickpfad-Optimierung fehlgeschlagen")
+            self.finished.emit(None)
+            return
+
         self.finished.emit(result)
 
     def _run_comparison(self, fabric_count: int) -> None:
         """Vergleicht alle Strategien."""
         self._cancelled = False
 
-        results = compare_strategies(
-            self._pattern,
-            fabric_count,
-            progress_callback=self._report_progress,
-            cancel_check=self._is_cancelled,
-        )
+        try:
+            results = compare_strategies(
+                self._pattern,
+                fabric_count,
+                progress_callback=self._report_progress,
+                cancel_check=self._is_cancelled,
+            )
+        except Exception:
+            logger.exception("Strategie-Vergleich fehlgeschlagen")
+            self.comparison_finished.emit(None)
+            return
 
         self.comparison_finished.emit(results)
