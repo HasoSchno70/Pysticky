@@ -149,6 +149,22 @@ class TestPatternTransformations:
         assert p.width == 20
         assert p.height == 15
 
+    def test_resize_shrink_recalculates_stitch_count(self):
+        """Regression: Verkleinern verwarf Stiche ausserhalb der neuen
+        Groesse, aktualisierte aber nie color_entries[i].stitch_count --
+        get_statistics()/Garnverbrauch-Schaetzungen blieben dauerhaft zu
+        hoch."""
+        p = Pattern(width=10, height=10)
+        p.color_entries.clear()
+        p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        p.set_stitch(1, 1, 0)  # bleibt nach dem Verkleinern erhalten
+        p.set_stitch(8, 8, 0)  # faellt nach dem Verkleinern weg
+        assert p.color_entries[0].stitch_count == 2
+
+        p.resize(5, 5)
+
+        assert p.color_entries[0].stitch_count == 1
+
     def test_crop(self):
         """Test: Muster beschneiden (x, y, width, height)."""
         p = Pattern(width=20, height=20)
@@ -163,6 +179,21 @@ class TestPatternTransformations:
         # Stich war bei (10,10), nach Crop ab (5,5) -> relativ (5,5)
         assert p.get_stitch(5, 5) == 0
 
+    def test_crop_recalculates_stitch_count(self):
+        """Regression: crop() aktualisierte color_entries[i].stitch_count
+        nie -- eine weggeschnittene Farbe blieb mit voller Alt-Zaehlung in
+        der Statistik stehen."""
+        p = Pattern(width=20, height=20)
+        p.color_entries.clear()
+        p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        p.set_stitch(10, 10, 0)  # bleibt im Crop-Bereich
+        p.set_stitch(0, 0, 0)  # faellt weg
+        assert p.color_entries[0].stitch_count == 2
+
+        p.crop(5, 5, 10, 10)
+
+        assert p.color_entries[0].stitch_count == 1
+
     def test_flatten_layers(self):
         """Test: Ebenen vereinen."""
         p = Pattern(width=10, height=10)
@@ -175,6 +206,111 @@ class TestPatternTransformations:
         p.set_stitch(1, 1, 0)
         p.flatten_layers()
         assert len(p.layer_stack) == 1
+
+
+class TestPatternBackstitchTransforms:
+    """Regression: rotate/flip/crop/resize aktualisierten die Grids, ließen
+    Rückstich-Koordinaten (absolute Pattern-Position in halben Stichen)
+    aber komplett unangetastet -- Konturen wären nach jeder dieser
+    Operationen an der alten, jetzt falschen Stelle stehen geblieben,
+    völlig losgelöst vom (rotierten/gespiegelten/verschobenen) Grid."""
+
+    def _pattern(self, width=4, height=6):
+        p = Pattern(width=width, height=height)
+        p.color_entries.clear()
+        p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        return p
+
+    def test_rotate_90_cw_transforms_backstitch(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.rotate_90_cw()
+
+        assert p.width == 6 and p.height == 4
+        bs = p.backstitches[0]
+        # Herleitung: altes (x,y) -> neues (2*H_alt - y, x), H_alt=6
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (12, 0, 10, 2)
+
+    def test_rotate_90_ccw_transforms_backstitch(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.rotate_90_ccw()
+
+        assert p.width == 6 and p.height == 4
+        bs = p.backstitches[0]
+        # Herleitung: altes (x,y) -> neues (y, 2*W_alt - x), W_alt=4
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (0, 8, 2, 6)
+
+    def test_rotate_180_transforms_backstitch(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.rotate_180()
+
+        assert p.width == 4 and p.height == 6
+        bs = p.backstitches[0]
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (8, 12, 6, 10)
+
+    def test_flip_horizontal_transforms_backstitch(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.flip_horizontal()
+
+        bs = p.backstitches[0]
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (8, 0, 6, 2)
+
+    def test_flip_vertical_transforms_backstitch(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.flip_vertical()
+
+        bs = p.backstitches[0]
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (0, 12, 2, 10)
+
+    def test_crop_shifts_and_keeps_backstitch_inside_new_bounds(self):
+        p = self._pattern(width=4, height=6)
+        # Zelle (1,1) in Stich-Koordinaten -> (2,2)-(4,4) in halben Stichen.
+        p.add_backstitch(2, 2, 4, 4, 0)
+
+        p.crop(1, 1, 2, 2)
+
+        assert len(p.backstitches) == 1
+        bs = p.backstitches[0]
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (0, 0, 2, 2)
+
+    def test_crop_drops_backstitch_outside_new_bounds(self):
+        p = self._pattern(width=4, height=6)
+        # Liegt komplett vor dem Crop-Bereich (der bei (1,1) beginnt).
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.crop(1, 1, 2, 2)
+
+        assert len(p.backstitches) == 0
+
+    def test_resize_shrink_drops_backstitch_outside_new_bounds(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)  # bleibt erhalten
+        p.add_backstitch(6, 6, 8, 8, 0)  # faellt weg (x=6/8 > neue Breite*2=4)
+
+        p.resize(2, 3)
+
+        assert len(p.backstitches) == 1
+        bs = p.backstitches[0]
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (0, 0, 2, 2)
+
+    def test_resize_grow_keeps_backstitch_unchanged(self):
+        p = self._pattern(width=4, height=6)
+        p.add_backstitch(0, 0, 2, 2, 0)
+
+        p.resize(10, 10)
+
+        assert len(p.backstitches) == 1
+        bs = p.backstitches[0]
+        assert (bs.x1, bs.y1, bs.x2, bs.y2) == (0, 0, 2, 2)
 
 
 class TestPatternProgress:

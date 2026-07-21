@@ -631,6 +631,30 @@ def test_convert_to_mode_skips_beads(empty_pattern):
     assert pattern.color_entries[1].thread.manufacturer == "DMC Diamond Painting"
 
 
+def test_convert_to_mode_restamps_stitch_type_of_existing_stitches(empty_pattern):
+    """Regression: convert_to_mode() aenderte entry.is_diamond, liess aber
+    stitch_type_grid bereits platzierter Zellen unangetastet -- nach
+    Stick->Diamond blieben existierende Zellen als FULL (Quadrat) statt als
+    DIAMOND (Drill) markiert, nach Diamond->Stick blieben sie dauerhaft
+    DIAMOND obwohl die Farbe wieder eine normale Stick-Farbe ist."""
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+
+    pattern = empty_pattern
+    pattern.color_entries.clear()
+    idx = pattern.add_color(
+        Thread.from_hex("White", "#FFFFFF", manufacturer="Anchor", catalog_number="1")
+    )
+    pattern.set_stitch(0, 0, idx)
+    assert pattern.layer_stack.active_layer.get_stitch_type(0, 0) == StitchType.FULL.value
+
+    pattern.convert_to_mode("diamond")
+    assert pattern.layer_stack.active_layer.get_stitch_type(0, 0) == StitchType.DIAMOND.value
+
+    pattern.convert_to_mode("stitch")
+    assert pattern.layer_stack.active_layer.get_stitch_type(0, 0) == StitchType.FULL.value
+
+
 def test_convert_to_mode_noop_when_already_target(empty_pattern):
     """convert_to_mode mit selbem Modus ist ein No-Op (returns False)."""
     pattern = empty_pattern

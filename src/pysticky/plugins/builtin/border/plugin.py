@@ -42,17 +42,23 @@ def run(pattern, ctx) -> None:
         m = margin + t_offset
         if m >= min(width, height) / 2:
             break
-        # Oben + Unten
+        # Oben + Unten -- bei ungerader Höhe/Breite kann die mittlere
+        # Zeile/Spalte oberer UND unterer (bzw. linker UND rechter) Rand
+        # zugleich sein. Dieselbe Zelle dann nicht ein zweites Mal zählen
+        # (set_stitch() auf dieselbe Zelle ändert das Ergebnis nicht, aber
+        # "placed" wurde vorher trotzdem doppelt hochgezählt).
+        top_row, bottom_row = m, height - 1 - m
         for x in range(m, width - m):
-            if pattern.set_stitch(x, m, color_index):
+            if pattern.set_stitch(x, top_row, color_index):
                 placed += 1
-            if pattern.set_stitch(x, height - 1 - m, color_index):
+            if bottom_row != top_row and pattern.set_stitch(x, bottom_row, color_index):
                 placed += 1
         # Links + Rechts (ohne Ecken doppelt)
+        left_col, right_col = m, width - 1 - m
         for y in range(m + 1, height - 1 - m):
-            if pattern.set_stitch(m, y, color_index):
+            if pattern.set_stitch(left_col, y, color_index):
                 placed += 1
-            if pattern.set_stitch(width - 1 - m, y, color_index):
+            if right_col != left_col and pattern.set_stitch(right_col, y, color_index):
                 placed += 1
 
     ctx.show_message(f"Rahmen erstellt: {placed} Stiche.")

@@ -209,6 +209,26 @@ class Pattern:
         self.width = new_width
         self.height = new_height
         self.layer_stack.resize(new_width, new_height)
+        # Verkleinern verwirft Stiche ausserhalb der neuen Groesse -- ohne
+        # das blieben color_entries[i].stitch_count und damit
+        # get_statistics()/Garnverbrauch-Schaetzungen dauerhaft zu hoch.
+        # Vergroessern aendert nichts, aber Neuberechnen ist billig und
+        # bleibt so in beiden Faellen konsistent (analog zu
+        # smart_resize.py, das dies bereits richtig macht).
+        self.recalculate_stitch_counts()
+
+        # Rückstiche außerhalb der neuen Größe verwerfen (nur beim
+        # Verkleinern relevant) -- resize() verschiebt den Ursprung nicht
+        # (siehe layer.py::resize, kopiert nur den oben-links überlappenden
+        # Bereich), daher hier keine Koordinaten-Verschiebung, nur Clipping.
+        max_x, max_y = 2 * new_width, 2 * new_height
+        self.backstitch_manager.transform(
+            lambda x1, y1, x2, y2: (
+                (x1, y1, x2, y2)
+                if 0 <= x1 <= max_x and 0 <= y1 <= max_y and 0 <= x2 <= max_x and 0 <= y2 <= max_y
+                else None
+            )
+        )
 
     def get_stitch(self, x: int, y: int) -> int | None:
         """
@@ -356,7 +376,7 @@ class Pattern:
             )
 
             if use_backup:
-                for entry, snapshot in zip(self.color_entries, target_backup):
+                for idx, (entry, snapshot) in enumerate(zip(self.color_entries, target_backup)):
                     if entry.is_bead or snapshot is None:
                         continue
                     entry.thread = Thread.from_hex(
@@ -365,11 +385,14 @@ class Pattern:
                         manufacturer=snapshot.get("manufacturer", "") or None,
                         catalog_number=snapshot.get("catalog_number", "") or None,
                     )
-                    entry.is_diamond = bool(snapshot.get("is_diamond", False))
+                    new_is_diamond = bool(snapshot.get("is_diamond", False))
+                    if new_is_diamond != entry.is_diamond:
+                        entry.is_diamond = new_is_diamond
+                        self._restamp_stitch_type_for_color(idx, entry)
                     changed = True
             else:
                 default_palette = "DMC Diamond Painting" if target_mode == "diamond" else "DMC"
-                for entry in self.color_entries:
+                for idx, entry in enumerate(self.color_entries):
                     if entry.is_bead:
                         continue
                     # Wenn schon im Ziel-Format (z.B. is_diamond+target=diamond),
@@ -383,11 +406,32 @@ class Pattern:
                     if already_target and match is entry.thread:
                         continue
                     entry.thread = match
-                    entry.is_diamond = target_mode == "diamond"
+                    new_is_diamond = target_mode == "diamond"
+                    if new_is_diamond != entry.is_diamond:
+                        entry.is_diamond = new_is_diamond
+                        self._restamp_stitch_type_for_color(idx, entry)
                     changed = True
 
         self.mode = target_mode
         return changed or current_mode != target_mode
+
+    def _restamp_stitch_type_for_color(self, color_index: int, entry: "ColorEntry") -> None:
+        """Setzt den Stich-Typ aller bereits platzierten Zellen dieser Farbe
+        neu, nachdem sich `entry.is_diamond` geändert hat (convert_to_mode()).
+
+        `set_stitch()` erzwingt DIAMOND/BEAD nur beim NEUEN Platzieren eines
+        Stichs -- bereits vorhandene Zellen blieben sonst dauerhaft auf ihrem
+        alten Stich-Typ eingefroren: nach Stick→Diamond weiterhin als Quadrat
+        gerendert (nur sichtbar, wenn "Diamond-Ansicht" zufällig aus ist),
+        nach Diamond→Stick umgekehrt dauerhaft als Drill (die Diamond-
+        Rendering-Prüfung gated NICHT auf den Ansicht-Toggle).
+        """
+        from .stitch import StitchType
+
+        new_type = StitchType.DIAMOND.value if entry.is_diamond else StitchType.FULL.value
+        for layer in self.layer_stack:
+            mask = layer.grid == color_index
+            layer.stitch_type_grid[mask] = new_type
 
     def add_color(
         self,
@@ -725,6 +769,25 @@ class Pattern:
         self.height = height
         self.layer_stack.width = width
         self.layer_stack.height = height
+        # Stiche ausserhalb des neuen Bereichs wurden verworfen -- ohne das
+        # blieben color_entries[i].stitch_count/get_statistics() dauerhaft
+        # zu hoch (siehe resize() fuer dieselbe Begruendung).
+        self.recalculate_stitch_counts()
+
+        # Rückstiche um den Crop-Offset verschieben und außerhalb des neuen
+        # Bereichs liegende verwerfen -- ohne das blieben Konturen an der
+        # alten absoluten Position stehen, komplett losgelöst vom
+        # verschobenen/verkleinerten Grid.
+        shift_x, shift_y = 2 * x, 2 * y
+        max_x, max_y = 2 * width, 2 * height
+
+        def _shift_and_clip(x1, y1, x2, y2):
+            nx1, ny1, nx2, ny2 = x1 - shift_x, y1 - shift_y, x2 - shift_x, y2 - shift_y
+            if 0 <= nx1 <= max_x and 0 <= ny1 <= max_y and 0 <= nx2 <= max_x and 0 <= ny2 <= max_y:
+                return (nx1, ny1, nx2, ny2)
+            return None
+
+        self.backstitch_manager.transform(_shift_and_clip)
 
         return True
 
@@ -765,6 +828,16 @@ class Pattern:
         for layer in self.layer_stack:
             layer.rotate_90_cw()
 
+        # Rückstich-Koordinaten (absolute Pattern-Position in halben
+        # Stichen) müssen dieselbe Rotation erfahren wie das Grid, sonst
+        # bleiben Konturen an der alten, jetzt falschen Stelle liegen.
+        # Herleitung passend zu np.rot90(grid, k=-1) in layer.py: altes
+        # (x,y) -> neues (2*H_alt - y, x).
+        old_height = self.height
+        self.backstitch_manager.transform(
+            lambda x1, y1, x2, y2: (2 * old_height - y1, x1, 2 * old_height - y2, x2)
+        )
+
         # Breite und Höhe tauschen
         self.width, self.height = self.height, self.width
         self.layer_stack.width = self.width
@@ -774,6 +847,13 @@ class Pattern:
         """Dreht das gesamte Muster 90° gegen den Uhrzeigersinn."""
         for layer in self.layer_stack:
             layer.rotate_90_ccw()
+
+        # Herleitung passend zu np.rot90(grid, k=1): altes (x,y) ->
+        # neues (y, 2*W_alt - x).
+        old_width = self.width
+        self.backstitch_manager.transform(
+            lambda x1, y1, x2, y2: (y1, 2 * old_width - x1, y2, 2 * old_width - x2)
+        )
 
         # Breite und Höhe tauschen
         self.width, self.height = self.height, self.width
@@ -785,15 +865,24 @@ class Pattern:
         for layer in self.layer_stack:
             layer.rotate_180()
 
+        w, h = 2 * self.width, 2 * self.height
+        self.backstitch_manager.transform(lambda x1, y1, x2, y2: (w - x1, h - y1, w - x2, h - y2))
+
     def flip_horizontal(self) -> None:
         """Spiegelt das gesamte Muster horizontal."""
         for layer in self.layer_stack:
             layer.flip_horizontal()
 
+        w = 2 * self.width
+        self.backstitch_manager.transform(lambda x1, y1, x2, y2: (w - x1, y1, w - x2, y2))
+
     def flip_vertical(self) -> None:
         """Spiegelt das gesamte Muster vertikal."""
         for layer in self.layer_stack:
             layer.flip_vertical()
+
+        h = 2 * self.height
+        self.backstitch_manager.transform(lambda x1, y1, x2, y2: (x1, h - y1, x2, h - y2))
 
     # === Rückstich-Methoden (delegieren an BackstitchManager) ===
 

@@ -24,6 +24,16 @@ class TestThreadColor:
         assert color.g == 0
         assert color.b == 0
 
+    def test_from_hex_shorthand_3_digit(self):
+        """Regression: die 3-stellige CSS-Kurzform ("#FFF" == "#FFFFFF")
+        crashte vorher mit einem verwirrenden rohen int(..., 16)-ValueError
+        statt entweder zu funktionieren oder klar zu fehlermelden."""
+        color = ThreadColor.from_hex("#FFF")
+        assert (color.r, color.g, color.b) == (255, 255, 255)
+
+        color2 = ThreadColor.from_hex("A1F")  # ohne '#', jede Ziffer doppelt
+        assert (color2.r, color2.g, color2.b) == (0xAA, 0x11, 0xFF)
+
     def test_to_hex(self):
         """Test: Farbe zu Hex konvertieren."""
         color = ThreadColor(r=255, g=128, b=0)

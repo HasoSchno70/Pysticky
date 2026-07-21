@@ -20,7 +20,7 @@ Example:
 """
 
 from dataclasses import dataclass
-from typing import Iterator
+from typing import Callable, Iterator
 
 
 @dataclass
@@ -163,6 +163,30 @@ class BackstitchManager:
             backstitch: Der wiederherzustellende Backstitch
         """
         self._backstitches.append(backstitch)
+
+    def transform(
+        self, fn: Callable[[int, int, int, int], tuple[int, int, int, int] | None]
+    ) -> None:
+        """Wendet eine Koordinaten-Transformation auf alle Rückstiche an --
+        für Pattern-weite Rotate/Flip/Crop/Resize-Operationen, die die
+        Stich-Grids bereits transformieren, aber Rückstich-Koordinaten
+        (absolute Pattern-Positionen in halben Stichen) sonst unangetastet
+        lassen würden.
+
+        Args:
+            fn: Bekommt (x1, y1, x2, y2) eines Rückstichs und gibt entweder
+                die neuen Koordinaten zurück, oder None um den Rückstich zu
+                verwerfen (z.B. weil er nach einem Crop/Verkleinern
+                außerhalb des neuen Bereichs liegt).
+        """
+        new_backstitches = []
+        for bs in self._backstitches:
+            result = fn(bs.x1, bs.y1, bs.x2, bs.y2)
+            if result is None:
+                continue
+            x1, y1, x2, y2 = result
+            new_backstitches.append(Backstitch(x1, y1, x2, y2, bs.color_index))
+        self._backstitches = new_backstitches
 
     def remove(self, backstitch: Backstitch) -> bool:
         """

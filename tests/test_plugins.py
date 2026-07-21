@@ -217,6 +217,37 @@ def test_border_plugin_draws_rectangle(empty_pattern):
     assert layer.get_stitch(5, 5) is None
 
 
+def test_border_plugin_does_not_double_count_middle_row(empty_pattern):
+    """Regression: bei ungerader Breite/Höhe kann die Mitte gleichzeitig
+    oberer UND unterer (bzw. linker UND rechter) Rand sein -- die Zelle
+    wurde dann zweimal gezaehlt, obwohl set_stitch() sie nur einmal
+    tatsaechlich veraendert. Pattern 5x3: bei margin=1 ist Zeile 1 sowohl
+    top_row als auch bottom_row (height-1-margin = 3-1-1 = 1)."""
+    from pysticky.core import Pattern, Thread
+    from pysticky.plugins import discover_plugins, run_plugin
+
+    pattern = Pattern(width=5, height=3)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Red", "#FF0000"))
+
+    plugins = {p.id: p for p in discover_plugins()}
+    border = plugins["pysticky.border"]
+
+    ctx = MockContext(int_answers=[1, 1])  # margin=1, thickness=1
+    run_plugin(border, pattern, ctx)
+
+    layer = pattern.layer_stack.active_layer
+    actual_cells = sum(
+        1
+        for y in range(pattern.height)
+        for x in range(pattern.width)
+        if layer.get_stitch(x, y) is not None
+    )
+    assert actual_cells == 3  # Zeile 1, Spalten 1-3
+
+    assert "3 Stiche" in ctx.messages[0]
+
+
 def test_checkerboard_plugin_fills_pattern(empty_pattern):
     """Schachbrett-Plugin fuellt das gesamte Pattern."""
     from pysticky.core import Thread

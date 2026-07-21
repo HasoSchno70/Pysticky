@@ -88,7 +88,8 @@ class ThreadColor:
         Erstellt eine Farbe aus einem Hex-String.
 
         Args:
-            hex_color: Hex-Farbcode mit oder ohne '#' (z.B. "#FF0000" oder "FF0000")
+            hex_color: Hex-Farbcode mit oder ohne '#' (z.B. "#FF0000", "FF0000"
+                oder die 3-stellige Kurzform "#FFF")
 
         Returns:
             Neue ThreadColor-Instanz
@@ -99,8 +100,16 @@ class ThreadColor:
         Example:
             >>> ThreadColor.from_hex("#FF0000")
             ThreadColor(r=255, g=0, b=0)
+            >>> ThreadColor.from_hex("#FFF")
+            ThreadColor(r=255, g=255, b=255)
         """
         hex_color = hex_color.lstrip("#")
+        if len(hex_color) == 3:
+            # CSS-Kurzform ("#FFF" == "#FFFFFF") -- ohne das crashte das
+            # hier mit einem verwirrenden rohen int(..., 16)-ValueError
+            # statt entweder zu funktionieren oder einen klaren Fehler zu
+            # zeigen.
+            hex_color = "".join(c * 2 for c in hex_color)
         return cls(r=int(hex_color[0:2], 16), g=int(hex_color[2:4], 16), b=int(hex_color[4:6], 16))
 
     def to_hex(self) -> str:
