@@ -26,6 +26,7 @@ class ColorsTab(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._diamond = False
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -60,6 +61,13 @@ class ColorsTab(QWidget):
         # Nur nicht-übersprungene Farben für Prozentberechnung
         total = sum(e.stitch_count for e in entries if not e.skip_stitching) or 1
 
+        was_diamond = self._diamond
+        self._diamond = pattern.mode == "diamond"
+        if self._diamond != was_diamond:
+            self._colors_table.setHorizontalHeaderItem(
+                5, QTableWidgetItem(t("Drills") if self._diamond else t("Stiche"))
+            )
+
         self._colors_table.setRowCount(len(entries))
 
         for row, entry in enumerate(entries):
@@ -74,10 +82,9 @@ class ColorsTab(QWidget):
             self._colors_table.setItem(row, 1, symbol_item)
 
             # Name (mit Skip-Markierung)
+            skip_label = t("nicht kleben") if self._diamond else t("nicht sticken")
             name_text = (
-                f"{entry.thread.name} ({t('nicht sticken')})"
-                if entry.skip_stitching
-                else entry.thread.name
+                f"{entry.thread.name} ({skip_label})" if entry.skip_stitching else entry.thread.name
             )
             name_item = QTableWidgetItem(name_text)
             if entry.skip_stitching:
