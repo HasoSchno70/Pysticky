@@ -515,6 +515,15 @@ class Pattern:
             # Alle höheren Indizes um 1 reduzieren
             layer.shift_color_indices(index + 1, -1)
 
+        # Rückstiche mit diesem Farbindex loeschen, hoehere dekrementieren --
+        # ohne das haetten Backstitches auf die falsche (nachgerueckte) Farbe
+        # gezeigt, oder (war es der letzte Farbindex) einen IndexError
+        # ausgeloest, sobald color_entries[bs.color_index] gelesen wird
+        # (Rendering/Export/Legende). color_management_dialog.py's eigener
+        # Loesch-Pfad macht das schon korrekt, dieser kanonische Pattern-API-
+        # Pfad hatte es nie nachgezogen.
+        self.backstitch_manager.update_color_indices(index)
+
         del self.color_entries[index]
 
     def get_color_entry(self, index: int) -> ColorEntry | None:

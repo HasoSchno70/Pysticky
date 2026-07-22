@@ -2,9 +2,13 @@
 Smart-Resize: skaliert ein Pattern mit Stitch-Redistribution.
 
 Im Gegensatz zum normalen `Pattern.resize` (croppt oder padded mit leeren
-Zellen), interpretiert smart-resize das Pattern als Pixel-Bild, skaliert
-es bilinear hoch/runter, und mappt jeden Pixel zurück auf die naheste
-existierende Farbe der Palette (Lab-Distance).
+Zellen), interpretiert smart-resize das Pattern als Pixel-Bild und skaliert
+es per Nearest-Neighbor-Sampling hoch/runter -- jede neue Zelle uebernimmt
+unveraendert die Farbe/den Stitch-Type der naechstliegenden alten Zelle.
+Da die Palette dabei nie verlassen wird (nur bestehende Farbindizes werden
+kopiert, keine neuen erzeugt), ist kein zusaetzliches Lab-Distance-Snapping
+noetig. Kein Interpolieren/Glaetten (kein "bilinear") -- beim Verkleinern
+werden Quell-Spalten/Zeilen schlicht ausgelassen, nicht gemittelt.
 
 Anwendungsfall: User hat ein 50×50-Pattern und will es als 100×100 stricken
 — smart-resize zeichnet die Stiche neu, statt einfach 50% leere Zellen
@@ -28,9 +32,9 @@ def smart_resize(pattern: "Pattern", new_width: int, new_height: int) -> None:
     Skaliert das Pattern auf (new_width, new_height) mit Stitch-Redistribution.
 
     Änderungen werden direkt auf das Pattern angewendet:
-    - Alle Layer werden bilinear hochskaliert
-    - Pro Pixel wird zur naheliegendsten existierenden Farbe gesnappt
-    - Stitch-Type-Grid wird mit nearest-neighbor übernommen
+    - Alle Layer werden per Nearest-Neighbor-Sampling neu skaliert (Farb-
+      und Stitch-Type-Grid übernehmen unverändert die Werte der jeweils
+      naheliegendsten alten Zelle, kein Interpolieren/Glätten)
     - Backstitches werden proportional skaliert (in halben Stichen)
 
     Args:

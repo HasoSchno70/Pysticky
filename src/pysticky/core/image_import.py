@@ -275,7 +275,23 @@ def import_image(
 
         index_grid = reduce_confetti(index_grid, settings.confetti_min_run_size)
 
-    # Stiche ins Layer schreiben und Stitch-Counts zählen
+    # Stiche ins Layer schreiben und Stitch-Counts zählen.
+    #
+    # layer.set_stitch() (im Gegensatz zu Pattern.set_stitch()) stempelt
+    # KEINEN Bead-/Diamond-Stitch-Type -- ohne forced_stitch_type wurde
+    # hier jeder importierte Bead-/Diamond-Stich mit stitch_type=FULL(0)
+    # gesetzt, obwohl is_bead/is_diamond auf den ColorEntries oben schon
+    # korrekt gesetzt ist. Sichtbare Folge: Pattern._count_beads() zaehlt
+    # strikt stitch_type_grid==BEAD, also blieb bead_count nach einem
+    # Bead-Paletten-Import immer 0.
+    from .stitch import StitchType
+
+    forced_stitch_type = 0
+    if palette_is_beads:
+        forced_stitch_type = StitchType.BEAD.value
+    elif palette_is_diamond:
+        forced_stitch_type = StitchType.DIAMOND.value
+
     layer = pattern.active_layer
     if layer is None:  # frisch erzeugtes Pattern hat immer ein aktives Layer
         raise RuntimeError("Pattern ohne aktives Layer — Import-Invariante verletzt")
@@ -283,7 +299,7 @@ def import_image(
         for x in range(target_width):
             color_index = int(index_grid[y, x])
             if color_index != _NO_STITCH:
-                layer.set_stitch(x, y, color_index)
+                layer.set_stitch(x, y, color_index, stitch_type=forced_stitch_type)
                 pattern.color_entries[color_index].stitch_count += 1
 
     # Backstitch-Auto-Generierung per Kantenerkennung

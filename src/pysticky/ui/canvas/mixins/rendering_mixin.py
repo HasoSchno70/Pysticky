@@ -282,11 +282,18 @@ class RenderingMixin:
             path.lineTo(QPointF(x + size / 2, y + size))
             path.lineTo(br)
             path.closeSubpath()
-        elif stype == 7:  # THREE_QUARTER (3/4 = full minus one corner)
+        elif stype == 7:  # THREE_QUARTER (3/4 = full minus die QUARTER_BL-Ecke)
+            # Regression: zeichnete vorher tl->tr->br->bl, also das volle
+            # Quadrat -- optisch identisch zu einem FULL-Stich (Bug auch in
+            # core/stitch_shapes.py::_PARTIAL_SHAPES[7], das exportseitig
+            # (PDF/HTML/Bild) dieselbe Form nutzt). Korrekt ist das Fuenfeck
+            # = volles Quadrat MINUS genau das Dreieck aus stype==5
+            # (QUARTER_BL) oben.
             path.moveTo(tl)
             path.lineTo(tr)
             path.lineTo(br)
-            path.lineTo(bl)
+            path.lineTo(QPointF(x + size / 2, y + size))
+            path.lineTo(QPointF(x, y + size / 2))
             path.closeSubpath()
         else:
             # Fallback: ganzes Rechteck

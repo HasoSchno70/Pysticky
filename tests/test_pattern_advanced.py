@@ -82,6 +82,40 @@ class TestPatternColors:
         assert len(p.color_entries) == 1
         assert p.color_entries[0].thread.name == "Grün"
 
+    def test_remove_color_updates_backstitch_indices(self):
+        """Regression (Runde 22): remove_color() rief nie
+        BackstitchManager.update_color_indices() auf -- Rueckstiche auf
+        einem hoeheren Farbindex zeigten danach auf die falsche
+        (nachgerueckte) Farbe, oder verursachten einen IndexError, wenn
+        der geloeschte Index der letzte war."""
+        p = Pattern(width=10, height=10)
+        p.color_entries.clear()
+        p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        p.add_color(Thread.from_hex("Grün", "#00FF00"))
+        p.add_color(Thread.from_hex("Blau", "#0000FF"))
+        # Rueckstich auf Farbe 1 (Gruen) und Farbe 2 (Blau)
+        p.add_backstitch(0, 0, 1, 1, color_index=1)
+        p.add_backstitch(2, 2, 3, 3, color_index=2)
+
+        p.remove_color(0)  # Rot entfernen -> Gruen wird 0, Blau wird 1
+
+        indices = sorted(bs.color_index for bs in p.backstitches)
+        assert indices == [0, 1]
+        # Alle verbleibenden Backstitch-Farbindizes muessen gueltig sein
+        for bs in p.backstitches:
+            assert 0 <= bs.color_index < len(p.color_entries)
+
+    def test_remove_color_removes_backstitches_on_deleted_color(self):
+        p = Pattern(width=10, height=10)
+        p.color_entries.clear()
+        p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        p.add_color(Thread.from_hex("Grün", "#00FF00"))
+        p.add_backstitch(0, 0, 1, 1, color_index=0)
+
+        p.remove_color(0)
+
+        assert len(p.backstitches) == 0
+
 
 class TestPatternStitches:
     """Tests für Stich-Operationen."""

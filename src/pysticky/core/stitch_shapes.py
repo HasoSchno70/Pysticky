@@ -34,8 +34,13 @@ _PARTIAL_SHAPES: dict[int, tuple[tuple[float, float], ...]] = {
     5: ((0.0, 0.5), (0.0, 1.0), (0.5, 1.0)),
     # QUARTER_BR
     6: ((1.0, 0.5), (0.5, 1.0), (1.0, 1.0)),
-    # THREE_QUARTER: alles ausser unten-links
-    7: ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)),
+    # THREE_QUARTER: alles ausser unten-links -- Fuenfeck = volles Quadrat
+    # MINUS genau das Dreieck aus QUARTER_BL (Eintrag 5) oben. Regression:
+    # war vorher das volle Rechteck (0,0)-(1,0)-(1,1)-(0,1), optisch
+    # identisch zu einem FULL-Stich -- derselbe Bug war unabhaengig in
+    # ui/canvas/mixins/rendering_mixin.py::_draw_partial_stitch() dupliziert
+    # (dort ebenfalls gefixt).
+    7: ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.5, 1.0), (0.0, 0.5)),
 }
 
 
@@ -136,14 +141,13 @@ def diamond_inset_pixels(cell_size: float) -> float:
 
     Strategie:
     - cell_size < 12 → Inset = 0 (Drills berühren sich, Spalt nicht sichtbar)
-    - cell_size >= 12 → Inset = round(cell_size * 0.08), max begrenzt damit der
-      Drill bei sehr grosser Zelle nicht zu winzig wird.
+    - cell_size >= 12 → Inset = cell_size * 0.08 (siehe diamond_inset_factor())
 
     Der Rückgabewert ist float — Renderer casten selbst zu int falls nötig.
     """
     if cell_size < 12:
         return 0.0
-    return min(cell_size * 0.08, cell_size * 0.15)
+    return cell_size * 0.08
 
 
 def diamond_should_draw_edge(cell_size: float) -> bool:

@@ -57,6 +57,35 @@ def test_find_equivalents_returns_dict():
     assert result["Anchor"].manufacturer == "Anchor"
 
 
+def test_find_equivalents_isolates_failure_to_one_palette(monkeypatch):
+    """Regression (Runde 22): find_equivalents() baute vorher ein Dict-
+    Comprehension ohne jede Fehlerbehandlung -- wenn die Aufloesung fuer
+    EINE angefragte Ziel-Palette warf (z.B. fehlerhafte Thread-/Farbdaten
+    in genau dieser Palette), riss das die GESAMTE Cross-Reference-
+    Aufloesung fuer alle anderen angefragten Paletten mit ab. PDF-/HTML-
+    Export rufen dies ungeschuetzt in einer Pro-Thread-Schleife auf -- ein
+    einzelner kaputter Eintrag haette sonst den kompletten Export
+    abgebrochen."""
+    import pysticky.core.thread_cross_ref as cross_ref_module
+    from pysticky.core import Thread
+
+    real_find_equivalent = cross_ref_module.find_equivalent
+
+    def _flaky_find_equivalent(thread, target_palette_name):
+        if target_palette_name == "Kaputt":
+            raise TypeError("simulierter Absturz durch fehlerhafte Palettendaten")
+        return real_find_equivalent(thread, target_palette_name)
+
+    monkeypatch.setattr(cross_ref_module, "find_equivalent", _flaky_find_equivalent)
+
+    t = Thread.from_hex("Black", "#000000", manufacturer="DMC", catalog_number="310")
+    result = cross_ref_module.find_equivalents(t, ["Anchor", "Kaputt", "Madeira"])
+
+    assert result["Kaputt"] is None
+    assert result["Anchor"] is not None
+    assert result["Madeira"] is not None
+
+
 def test_black_maps_to_black_across_manufacturers():
     """Schwarz aus einer Palette sollte zu einem dunklen Thread mappen."""
     from pysticky.core import Thread

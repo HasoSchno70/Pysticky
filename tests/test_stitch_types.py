@@ -309,6 +309,52 @@ def test_three_quarter_stitch_layer_roundtrip(tmp_path):
     assert loaded.active_layer.get_stitch_type(2, 2) == StitchType.THREE_QUARTER.value
 
 
+def test_three_quarter_shape_is_not_the_full_square():
+    """Regression (Runde 22): core/stitch_shapes.py::_PARTIAL_SHAPES[7]
+    war faelschlich das volle Rechteck (0,0)-(1,0)-(1,1)-(0,1) statt eines
+    Fuenfecks (volles Quadrat minus die QUARTER_BL-Ecke) -- ein
+    Drei-Viertel-Stich war dadurch in JEDEM Renderer (Canvas/PDF/HTML/PNG),
+    der diese gemeinsame Shape-Tabelle nutzt, optisch identisch zu einem
+    vollen Kreuzstich."""
+    from pysticky.core.stitch_shapes import normalized_partial_stitch_shape
+
+    shape = normalized_partial_stitch_shape(StitchType.THREE_QUARTER.value)
+    # Volles Rechteck haette Flaeche 1.0 -- das Fuenfeck (minus die kleine
+    # QUARTER_BL-Ecke, Flaeche 0.125) muss kleiner sein.
+    area = _polygon_area(shape)
+    assert area < 1.0
+    assert (0.0, 1.0) not in shape, "Die volle untere-linke Ecke darf kein Eckpunkt mehr sein"
+
+
+def _polygon_area(points):
+    """Shoelace-Formel fuer die Flaeche eines (konvexen) Polygons."""
+    n = len(points)
+    area = 0.0
+    for i in range(n):
+        x1, y1 = points[i]
+        x2, y2 = points[(i + 1) % n]
+        area += x1 * y2 - x2 * y1
+    return abs(area) / 2.0
+
+
+def test_image_export_renders_three_quarter_stitch_differently_from_full(tmp_path):
+    """End-to-End: PNG-Export muss Drei-Viertel-Stich anders rendern als
+    einen vollen Kreuzstich (vorher optisch identisch, siehe Bug oben)."""
+    from pysticky.io.image_export import ImageExporter
+
+    p_full = _make_full_pattern()
+    p_tq = _make_partial_pattern(StitchType.THREE_QUARTER.value)
+
+    f_full = tmp_path / "full.png"
+    f_tq = tmp_path / "three_quarter.png"
+    ImageExporter(p_full).export(f_full, cell_size=20)
+    ImageExporter(p_tq).export(f_tq, cell_size=20)
+
+    assert _png_file_hash(f_full) != _png_file_hash(f_tq), (
+        "PNG-Export muss Drei-Viertel-Stich anders rendern als vollen Kreuzstich"
+    )
+
+
 def test_french_knot_layer_roundtrip(tmp_path):
     """FRENCH_KNOT ueberlebt den .pxs-Roundtrip."""
     p = _make_partial_pattern(StitchType.FRENCH_KNOT.value)
@@ -418,6 +464,36 @@ def test_pdf_export_renders_partial_stitch_polygon(tmp_path):
     # Sanity: PDF-Header muss da sein
     with target.open("rb") as f:
         assert f.read(4) == b"%PDF"
+
+
+def test_preview_engine_pixel_mode_renders_three_quarter_differently_from_full(qtbot, tmp_path):
+    """Regression (Runde 22): PreviewRenderEngine._draw_partial_stitch_pixel()
+    (RenderMode.PIXEL) hatte fuer THREE_QUARTER unabhaengig denselben Bug
+    wie core/stitch_shapes.py und rendering_mixin.py -- das volle Rechteck
+    statt eines Fuenfecks, optisch identisch zu einem vollen Stich."""
+    from pysticky.ui.rendering.preview_render_engine import PreviewRenderEngine, RenderMode
+
+    p_full = Pattern(name="full", width=4, height=4)
+    p_full.active_layer.set_stitch(2, 2, 0)
+
+    p_tq = Pattern(name="tq", width=4, height=4)
+    p_tq.active_layer.set_stitch(2, 2, 0, stitch_type=StitchType.THREE_QUARTER.value)
+
+    engine_full = PreviewRenderEngine(p_full)
+    engine_full.set_render_mode(RenderMode.PIXEL)
+    engine_tq = PreviewRenderEngine(p_tq)
+    engine_tq.set_render_mode(RenderMode.PIXEL)
+
+    img_full = engine_full.render(cell_size=40)
+    img_tq = engine_tq.render(cell_size=40)
+
+    f_full = tmp_path / "full_pixel.png"
+    f_tq = tmp_path / "tq_pixel.png"
+    img_full.save(str(f_full), "PNG")
+    img_tq.save(str(f_tq), "PNG")
+    assert _png_file_hash(f_full) != _png_file_hash(f_tq), (
+        "Drei-Viertel-Stich muss im Pixel-Modus anders aussehen als voller Stich"
+    )
 
 
 def test_preview_engine_renders_partial_stitch_visibly_different(qtbot, tmp_path):

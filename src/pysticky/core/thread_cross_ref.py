@@ -18,9 +18,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from ..utils.logging import get_logger
 from .color_math import nearest_index_by_lab
 from .palette import get_palette_manager
 from .thread import Thread
+
+logger = get_logger(__name__)
 
 
 def find_equivalent(
@@ -66,9 +69,25 @@ def find_equivalents(
         target_palette_names: Liste von Ziel-Palette-Namen.
 
     Returns:
-        Dict palette_name -> Thread (oder None wenn nicht gefunden).
+        Dict palette_name -> Thread (oder None wenn nicht gefunden ODER
+        wenn die Aufloesung fuer GENAU diese Palette fehlschlaegt).
+
+    Note:
+        Jede Palette wird einzeln abgefangen -- ein fehlerhafter Thread/
+        Farbeintrag in EINER Ziel-Palette darf nicht die Cross-Reference-
+        Aufloesung fuer die anderen angefragten Paletten mitreissen (beide
+        PDF- und HTML-Export rufen dies ungeschuetzt in einer Pro-Thread-
+        Schleife auf -- ein einzelner kaputter Eintrag haette sonst den
+        gesamten Export abgebrochen, nicht nur die eine Palette).
     """
-    return {name: find_equivalent(thread, name) for name in target_palette_names}
+    result: dict[str, Thread | None] = {}
+    for name in target_palette_names:
+        try:
+            result[name] = find_equivalent(thread, name)
+        except Exception as e:  # noqa: BLE001 - Palette-Daten koennen fehlerhaft sein
+            logger.warning(f"Cross-Reference fuer Palette '{name}' fehlgeschlagen: {e}")
+            result[name] = None
+    return result
 
 
 def clear_cache() -> None:

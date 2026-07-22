@@ -182,18 +182,31 @@ class PaletteManager:
         # Threads erstellen
         threads: list[Thread] = []
         for entry in data:
-            color_data = entry.get("Color", {})
+            # Ein einzelner fehlerhafter Eintrag (z.B. "Color": null oder
+            # "R" als String statt Zahl -- beides syntaktisch gueltiges
+            # JSON) darf nicht die GESAMTE Datei zum Absturz bringen --
+            # ThreadColor.__post_init__ wirft dann TypeError, ".get()" auf
+            # einem Nicht-Dict wirft AttributeError, beides ausserhalb von
+            # load_all()'s except-Tuple. Stattdessen: diesen einen Eintrag
+            # ueberspringen, Rest der Palette bleibt nutzbar.
+            try:
+                color_data = entry.get("Color", {})
+                if not isinstance(color_data, dict):
+                    raise ValueError(f"'Color' ist kein Objekt: {color_data!r}")
 
-            thread = Thread(
-                name=entry.get("Name", "Unknown"),
-                color=ThreadColor(
-                    r=color_data.get("R", 128),
-                    g=color_data.get("G", 128),
-                    b=color_data.get("B", 128),
-                ),
-                manufacturer=manufacturer,
-                catalog_number=str(entry.get(number_field, "")) if number_field else None,
-            )
+                thread = Thread(
+                    name=entry.get("Name", "Unknown"),
+                    color=ThreadColor(
+                        r=color_data.get("R", 128),
+                        g=color_data.get("G", 128),
+                        b=color_data.get("B", 128),
+                    ),
+                    manufacturer=manufacturer,
+                    catalog_number=str(entry.get(number_field, "")) if number_field else None,
+                )
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.warning(f"Ungültiger Farbeintrag in {file_path.name} übersprungen: {e}")
+                continue
             threads.append(thread)
 
         # Palette erstellen und speichern

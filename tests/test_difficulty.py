@@ -111,6 +111,47 @@ def test_level_strings_match_constant():
     assert LEVELS == ("Anfänger", "Mittel", "Fortgeschritten", "Profi")
 
 
+def test_diamond_painting_pattern_does_not_get_inflated_special_score():
+    """Regression (Runde 22): compute_difficulty() zaehlte JEDE Zelle mit
+    stitch_type != FULL(0) als "Sonder-Stich" -- Pattern.set_stitch()
+    stempelt aber automatisch JEDEN Diamond-Painting-Drill mit
+    StitchType.DIAMOND(11), das ist die normale DP-Platzierung, keine
+    Komplexitaet. Ohne Modus-Bewusstsein bekam JEDES DP-Muster einen
+    special_ratio nahe 1.0 und wurde dadurch pauschal um bis zu 3 Punkte
+    zu schwer eingestuft, unabhaengig von echter Komplexitaet."""
+    p = Pattern(name="dp", width=10, height=10, mode="diamond", fabric_count=10)
+    p.color_entries.clear()
+    idx = p.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(10):
+        for y in range(10):
+            p.set_stitch(x, y, idx)
+
+    result = compute_difficulty(p)
+
+    assert result["factors"]["special"] == 0
+
+
+def test_cross_stitch_special_stitches_still_count_in_diamond_mode_context():
+    """Gegenprobe: ein ECHTER Sonderstich (Halbstich) im Stick-Modus zaehlt
+    weiterhin normal -- nur der DP-Baseline-Typ (DIAMOND) wird von der
+    Modus-bewussten Baseline ausgenommen, nicht Sonderstiche allgemein."""
+    p = Pattern(name="half", width=10, height=10)
+    p.color_entries.clear()
+    idx = p.add_color(Thread.from_hex("Rot", "#FF0000"))
+    for x in range(10):
+        for y in range(10):
+            p.set_stitch(x, y, idx, stitch_type=1)  # HALF_TL_BR
+
+    result = compute_difficulty(p)
+
+    assert result["factors"]["special"] == 3
+
+
 def test_complex_pattern_scores_above_anfaenger(pattern_with_stitches):
     """pattern_with_stitches hat ~84 Stiche, 2 Farben — erwartete Mittel-Untergrenze."""
     result = compute_difficulty(pattern_with_stitches)

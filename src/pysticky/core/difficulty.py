@@ -98,7 +98,19 @@ def compute_difficulty(pattern: "Pattern") -> dict:
     # Stiche zum Sticken
     stitches_to_do = sum(e.stitch_count for e in pattern.color_entries if not e.skip_stitching)
 
-    # Spezial-Stich-Anteil über alle sichtbaren Layer
+    # Spezial-Stich-Anteil über alle sichtbaren Layer.
+    #
+    # Im Diamond-Painting-Modus stempelt Pattern.set_stitch() JEDEN
+    # platzierten Drill automatisch mit StitchType.DIAMOND (11) --
+    # das ist die normale Platzierung fuer DP, keine Komplexitaet.
+    # Ohne diesen Ausschluss bekam JEDES DP-Muster einen special_ratio
+    # nahe 1.0 und wurde dadurch unabhaengig von der tatsaechlichen
+    # Komplexitaet (Farbanzahl/Groesse/Backstitches) pauschal um bis zu
+    # 3 Punkte zu schwer eingestuft.
+    from .stitch import StitchType
+
+    baseline_type = StitchType.DIAMOND.value if pattern.mode == "diamond" else StitchType.FULL.value
+
     total_stitch_cells = 0
     special_cells = 0
     for layer in pattern.layer_stack:
@@ -110,8 +122,8 @@ def compute_difficulty(pattern: "Pattern") -> dict:
         if cnt == 0:
             continue
         total_stitch_cells += cnt
-        # Sondertypen sind alles != 0 (FULL=0)
-        special_mask = stitch_mask & (layer.stitch_type_grid != 0)
+        # Sondertypen sind alles ausser dem Baseline-Typ des aktuellen Modus
+        special_mask = stitch_mask & (layer.stitch_type_grid != baseline_type)
         special_cells += int(np.count_nonzero(special_mask))
 
     special_ratio = (special_cells / total_stitch_cells) if total_stitch_cells > 0 else 0.0

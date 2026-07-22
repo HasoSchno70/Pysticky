@@ -339,6 +339,38 @@ class TestPaletteManager:
         assert manager.get_palette("Kaputt") is None
         assert manager.get_palette("Auch Kaputt") is None
 
+    def test_malformed_color_entry_skipped_not_whole_file(self, tmp_path):
+        """Regression (Runde 22): die STRUKTUR-Pruefung (Liste von Dicts)
+        deckte nur die aeussere JSON-Form ab -- ein einzelner Eintrag mit
+        "Color": null oder einem nicht-numerischen "R"/"G"/"B"-Wert
+        (beides syntaktisch gueltiges JSON) liess ThreadColor.__post_init__
+        mit TypeError bzw. entry.get() mit AttributeError abstuerzen,
+        ausserhalb von load_all()'s except-Tuple -- das riss die GESAMTE
+        Palettendatei (nicht nur den einen Eintrag) und je nach glob()-
+        Reihenfolge auch alle nachfolgenden Dateien mit."""
+        import json
+
+        (tmp_path / "Gemischt_Farben.json").write_text(
+            json.dumps(
+                [
+                    {"Name": "Rot", "Number": "1", "Color": {"R": 255, "G": 0, "B": 0}},
+                    {"Name": "Kaputt1", "Number": "2", "Color": None},
+                    {"Name": "Kaputt2", "Number": "3", "Color": {"R": "viel", "G": 0, "B": 0}},
+                    {"Name": "Blau", "Number": "4", "Color": {"R": 0, "G": 0, "B": 255}},
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        manager = PaletteManager()
+        manager._palettes_dir = tmp_path
+        manager.load_all()  # darf NICHT crashen
+
+        palette = manager.get_palette("Gemischt")
+        assert palette is not None
+        names = {t.name for t in palette.threads}
+        assert names == {"Rot", "Blau"}
+
 
 class TestPaletteManagerSingleton:
     """Tests für den Singleton."""

@@ -589,10 +589,17 @@ class PreviewRenderEngine:
             path.lineTo(fx + half, bottom)
             path.lineTo(right, bottom)
         elif stype == 7:
+            # THREE_QUARTER = volles Quadrat MINUS genau das Dreieck aus
+            # stype==5 (QUARTER_BL) oben -- war vorher faelschlich das
+            # volle Rechteck, optisch identisch zu einem FULL-Stich
+            # (derselbe Bug wie core/stitch_shapes.py::_PARTIAL_SHAPES[7]
+            # und rendering_mixin.py::_draw_partial_stitch, beide ebenfalls
+            # gefixt).
             path.moveTo(fx, fy)
             path.lineTo(right, fy)
             path.lineTo(right, bottom)
-            path.lineTo(fx, bottom)
+            path.lineTo(fx + half, bottom)
+            path.lineTo(fx, fy + half)
         else:
             painter.fillRect(x, y, size, size, color)
             return

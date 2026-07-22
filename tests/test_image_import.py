@@ -185,6 +185,36 @@ def test_import_solid_color_produces_uniform_pattern(tmp_path):
     assert len(indices) == 1
 
 
+def test_import_from_bead_palette_stamps_bead_stitch_type(tmp_path):
+    """Regression (Runde 22): import_image() schrieb Stiche per
+    `layer.set_stitch()` (nicht `Pattern.set_stitch()`), das den
+    is_bead/is_diamond-Stitch-Type NIE automatisch stempelt. Jeder aus
+    einer Bead-Palette importierte Stich bekam dadurch stitch_type=FULL(0)
+    statt BEAD(10), obwohl is_bead auf den ColorEntries korrekt gesetzt
+    war -- Pattern._count_beads() zaehlt strikt stitch_type_grid==BEAD,
+    also blieb `get_statistics()['bead_count']` nach einem Bead-Paletten-
+    Import immer 0."""
+    from pysticky.core.stitch import StitchType
+
+    path = _make_solid_rgb(tmp_path, (255, 255, 255))
+    settings = ImportSettings(width=5, height=5, max_colors=3, palette_name="Mill Hill Beads")
+    pattern = import_image(path, settings)
+
+    assert any(e.is_bead for e in pattern.color_entries)
+
+    layer = pattern.active_layer
+    stitch_types = {
+        layer.get_stitch_type(x, y)
+        for x in range(pattern.width)
+        for y in range(pattern.height)
+        if layer.get_stitch(x, y) is not None
+    }
+    assert stitch_types == {StitchType.BEAD.value}
+
+    stats = pattern.get_statistics()
+    assert stats["bead_count"] > 0
+
+
 def test_import_two_color_image_finds_both(tmp_path):
     """Zwei klar getrennte Farben muessen beide gefunden werden."""
     path = _make_two_squares(tmp_path)
