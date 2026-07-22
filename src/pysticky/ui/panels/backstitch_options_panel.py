@@ -256,13 +256,18 @@ class BackstitchOptionsPanel(QWidget):
         style = self._style_combo.itemData(index)
         self._line_style = style
         self._preview.set_line_style(style)
-        self.line_style_changed.emit(int(style))
+        # int(Qt.PenStyle.X) wirft in dieser PySide6-Version TypeError --
+        # das Enum unterstuetzt keine direkte int()-Konvertierung, nur
+        # .value. Dieser Bug war bisher unbemerkt, weil das Panel bis jetzt
+        # ueberhaupt nirgends verdrahtet war (kein Aufrufer hat das Signal
+        # je ausgeloest).
+        self.line_style_changed.emit(style.value)
 
     def _on_cap_changed(self, index: int) -> None:
         cap = self._cap_combo.itemData(index)
         self._cap_style = cap
         self._preview.set_cap_style(cap)
-        self.cap_style_changed.emit(int(cap))
+        self.cap_style_changed.emit(cap.value)
 
     def _on_snap_changed(self, enabled: bool) -> None:
         self._snap_enabled = enabled

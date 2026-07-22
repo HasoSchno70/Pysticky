@@ -88,10 +88,11 @@ class UndoHandlersMixin:
         """Rückstich hinzugefügt."""
         from ...core import AddBackstitchCommand
 
+        # Batch-aware (wie _on_stitch_placed/_on_stitch_removed) -- noetig
+        # seit Spiegel-Modus mehrere Rueckstich-Linien pro Klick erzeugen
+        # kann, die als EINE Undo-Aktion zusammengefasst werden muessen.
         command = AddBackstitchCommand(self.current_pattern, x1, y1, x2, y2, color_index)
-        self.undo_manager.execute(command)
-        self._update_undo_actions()
-        self._mark_unsaved()
+        self._execute_command(command)
         self.canvas.update()
 
     def _on_backstitch_removed(
@@ -109,9 +110,7 @@ class UndoHandlersMixin:
                 and bs.color_index == color_index
             ):
                 command = RemoveBackstitchCommand(self.current_pattern, bs)
-                self.undo_manager.execute(command)
-                self._update_undo_actions()
-                self._mark_unsaved()
+                self._execute_command(command)
                 self.canvas.update()
                 break
 

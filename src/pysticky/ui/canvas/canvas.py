@@ -144,6 +144,12 @@ class CrossStitchCanvas(
         # Rueckstich → "Linienbreite"); Default-Einstellwert 2 entspricht
         # dem bisherigen fest codierten Minimum, Offset 0 = unveraendert.
         self._backstitch_width_offset: int = 0
+        # Linienart/Endstil aus BackstitchOptionsPanel -- reine Session-
+        # Live-Einstellungen (wie Text-/Gradient-Options-Panel auch nicht
+        # persistiert werden), Default entspricht dem bisherigen fest
+        # codierten Verhalten.
+        self._backstitch_line_style: Qt.PenStyle = Qt.PenStyle.SolidLine
+        self._backstitch_cap_style: Qt.PenCapStyle = Qt.PenCapStyle.RoundCap
 
         # Marching Ants: animierter Versatz fuer die Auswahl-Umrandung
         # (Einstellungen → Werkzeuge → Auswahl → "Laufende Ameisen"). Timer

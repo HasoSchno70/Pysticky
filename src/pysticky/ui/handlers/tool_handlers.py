@@ -44,6 +44,7 @@ class ToolHandlersMixin:
 
         self.text_options_dock.setVisible(tool == Tool.TEXT)
         self.gradient_options_dock.setVisible(tool == Tool.GRADIENT)
+        self.backstitch_options_dock.setVisible(tool == Tool.BACKSTITCH)
 
         if tool == Tool.TEXT:
             self.text_options_panel.focus_text_input()
@@ -64,8 +65,25 @@ class ToolHandlersMixin:
                 end_idx = (start_idx + 1) % max(1, len(self.current_pattern.color_entries))
                 gradient_tool.set_end_color(end_idx)
                 self.gradient_options_panel.set_end_color(end_idx)
-        elif tool == Tool.BACKSTITCH and not self.canvas.show_backstitches:
-            self._on_toggle_backstitches(True)
+        elif tool == Tool.BACKSTITCH:
+            if not self.canvas.show_backstitches:
+                self._on_toggle_backstitches(True)
+            # Panel-Werte auf den lebenden Canvas/Tool-Zustand anwenden --
+            # das Panel selbst haelt nur Session-Live-Werte (nicht
+            # persistiert, analog Text-/Gradient-Panel).
+            panel = self.backstitch_options_panel
+            self.canvas._backstitch_width_offset = panel.thickness
+            self.canvas._backstitch_line_style = panel.line_style
+            self.canvas._backstitch_cap_style = panel.cap_style
+            backstitch_tool = self.canvas._tool_manager.get_backstitch_tool()
+            if backstitch_tool:
+                backstitch_tool.snap_to_grid = panel.snap_enabled
+            entry = self.current_pattern.get_color_entry(self.canvas._current_color_index)
+            if entry:
+                from ..color_utils import to_qcolor
+
+                panel._preview.set_color(to_qcolor(entry.thread.color))
+            self.canvas.update()
         elif tool == Tool.PROGRESS:
             if not self.canvas._show_completion:
                 self.canvas._show_completion = True
@@ -149,3 +167,26 @@ class ToolHandlersMixin:
         gradient_tool = self.canvas._tool_manager.get_gradient_tool()
         if gradient_tool:
             gradient_tool.set_end_color(color_index)
+
+    # === Backstitch-Tool Handler ===
+
+    def _on_backstitch_thickness_changed(self: "MainWindow", value: int) -> None:
+        self.canvas._backstitch_width_offset = value
+        self.canvas.update()
+
+    def _on_backstitch_style_changed(self: "MainWindow", style: int) -> None:
+        from PySide6.QtCore import Qt
+
+        self.canvas._backstitch_line_style = Qt.PenStyle(style)
+        self.canvas.update()
+
+    def _on_backstitch_cap_changed(self: "MainWindow", cap: int) -> None:
+        from PySide6.QtCore import Qt
+
+        self.canvas._backstitch_cap_style = Qt.PenCapStyle(cap)
+        self.canvas.update()
+
+    def _on_backstitch_snap_changed(self: "MainWindow", enabled: bool) -> None:
+        backstitch_tool = self.canvas._tool_manager.get_backstitch_tool()
+        if backstitch_tool:
+            backstitch_tool.snap_to_grid = enabled

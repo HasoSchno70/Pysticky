@@ -34,6 +34,7 @@ class DockBuilderMixin:
 
     def _create_dock_widgets(self: "MainWindow") -> None:
         """Erstellt alle Dock-Widgets."""
+        from ..panels.backstitch_options_panel import BackstitchOptionsPanel
         from ..panels.gradient_options_panel import GradientOptionsPanel
         from ..panels.info_panel import InfoPanel
         from ..panels.layer_panel import LayerPanel
@@ -77,6 +78,16 @@ class DockBuilderMixin:
         )
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.gradient_options_dock)
         self.gradient_options_dock.setVisible(False)
+
+        # Rueckstich-Options-Panel (links, versteckt) -- fehlte bislang
+        # komplett (anders als Text-/Gradient-Werkzeug, die je ein eigenes
+        # Dock bekommen), obwohl das Panel selbst schon lange fertig war.
+        self.backstitch_options_panel = BackstitchOptionsPanel(self)
+        self.backstitch_options_dock = self._create_dock(
+            t("Rückstich-Optionen"), self.backstitch_options_panel, "dock_backstitch_options"
+        )
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.backstitch_options_dock)
+        self.backstitch_options_dock.setVisible(False)
 
         # Minimap-Panel (links)
         self.minimap_panel = MinimapPanel(self)

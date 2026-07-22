@@ -1444,5 +1444,6 @@
   "Schritt {n}  |  Position ({x}, {y})  |  Distanz: {dist:.1f}": "Step {n}  |  Position ({x}, {y})  |  Distance: {dist:.1f}",
   "⚠ Sprung!": "⚠ Jump!",
   "{stitches} Stiche, {jumps} Sprünge": "{stitches} stitches, {jumps} jumps",
-  "Kein Bild geladen": "No image loaded"
+  "Kein Bild geladen": "No image loaded",
+  "Rückstich-Optionen": "Backstitch Options"
 }

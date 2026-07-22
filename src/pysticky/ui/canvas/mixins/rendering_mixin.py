@@ -835,6 +835,8 @@ class RenderingMixin:
 
         half_cell = self._cell_size // 2
         cb_mode = getattr(self, "_colorblind_mode", None)
+        line_style = getattr(self, "_backstitch_line_style", Qt.PenStyle.SolidLine)
+        cap_style = getattr(self, "_backstitch_cap_style", Qt.PenCapStyle.RoundCap)
 
         # Existierende Backstitches
         for bs in self._pattern.backstitches:
@@ -864,8 +866,8 @@ class RenderingMixin:
                 QPen(
                     QColor(0, 0, 0, 100),
                     max(3, self._cell_size // 5 + 2) + self._backstitch_width_offset,
-                    Qt.PenStyle.SolidLine,
-                    Qt.PenCapStyle.RoundCap,
+                    line_style,
+                    cap_style,
                 )
             )
             painter.drawLine(x1, y1, x2, y2)
@@ -875,8 +877,8 @@ class RenderingMixin:
                 QPen(
                     color,
                     line_width,
-                    Qt.PenStyle.SolidLine,
-                    Qt.PenCapStyle.RoundCap,
+                    line_style,
+                    cap_style,
                 )
             )
             painter.drawLine(x1, y1, x2, y2)

@@ -22,6 +22,7 @@ class SignalsConnectorMixin:
         self._connect_minimap_signals()
         self._connect_text_options_signals()
         self._connect_gradient_options_signals()
+        self._connect_backstitch_options_signals()
         self._connect_progress_signals()
 
     def _connect_canvas_signals(self: "MainWindow") -> None:
@@ -103,6 +104,15 @@ class SignalsConnectorMixin:
         """Verbindet Gradient-Options-Panel-Signale."""
         self.gradient_options_panel.start_color_changed.connect(self._on_gradient_start_changed)
         self.gradient_options_panel.end_color_changed.connect(self._on_gradient_end_changed)
+
+    def _connect_backstitch_options_signals(self: "MainWindow") -> None:
+        """Verbindet Rückstich-Options-Panel-Signale."""
+        self.backstitch_options_panel.thickness_changed.connect(
+            self._on_backstitch_thickness_changed
+        )
+        self.backstitch_options_panel.line_style_changed.connect(self._on_backstitch_style_changed)
+        self.backstitch_options_panel.cap_style_changed.connect(self._on_backstitch_cap_changed)
+        self.backstitch_options_panel.snap_enabled_changed.connect(self._on_backstitch_snap_changed)
 
     def _connect_progress_signals(self: "MainWindow") -> None:
         """Verbindet Fortschritts-Signale."""

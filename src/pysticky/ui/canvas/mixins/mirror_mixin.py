@@ -113,6 +113,63 @@ class MirrorMixin:
 
         return list(positions)
 
+    def get_mirrored_backstitch_lines(
+        self: "CrossStitchCanvas", x1: int, y1: int, x2: int, y2: int
+    ) -> list[tuple[int, int, int, int]]:
+        """Gibt alle gespiegelten Varianten einer Rückstich-Linie zurück.
+
+        Rückstich-Koordinaten sind in halben Stichen (siehe Backstitch-
+        Docstring in core/backstitch_manager.py) -- der Spiegel-Mittelpunkt
+        liegt daher bei pattern.width/pattern.height (nicht /2 wie bei
+        ganzen Stich-Zellen) und braucht keinen "+0.5"-Rundungsversatz, weil
+        Eck-Koordinaten schon exakt auf dem Gitter liegen (mirror = 2*width
+        - x). Beide Endpunkte werden IMMER mit derselben Transformation
+        gespiegelt (nie unabhängig!), sonst würde aus einer geraden Linie
+        ein irreführendes, verdrehtes Liniensegment.
+
+        Bewusst nur Horizontal/Vertikal/Quad + die Legacy-Booleans
+        unterstützt (Oktal degradiert wie beim Punkt-Pendant auf Quad) --
+        eine echte Diagonal-Spiegelung für LINIEN ist ein deutlich härteres
+        Geometrie-Problem als für einzelne Punkte (die Steigung dreht sich
+        mit, nicht nur die Position), analog zur bereits etablierten
+        Oktal-Rechteck-Einschränkung bleibt das hier bewusst außen vor.
+        """
+        if not self._pattern:
+            return [(x1, y1, x2, y2)]
+
+        max_x = 2 * self._pattern.width
+        max_y = 2 * self._pattern.height
+        lines = {(x1, y1, x2, y2)}
+
+        def _in_bounds(px1: int, py1: int, px2: int, py2: int) -> bool:
+            return (
+                0 <= px1 <= max_x and 0 <= py1 <= max_y and 0 <= px2 <= max_x and 0 <= py2 <= max_y
+            )
+
+        mode = self._mirror_mode
+        mirror_h = mode in (MirrorMode.HORIZONTAL, MirrorMode.QUAD, MirrorMode.OCTAL) or (
+            mode == MirrorMode.NONE and self._mirror_horizontal
+        )
+        mirror_v = mode in (MirrorMode.VERTICAL, MirrorMode.QUAD, MirrorMode.OCTAL) or (
+            mode == MirrorMode.NONE and self._mirror_vertical
+        )
+
+        if mirror_h:
+            mx1, mx2 = max_x - x1, max_x - x2
+            if _in_bounds(mx1, y1, mx2, y2):
+                lines.add((mx1, y1, mx2, y2))
+        if mirror_v:
+            my1, my2 = max_y - y1, max_y - y2
+            if _in_bounds(x1, my1, x2, my2):
+                lines.add((x1, my1, x2, my2))
+        if mirror_h and mirror_v:
+            mx1, mx2 = max_x - x1, max_x - x2
+            my1, my2 = max_y - y1, max_y - y2
+            if _in_bounds(mx1, my1, mx2, my2):
+                lines.add((mx1, my1, mx2, my2))
+
+        return list(lines)
+
     def _has_mirror_active(self: "CrossStitchCanvas") -> bool:
         """Prüft ob irgendein Spiegelmodus aktiv ist."""
         return (

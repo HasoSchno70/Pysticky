@@ -30,6 +30,13 @@ class PanelHandlersMixin:
         # wie Strg+H, nur automatisch statt manuell ausgeloest).
         if self._settings.value("highlight_selected", True, type=bool):
             self._on_isolate_color(index)
+        # Rueckstich-Vorschau im Options-Panel mitziehen, falls sichtbar.
+        if self.backstitch_options_dock.isVisible():
+            entry = self.current_pattern.get_color_entry(index)
+            if entry:
+                from ..color_utils import to_qcolor
+
+                self.backstitch_options_panel._preview.set_color(to_qcolor(entry.thread.color))
 
     def _on_info_color_clicked(self: "MainWindow", index: int) -> None:
         """Klick auf eine Farbe in der Info-Panel-Übersicht."""

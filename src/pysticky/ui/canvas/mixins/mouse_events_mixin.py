@@ -125,20 +125,29 @@ class MouseEventsMixin:
             if color_idx is not None:
                 self.color_picked.emit(color_idx)
 
-        # Backstitch: Aktion weitergeben
+        # Backstitch: Aktion weitergeben -- respektiert jetzt den aktiven
+        # Spiegel-Modus wie jedes andere Zeichenwerkzeug (vorher ignoriert).
         if current_tool == Tool.BACKSTITCH:
             backstitch_tool = self._tool_manager.get_backstitch_tool()
             if backstitch_tool:
                 action = backstitch_tool.pending_action
                 if action is not None:
-                    if action.action == "add":
-                        self.backstitch_added.emit(
-                            action.x1, action.y1, action.x2, action.y2, action.color_index
-                        )
-                    elif action.action == "remove":
-                        self.backstitch_removed.emit(
-                            action.x1, action.y1, action.x2, action.y2, action.color_index
-                        )
+                    lines = self.get_mirrored_backstitch_lines(
+                        action.x1, action.y1, action.x2, action.y2
+                    )
+                    # Mehrere Linien (Spiegel aktiv) muessen als EINE Undo-
+                    # Aktion zusammengefasst werden, sonst macht Strg+Z nur
+                    # die zuletzt hinzugefuegte gespiegelte Linie rueckgaengig.
+                    batch_this = len(lines) > 1
+                    if batch_this:
+                        self.batch_started.emit(t("Rückstich"))
+                    for lx1, ly1, lx2, ly2 in lines:
+                        if action.action == "add":
+                            self.backstitch_added.emit(lx1, ly1, lx2, ly2, action.color_index)
+                        elif action.action == "remove":
+                            self.backstitch_removed.emit(lx1, ly1, lx2, ly2, action.color_index)
+                    if batch_this:
+                        self.batch_ended.emit()
 
         self.update()
 
