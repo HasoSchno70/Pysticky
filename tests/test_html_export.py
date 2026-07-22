@@ -241,3 +241,46 @@ def test_html_export_mystery_mode_hides_overview_backstitch_note(pattern_with_st
     overview_section = content[start:end]
 
     assert "R&uuml;ckstiche" not in overview_section
+
+
+def test_html_export_escapes_script_tag_in_thread_fields(tmp_path):
+    """Security-Regression: Garnname/Hersteller/Katalognummer sind Freitext
+    (color_management_dialog.py) und landen in Legende + Mini-Legende jeder
+    Musterseite. Ein Muster mit einem Garnnamen wie "<script>alert(1)</script>"
+    wuerde -- ohne Escaping -- eine Stored-XSS-Payload in die exportierte
+    HTML-Datei schreiben, die beim spaeteren Oeffnen im Browser (durch den
+    Nutzer selbst oder jemanden, mit dem die Datei geteilt wird) ausgefuehrt
+    wird. PDF-Export hat dieselbe Absicherung ueber pdf_text_escape()
+    (siehe test_pdf_export_survives_unescaped_angle_bracket_in_thread_name);
+    HTML-Export nutzt dafuer durchgaengig _html_encode()."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=3, height=3)
+    idx = pattern.add_color(
+        Thread.from_hex(
+            "<script>alert(1)</script>",
+            "#FF0000",
+            manufacturer='"><img src=x onerror=alert(1)>',
+            catalog_number="<b>310",
+        )
+    )
+    for x in range(3):
+        for y in range(3):
+            pattern.set_stitch(x, y, idx)
+
+    target = tmp_path / "xss_thread.html"
+    ok = HTMLExporter(pattern).export(target)
+    assert ok is True
+
+    content = target.read_text(encoding="utf-8")
+
+    # Die rohen Payloads duerfen an keiner Stelle unescaped im HTML landen.
+    assert "<script>alert(1)</script>" not in content
+    assert "<img src=x onerror=alert(1)>" not in content
+    assert "<b>310" not in content
+
+    # Escapte Form muss stattdessen auftauchen (Beweis, dass der Test
+    # tatsaechlich den Escaping-Pfad trifft statt nur zu fehlen).
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in content
+    assert "&lt;img src=x onerror=alert(1)&gt;" in content
+    assert "&lt;b&gt;310" in content
