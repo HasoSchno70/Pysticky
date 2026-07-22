@@ -416,6 +416,113 @@ def test_xsd_clamp_color_index_drops_out_of_range_index_with_warning():
 
 
 # ============================================================================
+# PAT/XSD: Backstitch-Farbindex-Clamping (Runde 30)
+#
+# Grid-Stiche laufen schon lange durch _clamp_color_index (Runde 20), aber
+# Backstitches nahmen den rohen, aus der Datei gelesenen Farbindex bislang
+# UNGEPRUEFT entgegen -- ein korruptes .pat/.xsd mit einem Backstitch-
+# Farbindex jenseits der eingelesenen Palette landete klaglos (ohne
+# Warnung) als Backstitch mit nicht existierendem Farbindex im Pattern.
+# ============================================================================
+
+
+def _build_xsd_with_backstitch(color_index: int) -> bytes:
+    """Baut eine minimale, vollstaendige XSD-Datei (Header + 1 Farbe +
+    leeres 2x2-Grid + 1 Backstitch mit dem gegebenen Farbindex)."""
+    header = (
+        b"PMX"
+        + struct.pack("<B", 5)  # version
+        + struct.pack("<HH", 2, 2)  # width, height
+        + struct.pack("<H", 1)  # color_count
+        + struct.pack("<H", 0x01)  # flags: has_backstitches
+        + b"Title".ljust(64, b"\x00")
+        + b"Author".ljust(32, b"\x00")
+    )
+    color_data = (
+        struct.pack("BBB", 255, 0, 0)  # RGB
+        + b"Red".ljust(32, b"\x00")  # Name
+        + b"\x00" * 8  # DMC-Nummer
+        + b"\x00"  # Symbol (verworfen)
+    )
+    grid_data = bytes([0xFE, 0xFE, 0xFE, 0xFE])  # 2x2, alle Zellen leer
+    backstitch_data = (
+        struct.pack("<H", 1)  # count
+        + struct.pack("<hhhh", 0, 0, 2, 2)  # Koordinaten
+        + struct.pack("B", color_index)
+    )
+    return header + color_data + grid_data + backstitch_data
+
+
+def test_xsd_import_drops_out_of_range_backstitch_color_index(tmp_path):
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_xsd_with_backstitch(color_index=99))
+
+    importer = XSDImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Palette" in w for w in importer.warnings)
+
+
+def test_xsd_import_keeps_in_range_backstitch_color_index(tmp_path):
+    """Gegenprobe: ein gueltiger Farbindex (0, einzige eingelesene Farbe)
+    darf weiterhin normal ankommen."""
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_xsd_with_backstitch(color_index=0))
+
+    importer = XSDImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert len(pattern.backstitches) == 1
+    assert pattern.backstitches[0].color_index == 0
+
+
+def _build_pat_with_backstitch(color_index: int) -> bytes:
+    """Baut eine minimale, vollstaendige Legacy-PAT-Datei (Version 5:
+    Header + 1 Farbe + leeres 2x2-Grid + 1 Backstitch)."""
+    header = _build_pat_legacy_header(version=5, width=2, height=2, color_count=1)
+    color_data = (
+        struct.pack("BBB", 255, 0, 0)  # RGB
+        + b"\x00" * 6  # DMC-Nummer (Legacy: 6 Bytes)
+        + b"Red".ljust(20, b"\x00")  # Name (Legacy: 20 Bytes)
+        + b"\x00"  # Symbol (optional, hier absichtlich fehlend/leer -> Fallback-Symbol)
+    )
+    grid_data = bytes([0xFE, 0xFE, 0xFE, 0xFE])  # 2x2, alle Zellen leer
+    backstitch_data = (
+        struct.pack("<I", 1)  # count (Legacy: 4 Bytes)
+        + struct.pack("<hhhh", 0, 0, 2, 2)  # Koordinaten
+        + struct.pack("B", color_index)  # Legacy: 1 Byte Farbe
+    )
+    return header + color_data + grid_data + backstitch_data
+
+
+def test_pat_import_drops_out_of_range_backstitch_color_index(tmp_path):
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_with_backstitch(color_index=99))
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Palette" in w for w in importer.warnings)
+
+
+def test_pat_import_keeps_in_range_backstitch_color_index(tmp_path):
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_with_backstitch(color_index=0))
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert len(pattern.backstitches) == 1
+    assert pattern.backstitches[0].color_index == 0
+
+
+# ============================================================================
 # XSD: Helper-Klassen
 # ============================================================================
 

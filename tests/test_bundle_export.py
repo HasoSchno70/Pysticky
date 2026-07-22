@@ -4,6 +4,8 @@
 import zipfile
 from pathlib import Path
 
+import pytest
+
 from pysticky.io import export_bundle
 
 
@@ -57,6 +59,51 @@ def test_bundle_garnliste_has_thread_rows(pattern_with_stitches, tmp_path):
     lines = content.strip().split("\n")
     assert lines[0].startswith("Symbol")  # Header
     assert len(lines) >= 2  # Header + mindestens eine Datenzeile
+
+
+def test_bundle_garnliste_uses_drill_vocabulary_in_dp_mode(pattern_with_stitches, tmp_path):
+    """Regression: die Garnliste-CSV war komplett blind gegenueber
+    Pattern.mode == "diamond" -- anders als HTML-/PDF-Export und der
+    Statistik-Dialog (der den Garnverbrauch/Einkaufsliste-Tab in DP
+    komplett ausblendet, weil Skeins fuer Diamond-Drills keinen Sinn
+    ergeben), schrieb bundle_export._write_thread_csv() fuer JEDES
+    Pattern unveraendert den Header "Stiche;Strange (~)" und rechnete
+    eine Straehnen-Schaetzung aus -- auch fuer DP-Muster, wo das
+    bedeutungslos ist."""
+    pattern_with_stitches.mode = "diamond"
+
+    out = tmp_path / "test_bundle_dp.zip"
+    export_bundle(pattern_with_stitches, out, include_pdf=False)
+    with zipfile.ZipFile(out) as zf:
+        with zf.open("garnliste.csv") as f:
+            content = f.read().decode("utf-8")
+    lines = content.strip().split("\n")
+
+    header = lines[0]
+    assert "Drills" in header
+    assert "Strange" not in header
+    # Datenzeilen duerfen keine zusaetzliche Skein-Spalte mehr haben
+    assert len(lines) >= 2
+    header_cols = header.split(";")
+    data_cols = lines[1].split(";")
+    assert len(data_cols) == len(header_cols)
+
+
+def test_bundle_readme_uses_drill_pitch_in_dp_mode(pattern_with_stitches, tmp_path):
+    """Regression: README.txt im Bundle nannte Groesse/Stoffzaehlung
+    unveraendert "Stiche"/"... ct" -- selbst fuer Diamond-Painting-Muster,
+    wo es "Drills"/Drill-Pitch heissen sollte (siehe export_common.py
+    terms_for()/fabric_label_for(), die HTML-/PDF-Export schon nutzen)."""
+    pattern_with_stitches.mode = "diamond"
+
+    out = tmp_path / "test_bundle_dp_readme.zip"
+    export_bundle(pattern_with_stitches, out, include_pdf=False)
+    with zipfile.ZipFile(out) as zf:
+        with zf.open("README.txt") as f:
+            content = f.read().decode("utf-8")
+
+    assert "Drills" in content
+    assert "Stoffzaehlung" not in content
 
 
 def test_bundle_skips_pdf_when_reportlab_missing(monkeypatch, pattern_with_stitches, tmp_path):
@@ -126,6 +173,45 @@ def test_bundle_survives_source_image_copy_failure(pattern_with_stitches, tmp_pa
 
     assert out.exists()  # Bundle trotzdem erzeugt
     assert any("original" in s for s in result["skipped"])
+
+
+def test_bundle_export_failure_leaves_existing_bundle_untouched(
+    pattern_with_stitches, tmp_path, monkeypatch
+):
+    """Regression: export_bundle() schrieb die finale ZIP frueher DIREKT
+    in den Zielpfad. `zipfile.ZipFile(zip_path, "w", ...)` truncated die
+    Datei sofort beim Oeffnen -- schlug ein einzelner `zf.write()`-Aufruf
+    mittendrin fehl (Platte voll, Abbruch), war ein am Zielpfad bereits
+    vorhandenes Bundle (z.B. erneuter Export/Teilen desselben Musters)
+    unwiderruflich durch eine leere/unvollstaendige ZIP ersetzt -- obwohl
+    export_bundle() den Fehler weiterreicht und der Aufrufer denkt, nichts
+    sei passiert. Jetzt: Temp-Datei + os.replace() wie
+    core/file_io.py::save_pattern(), das bestehende Ziel wird erst nach
+    vollstaendigem Schreiben ersetzt."""
+    out = tmp_path / "existing_bundle.zip"
+    export_bundle(pattern_with_stitches, out, include_pdf=False)
+    original_bytes = out.read_bytes()
+
+    # Den zweiten von mehreren zf.write()-Aufrufen fehlschlagen lassen,
+    # um "Abbruch mitten im Schreiben der ZIP" zu simulieren.
+    original_write = zipfile.ZipFile.write
+    call_count = {"n": 0}
+
+    def flaky_write(self, *args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 2:
+            raise OSError("Platte voll (simuliert)")
+        return original_write(self, *args, **kwargs)
+
+    monkeypatch.setattr(zipfile.ZipFile, "write", flaky_write)
+
+    with pytest.raises(OSError):
+        export_bundle(pattern_with_stitches, out, include_pdf=False)
+
+    # Bestehende Bundle-Datei unveraendert -- kein Datenverlust
+    assert out.read_bytes() == original_bytes
+    # Keine liegen gebliebene Temp-Datei
+    assert not out.with_name(out.name + ".tmp").exists()
 
 
 def test_bundle_safe_basename_handles_special_chars(tmp_path):
