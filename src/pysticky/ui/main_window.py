@@ -888,12 +888,17 @@ class MainWindow(
             )
 
         if start_action == 0:
-            # Default: Welcome-Screen zeigen
+            # "Leeres Muster erstellen" -- legte bisher (Bug) exakt dasselbe
+            # Verhalten wie start_action==3 ("Nichts tun") an den Tag, weil
+            # hier nie tatsaechlich ein Pattern erzeugt wurde, nur der
+            # Welcome-Screen gezeigt. Jetzt wird direkt ein leeres
+            # Standard-Pattern erstellt (ohne Dialog, im Gegensatz zu
+            # start_action==1), passend zur Beschriftung in general_tab.py.
             if not _already_loaded():
-                self.canvas_container.show_welcome(True, recent_files=self._recent_files)
-                self.status_bar.showMessage(t("Willkommen bei PySticky"), self._status_timeout_ms)
-            else:
-                self.status_bar.showMessage(t("Bereit"), self._status_timeout_ms)
+                from ..core import Pattern
+
+                self.set_pattern(Pattern())
+            self.status_bar.showMessage(t("Bereit"), self._status_timeout_ms)
         elif start_action == 1:
             # Neues Projekt Dialog öffnen
             self._unsaved_changes = False

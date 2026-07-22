@@ -54,3 +54,44 @@ def test_load_user_templates_all_valid_still_works(tmp_path, monkeypatch):
 
     assert len(templates) == 1
     assert templates[0].name == "A"
+
+
+def test_get_templates_path_falls_back_when_configured_dir_unreachable(tmp_path, monkeypatch):
+    """Regression (Runde 27): get_templates_path() rief mkdir() auf dem in
+    Einstellungen -> Dateien -> "Templates" konfigurierten Ordner OHNE
+    try/except auf -- ein nicht mehr erreichbarer Ordner (abgestecktes
+    Netzlaufwerk/USB-Stick, entfernte Berechtigung) liess "Neues Projekt"
+    und "Templates verwalten" mit einem rohen OSError abstuerzen, statt auf
+    den Standard-Ordner zurueckzufallen."""
+    from pathlib import Path
+
+    from PySide6.QtCore import QSettings
+
+    from pysticky.ui.dialogs import user_template_dialog
+
+    unreachable = tmp_path / "unreachable"
+    home_dir = tmp_path / "home"
+    home_dir.mkdir()
+
+    monkeypatch.setattr(Path, "home", lambda: home_dir)
+
+    def fake_value(self, key, default="", type=None):  # noqa: A002
+        if key == "templates_path":
+            return str(unreachable)
+        return default
+
+    monkeypatch.setattr(QSettings, "value", fake_value)
+
+    orig_mkdir = Path.mkdir
+
+    def fake_mkdir(self, *args, **kwargs):
+        if self == unreachable:
+            raise PermissionError("simulated: unreachable")
+        return orig_mkdir(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "mkdir", fake_mkdir)
+
+    result = user_template_dialog.get_templates_path()
+
+    assert result == home_dir / ".pysticky" / "templates"
+    assert result.exists()

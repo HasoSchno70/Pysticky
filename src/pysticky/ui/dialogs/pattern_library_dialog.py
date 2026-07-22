@@ -97,12 +97,22 @@ class PatternLibraryDialog(QDialog):
         from ...config import APP_NAME, ORG_NAME
 
         configured = QSettings(ORG_NAME, APP_NAME).value("library_path", "", type=str).strip()
-        if configured:
-            library_dir = Path(configured)
-        else:
-            app_dir = Path(__file__).parent.parent.parent.parent.parent
-            library_dir = app_dir / "Muster"
-        library_dir.mkdir(exist_ok=True, parents=True)
+        default_dir = Path(__file__).parent.parent.parent.parent.parent / "Muster"
+        library_dir = Path(configured) if configured else default_dir
+        try:
+            library_dir.mkdir(exist_ok=True, parents=True)
+        except OSError as exc:
+            # Konfigurierter Ordner nicht (mehr) erreichbar (z.B. abgestecktes
+            # Netzlaufwerk/USB-Stick, fehlende Berechtigung) -- Dialog darf
+            # dadurch nicht komplett abstuerzen, sonst kommt der Nutzer gar
+            # nicht mehr an die Einstellungen heran, um den Pfad zu korrigieren.
+            logger.warning(
+                "Bibliotheks-Ordner '%s' nicht erreichbar (%s), falle auf Standard zurueck",
+                library_dir,
+                exc,
+            )
+            library_dir = default_dir
+            library_dir.mkdir(exist_ok=True, parents=True)
         # Thumbnail-Cache Ordner
         self._thumbnails_dir = library_dir / ".thumbnails"
         self._thumbnails_dir.mkdir(exist_ok=True)

@@ -282,7 +282,7 @@ class Layer:
         mask = self.grid >= from_index
         self.grid[mask] += delta
 
-    def crop(self, x: int, y: int, width: int, height: int) -> None:
+    def crop(self, x: int, y: int, width: int, height: int) -> bool:
         """
         Schneidet das Layer auf einen Bereich zu.
 
@@ -291,12 +291,33 @@ class Layer:
             y: Linke obere Ecke Y
             width: Neue Breite
             height: Neue Höhe
+
+        Returns:
+            True wenn zugeschnitten wurde, False bei ungueltigem Bereich
+            (Grid/width/height bleiben dann unveraendert).
+
+        Note:
+            Der einzige aktuelle Aufrufer (Pattern.crop()) validiert den
+            Bereich bereits VOR dem Aufruf -- diese Pruefung hier ist
+            Verteidigung in der Tiefe fuer die oeffentliche Layer-API: ohne
+            sie wuerden width/height unbedingt auf die ANGEFORDERTEN Werte
+            gesetzt, auch wenn numpy-Slicing bei einem zu grossen/negativen
+            Bereich eine kleinere/verschobene Form zurueckgibt -- ein
+            spaeterer get_stitch()/set_stitch() innerhalb der (falschen)
+            deklarierten Groesse wuerde dann mit einem rohen IndexError
+            abstuerzen statt sauber "out of bounds" zu melden.
         """
+        if width < 1 or height < 1 or x < 0 or y < 0:
+            return False
+        if x + width > self.width or y + height > self.height:
+            return False
+
         self.grid = self.grid[y : y + height, x : x + width].copy()
         self.completion_grid = self.completion_grid[y : y + height, x : x + width].copy()
         self.stitch_type_grid = self.stitch_type_grid[y : y + height, x : x + width].copy()
         self.width = width
         self.height = height
+        return True
 
     # === Fortschritts-Tracking (Completion) ===
 

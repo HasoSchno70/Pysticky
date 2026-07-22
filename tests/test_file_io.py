@@ -192,6 +192,47 @@ class TestFileIO:
         assert loaded.fabric_count == DEFAULT_FABRIC_COUNT
         assert loaded.size_cm[0] > 0  # darf nicht crashen
 
+    def test_load_falls_back_to_default_fabric_count_when_nan(self, tmp_path):
+        """Regression (Runde 27): json.load() akzeptiert die nicht-
+        standardkonformen Literale NaN/Infinity -- `nan <= 0` und `inf <= 0`
+        sind beide False in Python, die reine Round-26-Pruefung
+        ("<=0") liess "fabric_count": NaN also unbemerkt durchrutschen und
+        erzeugte stillschweigend NaN-Groessen (size_cm) statt zu crashen
+        oder auf den Default zurueckzufallen."""
+        from pysticky.core.constants import DEFAULT_FABRIC_COUNT
+
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "nan_fabric.pxs"
+        save_pattern(pattern, str(filepath))
+
+        text = filepath.read_text(encoding="utf-8")
+        text = text.replace(f'"fabric_count": {DEFAULT_FABRIC_COUNT}', '"fabric_count": NaN')
+        filepath.write_text(text, encoding="utf-8")
+
+        loaded = load_pattern(str(filepath))
+
+        assert loaded.fabric_count == DEFAULT_FABRIC_COUNT
+        assert loaded.size_cm[0] > 0  # darf nicht NaN sein
+
+    def test_load_raises_value_error_for_backstitch_missing_field(self, tmp_path):
+        """Regression (Runde 27): _dict_to_backstitch() griff direkt per
+        data["color_index"] etc. zu, ohne vorher auf Vollstaendigkeit zu
+        pruefen -- ein Rueckstich-Eintrag mit fehlendem Feld liess einen
+        rohen KeyError durchschlagen statt des von load_pattern()'s eigenem
+        Docstring versprochenen ValueError (gleiche Fehlerklasse wie
+        _dict_to_color_entry(), die das bereits korrekt macht)."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_backstitch.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        # color_index fehlt
+        data["pattern"]["backstitches"] = [{"x1": 0, "y1": 0, "x2": 2, "y2": 2}]
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
     def test_save_is_atomic_no_leftover_tmp_file(self, tmp_path):
         """Regression: save_pattern() schrieb frueher direkt in die
         Zieldatei -- ein Crash mitten in json.dump() haette die echte

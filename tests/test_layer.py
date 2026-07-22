@@ -176,6 +176,46 @@ class TestLayerAdvanced:
         assert layer.get_stitch(9, 0) == 1
         assert layer.get_stitch(0, 0) is None
 
+    def test_crop_out_of_bounds_is_noop(self):
+        """Regression (Runde 27): Layer.crop() validierte x/y/width/height
+        gar nicht -- ein zu grosser Bereich liess numpy-Slicing eine
+        KLEINERE Form zurueckgeben, waehrend width/height trotzdem
+        unbedingt auf die ANGEFORDERTEN (falschen) Werte gesetzt wurden.
+        Ein spaeterer get_stitch() innerhalb der (falschen) deklarierten
+        Groesse stuerzte dann mit einem rohen IndexError ab. Der einzige
+        aktuelle Aufrufer (Pattern.crop()) validiert zwar schon vorher,
+        aber Layer.crop() ist oeffentliche API und sollte sich nicht auf
+        einen braven Aufrufer verlassen (Verteidigung in der Tiefe)."""
+        layer = Layer(name="T", width=10, height=10)
+        layer.set_stitch(5, 5, 1)
+
+        result = layer.crop(5, 5, 100, 100)
+
+        assert result is False
+        assert layer.width == 10
+        assert layer.height == 10
+        assert layer.get_stitch(5, 5) == 1  # unveraendert
+
+    def test_crop_negative_origin_is_noop(self):
+        layer = Layer(name="T", width=10, height=10)
+
+        result = layer.crop(-1, 0, 5, 5)
+
+        assert result is False
+        assert layer.width == 10
+        assert layer.height == 10
+
+    def test_crop_valid_range_still_works(self):
+        layer = Layer(name="T", width=10, height=10)
+        layer.set_stitch(6, 6, 1)
+
+        result = layer.crop(5, 5, 3, 3)
+
+        assert result is True
+        assert layer.width == 3
+        assert layer.height == 3
+        assert layer.get_stitch(1, 1) == 1
+
 
 class TestLayerStackAdvanced:
     """Erweiterte Tests für LayerStack."""

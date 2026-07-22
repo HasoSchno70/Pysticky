@@ -43,7 +43,14 @@ class ZoomMixin:
 
     def zoom_reset(self: "CrossStitchCanvas") -> None:
         """Setzt den Zoom auf 100% zurück."""
-        self._set_cell_size(self.DEFAULT_CELL_SIZE)
+        # Anders als set_zoom() clampte dies bisher NICHT gegen
+        # MIN_CELL_SIZE/MAX_CELL_SIZE -- wenn Einstellungen -> Canvas ->
+        # Zoom so konfiguriert ist, dass DEFAULT_CELL_SIZE ausserhalb der
+        # (unabhaengig einstellbaren) Min/Max-Grenzen liegt, ueberschritt
+        # Zoom-Reset (100%) diese Grenzen still, bis der naechste
+        # zoom_in()/zoom_out()-Schritt wieder korrekt clampte.
+        target = clamp_int(self.DEFAULT_CELL_SIZE, self.MIN_CELL_SIZE, self.MAX_CELL_SIZE)
+        self._set_cell_size(target)
         self._center_pattern()
 
     def set_zoom(self: "CrossStitchCanvas", factor: float) -> None:

@@ -58,8 +58,23 @@ def get_templates_path() -> Path:
     from ...config import APP_NAME, ORG_NAME
 
     configured = QSettings(ORG_NAME, APP_NAME).value("templates_path", "", type=str).strip()
-    templates_dir = Path(configured) if configured else Path.home() / ".pysticky" / "templates"
-    templates_dir.mkdir(parents=True, exist_ok=True)
+    default_dir = Path.home() / ".pysticky" / "templates"
+    templates_dir = Path(configured) if configured else default_dir
+    try:
+        templates_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        # Konfigurierter Ordner nicht (mehr) erreichbar (z.B. abgestecktes
+        # Netzlaufwerk/USB-Stick, fehlende Berechtigung) -- "Neues Projekt"
+        # und "Templates verwalten" duerfen dadurch nicht komplett
+        # abstuerzen, sonst kommt der Nutzer gar nicht mehr an die
+        # Einstellungen heran, um den Pfad zu korrigieren.
+        logger.warning(
+            "Templates-Ordner '%s' nicht erreichbar (%s), falle auf Standard zurueck",
+            templates_dir,
+            exc,
+        )
+        templates_dir = default_dir
+        templates_dir.mkdir(parents=True, exist_ok=True)
     return templates_dir
 
 

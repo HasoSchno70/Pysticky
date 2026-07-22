@@ -26,6 +26,7 @@ Example:
 """
 
 import json
+import math
 import os
 from datetime import datetime
 from pathlib import Path
@@ -210,7 +211,16 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
     # Loeschen/Ablehnen der Datei noetig, einfacher Fallback reicht (gleiche
     # Grosszuegigkeit wie bei width/height oben).
     loaded_fabric_count = data.get("fabric_count", DEFAULT_FABRIC_COUNT)
-    if not isinstance(loaded_fabric_count, (int, float)) or loaded_fabric_count <= 0:
+    # json.load() akzeptiert per Default die nicht-standardkonformen Literale
+    # NaN/Infinity/-Infinity -- `nan <= 0` und `inf <= 0` sind beide False in
+    # Python, wuerden die reine "<=0"-Pruefung also unbemerkt durchrutschen
+    # und stillschweigend NaN-Groessen (statt eines Crashs) im UI erzeugen.
+    if (
+        not isinstance(loaded_fabric_count, (int, float))
+        or math.isnan(loaded_fabric_count)
+        or math.isinf(loaded_fabric_count)
+        or loaded_fabric_count <= 0
+    ):
         loaded_fabric_count = DEFAULT_FABRIC_COUNT
 
     # Pattern erstellen
@@ -494,7 +504,14 @@ def _dict_to_backstitch(data: dict[str, Any]) -> Backstitch:
 
     Returns:
         Rekonstruiertes Backstitch-Objekt
+
+    Raises:
+        ValueError: Bei fehlenden Pflichtfeldern (x1, y1, x2, y2, color_index)
     """
+    for field in ("x1", "y1", "x2", "y2", "color_index"):
+        if field not in data:
+            raise ValueError(f"Rückstich: Pflichtfeld '{field}' fehlt")
+
     return Backstitch(
         x1=data["x1"],
         y1=data["y1"],

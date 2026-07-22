@@ -125,7 +125,7 @@ class ToolsTab(QWidget):
 
         self.spin_tablet_max_brush = QSpinBox()
         self.spin_tablet_max_brush.setRange(1, 20)
-        self.spin_tablet_max_brush.setSuffix(" " + t("Stiche").lower())
+        self.spin_tablet_max_brush.setSuffix(" " + t("Stiche"))
         self.spin_tablet_max_brush.setToolTip(
             t(
                 "Maximale Brush-Größe bei 100 % Stift-Druck (Radius).\n"
