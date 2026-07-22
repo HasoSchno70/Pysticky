@@ -239,7 +239,11 @@ class PatternStatisticsDialog(QDialog):
         self._thread_tab.update_stats(self._pattern, stats)
         self._time_tab.update_stats(self._pattern, stats)
         self._progress_tab.update_stats(self._pattern, stats)
-        self._shopping_tab.update_stats(self._pattern, stats)
+        # Denselben Verschnitt-Zuschlag wie der Garnverbrauch-Tab verwenden
+        # (siehe ShoppingTab.update_stats()-Docstring) -- calculator_settings()
+        # gibt (fabric_count, waste_percent, price_per_skein) zurueck.
+        _, waste_percent, _ = self._thread_tab.calculator_settings()
+        self._shopping_tab.update_stats(self._pattern, stats, waste_percent)
 
     def _on_export_csv(self) -> None:
         """Exportiert die Statistiken als CSV."""

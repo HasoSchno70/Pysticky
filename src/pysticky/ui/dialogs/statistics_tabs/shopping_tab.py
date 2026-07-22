@@ -47,9 +47,16 @@ class ShoppingTab(QWidget):
         intro.setStyleSheet(f"color: {THEME.text_muted};")
         self._layout.addWidget(intro)
 
-    def update_stats(self, pattern: "Pattern", stats: dict) -> None:
+    def update_stats(self, pattern: "Pattern", stats: dict, waste_percent: float = 20.0) -> None:
         """Baut die Einkaufsliste auf (einmalig — der Dialog ruft dies genau
-        einmal nach der Konstruktion auf, wie zuvor beim Tab-Aufbau)."""
+        einmal nach der Konstruktion auf, wie zuvor beim Tab-Aufbau).
+
+        waste_percent: derselbe Verschnitt-Zuschlag wie im Garnverbrauch-Tab
+        (statistics_dialog.py liest ihn dort aus und reicht ihn hier durch)
+        -- vorher rechnete dieser Tab mit einer eigenen, davon unabhaengigen
+        Pauschal-Formel, wodurch beide Tabs fuer dasselbe Muster
+        unterschiedliche "benoetigte Straenge"-Zahlen zeigten.
+        """
         if self._populated:
             return
         self._populated = True
@@ -59,6 +66,7 @@ class ShoppingTab(QWidget):
             pattern,
             inv,
             STITCHES_PER_SKEIN,
+            waste_percent,
         )
 
         if not items:

@@ -129,6 +129,7 @@ def compute_shopping_list(
     pattern,
     inventory: Inventory,
     stitches_per_skein: dict[int, int],
+    waste_percent: float = 20.0,
 ) -> list[dict]:
     """Berechnet die Einkaufsliste für ein konkretes Pattern.
 
@@ -136,6 +137,12 @@ def compute_shopping_list(
         pattern: das Pattern (mit color_entries)
         inventory: globale Vorratsliste
         stitches_per_skein: Mapping fabric_count -> Stiche pro Strang
+        waste_percent: Verschnitt-Zuschlag in Prozent (Default 20, wie
+            statistics_tabs/thread_tab.py's Standard-Vorbelegung -- dieselbe
+            Formel wie dort (`ceil(exact_skeins * (1 + waste_percent/100))`),
+            damit Garnverbrauch- und Einkaufsliste-Tab nicht mehr auf
+            unterschiedliche "benoetigte Straenge"-Zahlen fuer dasselbe
+            Muster kommen (siehe dead-code-and-export-gaps.md).
 
     Returns:
         Liste von Dicts pro Farbe: {
@@ -145,6 +152,7 @@ def compute_shopping_list(
     from math import ceil
 
     spk = stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
+    waste_factor = 1 + (waste_percent / 100)
     out: list[dict] = []
     for entry in pattern.color_entries:
         if entry.skip_stitching:
@@ -153,10 +161,7 @@ def compute_shopping_list(
         count = entry.stitch_count
         if count <= 0:
             continue
-        needed = ceil(count / spk)
-        # Sicherheitszuschlag bei sehr vielen Stichen
-        if count > 1000:
-            needed += 1
+        needed = ceil((count / spk) * waste_factor)
         on_hand = inventory.get(thread.manufacturer, thread.catalog_number)
         to_buy = max(0, needed - on_hand)
         out.append(
@@ -175,6 +180,7 @@ def compute_shopping_list_multi(
     patterns: Iterable,
     inventory: Inventory,
     stitches_per_skein: dict[int, int],
+    waste_percent: float = 20.0,
 ) -> list[dict]:
     """Berechnet die kombinierte Einkaufsliste über mehrere Muster hinweg.
 
@@ -186,12 +192,15 @@ def compute_shopping_list_multi(
         patterns: die zu aggregierenden Patterns (mit color_entries)
         inventory: globale Vorratsliste
         stitches_per_skein: Mapping fabric_count -> Stiche pro Strang
+        waste_percent: Verschnitt-Zuschlag in Prozent (siehe
+            compute_shopping_list() -- dieselbe Konvention)
 
     Returns:
         Liste von Dicts pro Farbe: {"thread", "needed_skeins", "on_hand", "to_buy"}
     """
     from math import ceil
 
+    waste_factor = 1 + (waste_percent / 100)
     needed_by_key: dict[str, int] = {}
     thread_by_key: dict[str, "Thread"] = {}
     for pattern in patterns:
@@ -203,9 +212,7 @@ def compute_shopping_list_multi(
             count = entry.stitch_count
             if count <= 0:
                 continue
-            needed = ceil(count / spk)
-            if count > 1000:
-                needed += 1
+            needed = ceil((count / spk) * waste_factor)
             key = _key(thread.manufacturer, thread.catalog_number)
             needed_by_key[key] = needed_by_key.get(key, 0) + needed
             thread_by_key.setdefault(key, thread)

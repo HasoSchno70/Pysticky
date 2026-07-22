@@ -103,6 +103,59 @@ def test_shopping_list_skips_skip_stitching(tmp_path, pattern_with_stitches):
     assert p.color_entries[0].thread not in threads
 
 
+def test_shopping_list_uses_waste_percent_formula_matching_thread_tab(tmp_path):
+    """Regression (offener Punkt, per Nutzerentscheidung 'Garnverbrauch-
+    Konvention'): compute_shopping_list() nutzte bisher `ceil(count/spk)`
+    plus einen pauschalen +1 nur oberhalb 1000 Stichen -- der Garnverbrauch-
+    Tab (thread_tab.py) rechnet stattdessen mit einem prozentualen
+    Verschnitt-Zuschlag (`ceil(exact_skeins * (1 + waste_percent/100))`,
+    Standard 20%). Beide Tabs zeigten fuer dasselbe Muster unterschiedliche
+    "benoetigte Straenge"-Zahlen. Jetzt nutzt compute_shopping_list()
+    dieselbe Formel wie thread_tab.py."""
+    import math
+
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+    pattern = Pattern(name="Test", width=100, height=100, fabric_count=14)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    pattern.set_stitch(0, 0, 0)
+    pattern.color_entries[0].stitch_count = 1234
+
+    spk = {14: 500}
+    items = compute_shopping_list(pattern, inv, spk, waste_percent=20.0)
+
+    exact_skeins = 1234 / 500
+    expected = math.ceil(exact_skeins * 1.2)
+    assert items[0]["needed_skeins"] == expected
+    # Die alte Formel haette ceil(1234/500) + 1 = 3+1 = 4 ergeben --
+    # muss sich von der neuen (5) unterscheiden, sonst pruefte dieser Test
+    # nichts Unterscheidbares.
+    old_formula_result = math.ceil(1234 / 500) + 1
+    assert expected != old_formula_result
+
+
+def test_compute_shopping_list_multi_uses_waste_percent(tmp_path):
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+    pattern = Pattern(name="Test", width=100, height=100, fabric_count=14)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    pattern.set_stitch(0, 0, 0)
+    pattern.color_entries[0].stitch_count = 1234
+
+    spk = {14: 500}
+    items = compute_shopping_list_multi([pattern], inv, spk, waste_percent=20.0)
+
+    import math
+
+    exact_skeins = 1234 / 500
+    expected = math.ceil(exact_skeins * 1.2)
+    assert items[0]["needed_skeins"] == expected
+
+
 def _second_pattern_same_thread(stitch_count: int):
     """Zweites, unabhaengiges Pattern mit derselben DMC-310-Farbe wie
     `pattern_with_colors`, damit Multi-Pattern-Aggregation testbar ist."""
