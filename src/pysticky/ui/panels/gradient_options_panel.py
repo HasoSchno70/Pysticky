@@ -62,27 +62,27 @@ class GradientOptionsPanel(QWidget):
         layout.setSpacing(12)
 
         # Titel
-        title = QLabel(t("FARBVERLAUF"))
-        title.setStyleSheet(Styles.section_header())
-        layout.addWidget(title)
+        self._title = QLabel(t("FARBVERLAUF"))
+        self._title.setStyleSheet(Styles.section_header())
+        layout.addWidget(self._title)
 
         # Info
-        info = QLabel(
+        self._info = QLabel(
             t(
                 "Ziehe eine Linie zwischen zwei Punkten.\n"
                 "Die Farben werden automatisch interpoliert."
             )
         )
-        info.setWordWrap(True)
-        info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
-        layout.addWidget(info)
+        self._info.setWordWrap(True)
+        self._info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
+        layout.addWidget(self._info)
 
         # Startfarbe
         start_layout = QHBoxLayout()
-        start_label = QLabel(t("Startfarbe:"))
-        start_label.setFixedWidth(70)
-        start_label.setStyleSheet(f"color: {THEME.text_secondary};")
-        start_layout.addWidget(start_label)
+        self._start_label = QLabel(t("Startfarbe:"))
+        self._start_label.setFixedWidth(70)
+        self._start_label.setStyleSheet(f"color: {THEME.text_secondary};")
+        start_layout.addWidget(self._start_label)
 
         self._start_preview = ColorPreview()
         start_layout.addWidget(self._start_preview)
@@ -97,10 +97,10 @@ class GradientOptionsPanel(QWidget):
 
         # Endfarbe
         end_layout = QHBoxLayout()
-        end_label = QLabel(t("Endfarbe:"))
-        end_label.setFixedWidth(70)
-        end_label.setStyleSheet(f"color: {THEME.text_secondary};")
-        end_layout.addWidget(end_label)
+        self._end_label = QLabel(t("Endfarbe:"))
+        self._end_label.setFixedWidth(70)
+        self._end_label.setStyleSheet(f"color: {THEME.text_secondary};")
+        end_layout.addWidget(self._end_label)
 
         self._end_preview = ColorPreview()
         end_layout.addWidget(self._end_preview)
@@ -114,10 +114,10 @@ class GradientOptionsPanel(QWidget):
         layout.addLayout(end_layout)
 
         # Tauschen-Button
-        swap_btn = QPushButton("↔ " + t("Farben tauschen"))
-        swap_btn.setStyleSheet(Styles.button_secondary())
-        swap_btn.clicked.connect(self._on_swap)
-        layout.addWidget(swap_btn)
+        self._swap_btn = QPushButton("↔ " + t("Farben tauschen"))
+        self._swap_btn.setStyleSheet(Styles.button_secondary())
+        self._swap_btn.clicked.connect(self._on_swap)
+        layout.addWidget(self._swap_btn)
 
         layout.addStretch()
 
@@ -125,6 +125,11 @@ class GradientOptionsPanel(QWidget):
 
     def _apply_theme(self) -> None:
         self.setStyleSheet(f"GradientOptionsPanel {{ background: {THEME.bg_medium}; }}")
+        self._title.setStyleSheet(Styles.section_header())
+        self._info.setStyleSheet(f"color: {THEME.text_muted}; font-size: 10px;")
+        self._start_label.setStyleSheet(f"color: {THEME.text_secondary};")
+        self._end_label.setStyleSheet(f"color: {THEME.text_secondary};")
+        self._swap_btn.setStyleSheet(Styles.button_secondary())
         self._start_combo.setStyleSheet(Styles.combo_box())
         self._end_combo.setStyleSheet(Styles.combo_box())
         self._start_preview._apply_theme()

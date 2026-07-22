@@ -144,7 +144,8 @@ class InfoPanel(QWidget):
         layout.addWidget(self.source_frame)
 
         # === Farbübersicht ===
-        layout.addWidget(SectionHeader("📋", t("FARBÜBERSICHT"), THEME.info))
+        self._section_colors = SectionHeader("📋", t("FARBÜBERSICHT"), THEME.info)
+        layout.addWidget(self._section_colors)
 
         self.colors_frame = QFrame()
         self.colors_frame.setStyleSheet(f"""
@@ -192,6 +193,8 @@ class InfoPanel(QWidget):
 
     def _apply_theme(self) -> None:
         """Re-applies all stylesheets for theme switching."""
+        self._section_fabric._apply_theme(THEME.accent_primary)
+        self._section_colors._apply_theme(THEME.info)
         self.combo_fabric.setStyleSheet(Styles.combo_box())
         self.source_frame.setStyleSheet(f"""
             QFrame {{
@@ -349,9 +352,20 @@ class InfoPanel(QWidget):
         else:
             return f"~{total_m:.2f} m"
 
-    def _calculate_thread_per_color(self, stitch_count: int, fabric_count: int) -> str:
+    def _calculate_thread_per_color(
+        self, stitch_count: int, fabric_count: int, mode: str = "stitch"
+    ) -> str:
         if stitch_count == 0:
             return ""
+
+        if mode == "diamond":
+            # 10% Reserve, analog zum Gesamt-Drill-Bedarf in
+            # _calculate_thread_usage() -- vorher fehlte hier jeder
+            # Modus-Zweig, die Farbliste zeigte pro Diamond-Farbe eine
+            # bedeutungslose Garn-Meterangabe (Aida-Formel) statt einer
+            # Drill-Anzahl.
+            total_drills = int(stitch_count * 1.10)
+            return f"~{total_drills:,}".replace(",", ".")
 
         base_cm = 5.0 * (14 / fabric_count)
         total_cm = stitch_count * base_cm * 1.15
@@ -601,7 +615,7 @@ class InfoPanel(QWidget):
         self.card_size.set_value("0 × 0")
         self.card_cm.set_value("0 × 0 cm")
         self.card_layers.set_value("0")
-        self.card_time.set_value("0 Min")
+        self.card_time.set_value("0 " + t("Min"))
         self.card_thread.set_value("0" if self._mode == "diamond" else "0 m")
         self.card_progress.set_value("0%")
         self.card_difficulty.set_value("-")

@@ -228,6 +228,11 @@ class ProgressPanel(QWidget):
                 border-color: {THEME.error};
             }}
         """)
+        # Sticken-Modus-Button neu stylen -- _apply_stitch_mode_btn_style()
+        # wird sonst nur bei Zustandswechseln aufgerufen (set_stitch_mode_
+        # active()), nicht bei einem reinen Theme-Wechsel.
+        self._apply_stitch_mode_btn_style(self.btn_stitch_mode.isChecked())
+
         # Re-render per-color rows
         if self._pattern:
             self.update_progress(self._pattern)
@@ -246,7 +251,8 @@ class ProgressPanel(QWidget):
         self.overall_progress.setValue(int(percent * 10))
         completed = stats["completed_stitches"]
         total = stats["total_stitches"]
-        self.lbl_counts.setText(f"{completed:,} / {total:,} Stiche".replace(",", "."))
+        counts_str = f"{completed:,} / {total:,}".replace(",", ".")
+        self.lbl_counts.setText(f"{counts_str} {t('Stiche')}")
         # Pro-Farben-Rebuild verzögert anstossen
         if not self._update_timer.isActive():
             self._update_timer.start()

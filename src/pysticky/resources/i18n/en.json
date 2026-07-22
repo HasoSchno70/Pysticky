@@ -1399,5 +1399,10 @@
   "Klicke zum Einfügen...": "Click to paste...",
   "Mehrere Stiche": "Multiple Stitches",
   "Nichts zum Einfügen": "Nothing to paste",
-  "Kopiert: {w} × {h}": "Copied: {w} × {h}"
+  "Kopiert: {w} × {h}": "Copied: {w} × {h}",
+  "'{source}' mit '{target}' vereinen?\n\nDie Stiche von '{source}' werden auf '{target}' übertragen.\n\n": "'{source}' merge with '{target}'?\n\nThe stitches from '{source}' will be transferred to '{target}'.\n\n",
+  "'{name}' löschen?\n\n": "Delete '{name}'?\n\n",
+  "Alle Stiche aus '{name}' entfernen?": "Remove all stitches from '{name}'?",
+  "Palette wechseln": "Change palette",
+  "Das Muster wird mit '{name}' neu erstellt.\n\nAlle manuellen Änderungen gehen verloren!\n\nFortfahren?": "The pattern will be recreated with '{name}'.\n\nAll manual changes will be lost!\n\nContinue?"
 }

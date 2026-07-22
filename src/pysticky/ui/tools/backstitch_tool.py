@@ -125,12 +125,26 @@ class BackstitchTool(BaseTool):
             else:
                 snap_y = 2
 
-            return (base_x + snap_x, base_y + snap_y)
+            half_x, half_y = base_x + snap_x, base_y + snap_y
         else:
             # Kontinuierlich (2 Punkte pro Zelle)
             snap_x = 0 if in_cell_x < cell_size // 2 else 2
             snap_y = 0 if in_cell_y < cell_size // 2 else 2
-            return (base_x + snap_x, base_y + snap_y)
+            half_x, half_y = base_x + snap_x, base_y + snap_y
+
+        # Klick im Canvas-Rand ausserhalb des Musters (Zoom &lt; 100%, oder
+        # ein Klick knapp vor Zeile/Spalte 0) lieferte hier vorher
+        # unbegrenzte, teils negative Halb-Stich-Koordinaten -- anders als
+        # jedes andere Tool (die alle _is_valid_pos() vor dem Zurueckgeben
+        # pruefen) validierte BackstitchTool nie gegen die Musterbreite/
+        # -hoehe, und BackstitchManager.add() tut das ebenfalls nicht.
+        # Ergebnis: ein dauerhaft ausserhalb des Musters liegender
+        # Rueckstich landete unbemerkt in Pattern + Save-Datei.
+        max_x = ctx.pattern.width * 2
+        max_y = ctx.pattern.height * 2
+        half_x = max(0, min(half_x, max_x))
+        half_y = max(0, min(half_y, max_y))
+        return (half_x, half_y)
 
     def on_mouse_press(
         self, ctx: ToolContext, event: QMouseEvent

@@ -773,8 +773,10 @@ class LayerPanel(QWidget):
         reply = QMessageBox.question(
             self,
             t("Ebenen vereinen"),
-            f"'{source_layer.name}' mit '{target_layer.name}' vereinen?\n\n"
-            f"Die Stiche von '{source_layer.name}' werden auf '{target_layer.name}' übertragen.\n\n"
+            t(
+                "'{source}' mit '{target}' vereinen?\n\n"
+                "Die Stiche von '{source}' werden auf '{target}' übertragen.\n\n"
+            ).format(source=source_layer.name, target=target_layer.name)
             + t("Dies leert außerdem den Rückgängig-Verlauf."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -882,7 +884,8 @@ class LayerPanel(QWidget):
         reply = QMessageBox.question(
             self,
             t("Ebene löschen"),
-            f"'{layer.name}' löschen?\n\n" + t("Dies leert außerdem den Rückgängig-Verlauf."),
+            t("'{name}' löschen?\n\n").format(name=layer.name)
+            + t("Dies leert außerdem den Rückgängig-Verlauf."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -939,7 +942,7 @@ class LayerPanel(QWidget):
         reply = QMessageBox.question(
             self,
             t("Ebene leeren"),
-            f"Alle Stiche aus '{layer.name}' entfernen?",
+            t("Alle Stiche aus '{name}' entfernen?").format(name=layer.name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:

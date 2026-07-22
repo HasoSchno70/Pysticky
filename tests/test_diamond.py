@@ -393,6 +393,44 @@ def test_info_panel_diamond_time_is_faster_than_stitch(qtbot):
     assert "5" in diamond_time and "h" not in diamond_time  # ~50 Min
 
 
+def test_calculate_thread_per_color_uses_drills_in_diamond_mode(qtbot):
+    """Regression (Runde 21): _calculate_thread_per_color() hatte KEINEN
+    Modus-Zweig -- anders als _calculate_thread_usage() (Gesamt-Bedarf),
+    das korrekt zwischen Garn-Metern und Drill-Anzahl unterscheidet. Die
+    Farbliste zeigte pro Diamond-Farbe dadurch eine bedeutungslose
+    Aida-Garn-Meterangabe statt einer Drill-Anzahl."""
+    from pysticky.ui.panels.info_panel import InfoPanel
+
+    panel = InfoPanel()
+    qtbot.addWidget(panel)
+
+    stitch_result = panel._calculate_thread_per_color(100, 14, mode="stitch")
+    assert stitch_result.endswith("m") or stitch_result.endswith("cm")
+
+    diamond_result = panel._calculate_thread_per_color(100, 10, mode="diamond")
+    assert "m" not in diamond_result
+    assert diamond_result.startswith("~")
+
+
+def test_color_list_item_shows_drill_count_not_thread_length_in_diamond_mode(
+    qtbot, pattern_with_colors
+):
+    """End-to-End: _ColorListItem zeigt im Diamond-Modus eine Drill-Zahl,
+    keine Garn-Meterangabe, in der Stiche-Spalte."""
+    from pysticky.ui.panels.info_panel import InfoPanel
+    from pysticky.ui.panels.info_panel_widgets import _ColorListItem
+
+    panel = InfoPanel()
+    qtbot.addWidget(panel)
+
+    entry = pattern_with_colors.color_entries[0]
+    entry.stitch_count = 100
+    item = _ColorListItem(0, entry, 10, panel._calculate_thread_per_color, mode="diamond")
+    qtbot.addWidget(item)
+
+    assert "m" not in item.lbl_stats.text()
+
+
 def test_info_panel_unknown_mode_is_ignored(qtbot):
     """set_mode('foo') aendert nichts."""
     from pysticky.ui.panels.info_panel import InfoPanel

@@ -228,6 +228,12 @@ class PalettePanel(QWidget):
         self.label_info.setStyleSheet(
             f"color: {THEME.text_muted}; font-size: 11px; background: transparent;"
         )
+        # Bereits gerenderte Swatch-Icons backen THEME.accent_primary/
+        # border_light in ein Raster-QPixmap (_create_color_icon) -- ohne
+        # diesen Refresh blieben Rahmen/"benutzt"-Markierung nach einem
+        # Theme-Wechsel auf den alten Farben haengen, bis der Nutzer die
+        # Liste durch Suche/Palettenwechsel ohnehin neu aufbaut.
+        self._refresh_color_list()
 
     def _load_palettes(self) -> None:
         """Befüllt das Palette-Dropdown.
@@ -387,9 +393,11 @@ class PalettePanel(QWidget):
 
         reply = QMessageBox.question(
             self,
-            "Palette wechseln",
-            f"Das Muster wird mit '{self._current_palette_name}' neu erstellt.\n\n"
-            f"Alle manuellen Änderungen gehen verloren!\n\nFortfahren?",
+            t("Palette wechseln"),
+            t(
+                "Das Muster wird mit '{name}' neu erstellt.\n\n"
+                "Alle manuellen Änderungen gehen verloren!\n\nFortfahren?"
+            ).format(name=self._current_palette_name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 

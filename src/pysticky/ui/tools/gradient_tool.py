@@ -5,6 +5,7 @@ Farbverlauf-Tool für automatische Übergänge zwischen 2 Farben.
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPen
 
+from ...core.color_math import delta_e
 from ...utils import clamp_int
 from ..color_utils import to_qcolor
 from .base_tool import BaseTool, ToolContext
@@ -169,17 +170,21 @@ class GradientTool(BaseTool):
             self._preview_points.append((x, y, best_idx))
 
     def _find_closest_color(self, pattern, r: int, g: int, b: int) -> int:
-        """Findet die ähnlichste Farbe in der Palette."""
+        """Findet die ähnlichste Farbe in der Palette.
+
+        Nutzt CIEDE2000 (wie fill_tool.py/palette_conversion_dialog.py/
+        similar_colors_dialog.py etc.), nicht rohe RGB-Euklid-Distanz --
+        letztere gewichtet Helligkeits- vs. Farbton-Unterschiede anders als
+        menschliche Wahrnehmung und konnte bei einem Farbverlauf sichtbar
+        falsche/unruhige Zwischenfarben waehlen.
+        """
         best_dist = float("inf")
         best_idx = 0
+        target_rgb = (r, g, b)
 
         for i, entry in enumerate(pattern.color_entries):
-            pr = entry.thread.color.r
-            pg = entry.thread.color.g
-            pb = entry.thread.color.b
-
-            # Euklidische Distanz im RGB-Raum
-            dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
+            c = entry.thread.color
+            dist = delta_e(target_rgb, (c.r, c.g, c.b))
 
             if dist < best_dist:
                 best_dist = dist

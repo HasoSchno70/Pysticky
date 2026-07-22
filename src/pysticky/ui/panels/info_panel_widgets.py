@@ -288,7 +288,7 @@ class _ColorListItem(QFrame):
 
         # Stiche + Verbrauch right-aligned
         if self._entry.stitch_count > 0 and not skip:
-            usage = self._calc_thread(self._entry.stitch_count, self._fabric_count)
+            usage = self._calc_thread(self._entry.stitch_count, self._fabric_count, self._mode)
             stats_text = f"{self._entry.stitch_count}  ·  {usage}"
             stats_color = THEME.text_disabled
         elif skip:
@@ -332,10 +332,44 @@ class _ColorListItem(QFrame):
         # Symbol kann sich ändern wenn User es geändert hat
         self.lbl_symbol.setText(entry.symbol)
 
+        # Swatch/Nummer/Name-Stylesheets neu anwenden -- sonst bleiben sie
+        # nach einem Theme-Wechsel auf den alten THEME-Farben haengen, weil
+        # dieser Incremental-Pfad (siehe Docstring oben) sonst NUR Text
+        # aktualisiert. _apply_theme() ruft _update_colors_list() auf, die
+        # bei unveraenderter Farbanzahl genau in diesen Pfad faellt statt
+        # in den Voll-Rebuild in _setup_ui().
+        thread = entry.thread
+        c = thread.color
+        self.swatch.setStyleSheet(
+            f"background: rgb({c.r},{c.g},{c.b}); "
+            f"border: 1px solid {THEME.border_light}; border-radius: 3px;"
+        )
+        num = thread.catalog_number or "—"
+        self.lbl_num.setText(num)
+        if self._mode == "diamond":
+            self.lbl_num.setStyleSheet(
+                f"color: {THEME.text_primary}; font-size: 11px; font-weight: 600; "
+                f"font-family: 'Consolas', 'Courier New', monospace; background: transparent;"
+            )
+        else:
+            self.lbl_num.setStyleSheet(
+                f"color: {THEME.text_muted}; font-size: 10px; "
+                f"font-family: 'Consolas', 'Courier New', monospace; background: transparent;"
+            )
+        name = thread.name
+        if len(name) > 16:
+            name = name[:15] + "…"
+        self.lbl_name.setText(name)
+        self.lbl_name.setStyleSheet(
+            f"color: {THEME.text_secondary}; font-size: 11px; "
+            f"font-weight: 500; background: transparent;"
+            f"{' text-decoration: line-through;' if entry.skip_stitching else ''}"
+        )
+
         # Stiche + Verbrauch neu berechnen
         skip = entry.skip_stitching
         if entry.stitch_count > 0 and not skip:
-            usage = calc_thread_fn(entry.stitch_count, fabric_count)
+            usage = calc_thread_fn(entry.stitch_count, fabric_count, self._mode)
             stats_text = f"{entry.stitch_count}  ·  {usage}"
             stats_color = THEME.text_disabled
         elif skip:
@@ -349,8 +383,7 @@ class _ColorListItem(QFrame):
             f"color: {stats_color}; font-size: 10px; background: transparent;"
         )
 
-        # Tooltip aktualisieren
-        thread = entry.thread
+        # Tooltip aktualisieren (thread bereits oben aus entry.thread geholt)
         unit = t("Drills:") if self._mode == "diamond" else t("Stiche:")
         symbol_line = "" if self._mode == "diamond" else f"{t('Symbol:')} {entry.symbol}<br>"
         self.setToolTip(
@@ -428,3 +461,22 @@ class SectionHeader(QWidget):
     def set_icon(self, icon: str) -> None:
         """Ändert das Section-Icon zur Laufzeit."""
         self._icon_label.setText(icon)
+
+    def _apply_theme(self, color: str | None = None) -> None:
+        """Wendet die Akzentfarbe neu an (Theme-Wechsel).
+
+        `color` kommt vom Aufrufer immer als bereits aufgeloester THEME-Wert
+        (z.B. `THEME.accent_primary`), nicht als Attributname -- ohne diesen
+        Re-Apply-Hook blieb die Header-Farbe permanent auf dem beim
+        Konstruieren aktiven Theme haengen, da `self._color` nur einen
+        einmal aufgeloesten Hex-String speichert, keine lebende Referenz.
+        """
+        if color is not None:
+            self._color = color
+        self._icon_label.setStyleSheet(f"font-size: 14px; color: {self._color};")
+        self._title_label.setStyleSheet(f"""
+            font-size: 11px;
+            font-weight: 700;
+            color: {self._color};
+            letter-spacing: 1.5px;
+        """)
