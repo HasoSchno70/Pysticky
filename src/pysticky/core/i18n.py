@@ -131,10 +131,24 @@ class TranslationManager:
             return
         try:
             with open(path, "r", encoding="utf-8") as f:
-                self._translations[lang] = json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
+                loaded = json.load(f)
+        except (OSError, json.JSONDecodeError, ValueError) as e:
+            # ValueError deckt u.a. UnicodeDecodeError ab (Datei mit
+            # ungueltiger Kodierung) -- ohne das crashte t() beim naechsten
+            # Aufruf mit einem rohen UnicodeDecodeError statt sauber auf
+            # den Identity-Fallback zurueckzufallen.
             logger.error(f"Fehler beim Laden von {path}: {e}")
             self._translations[lang] = {}
+            return
+        if not isinstance(loaded, dict):
+            # Syntaktisch gueltiges JSON, aber kein Objekt (z.B. eine Liste
+            # oder ein blanker String) -- ohne diese Pruefung wuerde jeder
+            # spaetere t()-Aufruf mit einem AttributeError crashen, weil
+            # dictionary.get(...) auf einer Liste/einem String nicht existiert.
+            logger.error(f"Sprachdatei hat kein Objekt als Wurzel: {path}")
+            self._translations[lang] = {}
+            return
+        self._translations[lang] = loaded
 
     def reload(self) -> None:
         """Setzt alle geladenen Dictionaries zurück (für Live-Reload bei Dev)."""

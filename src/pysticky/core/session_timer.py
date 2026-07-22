@@ -36,7 +36,15 @@ MAX_PLAUSIBLE_SESSION_SECONDS = 12 * 3600  # 12h
 
 def get_total_seconds(pattern: "Pattern") -> int:
     """Liefert die kumulierte Stick-Zeit (ohne aktuelle laufende Session)."""
-    return int(pattern.metadata.get(META_TOTAL, 0))
+    try:
+        return int(pattern.metadata.get(META_TOTAL, 0))
+    except (TypeError, ValueError):
+        # metadata kommt ungeprueft aus der .pxs-Datei (file_io.py laedt es
+        # als rohes dict) -- ein hand-editierter oder korrupter Wert (z.B.
+        # ein String oder eine Liste statt einer Zahl) darf hier nicht mit
+        # einem rohen ValueError/TypeError crashen, sondern soll wie "noch
+        # keine Zeit erfasst" behandelt werden.
+        return 0
 
 
 def is_session_active(pattern: "Pattern") -> bool:
@@ -60,8 +68,18 @@ def stop_session(pattern: "Pattern", now: float | None = None) -> int:
     start = pattern.metadata.pop(META_START, None)
     if start is None:
         return 0
+    try:
+        start_f = float(start)
+    except (TypeError, ValueError):
+        # Kaputter last_session_start-Wert (z.B. ein String oder eine Liste
+        # in einer hand-editierten/korrupten .pxs-Datei) -- kann keine
+        # gueltige Dauer ergeben. Wurde oben bereits aus metadata entfernt
+        # (pop), also wie "keine Session aktiv" behandeln statt mit einem
+        # rohen ValueError/TypeError zu crashen (z.B. beim Verlassen des
+        # Sticken-Modus oder beim Schliessen der App).
+        return 0
     end = float(now if now is not None else time.time())
-    elapsed = max(0, int(end - float(start)))
+    elapsed = max(0, int(end - start_f))
     if elapsed > MAX_PLAUSIBLE_SESSION_SECONDS:
         # Vermutlich ein liegen gebliebener Zeitstempel aus einem
         # abgestürzten Prozess, keine echte Stickzeit -- verwerfen statt

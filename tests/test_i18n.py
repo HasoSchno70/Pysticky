@@ -125,6 +125,48 @@ def test_translation_handles_special_characters():
     assert t("Schließen") == "Close"
 
 
+def test_language_file_with_invalid_encoding_falls_back_to_identity(tmp_path):
+    """Sprachdatei mit ungueltiger UTF-8-Kodierung darf t() nicht mit einem
+    rohen UnicodeDecodeError crashen lassen -- soll wie jede andere kaputte
+    Sprachdatei auf den Identity-Fallback zurueckfallen."""
+    from pysticky.core.i18n import get_translation_manager, set_language, t
+
+    (tmp_path / "xx.json").write_bytes(b'{"Speichern": "Save"}\xff\xfe')
+
+    manager = get_translation_manager()
+    original_dir = manager._i18n_dir
+    manager._i18n_dir = tmp_path
+    manager.reload()
+    try:
+        set_language("xx")
+        assert t("Speichern") == "Speichern"
+    finally:
+        manager._i18n_dir = original_dir
+        manager.reload()
+
+
+def test_language_file_with_non_dict_root_falls_back_to_identity(tmp_path):
+    """Sprachdatei mit syntaktisch gueltigem JSON, das aber kein Objekt ist
+    (z.B. eine Liste), darf t() nicht mit einem AttributeError crashen
+    lassen -- soll auf den Identity-Fallback zurueckfallen."""
+    import json as _json
+
+    from pysticky.core.i18n import get_translation_manager, set_language, t
+
+    (tmp_path / "yy.json").write_text(_json.dumps(["not", "a", "dict"]), encoding="utf-8")
+
+    manager = get_translation_manager()
+    original_dir = manager._i18n_dir
+    manager._i18n_dir = tmp_path
+    manager.reload()
+    try:
+        set_language("yy")
+        assert t("Speichern") == "Speichern"
+    finally:
+        manager._i18n_dir = original_dir
+        manager.reload()
+
+
 def test_threadsafe_concurrent_access():
     """Mehrere Threads koennen gleichzeitig t() rufen ohne Crash."""
     import threading

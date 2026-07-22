@@ -72,6 +72,30 @@ def test_stop_accepts_session_just_under_plausible_cap(empty_pattern):
     assert session_timer.get_total_seconds(empty_pattern) == just_under_cap
 
 
+def test_get_total_seconds_with_corrupt_metadata_does_not_crash(empty_pattern):
+    """Regression: metadata wird ungeprueft aus der .pxs-Datei geladen
+    (file_io.py::load_pattern uebernimmt das rohe dict). Ein hand-editierter
+    oder korrupter total_stitch_seconds-Wert (z.B. ein String statt einer
+    Zahl) darf get_total_seconds() nicht mit einem rohen ValueError crashen
+    lassen -- betrifft u.a. die Statusleisten-Meldung beim Beenden des
+    Sticken-Modus (ui/handlers/view_handlers.py)."""
+    empty_pattern.metadata[session_timer.META_TOTAL] = "not-a-number"
+    assert session_timer.get_total_seconds(empty_pattern) == 0
+
+
+def test_stop_session_with_corrupt_start_does_not_crash(empty_pattern):
+    """Regression: ein korrupter last_session_start-Wert (z.B. ein String
+    statt eines Unix-Zeitstempels, aus einer hand-editierten .pxs-Datei)
+    darf stop_session() nicht mit einem rohen ValueError crashen lassen --
+    soll wie 'keine Session aktiv' behandelt werden (elapsed=0), die
+    kaputte Session aber trotzdem beenden (aus metadata entfernen)."""
+    empty_pattern.metadata[session_timer.META_START] = "not-a-timestamp"
+    elapsed = session_timer.stop_session(empty_pattern, now=1000.0)
+    assert elapsed == 0
+    assert not session_timer.is_session_active(empty_pattern)
+    assert session_timer.get_total_seconds(empty_pattern) == 0
+
+
 @pytest.mark.parametrize(
     "seconds,expected",
     [

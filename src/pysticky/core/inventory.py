@@ -67,7 +67,11 @@ class Inventory:
         try:
             with open(self._path, "r", encoding="utf-8") as f:
                 raw = json.load(f)
-        except (OSError, json.JSONDecodeError):
+        except (OSError, json.JSONDecodeError, ValueError):
+            # ValueError deckt u.a. UnicodeDecodeError ab (Datei mit
+            # ungueltiger Kodierung, z.B. durch einen abgebrochenen Schreib-
+            # vorgang) -- ohne das crashte das Laden der Inventory statt
+            # sauber auf eine leere Vorratsliste zurueckzufallen.
             self._data = {}
             return
         if isinstance(raw, dict):

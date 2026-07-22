@@ -54,6 +54,18 @@ def test_load_corrupt_file_does_not_crash(tmp_path):
     assert len(inv) == 0
 
 
+def test_load_file_with_invalid_encoding_does_not_crash(tmp_path):
+    """Datei mit ungueltiger UTF-8-Kodierung (z.B. abgebrochener Schreib-
+    vorgang) darf das Laden nicht mit einem rohen UnicodeDecodeError crashen
+    lassen -- soll wie jede andere kaputte Datei auf eine leere Vorratsliste
+    zurueckfallen."""
+    path = tmp_path / "inv.json"
+    # 0xFF ist in UTF-8 niemals ein gueltiges Start-Byte.
+    path.write_bytes(b'{"stock": {"DMC::310": 3}}\xff\xfe')
+    inv = Inventory(path)
+    assert len(inv) == 0
+
+
 def test_load_flat_legacy_format(tmp_path):
     """Backward-compat: alte flache Schreibweise sollte noch lesbar sein."""
     path = tmp_path / "inv.json"
