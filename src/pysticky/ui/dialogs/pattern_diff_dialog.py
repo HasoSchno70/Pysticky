@@ -81,6 +81,11 @@ class PatternDiffDialog(QDialog):
             f"<span style='color:#dba;'>~{s.changed} geändert</span> &middot; "
             f"{s.same} unverändert"
         )
+        if s.backstitch_changes:
+            stats_text += (
+                f" &middot; <span style='color:#888;'>Rückstiche: "
+                f"+{s.backstitches_added}/-{s.backstitches_removed}</span>"
+            )
         if s.size_changed:
             stats_text += (
                 f" &middot; <span style='color:#888;'>Größe: alt "

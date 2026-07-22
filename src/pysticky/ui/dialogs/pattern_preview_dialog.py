@@ -313,6 +313,17 @@ class PatternPreviewDialog(QDialog):
         self._is_dp = getattr(pattern, "mode", "stitch") == "diamond"
 
         self._engine = PreviewRenderEngine(pattern)
+        # Backstitch-Linien-/Kappenstil + Dicke vom lebenden Editor-Canvas
+        # übernehmen (falls vorhanden) -- sonst zeigt die Vorschau
+        # Rückstiche immer im festen Default statt der vom Nutzer im
+        # Backstitch-Options-Dock gewählten Optik.
+        canvas = getattr(parent, "canvas", None)
+        if canvas is not None:
+            self._engine.set_backstitch_style(
+                getattr(canvas, "_backstitch_line_style", Qt.PenStyle.SolidLine),
+                getattr(canvas, "_backstitch_cap_style", Qt.PenCapStyle.RoundCap),
+                getattr(canvas, "_backstitch_width_offset", 0),
+            )
 
         title_suffix = t("Vorlagen-Vorschau") if self._is_dp else t("Muster-Vorschau")
         self.setWindowTitle(f"{title_suffix} — {pattern.name}")

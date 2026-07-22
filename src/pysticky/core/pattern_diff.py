@@ -7,10 +7,12 @@ das Ergebnis (DiffDialog).
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 
 import numpy as np
 
+from .backstitch_manager import Backstitch
 from .layer import NO_STITCH
 from .pattern import Pattern
 
@@ -32,10 +34,16 @@ class DiffStats:
     width: int
     height: int
     size_changed: bool  # True wenn Width/Height unterschiedlich sind
+    backstitches_added: int = 0  # Anzahl neu hinzugefügter Rückstich-Linien
+    backstitches_removed: int = 0  # Anzahl entfernter Rückstich-Linien
 
     @property
     def total_changes(self) -> int:
-        return self.added + self.removed + self.changed
+        return self.added + self.removed + self.changed + self.backstitch_changes
+
+    @property
+    def backstitch_changes(self) -> int:
+        return self.backstitches_added + self.backstitches_removed
 
     def to_dict(self) -> dict:
         return {
@@ -47,6 +55,8 @@ class DiffStats:
             "width": self.width,
             "height": self.height,
             "size_changed": self.size_changed,
+            "backstitches_added": self.backstitches_added,
+            "backstitches_removed": self.backstitches_removed,
         }
 
 
@@ -120,6 +130,10 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
     changed = int(np.count_nonzero(changed_mask))
     same = int(np.count_nonzero(same_mask))
 
+    backstitches_added, backstitches_removed = _diff_backstitches(
+        old_pattern.backstitches, new_pattern.backstitches
+    )
+
     stats = DiffStats(
         added=added,
         removed=removed,
@@ -127,6 +141,38 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
         same=same,
         width=diff_w,
         height=diff_h,
+        backstitches_added=backstitches_added,
+        backstitches_removed=backstitches_removed,
         size_changed=(old_w != new_w or old_h != new_h),
     )
     return DiffResult(mask=mask, stats=stats)
+
+
+def _diff_backstitches(
+    old_backstitches: list[Backstitch],
+    new_backstitches: list[Backstitch],
+) -> tuple[int, int]:
+    """Vergleicht zwei Rückstich-Listen als Multimengen (Wert-Identität).
+
+    Rückstiche haben keine stabile ID über Snapshots hinweg — nur Koordinaten
+    + Farbe. Ein Vergleich per Listen-Index würde bei Einfügungen/Löschungen
+    in der Mitte der Liste sofort desynchronisieren (jeder nachfolgende
+    Eintrag würde als "geändert" erscheinen, obwohl er identisch ist, nur an
+    anderer Listen-Position). Multimengen-Differenz per Counter ist robust
+    gegen Reihenfolge UND gegen echte Duplikate (zwei identische Rückstiche
+    zählen als zwei, nicht als einer).
+
+    Returns:
+        (hinzugefügt, entfernt) — Anzahl Rückstich-Linien, die nur im neuen
+        bzw. nur im alten Pattern vorkommen.
+    """
+
+    def _key(bs: Backstitch) -> tuple[int, int, int, int, int]:
+        return (bs.x1, bs.y1, bs.x2, bs.y2, bs.color_index)
+
+    old_counts = Counter(_key(bs) for bs in old_backstitches)
+    new_counts = Counter(_key(bs) for bs in new_backstitches)
+
+    added = new_counts - old_counts
+    removed = old_counts - new_counts
+    return sum(added.values()), sum(removed.values())

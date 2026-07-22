@@ -63,6 +63,13 @@ class PreviewRenderEngine:
         self._fabric_color = QColor(255, 255, 255)
         self._show_backstitches = True
         self._show_completion = False
+        # Default entspricht dem Canvas-Default (rendering_mixin.py /
+        # canvas.py) -- ueberschrieben via set_backstitch_style(), sobald der
+        # Aufrufer (PatternPreviewDialog) den live konfigurierten Linien-/
+        # Kappenstil des Editors kennt.
+        self._backstitch_line_style = Qt.PenStyle.SolidLine
+        self._backstitch_cap_style = Qt.PenCapStyle.RoundCap
+        self._backstitch_width_offset = 0
 
         # Cache
         self._composite_grid: np.ndarray | None = None
@@ -89,6 +96,28 @@ class PreviewRenderEngine:
 
     def set_show_completion(self, show: bool) -> None:
         self._show_completion = show
+
+    def set_backstitch_style(
+        self,
+        line_style: Qt.PenStyle,
+        cap_style: Qt.PenCapStyle,
+        width_offset: int = 0,
+    ) -> None:
+        """Übernimmt Linien-/Kappenstil + Dicken-Offset für Rückstiche.
+
+        Ohne diesen Aufruf zeichnet die Vorschau Rückstiche immer
+        durchgezogen mit rundem Kappenstil in fester Dicke — unabhängig
+        davon, was der Nutzer im Backstitch-Options-Dock eingestellt hat
+        (siehe ui/canvas/mixins/rendering_mixin.py::_draw_backstitches, das
+        `_backstitch_line_style`/`_backstitch_cap_style`/
+        `_backstitch_width_offset` vom Canvas liest). Farbe wurde schon
+        immer korrekt übernommen (via get_color_entry) — nur Stil und Dicke
+        fielen in der "Muster-Vorschau" stillschweigend auf den Default
+        zurück.
+        """
+        self._backstitch_line_style = line_style
+        self._backstitch_cap_style = cap_style
+        self._backstitch_width_offset = width_offset
 
     def _rebuild_cache(self) -> None:
         """Baut den Composite-Grid-Cache neu auf."""
@@ -872,7 +901,7 @@ class PreviewRenderEngine:
         """Zeichnet alle sichtbaren Rückstiche."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         half_cell = cell_size / 2.0
-        thread_width = max(1, cell_size // 5)
+        thread_width = max(1, cell_size // 5 + self._backstitch_width_offset)
 
         # Sichtbarer Bereich in Halbzell-Koordinaten
         vis_x1 = x_start * 2
@@ -907,18 +936,21 @@ class PreviewRenderEngine:
                 QPen(
                     QColor(0, 0, 0, 80),
                     thread_width + 2,
-                    Qt.PenStyle.SolidLine,
-                    Qt.PenCapStyle.RoundCap,
+                    self._backstitch_line_style,
+                    self._backstitch_cap_style,
                 )
             )
             painter.drawLine(int(x1) + 1, int(y1) + 1, int(x2) + 1, int(y2) + 1)
 
             # Hauptlinie
             if self._render_mode == RenderMode.SYMBOL:
-                # Gestrichelt im Symbol-Plan
-                pen = QPen(color, thread_width, Qt.PenStyle.DashLine, Qt.PenCapStyle.RoundCap)
+                # Gestrichelt im Symbol-Plan (feste Konvention fuer gedruckte
+                # Plaene, unabhaengig vom editierbaren Canvas-Linienstil)
+                pen = QPen(color, thread_width, Qt.PenStyle.DashLine, self._backstitch_cap_style)
             else:
-                pen = QPen(color, thread_width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+                pen = QPen(
+                    color, thread_width, self._backstitch_line_style, self._backstitch_cap_style
+                )
             painter.setPen(pen)
             painter.drawLine(int(x1), int(y1), int(x2), int(y2))
 
