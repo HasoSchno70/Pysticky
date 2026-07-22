@@ -1005,7 +1005,19 @@ def test_preview_engine_renders_stick_pattern_keeps_cross_stitch(qtbot, pattern_
 
 
 def test_drill_labels_tied_to_show_symbols(qtbot, empty_pattern):
-    """Im DP-Modus wird das Drill-Label nur gezeichnet wenn show_symbols=True ist."""
+    """Im DP-Modus wird das Drill-Label nur gezeichnet wenn show_symbols=True ist.
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version hatte gar
+    keine Assertion -- sie verliess sich rein auf "kein Crash" (per
+    Kommentar explizit zugegeben). Ein Bug, der das Label IMMER oder NIE
+    zeichnet (show_symbols-Kopplung komplett entfernt), waere nie
+    aufgefallen. Jetzt wird die tatsaechlich gerenderte Zelle (2,2) als
+    Pixel-Snapshot verglichen: mit Label muss sie sich vom Label-losen
+    Rendering unterscheiden (das Symbol malt zusaetzliche Text-Pixel in
+    die sonst identische Drill-Facette).
+    """
+    from PySide6.QtGui import QPixmap
+
     from pysticky.core import Thread
     from pysticky.ui.canvas import CrossStitchCanvas
 
@@ -1027,14 +1039,26 @@ def test_drill_labels_tied_to_show_symbols(qtbot, empty_pattern):
     canvas.diamond_view = True
     canvas.resize(800, 600)
 
+    def _cell_pixels() -> list[int]:
+        pixmap = QPixmap(canvas.size())
+        canvas.render(pixmap)
+        image = pixmap.toImage()
+        cs = canvas._cell_size
+        sx = 2 * cs + canvas._offset_x
+        sy = 2 * cs + canvas._offset_y
+        return [image.pixel(x, y) for x in range(sx, sx + cs) for y in range(sy, sy + cs)]
+
     # show_symbols=False -> Drill-Labels sollten NICHT gezeichnet werden
     canvas._show_symbols = False
-    canvas.repaint()
+    pixels_without_label = _cell_pixels()
+
     # show_symbols=True -> Drill-Labels werden gezeichnet
     canvas._show_symbols = True
-    canvas.repaint()
-    # Beide Pfade laufen ohne Crash durch (eigentliche Pixel-Pruefung ist
-    # zu fragil — wir verlassen uns auf die Render-Logik in _draw_layer_cells).
+    pixels_with_label = _cell_pixels()
+
+    assert pixels_with_label != pixels_without_label, (
+        "Regression: Drill-Label-Rendering ist nicht (mehr) an show_symbols gekoppelt"
+    )
 
 
 # ---------------------------------------------------------------------------

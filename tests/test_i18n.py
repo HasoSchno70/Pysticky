@@ -70,13 +70,22 @@ def test_switching_back_to_german_restores_keys():
 
 def test_unknown_language_does_nothing_to_translations():
     """set_language mit unbekannter Sprache: Manager bleibt bei aktueller Sprache
-    (oder setzt sie, aber Translation faellt durch Identity)."""
+    (oder setzt sie, aber Translation faellt durch Identity).
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version pruefte nur
+    `isinstance(result, str)` -- das waere auch bei einem kaputten
+    Identity-Fallback wahr gewesen (z.B. wenn t() bei unbekannter Sprache
+    versehentlich "klingon" selbst, einen leeren String oder sonst
+    irgendeinen anderen String zurueckgeben wuerde). Die aktive Sprache
+    bleibt "de" (Fixture-Default), also muss t("Speichern") exakt
+    "Speichern" liefern -- wie in test_translation_returns_key_in_default_language.
+    """
     from pysticky.core.i18n import set_language, t
 
     set_language("klingon")  # existiert nicht
     # Identity-Fallback ist immer noch da
     result = t("Speichern")
-    assert isinstance(result, str)
+    assert result == "Speichern"
 
 
 def test_current_language_reports_active():

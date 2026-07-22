@@ -28,7 +28,17 @@ def test_smart_resize_changes_layer_dimensions(pattern_with_stitches):
 
 
 def test_smart_resize_doubles_pattern_keeps_stitches(empty_pattern):
-    """Hochskalieren 10x10 -> 20x20 erhaelt die Stiche (jetzt 4x soviele)."""
+    """Hochskalieren 10x10 -> 20x20 erhaelt die Stiche (jetzt 4x soviele).
+
+    Regression (Test-Qualitaets-Audit): `>= 3` (die Ausgangs-Stichzahl)
+    haette der Docstring-Behauptung ("jetzt 4x soviele") widersprochen, aber
+    auch dann noch gepasst, wenn smart_resize() das Grid beim Hochskalieren
+    ueberhaupt nicht neu abgetastet, sondern die alten 3 Stiche einfach
+    unveraendert kopiert haette (z.B. bei einem Shape-Mismatch-Bug, der
+    still verschluckt wird). Nearest-Neighbor bei exaktem Faktor 2 macht aus
+    jedem Alt-Stich einen exakten 2x2-Block -- bei 3 nicht ueberlappenden
+    Quell-Stichen ergibt das exakt 12.
+    """
     from pysticky.core import Thread
     from pysticky.core.layer import NO_STITCH
     from pysticky.core.smart_resize import smart_resize
@@ -42,8 +52,7 @@ def test_smart_resize_doubles_pattern_keeps_stitches(empty_pattern):
     smart_resize(pattern, 20, 20)
     layer = pattern.layer_stack.active_layer
     n_stitches = int(np.sum(layer.grid != NO_STITCH))
-    # Jeder Original-Stich wird zu mindestens einem Stich, oft mehreren
-    assert n_stitches >= 3
+    assert n_stitches == 12, "3 Quell-Stiche * 2x2-Block (Faktor 2) = 12"
     # Im Bereich (0,0) muss ein Stich sein (Skalierungs-Faktor 2)
     assert layer.get_stitch(0, 0) is not None
 
@@ -125,21 +134,33 @@ def test_smart_resize_scales_backstitches(empty_pattern):
 
 
 def test_smart_resize_recalculates_stitch_counts(empty_pattern):
-    """Stitch-Counts in color_entries werden nach Resize neu berechnet."""
+    """Stitch-Counts in color_entries werden nach Resize neu berechnet.
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version setzte Stiche
+    mit color_index=0 (dem Default-Schwarz aus Pattern.__post_init__),
+    pruefte aber stitch_count von color_entries[-1] (der frisch
+    hinzugefuegten, nie benutzten Rot-Farbe) -- die geprueften stitch_count
+    blieb dadurch vorher UND nachher bei 0, `after >= before` (0 >= 0) war
+    also unabhaengig davon wahr, ob recalculate_stitch_counts() ueberhaupt
+    aufgerufen wird. Jetzt wird explizit die Farbe geprueft, mit der auch
+    tatsaechlich gezeichnet wurde.
+    """
     from pysticky.core import Thread
     from pysticky.core.smart_resize import smart_resize
 
     pattern = empty_pattern
-    pattern.add_color(Thread.from_hex("Red", "#FF0000"))
-    pattern.set_stitch(1, 1, 0)
-    pattern.set_stitch(2, 2, 0)
+    red_idx = pattern.add_color(Thread.from_hex("Red", "#FF0000"))
+    pattern.set_stitch(1, 1, red_idx)
+    pattern.set_stitch(2, 2, red_idx)
 
-    before = pattern.color_entries[-1].stitch_count
+    before = pattern.color_entries[red_idx].stitch_count
+    assert before == 2
     smart_resize(pattern, 20, 20)
-    after = pattern.color_entries[-1].stitch_count
+    after = pattern.color_entries[red_idx].stitch_count
 
-    # Nach 2x-Hochskalierung sollten es mehr Stiche sein
-    assert after >= before
+    # 2x-Hochskalierung: 2 nicht ueberlappende Quell-Stiche -> je ein
+    # 2x2-Block -> exakt 8.
+    assert after == 8
 
 
 def test_smart_resize_aspect_ratio_change(empty_pattern):

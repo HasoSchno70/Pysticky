@@ -372,13 +372,23 @@ class TestPatternProgress:
     """Tests für Fortschrittsverfolgung."""
 
     def test_mark_completed(self):
-        """Test: Stich als erledigt markieren."""
+        """Test: Stich als erledigt markieren.
+
+        Regression (Test-Qualitaets-Audit): die vorherige Version pruefte
+        nur den Rueckgabewert `is True` -- das haette auch gepasst, wenn
+        mark_stitch_completed() immer bedingungslos True zurueckgegeben
+        haette, ohne den completion_grid ueberhaupt anzufassen. Jetzt wird
+        zusaetzlich der tatsaechliche Fertig-Zustand ueber is_completed()
+        geprueft (und dass eine ungestichte Zelle nicht mitmarkiert wird).
+        """
         p = Pattern(width=10, height=10)
         p.color_entries.clear()
         p.add_color(Thread.from_hex("Rot", "#FF0000"))
         p.set_stitch(0, 0, 0)
         result = p.mark_stitch_completed(0, 0, layer_index=0)
         assert result is True
+        assert p.active_layer.is_completed(0, 0) is True
+        assert p.active_layer.is_completed(1, 1) is False
 
     def test_progress_statistics(self):
         """Test: Fortschritts-Statistiken."""

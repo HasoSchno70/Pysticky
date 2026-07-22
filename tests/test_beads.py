@@ -222,12 +222,19 @@ def test_bead_count_not_counted_as_skeins(empty_pattern):
 
 
 def test_main_window_add_color_detects_bead_palette(qtbot, empty_pattern):
-    """MainWindow.add_color_to_pattern setzt is_bead automatisch fuer Mill-Hill-Farben."""
+    """MainWindow.add_color_to_pattern setzt is_bead automatisch fuer Mill-Hill-Farben.
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version dieses Tests
+    rief add_color_to_pattern() nie tatsaechlich auf, sondern kopierte zwei
+    Zeilen der Logik (Palette-Lookup + is_beads-Flag) direkt in den Test und
+    pruefte nur diese Kopie. Eine echte Regression in add_color_to_pattern()
+    selbst -- z.B. wenn der is_bead=-Kwarg beim add_color()-Aufruf verloren
+    ginge -- waere von diesem Test nie bemerkt worden. Jetzt wird die echte
+    MainWindow-Methode End-to-End aufgerufen."""
     pytest.importorskip("PySide6")
 
-    # Wir testen direkt die Logik ohne komplettes MainWindow,
-    # weil das volle Setup gross ist. Wir replizieren die Logik:
     from pysticky.core.palette import get_palette_manager
+    from pysticky.ui.main_window import MainWindow
 
     pm = get_palette_manager()
     pm.load_all()
@@ -235,7 +242,13 @@ def test_main_window_add_color_detects_bead_palette(qtbot, empty_pattern):
     pearl = pm.get_palette("Mill Hill Beads").find_by_number("02001")
     assert pearl is not None
 
-    # Simuliere add_color_to_pattern-Logik
-    palette = pm.get_palette(pearl.manufacturer)
-    is_bead = palette is not None and palette.is_beads
-    assert is_bead is True
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w._check_save_changes = lambda: True
+    w._autosave_timer.stop()
+    w.current_pattern = empty_pattern
+
+    # pearl ist bereits ein vollstaendiger Thread (aus der Palette geladen)
+    index = w.add_color_to_pattern(pearl)
+
+    assert empty_pattern.color_entries[index].is_bead is True

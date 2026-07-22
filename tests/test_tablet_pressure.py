@@ -240,14 +240,37 @@ def test_pencil_pressure_zero_means_single_stitch(pattern_with_colors):
     assert changes == [(10, 10, 0)]
 
 
-def test_tablet_pressure_clamped_to_valid_range():
-    """tabletEvent-Handler clamped Pressure auf [0, 1]."""
-    # Die Logik testen wir am `_tablet_pressure`-Attribute direkt — ohne
-    # Qt-Event-Engine, weil das stabiler ist.
-    pressure_in = 1.5  # ungueltig
-    clamped = max(0.0, min(1.0, pressure_in))
-    assert clamped == 1.0
+def test_tablet_pressure_clamped_to_valid_range(qapp):
+    """CrossStitchCanvas.tabletEvent() clamped Pressure auf [0, 1].
 
-    pressure_in = -0.2
-    clamped = max(0.0, min(1.0, pressure_in))
-    assert clamped == 0.0
+    Regression (Test-Qualitaets-Audit): die vorherige Version dieses Tests
+    rief tabletEvent() nie auf -- sie rechnete `max(0.0, min(1.0, x))`
+    direkt im Test nach und pruefte nur diese eigene Kopie der Formel. Eine
+    echte Regression im Handler selbst (z.B. clamp()-Aufruf entfernt oder
+    mit falschen Grenzen) waere nie aufgefallen. Jetzt wird der echte
+    Handler mit einem QTabletEvent-Mock (spec=QTabletEvent besteht den
+    isinstance-Check, den Qt-typisierte Handler oft brauchen) aufgerufen."""
+    from unittest.mock import MagicMock
+
+    from PySide6.QtCore import QEvent
+    from PySide6.QtGui import QTabletEvent
+
+    from pysticky.core import Pattern
+    from pysticky.ui.canvas import CrossStitchCanvas
+
+    canvas = CrossStitchCanvas()
+    canvas.set_pattern(Pattern(name="Test", width=5, height=5))
+
+    too_high = MagicMock(spec=QTabletEvent)
+    too_high.pressure.return_value = 1.5  # ungueltig, ueber dem Maximum
+    too_high.type.return_value = QEvent.Type.TabletMove
+    canvas.tabletEvent(too_high)
+    assert canvas._tablet_pressure == 1.0, "Regression: Pressure > 1.0 wurde nicht auf 1.0 geclampt"
+
+    too_low = MagicMock(spec=QTabletEvent)
+    too_low.pressure.return_value = -0.2  # ungueltig, unter dem Minimum
+    too_low.type.return_value = QEvent.Type.TabletMove
+    canvas.tabletEvent(too_low)
+    assert canvas._tablet_pressure == 0.0, (
+        "Regression: negative Pressure wurde nicht auf 0.0 geclampt"
+    )

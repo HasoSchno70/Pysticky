@@ -120,26 +120,37 @@ def test_pdf_exporter_default_overlap_is_zero(big_pattern):
 
 
 def test_html_with_overlap_includes_neighbor_stitches(big_pattern, tmp_path):
-    """Mit Overlap=5: Seite 1 zeigt Stiche von Spalte 40-44 (Vorschau auf Seite 2)."""
+    """Mit Overlap=5: Seite 1 zeigt Stiche von Spalte 40-44 (Vorschau auf Seite 2).
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version pruefte nur
+    `"overlap-cell" in html` -- das haette bereits
+    test_html_with_overlap_renders_overlap_css_classes() (weiter oben in
+    dieser Datei) genauso abgedeckt, unabhaengig davon, ob der konkrete
+    Nachbar-Stich bei (40, 5) ueberhaupt mitgerendert wird (z.B. eine leere
+    Overlap-Zone, die nur ihre CSS-Klasse aber keinen Stich-Inhalt zeigt,
+    waere durchgerutscht). Jetzt wird die exakte <td>-Zelle fuer (40, 5)
+    gesucht: sie muss die overlap-cell-Klasse UND das Symbol des dort
+    gesetzten Stichs enthalten.
+    """
     from pysticky.io import HTMLExporter
 
-    # Stich an Position (40, 5) — direkt am Rand der ersten Seite
+    # Stich an Position (40, 5) — direkt am Rand der ersten Seite, im
+    # Overlap-Bereich von Seite 1 (Spalten 40..44 bei STITCHES_PER_PAGE_X=40
+    # und Overlap=5).
     big_pattern.set_stitch(40, 5, 0)
 
+    exporter = HTMLExporter(big_pattern, page_overlap_stitches=5)
+    symbol = exporter._get_pixel_symbol(40, 5)
+    assert symbol, "Test-Fixture-Fehler: Stich (40,5) hat kein Symbol"
+
     out = tmp_path / "overlap_neighbor.html"
-    HTMLExporter(big_pattern, page_overlap_stitches=5).export(out)
+    exporter.export(out)
     html = out.read_text(encoding="utf-8")
 
-    # Bei Overlap=5 zeigt Seite 1 (Spalten 1-45) den Stich an Spalte 41.
-    # Wir koennen das schwer direkt pruefen; statt dessen pruefen wir,
-    # dass die Spalte 41 (also der Overlap-Bereich der ersten Seite) als
-    # Header drin ist mit der Nummer 41.
-    # Header sind nicht alle drin (nur jeder 5te), aber wenn cur_x am Ende
-    # mod 5 == 0 ist, sollte er erscheinen. (41+1=42, %5 != 0; aber 45+1=46,
-    # %5 != 0... also vielleicht 50?) — sicherer: Spalte 41 selbst wird als
-    # Datenzelle gerendert, also pruefen wir auf das Vorhandensein der
-    # overlap-cell-Klasse mit der erwarteten Anzahl Spalten.
-    assert "overlap-cell" in html
+    assert f"<td class='overlap-cell'>{symbol}</td>" in html, (
+        "Regression: der Nachbar-Stich (40,5) wird nicht als overlap-cell "
+        "mit seinem Symbol gerendert"
+    )
 
 
 def test_zero_overlap_equivalent_to_no_overlap(big_pattern, tmp_path):

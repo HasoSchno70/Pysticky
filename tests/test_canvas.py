@@ -99,18 +99,39 @@ def test_optimized_canvas_paint_with_no_pattern(qtbot):
 
 
 def test_optimized_canvas_paint_with_pattern(qtbot, pattern_with_stitches):
-    """Optimized-Canvas mit Pattern zeichnet und misst Frame-Zeit."""
+    """Optimized-Canvas mit Pattern zeichnet und misst Frame-Zeit.
+
+    Regression (Test-Qualitaets-Audit): `_last_frame_time` wird in
+    __init__ bereits auf 0.0 initialisiert -- `>= 0.0` waere also selbst
+    dann wahr gewesen, wenn paintEvent() die Zeitmessung nie ausgefuehrt
+    haette. Jetzt wird explizit auf einen positiven, tatsaechlich
+    gemessenen Wert geprueft (und dass der PerformanceManager-Stats-Eintrag
+    synchron mitgezogen wird).
+
+    Gerendert wird ueber QWidget.render() in ein QPixmap statt ueber
+    repaint() + show()/waitExposed() -- letzteres erwies sich als abhaengig
+    von der Fenster-Expose-Reihenfolge anderer Canvas-Instanzen im selben
+    Testlauf (repaint() liefert dann keinen synchronen paintEvent,
+    _last_frame_time bleibt beim Default 0.0). render() ruft paintEvent()
+    laut Qt-Doku direkt auf und braucht keine sichtbare/exponierte native
+    Fensteroberflaeche, daher ist es sowohl der echte Code-Pfad als auch
+    robust in einer Headless-Umgebung.
+    """
+    from PySide6.QtGui import QPixmap
+
     from pysticky.ui.canvas import OptimizedCrossStitchCanvas
 
     canvas = OptimizedCrossStitchCanvas()
     qtbot.addWidget(canvas)
     canvas.set_pattern(pattern_with_stitches)
     canvas.resize(400, 400)
-    canvas.show()
-    qtbot.waitExposed(canvas)
-    canvas.repaint()
-    # Frame-Timing wird gemessen
-    assert canvas._last_frame_time >= 0.0
+
+    canvas.render(QPixmap(400, 400))
+
+    assert canvas._last_frame_time > 0.0, (
+        "Regression: paintEvent() hat die Frame-Zeit nicht gemessen/aktualisiert"
+    )
+    assert canvas._perf_manager._stats["last_frame_time_ms"] == canvas._last_frame_time
 
 
 def test_canvas_zoom_changes_cell_size(qtbot, pattern_with_stitches):

@@ -114,13 +114,22 @@ def test_slider_value_unchanged_without_focus(qapp, guard):
 
 
 def test_other_widgets_unaffected(qapp, guard):
-    """QPushButton bekommt Wheel-Events ganz normal — kein Eingriff."""
+    """QPushButton bekommt Wheel-Events ganz normal — kein Eingriff.
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version hatte gar
+    keine Assertion ("kein Pruef-Effekt") -- ein Guard, der versehentlich
+    ALLE Widget-Typen abfaengt (z.B. GUARDED_TYPES-Check entfernt/kaputt),
+    waere nie aufgefallen, solange nichts crasht. eventFilter() wird jetzt
+    direkt aufgerufen und muss fuer einen QPushButton False liefern
+    ("nicht behandelt", Event geht normal an den Button durch).
+    """
     from PySide6.QtWidgets import QPushButton
 
     btn = QPushButton("X")
-    # Nur Verifikation, dass kein Crash auftritt
-    qapp.sendEvent(btn, _make_wheel_event(btn))
-    # Kein Pruef-Effekt — Button hat keinen Wert. Wichtig: kein Crash.
+    handled = guard.eventFilter(btn, _make_wheel_event(btn))
+    assert handled is False, (
+        "Regression: WheelGuard greift bei einem nicht-gesperrten Widget-Typ ein"
+    )
 
 
 def test_install_wheel_guard_is_idempotent(qapp):

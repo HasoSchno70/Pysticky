@@ -57,16 +57,28 @@ class TestStitchPathOptimizer:
         assert result.total_stitches == 20
 
     def test_column_by_column(self, pattern_with_stitches):
-        """Test: Spaltenweise."""
+        """Test: Spaltenweise.
+
+        Regression (Test-Qualitaets-Audit): anders als alle Schwester-Tests
+        (row_by_row, nearest_neighbor, danish_method) fehlte hier die
+        total_stitches-Pruefung -- ein Bug, der fuer diese Strategie
+        speziell Stiche verliert (z.B. Off-by-one in der Spalten-Traversal),
+        waere durch `result is not None` allein nie aufgefallen.
+        """
         optimizer = StitchPathOptimizer(pattern_with_stitches)
         result = optimizer.optimize(OptimizationStrategy.COLUMN_BY_COLUMN)
         assert result is not None
+        assert result.total_stitches == 20
 
     def test_diagonal(self, pattern_with_stitches):
-        """Test: Diagonal."""
+        """Test: Diagonal.
+
+        Regression (Test-Qualitaets-Audit): siehe test_column_by_column --
+        gleiche fehlende total_stitches-Pruefung."""
         optimizer = StitchPathOptimizer(pattern_with_stitches)
         result = optimizer.optimize(OptimizationStrategy.DIAGONAL)
         assert result is not None
+        assert result.total_stitches == 20
 
     def test_empty_pattern(self):
         """Test: Leeres Pattern."""

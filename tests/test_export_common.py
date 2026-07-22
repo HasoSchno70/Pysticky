@@ -95,13 +95,35 @@ def test_watermark_returns_pattern_metadata(empty_pattern):
     assert copyright_ == "(c) 2026 Anna"
 
 
-def test_watermark_empty_when_no_metadata_no_settings(empty_pattern):
-    """Ohne Metadata und ohne Settings-Defaults liefert die Funktion leere Strings."""
-    # In Tests gibt es typischerweise keine PySticky-QSettings — wenn doch,
-    # tolerieren wir leere Defaults.
-    author, copyright_ = get_watermark(empty_pattern)
-    assert isinstance(author, str)
-    assert isinstance(copyright_, str)
+def test_watermark_empty_when_no_metadata_no_settings(empty_pattern, qtbot):
+    """Ohne Metadata und ohne Settings-Defaults liefert die Funktion leere Strings.
+
+    Regression (Test-Qualitaets-Audit): die vorherige Version pruefte nur
+    `isinstance(..., str)` -- das waere selbst dann wahr gewesen, wenn
+    get_watermark() "None", einen Platzhalter oder sonst irgendeinen String
+    statt der dokumentierten leeren Strings zurueckgegeben haette. Um das
+    ohne Kopplung an zufaellig vorhandene QSettings-Reste testen zu koennen,
+    werden die Settings-Defaults hier explizit auf leer gesetzt.
+    """
+    from PySide6.QtCore import QCoreApplication, QSettings
+
+    app = QCoreApplication.instance()
+    app.setOrganizationName("PySticky")
+    app.setApplicationName("PySticky")
+    s = QSettings()
+    old_author = s.value("default_author", "", type=str)
+    old_copyright = s.value("default_copyright", "", type=str)
+    s.setValue("default_author", "")
+    s.setValue("default_copyright", "")
+    s.sync()
+    try:
+        author, copyright_ = get_watermark(empty_pattern)
+        assert author == ""
+        assert copyright_ == ""
+    finally:
+        s.setValue("default_author", old_author)
+        s.setValue("default_copyright", old_copyright)
+        s.sync()
 
 
 def test_watermark_strips_whitespace(empty_pattern):

@@ -292,11 +292,17 @@ def test_xsd_import_truncated_file_returns_none(tmp_path):
 
 
 def test_xsd_convenience_returns_tuple(tmp_path):
+    """Regression (Test-Qualitaets-Audit): anders als die PAT-Schwester
+    (test_pat_convenience_returns_tuple) fehlte hier `len(errors) > 0` --
+    ein import_xsd(), das den Fehler ("Datei fehlt") verschluckt und eine
+    leere errors-Liste zurueckgibt, waere durch `isinstance(errors, list)`
+    allein nicht aufgefallen."""
     f = tmp_path / "fehlt.xsd"
     pattern, errors, warnings = import_xsd(f)
     assert pattern is None
     assert isinstance(errors, list)
     assert isinstance(warnings, list)
+    assert len(errors) > 0
 
 
 def _build_pm_header(

@@ -163,7 +163,13 @@ class TestDmcPaletteData:
         assert dmc is not None
         black = dmc.find_by_number("310")
         assert black is not None
-        assert (black.color.r, black.color.g, black.color.b) < (20, 20, 20)
+        # Elementweise pruefen -- ein Tupel-Vergleich waere lexikografisch:
+        # (0, 255, 255) < (20, 20, 20) ist ebenfalls True (erstes Element
+        # entscheidet), obwohl g/b dann grotesk falsch (Cyan statt Schwarz)
+        # waeren. Diese Regression haette der alte Tupel-Vergleich nie gefangen.
+        assert black.color.r < 20
+        assert black.color.g < 20
+        assert black.color.b < 20
 
 
 class TestCosmoPaletteData:
@@ -272,14 +278,22 @@ class TestPaletteManager:
         assert len(palettes) > 0
 
     def test_get_palette(self):
-        """Test: Palette abrufen."""
+        """Test: Palette abrufen.
+
+        Regression (Test-Qualitaets-Audit): die Pruefung stand hinter einem
+        `if palettes:` -- waere load_all() komplett kaputt und laedt null
+        Paletten, wuerde dieser Test stillschweigend nichts pruefen statt
+        zu failen. test_load_all() prueft zwar `len(palettes) > 0`
+        separat, aber test_get_palette() selbst muss unabhaengig davon
+        tatsaechlich fehlschlagen koennen.
+        """
         manager = PaletteManager()
         manager.load_all()
         palettes = manager.available_palettes
-        if palettes:
-            palette = manager.get_palette(palettes[0])
-            assert palette is not None
-            assert len(palette) > 0
+        assert palettes, "Regression: keine Paletten geladen"
+        palette = manager.get_palette(palettes[0])
+        assert palette is not None
+        assert len(palette) > 0
 
     def test_get_nonexistent_palette(self):
         """Test: Nicht existierende Palette."""

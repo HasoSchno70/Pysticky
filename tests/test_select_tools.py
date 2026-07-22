@@ -85,12 +85,23 @@ def test_both_select_tools_share_clipboard(pattern_with_stitches):
     assert SelectTool._clipboard is not None
     assert len(SelectTool._clipboard) == 9  # 3x3
 
-    # Lasso sieht das gleiche clipboard via class-level
-    assert lasso.__class__.__mro__[1] is not None  # baseclass exists
-    # SelectTool._clipboard ist Klassen-Attribut, also auch ueber Lasso lesbar
-    from pysticky.ui.tools.select_tool import SelectTool as ST
-
-    assert ST._clipboard is SelectTool._clipboard
+    # Lasso liest/schreibt ueber SelectTool._clipboard, nicht ueber ein
+    # eigenes lasso-lokales Attribut -- sonst waeren beide Tools nicht
+    # wirklich am selben Clipboard beteiligt. Vorher stand hier nur eine
+    # triviale `__mro__[1] is not None`-Pruefung (immer wahr fuer jede
+    # Subklasse, unabhaengig vom Clipboard-Sharing) plus ein tautologischer
+    # `ST._clipboard is SelectTool._clipboard`-Vergleich (derselbe Import
+    # zweimal, beweist nichts ueber Lasso). Jetzt wird ueber lasso.copy_selection()
+    # tatsaechlich verifiziert, dass Lasso denselben Clipboard-Inhalt sieht/setzt
+    # -- mit einer ABWEICHENDEN Pixelzahl (5 statt 9), damit ein Bug, der
+    # Lasso an einem eigenen lasso-lokalen Clipboard vorbeischreiben liesse
+    # (SelectTool._clipboard bliebe dann bei den alten 9 Eintraegen stehen),
+    # tatsaechlich auffaellt.
+    lasso._selected_pixels = {(5, 5), (6, 5), (5, 6), (6, 6), (7, 5)}
+    lasso._selection_bounds = QRect(5, 5, 3, 3)
+    assert lasso.copy_selection(ctx) is True
+    assert SelectTool._clipboard is not None
+    assert len(SelectTool._clipboard) == 5
 
 
 # === SelectTool: kompletter Lifecycle ===

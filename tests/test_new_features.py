@@ -219,13 +219,43 @@ class TestColorBlindness:
             assert 0 <= b <= 255
 
     def test_cache_works(self):
+        """simulate_color() legt das Ergebnis im Modul-Cache ab.
+
+        Regression (Test-Qualitaets-Audit): `r1 == r2` allein beweist nur,
+        dass die (deterministische) Transformation zweimal denselben Wert
+        liefert -- das waere auch OHNE jeden Cache der Fall. Der Modul-Cache
+        wird jetzt direkt inspiziert, damit ein entfernter/kaputter
+        Cache-Mechanismus tatsaechlich auffaellt.
+        """
+        from pysticky.core.color_blindness import _cache
+
+        key = (100, 50, 200, ColorBlindType.PROTANOPIA.value)
+        assert key not in _cache
+
         r1 = simulate_color(100, 50, 200, ColorBlindType.PROTANOPIA)
+        assert _cache.get(key) == r1, "Regression: Ergebnis wurde nicht im Cache abgelegt"
+
         r2 = simulate_color(100, 50, 200, ColorBlindType.PROTANOPIA)
         assert r1 == r2
 
     def test_clear_cache(self):
+        """clear_cache() leert den Modul-Cache tatsaechlich.
+
+        Regression (Test-Qualitaets-Audit): `len(r) == 3` prueft nur die
+        Form des Rueckgabewerts (jedes 3-Tupel besteht), niemals ob der
+        Cache wirklich geleert wurde -- ein clear_cache(), das komplett
+        nichts tut, waere nie aufgefallen.
+        """
+        from pysticky.core.color_blindness import _cache
+
         simulate_color(100, 50, 200, ColorBlindType.PROTANOPIA)
+        assert len(_cache) > 0
+
         clear_cache()
-        # Should still work after clearing
+        assert len(_cache) == 0, "Regression: clear_cache() hat den Cache nicht geleert"
+
+        # Nach dem Leeren funktioniert simulate_color() weiterhin normal
+        # und befuellt den Cache erneut.
         r = simulate_color(100, 50, 200, ColorBlindType.PROTANOPIA)
         assert len(r) == 3
+        assert len(_cache) == 1
