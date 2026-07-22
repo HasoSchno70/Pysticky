@@ -16,6 +16,7 @@ Synchron — der MainWindow-Handler ruft das in einem Worker auf.
 from __future__ import annotations
 
 import csv
+import os
 import shutil
 import tempfile
 import zipfile
@@ -36,41 +37,69 @@ def _safe_basename(pattern: "Pattern") -> str:
 
 
 def _write_thread_csv(pattern: "Pattern", path: Path) -> None:
-    """Schreibt eine kompakte Garn-Bedarfsliste als CSV (kein UI-Code)."""
+    """Schreibt eine kompakte Garn-/Drill-Bedarfsliste als CSV (kein UI-Code).
+
+    Im Diamond-Painting-Modus ergibt eine Garn-Straehnen/Skein-Schaetzung
+    keinen Sinn (Drills werden nicht in Straehnen abgezaehlt) -- der
+    Statistik-Dialog blendet den entsprechenden Tab in DP deshalb komplett
+    aus (siehe dp-stitch-parity-2026-07-18.md). Diese CSV war der einzige
+    Export-Pfad, der das nicht nachvollzogen hatte: Sie schrieb fuer JEDES
+    Pattern unveraendert "Stiche"/"Strange (~)" in den Header und rechnete
+    eine Skein-Spalte aus, auch fuer DP-Muster.
+    """
     import math
 
     from ..core.constants import DEFAULT_STITCHES_PER_SKEIN, STITCHES_PER_SKEIN
+    from .export_common import is_diamond_mode
 
+    is_dp = is_diamond_mode(pattern)
     stitches_per_skein = STITCHES_PER_SKEIN.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
 
     with open(path, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, delimiter=";")
-        writer.writerow(["Symbol", "Hersteller", "Nr.", "Name", "Hex", "Stiche", "Strange (~)"])
+        if is_dp:
+            writer.writerow(["Symbol", "Hersteller", "Nr.", "Name", "Hex", "Drills"])
+        else:
+            writer.writerow(["Symbol", "Hersteller", "Nr.", "Name", "Hex", "Stiche", "Strange (~)"])
         for entry in pattern.color_entries:
             if entry.skip_stitching:
                 continue
             t = entry.thread
-            skeins = math.ceil(entry.stitch_count / stitches_per_skein) if entry.stitch_count else 0
-            writer.writerow(
-                [
-                    entry.symbol,
-                    t.manufacturer or "",
-                    t.catalog_number or "",
-                    t.name,
-                    t.color.to_hex(),
-                    entry.stitch_count,
-                    skeins,
-                ]
-            )
+            row = [
+                entry.symbol,
+                t.manufacturer or "",
+                t.catalog_number or "",
+                t.name,
+                t.color.to_hex(),
+                entry.stitch_count,
+            ]
+            if not is_dp:
+                skeins = (
+                    math.ceil(entry.stitch_count / stitches_per_skein) if entry.stitch_count else 0
+                )
+                row.append(skeins)
+            writer.writerow(row)
 
 
 def _write_readme(pattern: "Pattern", path: Path, contents: list[str]) -> None:
     """Erzeugt ein README mit der Liste enthaltener Dateien."""
+    from .export_common import fabric_label_for, is_diamond_mode, terms_for
+
+    terms = terms_for(pattern)
+    size_line = terms["size_unit_template"].format(w=pattern.width, h=pattern.height)
+    # Stoffzaehlung ("14 ct") ist im DP-Modus bedeutungslos (kein Aida-Stoff) --
+    # dort stattdessen das Drill-Raster (z.B. "2.5 mm Square") ausgeben,
+    # analog zu fabric_label_for()'s Nutzung in HTML-/PDF-Export.
+    fabric_line = (
+        f"{terms['fabric_label']}: {fabric_label_for(pattern)}"
+        if is_diamond_mode(pattern)
+        else f"Stoffzaehlung: {pattern.fabric_count} ct"
+    )
     lines = [
         f"PySticky-Bundle: {pattern.name}",
         "=" * 60,
-        f"Größe: {pattern.width} x {pattern.height} Stiche",
-        f"Stoffzaehlung: {pattern.fabric_count} ct",
+        f"Größe: {size_line}",
+        fabric_line,
         f"Farben: {len(pattern.color_entries)}",
         "",
         "Enthaltene Dateien:",
@@ -183,10 +212,27 @@ def export_bundle(
         _write_readme(pattern, readme_path, files_in_zip)
         files_in_zip.append(readme_path.name)
 
-        # ZIP schreiben (deflated, default level)
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for name in files_in_zip:
-                zf.write(tmp / name, arcname=name)
+        # ZIP schreiben (deflated, default level) -- atomar wie
+        # core/file_io.py::save_pattern(): erst in eine Temp-Datei NEBEN
+        # dem Ziel, dann per os.replace() (atomar auf POSIX UND Windows,
+        # anders als os.rename()) an die Zielposition verschieben. Ohne
+        # das wuerde ein Crash/Abbruch waehrend des (bei mehreren
+        # gebuendelten Dateien nicht ganz kurzen) ZIP-Schreibens ein
+        # bereits vorhandenes Bundle an genau diesem Pfad (z.B. ein
+        # erneuter Export/Teilen desselben Musters) durch eine
+        # abgeschnittene/korrupte ZIP-Datei ersetzen.
+        zip_temp_path = zip_path.with_name(zip_path.name + ".tmp")
+        try:
+            with zipfile.ZipFile(zip_temp_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                for name in files_in_zip:
+                    zf.write(tmp / name, arcname=name)
+            os.replace(zip_temp_path, zip_path)
+        except BaseException:
+            try:
+                zip_temp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+            raise
 
     return {
         "zip_path": str(zip_path),

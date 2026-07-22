@@ -409,6 +409,8 @@ class XSDImporter:
     def _read_backstitches(self, f: BinaryIO, pattern: Pattern) -> None:
         """Liest Backstitch-Daten."""
 
+        color_count = len(pattern.color_entries)
+
         try:
             # Anzahl Backstitches (2 Bytes)
             count_data = f.read(2)
@@ -432,8 +434,17 @@ class XSDImporter:
 
                 color_index = struct.unpack("B", color_byte)[0]
 
+                # Farbindex gegen die eingelesene Palette pruefen -- dieselbe
+                # Absicherung wie beim Grid (_clamp_color_index), die bislang
+                # nur dort griff. Ohne das haette ein korrupter Backstitch-
+                # Farbindex klaglos (ohne Warnung) ein Backstitch mit
+                # nicht existierendem Farbindex im Pattern hinterlassen.
+                clamped = self._clamp_color_index(color_index, color_count)
+                if clamped is None:
+                    continue
+
                 # Backstitch hinzufügen
-                pattern.add_backstitch(x1, y1, x2, y2, color_index)
+                pattern.add_backstitch(x1, y1, x2, y2, clamped)
 
         except (ValueError, IndexError, struct.error) as e:
             self.warnings.append(f"Fehler beim Lesen der Backstitch-Daten: {e}")

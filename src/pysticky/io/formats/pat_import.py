@@ -450,6 +450,8 @@ class PATImporter:
     def _read_backstitches(self, f: BinaryIO, pattern: Pattern, version: int) -> None:
         """Liest Backstitch-Daten."""
 
+        color_count = len(pattern.color_entries)
+
         try:
             # Prüfe ob noch Daten vorhanden
             pos = f.tell()
@@ -479,8 +481,17 @@ class PATImporter:
                 else:
                     color_index = struct.unpack("B", f.read(1))[0]
 
+                # Farbindex gegen die eingelesene Palette pruefen -- dieselbe
+                # Absicherung wie beim Grid (_clamp_color_index), die bislang
+                # nur dort griff. Ohne das haette ein korrupter Backstitch-
+                # Farbindex klaglos (ohne Warnung) ein Backstitch mit
+                # nicht existierendem Farbindex im Pattern hinterlassen.
+                clamped = self._clamp_color_index(color_index, color_count)
+                if clamped is None:
+                    continue
+
                 # In halbe Stiche konvertieren (PAT verwendet ganze Koordinaten)
-                pattern.add_backstitch(x1 * 2, y1 * 2, x2 * 2, y2 * 2, color_index)
+                pattern.add_backstitch(x1 * 2, y1 * 2, x2 * 2, y2 * 2, clamped)
 
         except (struct.error, ValueError, IndexError) as e:
             self.warnings.append(f"Fehler beim Lesen der Backstitch-Daten: {e}")
