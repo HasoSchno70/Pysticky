@@ -523,6 +523,40 @@ def test_preview_engine_renders_partial_stitch_visibly_different(qtbot, tmp_path
     )
 
 
+def test_preview_engine_respects_backstitch_line_style_and_width(qtbot, tmp_path):
+    """
+    Regression: PreviewRenderEngine._draw_backstitches() zeichnete
+    Rueckstiche immer durchgezogen mit rundem Kappenstil in fester Dicke --
+    unabhaengig davon, was der Nutzer im Backstitch-Options-Dock eingestellt
+    hat. Der Canvas-Renderer (rendering_mixin.py::_draw_backstitches) liest
+    dafuer _backstitch_line_style/_backstitch_cap_style/
+    _backstitch_width_offset vom Canvas; die Vorschau hatte kein Gegenstueck
+    dafuer und ignorierte diese Einstellungen komplett.
+    """
+    from PySide6.QtCore import Qt
+
+    from pysticky.ui.rendering.preview_render_engine import PreviewRenderEngine
+
+    p = Pattern(name="bs", width=6, height=6)
+    p.add_backstitch(2, 2, 10, 10, color_index=0)
+
+    engine_default = PreviewRenderEngine(p)
+    img_default = engine_default.render(cell_size=40)
+
+    engine_styled = PreviewRenderEngine(p)
+    engine_styled.set_backstitch_style(Qt.PenStyle.DotLine, Qt.PenCapStyle.SquareCap, 4)
+    img_styled = engine_styled.render(cell_size=40)
+
+    f_default = tmp_path / "bs_default.png"
+    f_styled = tmp_path / "bs_styled.png"
+    img_default.save(str(f_default), "PNG")
+    img_styled.save(str(f_styled), "PNG")
+
+    assert _png_file_hash(f_default) != _png_file_hash(f_styled), (
+        "Rueckstich-Linienstil/-Dicke muessen die Vorschau visuell beeinflussen"
+    )
+
+
 # ============================================================================
 # UI: Statusleiste + Menue + Toolbar synchron — ans absolute Ende der Datei,
 # damit die MainWindow-Konstruktion die Tests danach nicht zum Crashen bringt.

@@ -151,6 +151,61 @@ def test_diff_total_changes_property(pattern_with_colors):
     assert diff.stats.total_changes > 0
 
 
+def test_diff_detects_added_backstitch_with_unchanged_grid(pattern_with_colors):
+    """Ein neu hinzugefuegter Rueckstich muss als Aenderung erkannt werden,
+    auch wenn sich am Kreuzstich-Raster selbst nichts aendert.
+
+    Regression: compute_diff() verglich bisher nur die Composite-Grids
+    (Farbe + Stitch-Type) und ignorierte pattern.backstitches komplett --
+    ein Diff zwischen zwei Snapshots mit identischem Raster aber
+    unterschiedlichen Konturlinien zeigte "0 Aenderungen" an, obwohl der
+    Nutzer tatsaechlich eine Rueckstich-Linie hinzugefuegt/entfernt hatte.
+    """
+    import copy
+
+    from pysticky.core.pattern_diff import compute_diff
+
+    old = copy.deepcopy(pattern_with_colors)
+    pattern_with_colors.add_backstitch(0, 0, 2, 2, color_index=0)
+
+    diff = compute_diff(old, pattern_with_colors)
+    assert diff.stats.added == 0
+    assert diff.stats.removed == 0
+    assert diff.stats.changed == 0
+    assert diff.stats.backstitches_added == 1
+    assert diff.stats.backstitches_removed == 0
+    assert diff.has_changes is True
+
+
+def test_diff_detects_removed_and_reordered_backstitches(pattern_with_colors):
+    """Multimengen-Vergleich statt Listen-Index: Entfernen eines mittleren
+    Rueckstichs darf die verbleibenden nicht als "geaendert" markieren."""
+    import copy
+
+    from pysticky.core.pattern_diff import compute_diff
+
+    pattern_with_colors.add_backstitch(0, 0, 2, 2, color_index=0)
+    bs_middle = pattern_with_colors.add_backstitch(2, 0, 4, 2, color_index=0)
+    pattern_with_colors.add_backstitch(4, 0, 6, 2, color_index=0)
+    old = copy.deepcopy(pattern_with_colors)
+
+    # Mittleren Rueckstich per Wert entfernen (verschiebt Listen-Indizes der
+    # Nachfolger) -- ein index-basierter Vergleich wuerde das faelschlich
+    # als "removed + added" fuer alle nachfolgenden Eintraege sehen.
+    middle_key = (bs_middle.x1, bs_middle.y1, bs_middle.x2, bs_middle.y2)
+    pattern_with_colors.remove_backstitch(
+        next(
+            bs
+            for bs in pattern_with_colors.backstitches
+            if (bs.x1, bs.y1, bs.x2, bs.y2) == middle_key
+        )
+    )
+
+    diff = compute_diff(old, pattern_with_colors)
+    assert diff.stats.backstitches_added == 0
+    assert diff.stats.backstitches_removed == 1
+
+
 def test_diff_has_changes_property():
     """has_changes ist True wenn total_changes > 0."""
     from pysticky.core import Pattern, Thread
