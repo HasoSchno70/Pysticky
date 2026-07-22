@@ -986,8 +986,18 @@ class Pattern:
             for index, count in layer.get_completed_color_counts().items():
                 completed_per_color[index] = completed_per_color.get(index, 0) + count
 
-        total = sum(total_per_color.values())
-        completed = sum(completed_per_color.values())
+        # skip_stitching-Farben ("Stofffarbe", wird nicht gestickt) duerfen
+        # nicht in den Gesamt-Fortschritt einfliessen -- sonst kann der
+        # Fortschrittsbalken/die Prozentanzeige selbst bei tatsaechlich
+        # 100% erledigten (echten) Farben nie 100% erreichen, weil die
+        # Stofffarbe realistisch nie als "erledigt" markiert wird. Die
+        # per_color-Liste unten enthaelt weiterhin ALLE Farben (inkl.
+        # skip_stitching) mit ihrem eigenen skip_stitching-Flag -- Aufrufer
+        # wie progress_tab.py filtern dort selbst; nur die AGGREGIERTEN
+        # total/completed/percent-Werte hier muessen die Farbe ausschliessen.
+        skip_indices = {i for i, entry in enumerate(self.color_entries) if entry.skip_stitching}
+        total = sum(v for i, v in total_per_color.items() if i not in skip_indices)
+        completed = sum(v for i, v in completed_per_color.items() if i not in skip_indices)
         percent = (completed / total * 100.0) if total > 0 else 0.0
 
         per_color = []

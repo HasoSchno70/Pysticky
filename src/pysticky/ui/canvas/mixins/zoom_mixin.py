@@ -48,7 +48,11 @@ class ZoomMixin:
 
     def set_zoom(self: "CrossStitchCanvas", factor: float) -> None:
         """Setzt den Zoom-Faktor (1.0 = 100%)."""
-        new_size = int(self.DEFAULT_CELL_SIZE * factor)
+        # round() statt int(): int() rundet immer Richtung 0 ab, z.B.
+        # factor=1.33 -> int(26.6)=26 statt der naheliegenden 27 -- dadurch
+        # zeigte get_zoom_percent() danach 130% statt der angefragten 133%,
+        # kein sauberer Roundtrip zwischen set_zoom()/get_zoom_percent().
+        new_size = round(self.DEFAULT_CELL_SIZE * factor)
         new_size = clamp_int(new_size, self.MIN_CELL_SIZE, self.MAX_CELL_SIZE)
         self._set_cell_size(new_size)
 

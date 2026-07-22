@@ -4,7 +4,6 @@ Farben-Details-Tab für den Statistik-Dialog.
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QHeaderView,
@@ -16,7 +15,7 @@ from PySide6.QtWidgets import (
 
 from ....core.i18n import t
 from ...styles import THEME
-from ._table_helpers import color_swatch_item, sortable_count_item
+from ._table_helpers import color_swatch_item, sortable_count_item, sortable_percent_item
 
 if TYPE_CHECKING:
     from ....core import Pattern
@@ -76,7 +75,7 @@ class ColorsTab(QWidget):
 
             # Name (mit Skip-Markierung)
             name_text = (
-                f"{entry.thread.name} (nicht sticken)"
+                f"{entry.thread.name} ({t('nicht sticken')})"
                 if entry.skip_stitching
                 else entry.thread.name
             )
@@ -103,6 +102,5 @@ class ColorsTab(QWidget):
                 percent_item.setForeground(QBrush(QColor(THEME.text_muted)))
             else:
                 percent = (entry.stitch_count / total) * 100
-                percent_item = QTableWidgetItem(f"{percent:.1f}%")
-                percent_item.setData(Qt.ItemDataRole.UserRole, percent)
+                percent_item = sortable_percent_item(percent)
             self._colors_table.setItem(row, 6, percent_item)

@@ -101,13 +101,23 @@ class OverviewTab(QWidget):
         else:
             self._card_stitches.set_value(f"{stats['total_stitches']:,}")
 
-        # Farben: Zeige verwendete - übersprungene
+        # Farben: Zeige verwendete - übersprungene.
+        #
+        # Regression: der else-Zweig zeigte vorher stats["color_count"] --
+        # das ist IMMER die volle Palettengroesse (len(color_entries)),
+        # nicht die Anzahl tatsaechlich gemalter Farben. Ein Muster mit
+        # ungenutzten Palettenfarben (z.B. manuell hinzugefuegt, nie
+        # gemalt) zeigte dadurch eine zu hohe Zahl, sobald skipped_colors
+        # zufaellig 0 war -- die angezeigte Bedeutung der Karte kippte
+        # abhaengig von einem voellig unabhaengigen Flag. "used - skipped"
+        # ist in BEIDEN Faellen korrekt (bei skipped==0 gilt ohnehin
+        # used - skipped == used).
         used = stats["used_colors"]
         skipped = stats.get("skipped_colors", 0)
         if skipped > 0:
-            self._card_colors.set_value(f"{used - skipped} (+{skipped} übersp.)")
+            self._card_colors.set_value(f"{used - skipped} (+{skipped} {t('übersp.')})")
         else:
-            self._card_colors.set_value(str(stats["color_count"]))
+            self._card_colors.set_value(str(used - skipped))
 
         self._card_backstitches.set_value(str(len(pattern.backstitches)))
 

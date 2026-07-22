@@ -50,8 +50,26 @@ class MirrorMixin:
             if 0 <= mirror_x < self._pattern.width and 0 <= mirror_y < self._pattern.height:
                 positions.add((mirror_x, mirror_y))
 
-        # 8-fach: Diagonale Spiegelungen
-        if mode == MirrorMode.OCTAL:
+        # 8-fach: Diagonale Spiegelungen.
+        #
+        # Diese vier Formeln sind eine reine x/y-Transposition um das
+        # Zentrum -- geometrisch nur eine echte 45-Grad-Diagonal-Spiegelung
+        # bei einem QUADRATISCHEN Muster (width == height). Bei einem
+        # rechteckigen Muster (der Normalfall) hat die tatsaechliche Eck-zu-
+        # Eck-Diagonale einen anderen Winkel als 45 Grad; die Transpositions-
+        # Formel produzierte dort ausserhalb bounds liegende (und damit
+        # stillschweigend verworfene) Positionen, oder in Zentrumsnaehe eine
+        # IM Muster liegende, aber geometrisch bedeutungslose Position (kein
+        # echter Spiegelpunkt von irgendwas). "8-fach" degradierte dadurch
+        # unbemerkt zu einem Mix aus teilweise fehlendem und teilweise
+        # falsch platziertem 4-fach. Eine echte Spiegelung an der
+        # tatsaechlichen (nicht-45-Grad) Rechteck-Diagonale ist eine eigene,
+        # nicht-triviale Geometrieaufgabe (Ziel-Zellen muessten auf dem
+        # Ganzzahl-Gitter gerundet werden, mit Kollisionsrisiko) -- als
+        # sichere Zwischenloesung faellt Oktal bei nicht-quadratischen
+        # Mustern auf die bereits korrekte 4-fach-Spiegelung zurueck, statt
+        # falsche/fehlende Daten zu erzeugen.
+        if mode == MirrorMode.OCTAL and self._pattern.width == self._pattern.height:
             # Spiegelung an der Diagonale
             diag_x = int(center_x + dy - 0.5)
             diag_y = int(center_y + dx - 0.5)

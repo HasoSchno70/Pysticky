@@ -24,6 +24,17 @@ class TabletGestureMixin:
         """Override für Gesture-Events. Maus/Tastatur lassen wir Qt durchreichen."""
         if event.type() == QEvent.Type.Gesture:
             return self._handle_gesture(event)
+        if event.type() == QEvent.Type.TabletLeaveProximity:
+            # Der Stift verlaesst den Erkennungsbereich -- Treiber senden
+            # das zuverlaessig auch bei einem abrupt unterbrochenen Strich
+            # (Stift kippt aus dem Sensorbereich, Fokuswechsel waehrend
+            # gedrueckt), OHNE dass danach zwingend ein TabletRelease folgt.
+            # Ohne diesen Reset blieb _tablet_in_use/_tablet_pressure auf
+            # dem letzten Stand haengen -- ein spaeterer normaler Maus-Klick
+            # wurde dadurch faelschlich als druckbasierter (Brush-)Stich
+            # interpretiert.
+            self._tablet_in_use = False
+            self._tablet_pressure = 0.0
         return super().event(event)
 
     def _handle_gesture(self: "CrossStitchCanvas", event: QGestureEvent) -> bool:

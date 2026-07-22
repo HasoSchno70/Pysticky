@@ -24,7 +24,11 @@ from PySide6.QtWidgets import (
 from ....core.i18n import t
 from ...styles import THEME
 from ._constants import STITCHES_PER_SKEIN
-from ._table_helpers import color_swatch_item, sortable_count_item
+from ._table_helpers import (
+    color_swatch_item,
+    sortable_count_item,
+    sortable_decimal_item,
+)
 
 if TYPE_CHECKING:
     from ....core import Pattern
@@ -136,6 +140,21 @@ class ThreadTab(QWidget):
     def update_stats(self, pattern: "Pattern", stats: dict) -> None:
         """Merkt sich das Muster und berechnet den Garnverbrauch."""
         self._pattern = pattern
+
+        # Regression: die Stoffart-Combobox blieb immer auf dem hart-
+        # codierten Default "Aida 14" stehen, unabhaengig vom tatsaechlichen
+        # pattern.fabric_count -- der Tab oeffnete sich fuer ein Aida-18-
+        # oder Evenweave-28-Muster mit einer falschen Stoffzaehlung und
+        # berechnete Straenge/Kosten entsprechend falsch, bis der Nutzer es
+        # manuell bemerkte und umstellte. Gleiches Muster wie in
+        # ui/panels/info_panel.py (itemData-Suche statt currentIndex()).
+        self._fabric_combo.blockSignals(True)
+        for i in range(self._fabric_combo.count()):
+            if self._fabric_combo.itemData(i) == pattern.fabric_count:
+                self._fabric_combo.setCurrentIndex(i)
+                break
+        self._fabric_combo.blockSignals(False)
+
         self._recalculate_thread()
 
     def calculator_settings(self) -> tuple[int, float, float]:
@@ -177,22 +196,22 @@ class ThreadTab(QWidget):
             # Stränge (genau)
             if entry.stitch_count > 0:
                 exact_skeins = entry.stitch_count / stitches_per_skein
-                self._thread_table.setItem(row, 3, QTableWidgetItem(f"{exact_skeins:.2f}"))
+                self._thread_table.setItem(row, 3, sortable_decimal_item(exact_skeins))
 
                 # Stränge mit Zuschlag (aufgerundet)
                 with_waste = math.ceil(exact_skeins * waste_factor)
-                self._thread_table.setItem(row, 4, QTableWidgetItem(str(with_waste)))
+                self._thread_table.setItem(row, 4, sortable_count_item(with_waste))
 
                 # Kosten
                 cost = with_waste * price
-                self._thread_table.setItem(row, 5, QTableWidgetItem(f"{cost:.2f} €"))
+                self._thread_table.setItem(row, 5, sortable_decimal_item(cost, " €"))
 
                 total_skeins += with_waste
                 total_cost += cost
             else:
-                self._thread_table.setItem(row, 3, QTableWidgetItem("0"))
-                self._thread_table.setItem(row, 4, QTableWidgetItem("0"))
-                self._thread_table.setItem(row, 5, QTableWidgetItem("0.00 €"))
+                self._thread_table.setItem(row, 3, sortable_decimal_item(0.0))
+                self._thread_table.setItem(row, 4, sortable_count_item(0))
+                self._thread_table.setItem(row, 5, sortable_decimal_item(0.0, " €"))
 
         # Info über übersprungene Farben
         skipped_count = sum(

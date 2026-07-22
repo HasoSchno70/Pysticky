@@ -393,6 +393,43 @@ class TestPatternProgress:
         assert progress["completed_stitches"] == 1
         assert progress["progress_percent"] == 50.0
 
+    def test_progress_statistics_excludes_skip_stitching_colors(self):
+        """Regression (Runde 24): get_progress_statistics()'s total/
+        completed/percent summierten VOR dem Fix ueber ALLE Farben,
+        inklusive skip_stitching ("Stofffarbe", wird nicht gestickt).
+        Dadurch konnte der Gesamt-Fortschritt (Progress-Dock, Info-Panel,
+        Statistik-Dialog) selbst bei 100% erledigten ECHTEN Farben nie
+        100% erreichen, weil die Stofffarbe-Stiche realistisch nie als
+        erledigt markiert werden. per_color enthaelt weiterhin ALLE
+        Farben mit ihrem eigenen skip_stitching-Flag -- nur die
+        AGGREGIERTEN Werte muessen die Stofffarbe ausschliessen."""
+        p = Pattern(width=10, height=10)
+        p.color_entries.clear()
+        real_idx = p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        fabric_idx = p.add_color(Thread.from_hex("Stoff", "#EEEEEE"))
+        p.color_entries[fabric_idx].skip_stitching = True
+
+        # 2 echte Stiche (beide erledigt) + 3 Stofffarbe-Stiche (nie erledigt)
+        p.set_stitch(0, 0, real_idx)
+        p.set_stitch(1, 1, real_idx)
+        p.set_stitch(2, 2, fabric_idx)
+        p.set_stitch(3, 3, fabric_idx)
+        p.set_stitch(4, 4, fabric_idx)
+        p.mark_stitch_completed(0, 0, layer_index=0)
+        p.mark_stitch_completed(1, 1, layer_index=0)
+
+        progress = p.get_progress_statistics()
+
+        assert progress["total_stitches"] == 2
+        assert progress["completed_stitches"] == 2
+        assert progress["progress_percent"] == 100.0
+
+        # per_color muss weiterhin BEIDE Farben (inkl. Stofffarbe) enthalten,
+        # nur die aggregierten Werte oben schliessen sie aus.
+        assert len(progress["per_color"]) == 2
+        fabric_entry = next(c for c in progress["per_color"] if c["skip_stitching"])
+        assert fabric_entry["total"] == 3
+
     def test_reset_progress(self):
         """Test: Fortschritt zurücksetzen."""
         p = Pattern(width=10, height=10)

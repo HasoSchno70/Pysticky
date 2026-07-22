@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from ....core.i18n import t
 from ...styles import THEME
 from ...widgets.statistics_widgets import StatCard
+from ._table_helpers import sortable_percent_item
 
 if TYPE_CHECKING:
     from ....core import Pattern
@@ -169,9 +170,7 @@ class ProgressTab(QWidget):
             self._progress_table.setItem(row, 3, total_item)
 
             # Prozent
-            pct = color_info["percent"]
-            pct_item = QTableWidgetItem(f"{pct:.1f}%")
-            pct_item.setData(Qt.ItemDataRole.UserRole, pct)
+            pct_item = sortable_percent_item(color_info["percent"])
             self._progress_table.setItem(row, 4, pct_item)
 
             # Status
