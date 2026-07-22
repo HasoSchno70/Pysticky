@@ -366,12 +366,27 @@ class PatternLibraryDialog(QDialog):
         self._update_thumbnails()
 
     def _save_library(self) -> None:
-        """Speichert die Bibliothek in die JSON-Datei."""
+        """Speichert die Bibliothek in die JSON-Datei.
+
+        Wird von 10+ Stellen aufgerufen (Favorit umschalten, Tags/Notizen
+        aendern, Eintrag entfernen/hinzufuegen, ...), keine davon prueft
+        einen Rueckgabewert. Ohne diese Warnung wuerde ein Schreibfehler
+        (z.B. abgestecktes Netzlaufwerk, volle Platte) komplett unbemerkt
+        bleiben -- die Aenderung wirkt im laufenden Dialog uebernommen,
+        geht beim naechsten Start aber stillschweigend verloren.
+        """
         try:
             with open(self._library_path, "w", encoding="utf-8") as f:
                 json.dump(self._library.to_dict(), f, indent=2, ensure_ascii=False)
         except (OSError, ValueError) as e:
             logger.error("Fehler beim Speichern der Bibliothek: %s", e)
+            QMessageBox.warning(
+                self,
+                t("Fehler"),
+                t("Änderung an der Bibliothek konnte nicht gespeichert werden:\n{error}").format(
+                    error=e
+                ),
+            )
 
     def _update_category_list(self) -> None:
         """Aktualisiert die Kategorie-Liste.
