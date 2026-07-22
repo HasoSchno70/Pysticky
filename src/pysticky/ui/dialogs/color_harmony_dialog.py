@@ -500,16 +500,19 @@ class ColorHarmonyDialog(QDialog):
         # Harmonie-Typ
         settings_layout.addWidget(QLabel(t("Harmonie-Typ:")), 0, 0)
         self._harmony_combo = QComboBox()
-        self._harmony_combo.addItems(
-            [
-                HarmonyType.COMPLEMENTARY,
-                HarmonyType.ANALOGOUS,
-                HarmonyType.TRIADIC,
-                HarmonyType.SPLIT_COMPLEMENTARY,
-                HarmonyType.TETRADIC,
-            ]
-        )
-        self._harmony_combo.currentTextChanged.connect(self._update_harmonies)
+        # itemData traegt den unuebersetzten Schluessel (fuer
+        # HarmonyType.get_offsets()/DESCRIPTIONS-Lookups), der sichtbare Text
+        # ist uebersetzt -- sonst blieb der Combo im Englischen permanent
+        # deutsch (currentText() wurde direkt als Lookup-Key benutzt).
+        for harmony_type in (
+            HarmonyType.COMPLEMENTARY,
+            HarmonyType.ANALOGOUS,
+            HarmonyType.TRIADIC,
+            HarmonyType.SPLIT_COMPLEMENTARY,
+            HarmonyType.TETRADIC,
+        ):
+            self._harmony_combo.addItem(t(harmony_type), harmony_type)
+        self._harmony_combo.currentIndexChanged.connect(self._update_harmonies)
         settings_layout.addWidget(self._harmony_combo, 0, 1)
 
         # Beschreibung des aktuellen Harmonie-Typs
@@ -579,7 +582,7 @@ class ColorHarmonyDialog(QDialog):
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
         button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 
-        self._add_btn = QPushButton("Hinzufügen (0)")
+        self._add_btn = QPushButton(t("Hinzufügen ({count})").format(count=0))
         self._add_btn.setEnabled(False)
         self._add_btn.clicked.connect(self._on_add)
         # _apply_theme() setzt einen eigenen dialogweiten QPushButton-Stil,
@@ -716,11 +719,11 @@ class ColorHarmonyDialog(QDialog):
         src_hsl = rgb_to_hsl(*src_rgb)
 
         # Harmonie-Offsets + Beschreibung
-        harmony_type = self._harmony_combo.currentText()
+        harmony_type = self._harmony_combo.currentData()
         offsets = HarmonyType.get_offsets(harmony_type)
         # Beschreibung aktualisieren
         desc = HarmonyType.DESCRIPTIONS.get(harmony_type, "")
-        self._harmony_desc.setText(desc)
+        self._harmony_desc.setText(t(desc) if desc else "")
 
         # Harmonische Farben berechnen
         for name, offset in offsets:
@@ -734,7 +737,7 @@ class ColorHarmonyDialog(QDialog):
 
             # Swatch erstellen
             swatch = ColorSwatch()
-            swatch.set_data(name, target_rgb, thread, distance)
+            swatch.set_data(t(name), target_rgb, thread, distance)
             swatch.clicked.connect(self._on_swatch_clicked)
 
             self._harmonies_layout.addWidget(swatch)
@@ -753,7 +756,7 @@ class ColorHarmonyDialog(QDialog):
     def _update_add_button(self) -> None:
         """Aktualisiert den Hinzufügen-Button."""
         count = len(self._selected_threads)
-        self._add_btn.setText(f"Hinzufügen ({count})")
+        self._add_btn.setText(t("Hinzufügen ({count})").format(count=count))
         self._add_btn.setEnabled(count > 0)
 
     def _select_all(self) -> None:

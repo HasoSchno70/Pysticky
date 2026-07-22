@@ -38,9 +38,14 @@ _SUGGESTION_COUNT = 8
 _SUGGESTION_COLUMNS = 2
 
 
-def _stitch_count_text(count: int) -> str:
-    """'1 Stich' / 'n Stiche' — korrekt dekliniert."""
-    return f"{count} {t('Stich') if count == 1 else t('Stiche')}"
+def _stitch_count_text(count: int, is_diamond: bool = False) -> str:
+    """'1 Stich' / 'n Stiche' (bzw. 'Drill'/'Drills' im DP-Modus, analog
+    snapshot_history_dialog.py) — korrekt dekliniert."""
+    if is_diamond:
+        unit = t("Drill") if count == 1 else t("Drills")
+    else:
+        unit = t("Stich") if count == 1 else t("Stiche")
+    return f"{count} {unit}"
 
 
 class ColorBox(QFrame):
@@ -68,6 +73,7 @@ class ReplaceColorDialog(QDialog):
     def __init__(self, pattern: Pattern, current_color_index: int = 0, parent=None):
         super().__init__(parent)
         self.pattern = pattern
+        self._is_diamond = getattr(pattern, "mode", "stitch") == "diamond"
         self._source_index = current_color_index
         self._target_index = 0
         # Ergebnis: Liste (quell_index, ziel_index). Beim manuellen Ersetzen
@@ -270,7 +276,9 @@ class ReplaceColorDialog(QDialog):
             entry = self.pattern.color_entries[idx]
             thread = entry.thread
             label = f"{thread.catalog_number or thread.name}"
-            btn = QPushButton(f"{label}\n{_stitch_count_text(entry.stitch_count)}")
+            btn = QPushButton(
+                f"{label}\n{_stitch_count_text(entry.stitch_count, is_diamond=self._is_diamond)}"
+            )
             btn.setIcon(color_swatch_icon(thread.color, 24, rounded=True))
             btn.setIconSize(QSize(24, 24))
             btn.setCheckable(True)
@@ -344,13 +352,17 @@ class ReplaceColorDialog(QDialog):
             entry = entries[self._source_index]
             color = entry.thread.color
             self.source_color_box.set_color(color.r, color.g, color.b)
-            self.source_count_label.setText(_stitch_count_text(entry.stitch_count))
+            self.source_count_label.setText(
+                _stitch_count_text(entry.stitch_count, is_diamond=self._is_diamond)
+            )
 
         if 0 <= self._target_index < len(entries):
             entry = entries[self._target_index]
             color = entry.thread.color
             self.target_color_box.set_color(color.r, color.g, color.b)
-            self.target_count_label.setText(_stitch_count_text(entry.stitch_count))
+            self.target_count_label.setText(
+                _stitch_count_text(entry.stitch_count, is_diamond=self._is_diamond)
+            )
 
         matches = self._matching_indices()
         total_count = sum(entries[i].stitch_count for i in matches)

@@ -204,12 +204,16 @@ class PatternLibraryDialog(QDialog):
         self._search_edit.textChanged.connect(self._filter_thumbnails)
         search_layout.addWidget(self._search_edit)
 
-        # Sortierung
+        # Sortierung -- itemData traegt den unuebersetzten Schluessel fuer
+        # _sort_changed(), der sichtbare Text ist uebersetzt.
         sort_combo = QComboBox()
-        sort_combo.addItems(["Name", "Datum", "Größe", "Farben"])
+        for sort_key in ("Name", "Datum", "Größe", "Farben"):
+            sort_combo.addItem(t(sort_key), sort_key)
         sort_combo.setStyleSheet(Styles.combo_box())
         sort_combo.setFixedWidth(100)
-        sort_combo.currentTextChanged.connect(self._sort_changed)
+        sort_combo.currentIndexChanged.connect(
+            lambda _index: self._sort_changed(sort_combo.currentData())
+        )
         search_layout.addWidget(sort_combo)
 
         right_layout.addLayout(search_layout)
@@ -642,8 +646,9 @@ class PatternLibraryDialog(QDialog):
         reply = QMessageBox.question(
             self,
             t("Eintrag entfernen"),
-            f"'{entry.name}' aus der Bibliothek entfernen?\n\n"
-            "Die Datei selbst wird nicht gelöscht.",
+            t(
+                "'{name}' aus der Bibliothek entfernen?\n\nDie Datei selbst wird nicht gelöscht."
+            ).format(name=entry.name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
@@ -698,7 +703,9 @@ class PatternLibraryDialog(QDialog):
             self._update_thumbnails()
 
             QMessageBox.information(
-                self, t("Scan abgeschlossen"), f"{added} neue Muster zur Bibliothek hinzugefügt."
+                self,
+                t("Scan abgeschlossen"),
+                t("{added} neue Muster zur Bibliothek hinzugefügt.").format(added=added),
             )
 
     # Auto-Kategorisierung Keywords
@@ -781,7 +788,7 @@ class PatternLibraryDialog(QDialog):
         text, ok = QInputDialog.getText(
             self,
             t("Tags bearbeiten"),
-            f"Tags für '{entry.name}' (kommagetrennt):",
+            t("Tags für '{name}' (kommagetrennt):").format(name=entry.name),
             QLineEdit.EchoMode.Normal,
             current_tags,
         )
@@ -849,8 +856,10 @@ class PatternLibraryDialog(QDialog):
         reply = QMessageBox.question(
             self,
             t("Kategorie löschen"),
-            f"Kategorie '{category}' wirklich löschen?\n\n"
-            "Die Muster werden nicht gelöscht, nur die Kategorie-Zuordnung.",
+            t(
+                "Kategorie '{category}' wirklich löschen?\n\n"
+                "Die Muster werden nicht gelöscht, nur die Kategorie-Zuordnung."
+            ).format(category=category),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 

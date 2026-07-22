@@ -16,12 +16,15 @@ from ...utils.logging import get_logger
 logger = get_logger(__name__)
 
 from PySide6.QtCore import QPointF, QRect
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPixmap, Qt
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap, Qt
 
 from ...core.stitch_shapes import (
     bead_radius_factor,
+    diamond_inset_pixels,
+    diamond_should_draw_edge,
     french_knot_radius_factor,
     is_bead,
+    is_diamond,
     is_french_knot,
     normalized_partial_stitch_shape,
 )
@@ -36,10 +39,82 @@ if TYPE_CHECKING:
 LARGE_PATTERN_THRESHOLD = 200 * 200  # 40.000 Zellen
 
 
+def _draw_diamond_drill_perf(
+    painter: "QPainter", x: int, y: int, size: int, color: "QColor"
+) -> None:
+    """Zeichnet einen Diamond-Painting-Drill im Chunk-Cache-Pfad.
+
+    Duplikat von RenderingMixin._draw_diamond_drill (Direkt-Render-Pfad) --
+    facettiertes Quadrat statt flachem Rechteck.
+    """
+    inset = int(diamond_inset_pixels(size))
+    x0 = x + inset
+    y0 = y + inset
+    x1 = x + size - inset
+    y1 = y + size - inset
+    cx = (x0 + x1) / 2.0
+    cy = (y0 + y1) / 2.0
+
+    top = QPainterPath()
+    top.moveTo(x0, y0)
+    top.lineTo(x1, y0)
+    top.lineTo(cx, cy)
+    top.closeSubpath()
+
+    right = QPainterPath()
+    right.moveTo(x1, y0)
+    right.lineTo(x1, y1)
+    right.lineTo(cx, cy)
+    right.closeSubpath()
+
+    bottom = QPainterPath()
+    bottom.moveTo(x1, y1)
+    bottom.lineTo(x0, y1)
+    bottom.lineTo(cx, cy)
+    bottom.closeSubpath()
+
+    left = QPainterPath()
+    left.moveTo(x0, y1)
+    left.lineTo(x0, y0)
+    left.lineTo(cx, cy)
+    left.closeSubpath()
+
+    alpha = color.alpha()
+
+    def _shift(c: "QColor", factor: int) -> "QColor":
+        shifted = c.lighter(factor) if factor >= 100 else c.darker(200 - factor)
+        shifted.setAlpha(alpha)
+        return shifted
+
+    c_top = _shift(color, 145)
+    c_right = _shift(color, 110)
+    c_left = _shift(color, 95)
+    c_bottom = _shift(color, 70)
+
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.fillPath(top, c_top)
+    painter.fillPath(right, c_right)
+    painter.fillPath(bottom, c_bottom)
+    painter.fillPath(left, c_left)
+
+    if diamond_should_draw_edge(size):
+        edge = QColor(0, 0, 0, min(120, alpha))
+        painter.setPen(QPen(edge, 1))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRect(x0, y0, x1 - x0, y1 - y0)
+
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
+
 def _fill_partial_stitch_perf(
     painter: "QPainter", x: int, y: int, size: int, stype: int, color: "QColor"
 ) -> None:
     """Füllt einen halben/Viertel-Stich oder French-Knot im Chunk-Cache-Pfad."""
+    if is_diamond(stype):
+        _draw_diamond_drill_perf(painter, x, y, size, color)
+        return
+
     if is_french_knot(stype):
         radius = max(1, int(size * french_knot_radius_factor()))
         cx = x + size // 2
@@ -432,10 +507,15 @@ def render_chunk_to_pixmap(
 
                 fill_color = color_cache[color_key]
 
-                # Zelle füllen — voll (Rect) oder Polygon für halbe/Viertel
+                # Zelle füllen — voll (Rect), Drill (Diamond-View) oder
+                # Polygon für halbe/Viertel. Im Diamond-View werden FULL-
+                # Stiche als Drill gerendert, konsistent mit dem
+                # Direkt-Render-Pfad (RenderingMixin._draw_layer_cells).
                 if show_colors:
                     stype = layer.get_stitch_type(gx, gy)
-                    if stype == 0:
+                    if is_diamond(stype) or (diamond_view and stype == 0):
+                        _draw_diamond_drill_perf(painter, px, py, cell_size, fill_color)
+                    elif stype == 0:
                         painter.fillRect(px, py, cell_size, cell_size, fill_color)
                     else:
                         _fill_partial_stitch_perf(painter, px, py, cell_size, stype, fill_color)

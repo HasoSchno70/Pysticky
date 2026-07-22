@@ -127,7 +127,14 @@ class SwapColorsDialog(QDialog):
         if first_count == 0 and second_count == 0:
             self.info_label.setText(t("Keine Stiche in beiden Farben"))
         else:
-            self.info_label.setText(f"{first_count} ↔ {second_count} Stiche werden getauscht")
+            unit = (
+                t("Drills") if getattr(self.pattern, "mode", "stitch") == "diamond" else t("Stiche")
+            )
+            self.info_label.setText(
+                t("{first} ↔ {second} {unit} werden getauscht").format(
+                    first=first_count, second=second_count, unit=unit
+                )
+            )
 
     def _on_accept(self) -> None:
         if self._first_index == self._second_index:

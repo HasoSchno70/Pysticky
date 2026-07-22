@@ -453,8 +453,10 @@ class PaletteConversionDialog(QDialog):
             QMessageBox.warning(
                 self,
                 t("Fehlende Zuordnungen"),
-                f"{missing} Farbe(n) haben keine Zuordnung.\n"
-                "Bitte weisen Sie allen Farben ein Ziel-Garn zu.",
+                t(
+                    "{missing} Farbe(n) haben keine Zuordnung.\n"
+                    "Bitte weisen Sie allen Farben ein Ziel-Garn zu."
+                ).format(missing=missing),
             )
             return
 
@@ -496,7 +498,9 @@ class PaletteConversionDialog(QDialog):
             reply = QMessageBox.question(
                 self,
                 t("Schlechte Zuordnungen"),
-                f"{poor} Farbe(n) haben einen hohen Farbabstand (>25).\nTrotzdem konvertieren?",
+                t(
+                    "{poor} Farbe(n) haben einen hohen Farbabstand (>25).\nTrotzdem konvertieren?"
+                ).format(poor=poor),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:

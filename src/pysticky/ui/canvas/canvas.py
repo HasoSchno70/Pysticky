@@ -201,6 +201,14 @@ class CrossStitchCanvas(
         self._last_pan_point: QPoint = QPoint()
         self._cursor_pos: QPoint | None = None
         self._batch_active: bool = False
+        # Werkzeug-Klassifikation zum Zeitpunkt des mousePressEvent, die den
+        # aktiven Batch geoeffnet hat -- mouseReleaseEvent muss ANHAND DAVON
+        # entscheiden ob geschlossen wird, nicht anhand des dann AKTUELLEN
+        # Werkzeugs. Sonst bleibt _batch_active fuer immer haengen, wenn der
+        # Nutzer waehrend eines gehaltenen Mausklicks per Tastenkuerzel auf
+        # Select/Polygon wechselt (siehe Regressionstest).
+        self._batch_opened_by_polygon_tool: bool = False
+        self._batch_opened_by_select_tool: bool = False
 
         # Farb-Isolation (None = aus). Andere Farben werden in _draw_layer_cells
         # mit reduzierter Alpha gezeichnet — Cache-Key hängt schon an Alpha,

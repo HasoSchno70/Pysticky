@@ -100,16 +100,22 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
         visible_rect = self._get_visible_grid_rect()
 
         # Level-of-Detail prüfen
-        skip_symbols, skip_grid, use_simplified = should_skip_details(self._cell_size)
+        skip_symbols, skip_grid, _use_simplified = should_skip_details(self._cell_size)
 
         # Zellen zeichnen
         # Bei aktiver Farb-Isolation den Chunk-Cache umgehen — der gecachte
         # Pfad in render_chunk_to_pixmap kennt die Per-Cell-Alpha-Logik nicht.
         # Bei grossen Mustern verlieren wir dann den Caching-Vorteil; das ist
         # akzeptabel weil Isolation ein temporärer View-Modus ist.
-        use_chunk_cache = (
-            self._perf_manager.enabled and not use_simplified and self._isolate_color_index is None
-        )
+        #
+        # WICHTIG: `use_simplified` (cell_size < 6, siehe should_skip_details)
+        # darf den Chunk-Cache NICHT deaktivieren -- es gibt keinen
+        # tatsaechlich "vereinfachten" Rendering-Pfad, _draw_all_cells ist
+        # exakt derselbe teure Pro-Zelle-Direkt-Renderer wie sonst. Das
+        # deaktivierte den Cache exakt dort, wo am meisten Zellen gleichzeitig
+        # sichtbar sind (weit rausgezoomt) -- also genau dort, wo er am
+        # meisten bringt (Performance-Klippe umgekehrt zur Absicht).
+        use_chunk_cache = self._perf_manager.enabled and self._isolate_color_index is None
         if use_chunk_cache:
             self._draw_cells_chunked(painter, visible_rect, skip_symbols)
         else:

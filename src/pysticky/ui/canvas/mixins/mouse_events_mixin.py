@@ -54,6 +54,12 @@ class MouseEventsMixin:
         is_select_tool = current_tool in (Tool.SELECT, Tool.SELECT_LASSO)
         is_progress_tool = current_tool == Tool.PROGRESS
 
+        # Klassifikation fuer mouseReleaseEvent merken (siehe Kommentar bei
+        # der Attribut-Deklaration in canvas.py) -- entscheidend ist das
+        # Werkzeug BEIM OEFFNEN des Batches, nicht beim Loslassen.
+        self._batch_opened_by_polygon_tool = is_polygon_tool
+        self._batch_opened_by_select_tool = is_select_tool
+
         # Progress-Tool hat eigenes Rechts-/Linksklick-Handling
         if is_progress_tool:
             if not self._batch_active:
@@ -216,8 +222,17 @@ class MouseEventsMixin:
             else:
                 self._apply_changes_with_mirror(changes)
 
-        # Batch beenden
-        if self._batch_active and not is_polygon_tool and not is_select_tool:
+        # Batch beenden -- massgeblich ist das Werkzeug, das den Batch beim
+        # mousePressEvent geoeffnet hat, NICHT das evtl. inzwischen (per
+        # Tastenkuerzel, waehrend die Maustaste noch gehalten wird)
+        # gewechselte aktuelle Werkzeug. Sonst bleibt _batch_active haengen,
+        # weil z.B. das Select-Werkzeug hier faelschlich vom Schliessen
+        # ausgenommen wuerde, obwohl es den Batch nie selbst geoeffnet hat.
+        if (
+            self._batch_active
+            and not self._batch_opened_by_polygon_tool
+            and not self._batch_opened_by_select_tool
+        ):
             self._batch_active = False
             self.batch_ended.emit()
 

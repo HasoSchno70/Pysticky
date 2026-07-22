@@ -28,7 +28,10 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
+from ...utils.logging import get_logger
 from ..styles import THEME, Styles
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -70,9 +73,19 @@ def load_user_templates() -> list[UserTemplate]:
     try:
         with open(templates_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return [UserTemplate(**t) for t in data]
     except (OSError, json.JSONDecodeError, ValueError):
         return []
+
+    templates = []
+    for entry in data:
+        # Ein einzelner fehlerhafter Eintrag (fehlendes Pflichtfeld, alte
+        # Formatversion) darf nicht das Laden ALLER Templates crashen lassen
+        # -- gleiche Fehlerklasse wie LibraryData.from_dict().
+        try:
+            templates.append(UserTemplate(**entry))
+        except TypeError as exc:
+            logger.warning("Ungueltiges Template uebersprungen: %s", exc)
+    return templates
 
 
 def save_user_templates(templates: list[UserTemplate]) -> bool:
