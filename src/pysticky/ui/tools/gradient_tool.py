@@ -71,9 +71,19 @@ class GradientTool(BaseTool):
         if not (0 <= x < ctx.pattern.width and 0 <= y < ctx.pattern.height):
             return []
 
+        # _active war hier nie gesetzt -- dadurch hielt ToolManager.draw_preview()
+        # (das nicht-Select/Lasso-Werkzeuge nur bei is_active zeichnet) die
+        # gesamte draw_preview()-Implementierung dieses Tools fuer tot: waehrend
+        # des Ziehens erschien keinerlei Live-Vorschau (Start-/End-Markierung,
+        # interpolierte Farben), erst der Loslassen-Klick zeigte ein Ergebnis.
+        self._active = True
         self._start_pos = (x, y)
         self._end_pos = (x, y)
-        self._start_color_index = ctx.current_color_index
+        # _start_color_index NICHT hier auf ctx.current_color_index ueberschreiben:
+        # das Farbverlauf-Panel (gradient_options_panel.py) hat eigene Start-/
+        # Endfarbe-Comboboxen, die via set_start_color()/set_end_color() eine von
+        # der globalen Farbleiste unabhaengige Auswahl setzen. Diese Zeile hat die
+        # Panel-Auswahl bei jedem Klick still durch die globale Farbe ersetzt.
         self._preview_points = []
 
         return []
@@ -115,6 +125,7 @@ class GradientTool(BaseTool):
         self._start_pos = None
         self._end_pos = None
         self._preview_points = []
+        self._active = False
 
         return changes
 
