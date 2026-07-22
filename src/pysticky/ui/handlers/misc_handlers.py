@@ -837,6 +837,16 @@ class MiscHandlersMixin:
         if hasattr(self, "_apply_statusbar_styles"):
             self._apply_statusbar_styles()
 
+        # 5b) Sticken-Modus-Indikator-Pill -- baut ihr Stylesheet nur bei
+        # jedem Ein-/Ausschalten frisch aus THEME zusammen
+        # (main_window.py::_update_stitch_mode_indicator), hat aber KEINE
+        # eigene _apply_theme()-Methode (ist ein rohes QLabel). Blieb bisher
+        # bei einem Theme-Wechsel WAEHREND aktivem Sticken-Modus auf den
+        # alten Farben haengen, bis der Modus einmal aus- und wieder
+        # eingeschaltet wurde.
+        if hasattr(self, "_update_stitch_mode_indicator") and hasattr(self, "label_stitch_mode"):
+            self._update_stitch_mode_indicator(self.label_stitch_mode.isVisible())
+
         # 6) Alle Widgets mit _apply_theme() aufrufen
         for w in self.findChildren(QWidget):
             if hasattr(w, "_apply_theme"):

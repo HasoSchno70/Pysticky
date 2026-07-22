@@ -156,7 +156,16 @@ def discover_plugins(extra_dirs: list[Path] | None = None) -> list[Plugin]:
                 with open(manifest_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 manifest = PluginManifest.from_dict(data)
-            except (OSError, json.JSONDecodeError, PluginError) as e:
+            except (OSError, json.JSONDecodeError, UnicodeDecodeError, PluginError) as e:
+                # UnicodeDecodeError faengt hand-editierte/beschaedigte
+                # manifest.json-Dateien mit ungueltigen UTF-8-Bytes ab -- die
+                # trat vorher NICHT in diesem except-Tupel auf (sie ist eine
+                # ValueError-Unterklasse, aber keine der drei explizit
+                # gelisteten), wodurch EIN kaputtes Plugin-Verzeichnis
+                # discover_plugins() komplett abstuerzen liess und damit den
+                # gesamten Plugin-Dialog fuer ALLE Plugins (auch die
+                # gueltigen) unbrauchbar machte. Gleiche Bugklasse wie bei
+                # PaletteManager._load_palette_file & Co.
                 logger.warning(f"Plugin in {child} übersprungen: {e}")
                 continue
             if manifest.id in seen_ids:

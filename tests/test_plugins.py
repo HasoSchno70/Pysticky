@@ -95,6 +95,33 @@ def test_discover_skips_invalid_manifest(tmp_path):
     assert not bad_ids
 
 
+def test_discover_skips_manifest_with_invalid_utf8_bytes(tmp_path):
+    """Regression: ein manifest.json mit ungueltigen UTF-8-Bytes (z.B. durch
+    einen kaputten Editor/Encoding-Fehler) loeste beim Oeffnen mit
+    encoding="utf-8" einen UnicodeDecodeError aus. Der wurde vom
+    except-Tupel (OSError, json.JSONDecodeError, PluginError) NICHT
+    abgefangen, obwohl UnicodeDecodeError eine ValueError-Unterklasse ist,
+    aber keine der drei dort explizit gelisteten -- discover_plugins() stieg
+    dadurch komplett aus, bevor auch nur die guelten Built-in-Plugins
+    zurueckgegeben wurden. Ein einzelnes kaputtes Plugin-Verzeichnis durfte
+    nicht den gesamten Plugin-Dialog fuer ALLE Plugins unbrauchbar machen."""
+    from pysticky.plugins import discover_plugins
+
+    bad_dir = tmp_path / "bad_encoding_plugin"
+    bad_dir.mkdir()
+    # 0xFF ist in UTF-8 niemals ein gueltiges Start-Byte.
+    (bad_dir / "manifest.json").write_bytes(b'{"id": "x", "name": "\xff\xfe", "version": "1"}')
+
+    plugins = discover_plugins(extra_dirs=[tmp_path])
+    # Vorher: UnicodeDecodeError propagiert aus discover_plugins() raus,
+    # dieser Aufruf kam nie zurueck. Jetzt: Verzeichnis wird uebersprungen,
+    # Built-ins kommen weiterhin normal zurueck.
+    ids = {p.id for p in plugins}
+    assert "pysticky.border" in ids
+    bad_ids = {p.id for p in plugins if "bad_encoding" in str(p.directory).lower()}
+    assert not bad_ids
+
+
 @pytest.mark.parametrize("root_value", [None, [], 42, "just a string"])
 def test_discover_skips_manifest_with_non_dict_root(tmp_path, root_value):
     """manifest.json ist syntaktisch gueltiges JSON, aber die Wurzel ist kein
