@@ -240,36 +240,20 @@ class MiscHandlersMixin:
         table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         table.setAlternatingRowColors(True)
 
-        shortcuts = [
-            (t("— Datei —"), ""),
-            (t("Neu"), "Ctrl+N"),
-            (t("Öffnen"), "Ctrl+O"),
-            (t("Speichern"), "Ctrl+S"),
-            (t("— Bearbeiten —"), ""),
-            (t("Rückgängig"), "Ctrl+Z"),
-            (t("Wiederholen"), "Ctrl+Y"),
-            (t("— Ansicht —"), ""),
-            (t("Vergrößern"), "Ctrl++"),
-            (t("Verkleinern"), "Ctrl+-"),
-            (t("Muster-Vorschau"), "F5"),
-            (t("— Werkzeuge —"), ""),
-            (t("Stift"), "P"),
-            (t("Radierer"), "E"),
-            (t("Füllen"), "G"),
-            (t("Pipette"), "I"),
-            (t("Linie"), "L"),
-            (t("Rechteck"), "R"),
-            (t("Ellipse"), "O"),
-            (t("Text"), "T"),
-            (t("Rückstich"), "B"),
-            (t("Auswahl"), "S"),
-            (t("Fortschritt"), "K"),
-            (t("— Auswahl —"), ""),
-            (t("Kopieren"), "Ctrl+C"),
-            (t("Ausschneiden"), "Ctrl+X"),
-            (t("Einfügen"), "Ctrl+V"),
-            (t("Löschen"), "Entf"),
-        ]
+        # Aus der lebenden ShortcutRegistry lesen statt einer zweiten,
+        # hart-codierten Liste -- exakt die Zwei-Listen-Falle, die
+        # shortcuts_registry.py fuer den Einstellungen-Tab bereits vermeidet
+        # (siehe dessen Modul-Docstring). Diese Hilfe-Ansicht hier hatte die
+        # Falle bisher trotzdem: sie zeigte fest eingebaute Default-Werte
+        # (z.B. "Speichern" -> "Ctrl+S"), die nach einer Anpassung im
+        # Tastenkürzel-Tab NICHT mehr mit dem tatsaechlich aktiven Shortcut
+        # uebereinstimmten -- der User sah dauerhaft die falsche Tastenkombi.
+        registry = getattr(self, "_shortcut_registry", None)
+        shortcuts = (
+            [(registry.label(sid), registry.current(sid)) for sid in registry.ids()]
+            if registry is not None
+            else []
+        )
 
         table.setRowCount(len(shortcuts))
         for row, (action, shortcut) in enumerate(shortcuts):

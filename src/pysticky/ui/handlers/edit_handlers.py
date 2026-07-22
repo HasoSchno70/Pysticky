@@ -52,8 +52,15 @@ class EditHandlersMixin:
             if not mapping:
                 return
 
+            # Stich-Typ (Halb-/Viertelstich etc.) je Zelle mitschicken --
+            # ohne das 4-Tuple landete hier IMMER stitch_placed (3-Tuple),
+            # das ueber _on_stitch_placed() den GLOBALEN
+            # canvas._active_stitch_type einsetzt (Standard FULL) statt des
+            # tatsaechlichen Typs der ersetzten Zelle. Ein Halbstich wurde
+            # dadurch beim Farbe-Ersetzen stillschweigend zum Vollstich.
+            type_grid = self.current_pattern.layer_stack.get_composite_stitch_type_grid()
             changes = [
-                (x, y, mapping[color_idx])
+                (x, y, mapping[color_idx], int(type_grid[y, x]))
                 for x, y, color_idx in self.current_pattern.iterate_composite_stitches()
                 if color_idx in mapping
             ]
@@ -70,7 +77,9 @@ class EditHandlersMixin:
                     # Chunk-Pixmap-Cache (>200x200 Muster) beim alten Bild
                     # haengen (gleicher Bug wie Runde 4 bei Selection-Ops,
                     # hier an einer bis Runde 13 uebersehenen Stelle).
-                    self.canvas._apply_changes(cast("list[tuple[int, int, int | None]]", changes))
+                    self.canvas._apply_changes(
+                        cast("list[tuple[int, int, int | None, int]]", changes)
+                    )
                     self.canvas.batch_ended.emit()
                 finally:
                     QApplication.restoreOverrideCursor()
@@ -128,8 +137,14 @@ class EditHandlersMixin:
 
         self.canvas.batch_started.emit(t("Farben tauschen"))
         # _apply_changes() statt manuellem Signal-Loop -- siehe _on_replace_color.
-        changes = [(x, y, b) for x, y in a_positions] + [(x, y, a) for x, y in b_positions]
-        self.canvas._apply_changes(cast("list[tuple[int, int, int | None]]", changes))
+        # Stich-Typ je Zelle mitschicken (4-Tuple) -- sonst geht wie bei
+        # _on_replace_color der urspruengliche Halb-/Viertelstich-Typ beim
+        # Tauschen verloren (wird durch canvas._active_stitch_type ersetzt).
+        type_grid = self.current_pattern.layer_stack.get_composite_stitch_type_grid()
+        changes = [(x, y, b, int(type_grid[y, x])) for x, y in a_positions] + [
+            (x, y, a, int(type_grid[y, x])) for x, y in b_positions
+        ]
+        self.canvas._apply_changes(cast("list[tuple[int, int, int | None, int]]", changes))
         self.canvas.batch_ended.emit()
 
         self.canvas.update()

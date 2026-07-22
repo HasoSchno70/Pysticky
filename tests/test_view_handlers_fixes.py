@@ -77,3 +77,30 @@ def test_snap_grid_toggle_preserves_configured_snap_interval(qtbot):
 
     w._on_snap_grid_changed(False)
     assert w.canvas.snap_interval == 10
+
+
+def test_leaving_stitch_mode_restores_completion_checkbox(qtbot):
+    """Runde 30: _on_toggle_stitch_mode() setzte beim Aktivieren
+    action_show_completion unbedingt auf True (Completion-Overlay soll im
+    Sticken-Modus sichtbar sein), stellte den gespeicherten Wert beim
+    Verlassen aber nur auf canvas._show_completion zurueck -- die Checkbox
+    selbst blieb dauerhaft angehakt, obwohl "Fortschritt anzeigen" vorher
+    aus war. Checkbox-Anzeige und tatsaechlicher Overlay-Zustand liefen
+    dadurch auseinander."""
+    from pysticky.ui.main_window import MainWindow
+
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w._check_save_changes = lambda: True
+    w._autosave_timer.stop()
+
+    # Vorbedingung: "Fortschritt anzeigen" ist AUS.
+    w.canvas._show_completion = False
+    w.action_show_completion.setChecked(False)
+
+    w._on_toggle_stitch_mode(True)
+    assert w.action_show_completion.isChecked() is True
+
+    w._on_toggle_stitch_mode(False)
+    assert w.canvas._show_completion is False
+    assert w.action_show_completion.isChecked() is False

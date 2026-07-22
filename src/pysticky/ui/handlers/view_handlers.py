@@ -86,6 +86,14 @@ class ViewHandlersMixin:
                 self.tool_bar.select_tool(saved["tool"])
                 self.canvas.show_symbols = saved["show_symbols"]
                 self.canvas._show_completion = saved["show_completion"]
+                # Checkbox/Menü-Action mit dem wiederhergestellten Wert
+                # synchron halten -- beim Aktivieren wird sie oben unbedingt
+                # auf True gesetzt; ohne dieses Gegenstueck blieb sie nach
+                # dem Verlassen des Sticken-Modus dauerhaft "angehakt", auch
+                # wenn "Fortschritt anzeigen" vorher aus war (canvas-Zustand
+                # und Checkbox-Anzeige liefen dann auseinander).
+                if hasattr(self, "action_show_completion"):
+                    self.action_show_completion.setChecked(saved["show_completion"])
                 for dock, was_visible in saved["dock_visibility"].items():
                     if was_visible:
                         dock.show()
