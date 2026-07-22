@@ -120,7 +120,7 @@ class TilePreviewWidget(QFrame):
                         painter.drawLine(tile_x, py, tile_x + pw * cs, py)
 
                 if self._show_borders:
-                    pen = QPen(QColor(THEME.accent_primary + "99"), 1, Qt.PenStyle.DashLine)
+                    pen = QPen(self._tile_border_color(), 1, Qt.PenStyle.DashLine)
                     painter.setPen(pen)
                     painter.setBrush(Qt.BrushStyle.NoBrush)
                     painter.drawRect(tile_x, tile_y, pw * cs, ph * cs)
@@ -145,6 +145,22 @@ class TilePreviewWidget(QFrame):
         painter.setPen(QColor(THEME.text_muted))
         info = f"{pw}×{ph} Stiche | {self._tiles_x}×{self._tiles_y} Kacheln"
         painter.drawText(10, self.height() - 10, info)
+
+    def _tile_border_color(self) -> QColor:
+        """Semi-transparente Variante von accent_primary fuer die gestrichelte
+        Kachel-Umrandung.
+
+        WICHTIG: nicht per String-Konkatenation `THEME.accent_primary + "99"`
+        bauen -- QColor interpretiert einen 8-stelligen Hex-String als
+        #AARRGGBB (Alpha ZUERST), nicht als #RRGGBBAA. Ein angehaengtes
+        Alpha-Suffix verschiebt dadurch alle Kanaele und ergibt eine voellig
+        falsche (und noch dazu undurchsichtige) Farbe statt eines
+        durchscheinenden accent_primary. `setAlpha()` auf einem echten
+        QColor-Objekt ist der korrekte Weg.
+        """
+        color = QColor(THEME.accent_primary)
+        color.setAlpha(0x99)
+        return color
 
     def _draw_pattern_tile(
         self, painter: QPainter, offset_x: int, offset_y: int, cell_size: int

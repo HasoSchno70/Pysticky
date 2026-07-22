@@ -931,6 +931,12 @@ class LayerPanel(QWidget):
         if ok and name:
             layer.name = name
             self._refresh_list()
+            # Ohne dieses Signal bleibt _unsaved_changes in MainWindow auf
+            # False stehen (siehe _on_layers_changed -> _mark_unsaved) --
+            # ein Nutzer, der nur umbenennt und dann ohne weitere Aenderung
+            # schliesst, bekommt keine "Speichern?"-Abfrage und verliert die
+            # neue Ebenen-Bezeichnung stillschweigend beim naechsten Laden.
+            self.layers_changed.emit()
 
     def _on_clear_layer(self) -> None:
         """Leert die ausgewählte Ebene."""
