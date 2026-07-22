@@ -48,9 +48,9 @@ class StatCard(QFrame):
             icon_label.setStyleSheet("font-size: 20px;")
             header.addWidget(icon_label)
 
-        title_label = QLabel(title)
-        title_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
-        header.addWidget(title_label)
+        self._title_label = QLabel(title)
+        self._title_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
+        header.addWidget(self._title_label)
         header.addStretch()
         layout.addLayout(header)
 
@@ -73,3 +73,8 @@ class StatCard(QFrame):
 
     def set_value(self, value: str) -> None:
         self._value_label.setText(value)
+
+    def set_label(self, title: str) -> None:
+        """Ändert das Label der Karte zur Laufzeit (z.B. für Modus-Wechsel,
+        analog info_panel_widgets.StatCard.set_label())."""
+        self._title_label.setText(title)

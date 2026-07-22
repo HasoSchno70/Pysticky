@@ -37,9 +37,19 @@ class TimeTab(QWidget):
         "Profi": 2,
     }
 
+    # Diamond Painting: feste Rate ohne Skill-Abstufung (Hand-Tool-Tempo),
+    # identisch zu info_panel.py::_calculate_stitch_time()'s etablierter
+    # DP-Konvention -- dort ist Kreuzstich-Zeit allerdings ein einzelner
+    # fixer 20s-Wert statt der hier skill-abgestuften 2-8s-Spanne; ein
+    # gemeinsames Skalierungsmodell fuer beide Modi existiert nicht, DP
+    # bekommt daher bewusst die eigene feste Rate statt einer erfundenen
+    # Skalierung.
+    SECONDS_PER_DRILL = 3.0
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._pattern: "Pattern | None" = None
+        self._diamond = False
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -108,15 +118,45 @@ class TimeTab(QWidget):
     def update_stats(self, pattern: "Pattern", stats: dict) -> None:
         """Merkt sich das Muster und berechnet die Zeitschätzung."""
         self._pattern = pattern
+        was_diamond = self._diamond
+        self._diamond = pattern.mode == "diamond"
+        if self._diamond != was_diamond:
+            self._apply_mode_labels()
         self._recalculate_time()
+
+    def _apply_mode_labels(self) -> None:
+        """Passt Vokabular/Bedienelemente an den Muster-Modus an (analog
+        info_panel.py::set_mode() und progress_tab.py's DP-Branching).
+        Skill-Level hat im DP-Modus keine etablierte Entsprechung (feste
+        Hand-Tool-Rate statt Erfahrungsstufen) -- Combo wird deaktiviert
+        statt wirkungslos anklickbar zu bleiben (gleiches Muster wie
+        Sticken-Modus/Tweed-Blend in view_handlers.py)."""
+        self._skill_combo.setEnabled(not self._diamond)
+        self._card_speed.set_label(
+            t("Drills pro Stunde") if self._diamond else t("Stiche pro Stunde")
+        )
+        self._card_days.set_label(
+            t("Bei täglichem Kleben") if self._diamond else t("Bei täglichem Sticken")
+        )
+        self._time_table.setHorizontalHeaderLabels(
+            [
+                t("Farbe"),
+                t("Name"),
+                t("Drills") if self._diamond else t("Stiche"),
+                t("Geschätzte Zeit"),
+            ]
+        )
 
     def _recalculate_time(self) -> None:
         """Berechnet die Zeitschätzung neu."""
         if self._pattern is None:
             return
 
-        skill = self._skill_combo.currentData()
-        seconds_per_stitch = self.SECONDS_PER_STITCH.get(skill, 5)
+        if self._diamond:
+            seconds_per_stitch = self.SECONDS_PER_DRILL
+        else:
+            skill = self._skill_combo.currentData()
+            seconds_per_stitch = self.SECONDS_PER_STITCH.get(skill, 5)
         hours_per_day = self._hours_spin.value()
 
         # Nur nicht-übersprungene Farben zählen

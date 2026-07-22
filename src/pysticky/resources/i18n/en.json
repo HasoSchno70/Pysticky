@@ -1445,5 +1445,7 @@
   "⚠ Sprung!": "⚠ Jump!",
   "{stitches} Stiche, {jumps} Sprünge": "{stitches} stitches, {jumps} jumps",
   "Kein Bild geladen": "No image loaded",
-  "Rückstich-Optionen": "Backstitch Options"
+  "Rückstich-Optionen": "Backstitch Options",
+  "Drills pro Stunde": "Drills per Hour",
+  "Bei täglichem Kleben": "With Daily Gluing"
 }
