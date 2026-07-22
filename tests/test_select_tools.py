@@ -130,7 +130,7 @@ def test_select_delete_returns_none_changes(pattern_with_stitches):
 
     changes = tool.delete_selection(ctx)
     assert len(changes) == 4
-    assert all(c == (x, y, None) for c, (x, y) in zip(changes, [(5, 5), (6, 5), (5, 6), (6, 6)]))
+    assert all(c == (x, y, None, 0) for c, (x, y) in zip(changes, [(5, 5), (6, 5), (5, 6), (6, 6)]))
 
 
 def test_select_fill_uses_current_color(pattern_with_colors):
@@ -141,7 +141,7 @@ def test_select_fill_uses_current_color(pattern_with_colors):
 
     changes = tool.fill_selection(ctx)
     assert len(changes) == 4
-    assert all(c_idx == 2 for _, _, c_idx in changes)
+    assert all(c_idx == 2 for _, _, c_idx, _ in changes)
 
 
 def test_select_rotate_cw_changes_geometry(pattern_with_stitches):
@@ -189,8 +189,8 @@ def test_select_move_no_overlap(pattern_with_stitches):
     changes = tool._apply_move(ctx)
 
     # Trennung pruefen: erst alte (None), dann neue (color_idx)
-    none_changes = [(x, y) for x, y, c in changes if c is None]
-    set_changes = [(x, y, c) for x, y, c in changes if c is not None]
+    none_changes = [(x, y) for x, y, c, _ in changes if c is None]
+    set_changes = [(x, y, c) for x, y, c, _ in changes if c is not None]
 
     # Alle 4 alten Positions sind im "None"-Block
     assert set(none_changes) >= {(5, 5), (6, 5), (5, 6), (6, 6)}
@@ -223,8 +223,8 @@ def test_select_move_with_overlap_order(pattern_with_stitches):
     changes = tool._apply_move(ctx)
 
     # Reihenfolge: erst alle None-Changes, dann alle Set-Changes
-    last_none_idx = max(i for i, (_, _, c) in enumerate(changes) if c is None)
-    first_set_idx = min(i for i, (_, _, c) in enumerate(changes) if c is not None)
+    last_none_idx = max(i for i, (_, _, c, _) in enumerate(changes) if c is None)
+    first_set_idx = min(i for i, (_, _, c, _) in enumerate(changes) if c is not None)
     assert last_none_idx < first_set_idx, (
         "apply_move muss erst alle alten Positionen loeschen, bevor neue "
         "gesetzt werden — sonst werden ueberlappende Pixel zerstoert"
@@ -244,7 +244,7 @@ def test_select_paste_without_clipboard_returns_false(pattern_with_colors):
 
 def test_select_paste_starts_paste_mode(pattern_with_colors):
     """Wenn Clipboard etwas hat, geht das Tool in den Paste-Modus."""
-    SelectTool._clipboard = [(0, 0, 2)]
+    SelectTool._clipboard = [(0, 0, 2, 0)]
     SelectTool._clipboard_size = (1, 1)
     tool = SelectTool()
     ctx = _make_ctx(pattern_with_colors, 3, 4)
@@ -256,7 +256,7 @@ def test_select_paste_starts_paste_mode(pattern_with_colors):
 def test_select_clear_resets_all_state():
     tool = SelectTool()
     tool._selection = QRect(0, 0, 5, 5)
-    tool._selection_content = [(0, 0, 1)]
+    tool._selection_content = [(0, 0, 1, 0)]
     tool._is_pasting = True
     tool.clear_selection()
     assert tool.selection is None
@@ -292,4 +292,4 @@ def test_lasso_fill_operates_on_pixel_set_not_bounding_rect(pattern_with_colors)
     ctx = _make_ctx(pattern_with_colors, 2, 2, color_index=2)
     changes = tool.fill_selection(ctx)
     assert len(changes) == 3, "Lasso fuellt nur die Pixel im Set, nicht den Rect"
-    assert {(x, y) for x, y, _ in changes} == {(2, 2), (3, 2), (2, 3)}
+    assert {(x, y) for x, y, _, _ in changes} == {(2, 2), (3, 2), (2, 3)}

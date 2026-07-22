@@ -68,6 +68,11 @@ class CrossStitchCanvas(
     # === Signals ===
     position_changed = Signal(int, int)
     stitch_placed = Signal(int, int, int)
+    # Wie stitch_placed, aber mit explizitem Stichtyp -- genutzt von Select/
+    # Lasso-Tool-Operationen (Verschieben/Drehen/Spiegeln/Einfuegen), die den
+    # urspruenglichen Stichtyp einer Zelle bewahren wollen, statt dass
+    # _on_stitch_placed() ihn durch den globalen _active_stitch_type ersetzt.
+    stitch_placed_typed = Signal(int, int, int, int)
     stitch_removed = Signal(int, int)
     color_picked = Signal(int)
     text_confirmed = Signal()
@@ -562,9 +567,20 @@ class CrossStitchCanvas(
     # Change-Handling
     # =========================================================================
 
-    def _apply_changes(self, changes: list[tuple[int, int, int | None]]) -> None:
-        """Wendet Änderungen an (ohne Spiegelung)."""
-        for x, y, color_index in changes:
+    def _apply_changes(
+        self,
+        changes: list[tuple[int, int, int | None] | tuple[int, int, int | None, int]],
+    ) -> None:
+        """Wendet Änderungen an (ohne Spiegelung).
+
+        4-Tuple (x, y, color_index, stitch_type) kommen von Select/Lasso-
+        Tool-Operationen (Verschieben/Drehen/Spiegeln/Einfuegen), die den
+        urspruenglichen Stichtyp einer Zelle bewahren -- alle anderen
+        Werkzeuge liefern weiterhin 3-Tuple und nutzen wie bisher den
+        globalen _active_stitch_type (siehe stitch_placed_typed-Signal).
+        """
+        for change in changes:
+            x, y, color_index = change[0], change[1], change[2]
             # Chunk-Cache (OptimizedCrossStitchCanvas) muss die betroffene
             # Zelle als dirty kennen, sonst zeigt der nächste paintEvent
             # weiterhin den alten gecachten Chunk-Pixmap -- neue Stiche
@@ -572,16 +588,22 @@ class CrossStitchCanvas(
             self.invalidate_cell(x, y)
             if color_index is None:
                 self.stitch_removed.emit(x, y)
+            elif len(change) == 4:
+                self.stitch_placed_typed.emit(x, y, color_index, change[3])
             else:
                 self.stitch_placed.emit(x, y, color_index)
 
-    def _apply_changes_with_mirror(self, changes: list[tuple[int, int, int | None]]) -> None:
+    def _apply_changes_with_mirror(
+        self,
+        changes: list[tuple[int, int, int | None] | tuple[int, int, int | None, int]],
+    ) -> None:
         """Wendet Änderungen mit Spiegelung an."""
         if not self._has_mirror_active():
             self._apply_changes(changes)
             return
 
-        for x, y, color_index in changes:
+        for change in changes:
+            x, y, color_index = change[0], change[1], change[2]
             for mx, my in self.get_mirrored_positions(x, y):
                 self.invalidate_cell(mx, my)
                 if color_index is None:

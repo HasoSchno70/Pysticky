@@ -52,7 +52,27 @@ class UndoHandlersMixin:
         QTimer.singleShot(100, self.tile_preview_panel.refresh)
 
     def _on_stitch_placed(self: "MainWindow", x: int, y: int, color_index: int) -> None:
-        """Stich platziert."""
+        """Stich platziert (normale Zeichen-Werkzeuge -- Stichtyp kommt vom
+        globalen canvas._active_stitch_type)."""
+        stitch_type = getattr(self.canvas, "_active_stitch_type", 0)
+        self._place_stitch(x, y, color_index, stitch_type)
+
+    def _on_stitch_placed_typed(
+        self: "MainWindow", x: int, y: int, color_index: int, stitch_type: int
+    ) -> None:
+        """Stich platziert MIT explizitem Stichtyp.
+
+        Genutzt von Select/Lasso-Tool-Operationen (Verschieben/Drehen/
+        Spiegeln/Einfuegen), die den urspruenglichen Stichtyp einer Zelle
+        bewahren wollen -- vorher landete hier IMMER der globale
+        _active_stitch_type, wodurch z.B. ein Halb-/Viertelstich nach dem
+        Verschieben als voller Stich wieder auftauchte.
+        """
+        self._place_stitch(x, y, color_index, stitch_type)
+
+    def _place_stitch(
+        self: "MainWindow", x: int, y: int, color_index: int, stitch_type: int
+    ) -> None:
         from ...core import PlaceStitchCommand
 
         # Werkzeuge kennen nur canvas._current_color_index, nicht ob die
@@ -68,7 +88,6 @@ class UndoHandlersMixin:
             return
 
         layer_index = self.current_pattern.layer_stack.active_index
-        stitch_type = getattr(self.canvas, "_active_stitch_type", 0)
         self._execute_command(
             PlaceStitchCommand(
                 self.current_pattern, x, y, color_index, layer_index, stitch_type=stitch_type

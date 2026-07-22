@@ -84,19 +84,22 @@ class BaseTool(ABC):
     @abstractmethod
     def on_mouse_press(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         """
         Maus gedrückt.
 
         Returns:
-            Liste von (x, y, color_index) Änderungen. color_index=None bedeutet löschen.
+            Liste von (x, y, color_index) Änderungen. color_index=None bedeutet
+            löschen. Optionales 4. Element ist der Stichtyp -- genutzt von
+            Select/Lasso-Tool, um den urspruenglichen Stichtyp einer Zelle bei
+            Verschieben/Drehen/Spiegeln/Einfuegen zu bewahren.
         """
         pass
 
     @abstractmethod
     def on_mouse_move(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         """
         Maus bewegt (während gedrückt).
 
@@ -108,7 +111,7 @@ class BaseTool(ABC):
     @abstractmethod
     def on_mouse_release(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         """
         Maus losgelassen.
 

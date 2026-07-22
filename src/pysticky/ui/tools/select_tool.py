@@ -34,8 +34,11 @@ class SelectTool(BaseTool):
     - V: Vertikal spiegeln
     """
 
-    # Clipboard (Klassenvariable für alle Instanzen)
-    _clipboard: list[tuple[int, int, int | None]] | None = None
+    # Clipboard (Klassenvariable für alle Instanzen). Vierter Tupel-Wert ist
+    # der Stichtyp (0=FULL, 1=HALF_TL_BR, ...) -- muss mitgefuehrt werden,
+    # sonst wuerde jeder Halb-/Viertelstich beim Kopieren/Einfuegen als
+    # voller Stich wieder auftauchen.
+    _clipboard: list[tuple[int, int, int | None, int]] | None = None
     _clipboard_size: tuple[int, int] = (0, 0)
 
     def __init__(self) -> None:
@@ -53,7 +56,7 @@ class SelectTool(BaseTool):
         self._is_moving: bool = False
         self._move_start: tuple[int, int] | None = None
         self._original_selection: QRect | None = None
-        self._selection_content: list[tuple[int, int, int | None]] | None = None
+        self._selection_content: list[tuple[int, int, int | None, int]] | None = None
         self._content_captured: bool = False
 
         # Einfügen-Modus
@@ -110,7 +113,7 @@ class SelectTool(BaseTool):
 
     def on_mouse_press(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         if event.button() != Qt.MouseButton.LeftButton:
             return []
 
@@ -147,7 +150,7 @@ class SelectTool(BaseTool):
 
     def on_mouse_move(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         x, y = ctx.grid_x, ctx.grid_y
         self._current_pos = (x, y)
         self._shift_pressed = event.modifiers() & Qt.KeyboardModifier.ShiftModifier
@@ -167,7 +170,7 @@ class SelectTool(BaseTool):
 
     def on_mouse_release(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         changes = []
 
         if event.button() == Qt.MouseButton.LeftButton:
@@ -229,29 +232,31 @@ class SelectTool(BaseTool):
             ):
                 if self._is_valid_pos(ctx, x, y):
                     color_idx = layer.get_stitch(x, y)
+                    stitch_type = layer.get_stitch_type(x, y)
                     rel_x = x - self._selection.left()
                     rel_y = y - self._selection.top()
-                    self._selection_content.append((rel_x, rel_y, color_idx))
+                    self._selection_content.append((rel_x, rel_y, color_idx, stitch_type))
 
-    def _apply_move(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def _apply_move(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         if not self._selection_content or not self._selection or not self._original_selection:
             return []
 
         changes = []
 
         # Alte Position löschen
-        for rel_x, rel_y, _ in self._selection_content:
+        for rel_x, rel_y, _, _ in self._selection_content:
             old_x = self._original_selection.left() + rel_x
             old_y = self._original_selection.top() + rel_y
             if self._is_valid_pos(ctx, old_x, old_y):
-                changes.append((old_x, old_y, None))
+                changes.append((old_x, old_y, None, 0))
 
-        # Neue Position setzen
-        for rel_x, rel_y, color_idx in self._selection_content:
+        # Neue Position setzen -- Stichtyp wird unveraendert mitgenommen
+        # (reine Verschiebung, keine Drehung/Spiegelung der Zellinhalte).
+        for rel_x, rel_y, color_idx, stitch_type in self._selection_content:
             new_x = self._selection.left() + rel_x
             new_y = self._selection.top() + rel_y
             if self._is_valid_pos(ctx, new_x, new_y) and color_idx is not None:
-                changes.append((new_x, new_y, color_idx))
+                changes.append((new_x, new_y, color_idx, stitch_type))
 
         return changes
 
@@ -274,14 +279,15 @@ class SelectTool(BaseTool):
             for x in range(self._selection.left(), self._selection.left() + w):
                 if self._is_valid_pos(ctx, x, y):
                     color_idx = layer.get_stitch(x, y)
+                    stitch_type = layer.get_stitch_type(x, y)
                     rel_x = x - self._selection.left()
                     rel_y = y - self._selection.top()
-                    SelectTool._clipboard.append((rel_x, rel_y, color_idx))
+                    SelectTool._clipboard.append((rel_x, rel_y, color_idx, stitch_type))
 
         SelectTool._clipboard_size = (w, h)
         return True
 
-    def cut_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def cut_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Schneidet die Auswahl aus."""
         if not self.copy_selection(ctx):
             return []
@@ -297,7 +303,7 @@ class SelectTool(BaseTool):
         self._active = True
         return True
 
-    def _confirm_paste(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def _confirm_paste(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Bestätigt das Einfügen."""
         if not SelectTool._clipboard or not self._paste_position:
             self._is_pasting = False
@@ -306,11 +312,11 @@ class SelectTool(BaseTool):
         changes = []
         px, py = self._paste_position
 
-        for rel_x, rel_y, color_idx in SelectTool._clipboard:
+        for rel_x, rel_y, color_idx, stitch_type in SelectTool._clipboard:
             new_x = px + rel_x
             new_y = py + rel_y
             if self._is_valid_pos(ctx, new_x, new_y) and color_idx is not None:
-                changes.append((new_x, new_y, color_idx))
+                changes.append((new_x, new_y, color_idx, stitch_type))
 
         # Neue Auswahl um eingefügten Bereich
         w, h = SelectTool._clipboard_size
@@ -328,7 +334,7 @@ class SelectTool(BaseTool):
 
     # === Löschen / Füllen ===
 
-    def delete_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def delete_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Löscht den Inhalt der Auswahl."""
         if not self._selection:
             return []
@@ -339,14 +345,16 @@ class SelectTool(BaseTool):
                 self._selection.left(), self._selection.left() + self._selection.width()
             ):
                 if self._is_valid_pos(ctx, x, y):
-                    changes.append((x, y, None))
+                    changes.append((x, y, None, 0))
 
         self._selection_content = None
         self._content_captured = False
         return changes
 
-    def fill_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
-        """Füllt die Auswahl mit der aktuellen Farbe."""
+    def fill_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
+        """Füllt die Auswahl mit der aktuellen Farbe (immer als voller Stich --
+        bewusst, ein Füllen soll keine bestehenden Halb-/Viertelstiche
+        durchscheinen lassen)."""
         if not self._selection:
             return []
 
@@ -356,14 +364,14 @@ class SelectTool(BaseTool):
                 self._selection.left(), self._selection.left() + self._selection.width()
             ):
                 if self._is_valid_pos(ctx, x, y):
-                    changes.append((x, y, ctx.current_color_index))
+                    changes.append((x, y, ctx.current_color_index, 0))
         return changes
 
     # === Transformieren ===
 
     def rotate_selection(
         self, ctx: ToolContext, clockwise: bool = True
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None, int]]:
         """Dreht den Inhalt der Auswahl um 90°."""
         if not self._selection:
             return []
@@ -371,6 +379,10 @@ class SelectTool(BaseTool):
         layer = ctx.pattern.active_layer
         if not layer:
             return []
+
+        from ...core.stitch import ROTATE_CCW_MAP, ROTATE_CW_MAP
+
+        rotate_map = ROTATE_CW_MAP if clockwise else ROTATE_CCW_MAP
 
         w = self._selection.width()
         h = self._selection.height()
@@ -384,11 +396,14 @@ class SelectTool(BaseTool):
                 gx, gy = left + x, top + y
                 if self._is_valid_pos(ctx, gx, gy):
                     color_idx = layer.get_stitch(gx, gy)
-                    content.append((x, y, color_idx))
+                    stitch_type = layer.get_stitch_type(gx, gy)
+                    content.append((x, y, color_idx, stitch_type))
 
-        # Rotieren
+        # Rotieren -- Stichtyp wird per ROTATE_CW_MAP/ROTATE_CCW_MAP
+        # mitgedreht (z.B. HALF_TL_BR "/" wird bei 90° zu HALF_TR_BL "\"),
+        # sonst zeigt ein gedrehter Halbstich weiterhin in die alte Richtung.
         rotated = []
-        for x, y, color_idx in content:
+        for x, y, color_idx, stitch_type in content:
             if clockwise:
                 # 90° rechts: (x,y) -> (h-1-y, x)
                 new_x = h - 1 - y
@@ -397,7 +412,8 @@ class SelectTool(BaseTool):
                 # 90° links: (x,y) -> (y, w-1-x)
                 new_x = y
                 new_y = w - 1 - x
-            rotated.append((new_x, new_y, color_idx))
+            new_stitch_type = rotate_map.get(stitch_type, stitch_type)
+            rotated.append((new_x, new_y, color_idx, new_stitch_type))
 
         # Neue Größe (w und h tauschen)
         new_w, new_h = h, w
@@ -410,14 +426,14 @@ class SelectTool(BaseTool):
             for x in range(w):
                 gx, gy = left + x, top + y
                 if self._is_valid_pos(ctx, gx, gy):
-                    changes.append((gx, gy, None))
+                    changes.append((gx, gy, None, 0))
 
         # Neue Position setzen
-        for new_x, new_y, color_idx in rotated:
+        for new_x, new_y, color_idx, new_stitch_type in rotated:
             gx = left + new_x
             gy = top + new_y
             if self._is_valid_pos(ctx, gx, gy) and color_idx is not None:
-                changes.append((gx, gy, color_idx))
+                changes.append((gx, gy, color_idx, new_stitch_type))
 
         # Auswahl aktualisieren
         self._selection = QRect(left, top, new_w, new_h)
@@ -425,7 +441,7 @@ class SelectTool(BaseTool):
 
         return changes
 
-    def flip_selection_horizontal(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def flip_selection_horizontal(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Spiegelt den Inhalt horizontal."""
         if not self._selection:
             return []
@@ -433,6 +449,8 @@ class SelectTool(BaseTool):
         layer = ctx.pattern.active_layer
         if not layer:
             return []
+
+        from ...core.stitch import FLIP_H_MAP
 
         w = self._selection.width()
         h = self._selection.height()
@@ -448,23 +466,25 @@ class SelectTool(BaseTool):
             for x in range(w):
                 gx, gy = left + x, top + y
                 if self._is_valid_pos(ctx, gx, gy):
-                    row.append(layer.get_stitch(gx, gy))
+                    row.append((layer.get_stitch(gx, gy), layer.get_stitch_type(gx, gy)))
                 else:
-                    row.append(None)
+                    row.append((None, 0))
             rows.append(row)
 
-        # Jede Zeile umdrehen und schreiben
+        # Jede Zeile umdrehen und schreiben -- Stichtyp wird per FLIP_H_MAP
+        # mitgespiegelt (z.B. HALF_TL_BR "/" wird zu HALF_TR_BL "\").
         for y, row in enumerate(rows):
             row.reverse()
-            for x, color_idx in enumerate(row):
+            for x, (color_idx, stitch_type) in enumerate(row):
                 gx, gy = left + x, top + y
                 if self._is_valid_pos(ctx, gx, gy):
-                    changes.append((gx, gy, color_idx))
+                    new_stitch_type = FLIP_H_MAP.get(stitch_type, stitch_type)
+                    changes.append((gx, gy, color_idx, new_stitch_type))
 
         self._content_captured = False
         return changes
 
-    def flip_selection_vertical(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def flip_selection_vertical(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Spiegelt den Inhalt vertikal."""
         if not self._selection:
             return []
@@ -472,6 +492,8 @@ class SelectTool(BaseTool):
         layer = ctx.pattern.active_layer
         if not layer:
             return []
+
+        from ...core.stitch import FLIP_V_MAP
 
         w = self._selection.width()
         h = self._selection.height()
@@ -485,19 +507,21 @@ class SelectTool(BaseTool):
             for x in range(w):
                 gx, gy = left + x, top + y
                 if self._is_valid_pos(ctx, gx, gy):
-                    row.append(layer.get_stitch(gx, gy))
+                    row.append((layer.get_stitch(gx, gy), layer.get_stitch_type(gx, gy)))
                 else:
-                    row.append(None)
+                    row.append((None, 0))
             rows.append(row)
 
-        # Zeilen umdrehen und schreiben
+        # Zeilen umdrehen und schreiben -- Stichtyp wird per FLIP_V_MAP
+        # mitgespiegelt.
         rows.reverse()
         changes = []
         for y, row in enumerate(rows):
-            for x, color_idx in enumerate(row):
+            for x, (color_idx, stitch_type) in enumerate(row):
                 gx, gy = left + x, top + y
                 if self._is_valid_pos(ctx, gx, gy):
-                    changes.append((gx, gy, color_idx))
+                    new_stitch_type = FLIP_V_MAP.get(stitch_type, stitch_type)
+                    changes.append((gx, gy, color_idx, new_stitch_type))
 
         self._content_captured = False
         return changes
@@ -555,7 +579,7 @@ class SelectTool(BaseTool):
 
         px, py = self._paste_position
 
-        for rel_x, rel_y, color_idx in SelectTool._clipboard:
+        for rel_x, rel_y, color_idx, _ in SelectTool._clipboard:
             if color_idx is None:
                 continue
 
@@ -588,7 +612,7 @@ class SelectTool(BaseTool):
         if not self._selection_content or not self._selection:
             return
 
-        for rel_x, rel_y, color_idx in self._selection_content:
+        for rel_x, rel_y, color_idx, _ in self._selection_content:
             if color_idx is None:
                 continue
 

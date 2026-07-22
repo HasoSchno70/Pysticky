@@ -123,21 +123,21 @@ class ToolManager:
 
     def on_mouse_press(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         """Delegiert Mouse-Press an aktives Werkzeug."""
         tool = self.get_active_tool()
         return tool.on_mouse_press(ctx, event) if tool else []
 
     def on_mouse_move(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         """Delegiert Mouse-Move an aktives Werkzeug."""
         tool = self.get_active_tool()
         return tool.on_mouse_move(ctx, event) if tool else []
 
     def on_mouse_release(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         """Delegiert Mouse-Release an aktives Werkzeug."""
         tool = self.get_active_tool()
         return tool.on_mouse_release(ctx, event) if tool else []

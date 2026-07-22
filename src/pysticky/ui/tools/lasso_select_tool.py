@@ -56,7 +56,7 @@ class LassoSelectTool(BaseTool):
         self._is_moving: bool = False
         self._move_start: tuple[int, int] | None = None
         self._original_bounds: QRect | None = None
-        self._selection_content: list[tuple[int, int, int | None]] | None = None
+        self._selection_content: list[tuple[int, int, int | None, int]] | None = None
         self._content_captured: bool = False
 
         # Einfügen-Modus
@@ -193,7 +193,7 @@ class LassoSelectTool(BaseTool):
 
     def on_mouse_press(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         if event.button() != Qt.MouseButton.LeftButton:
             return []
 
@@ -232,7 +232,7 @@ class LassoSelectTool(BaseTool):
 
     def on_mouse_move(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         x, y = ctx.grid_x, ctx.grid_y
         self._last_grid_pos = (x, y)
 
@@ -255,7 +255,7 @@ class LassoSelectTool(BaseTool):
 
     def on_mouse_release(
         self, ctx: ToolContext, event: QMouseEvent
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None] | tuple[int, int, int | None, int]]:
         changes = []
 
         if event.button() == Qt.MouseButton.LeftButton:
@@ -298,11 +298,12 @@ class LassoSelectTool(BaseTool):
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
                 color_idx = layer.get_stitch(x, y)
+                stitch_type = layer.get_stitch_type(x, y)
                 rel_x = x - self._selection_bounds.left()
                 rel_y = y - self._selection_bounds.top()
-                self._selection_content.append((rel_x, rel_y, color_idx))
+                self._selection_content.append((rel_x, rel_y, color_idx, stitch_type))
 
-    def _apply_move(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def _apply_move(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Wendet die Verschiebung an."""
         if not self._selection_content or not self._selection_bounds or not self._original_bounds:
             return []
@@ -310,18 +311,18 @@ class LassoSelectTool(BaseTool):
         changes = []
 
         # Alte Positionen löschen
-        for rel_x, rel_y, _ in self._selection_content:
+        for rel_x, rel_y, _, _ in self._selection_content:
             old_x = self._original_bounds.left() + rel_x
             old_y = self._original_bounds.top() + rel_y
             if self._is_valid_pos(ctx, old_x, old_y):
-                changes.append((old_x, old_y, None))
+                changes.append((old_x, old_y, None, 0))
 
-        # Neue Positionen setzen
-        for rel_x, rel_y, color_idx in self._selection_content:
+        # Neue Positionen setzen -- Stichtyp wird unveraendert mitgenommen.
+        for rel_x, rel_y, color_idx, stitch_type in self._selection_content:
             new_x = self._selection_bounds.left() + rel_x
             new_y = self._selection_bounds.top() + rel_y
             if self._is_valid_pos(ctx, new_x, new_y) and color_idx is not None:
-                changes.append((new_x, new_y, color_idx))
+                changes.append((new_x, new_y, color_idx, stitch_type))
 
         return changes
 
@@ -341,9 +342,10 @@ class LassoSelectTool(BaseTool):
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
                 color_idx = layer.get_stitch(x, y)
+                stitch_type = layer.get_stitch_type(x, y)
                 rel_x = x - self._selection_bounds.left()
                 rel_y = y - self._selection_bounds.top()
-                SelectTool._clipboard.append((rel_x, rel_y, color_idx))
+                SelectTool._clipboard.append((rel_x, rel_y, color_idx, stitch_type))
 
         SelectTool._clipboard_size = (
             self._selection_bounds.width(),
@@ -351,7 +353,7 @@ class LassoSelectTool(BaseTool):
         )
         return True
 
-    def cut_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def cut_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Schneidet die Auswahl aus."""
         if not self.copy_selection(ctx):
             return []
@@ -367,7 +369,7 @@ class LassoSelectTool(BaseTool):
         self._active = True
         return True
 
-    def _confirm_paste(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def _confirm_paste(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Bestätigt das Einfügen."""
         if not SelectTool._clipboard or not self._paste_position:
             self._is_pasting = False
@@ -379,13 +381,13 @@ class LassoSelectTool(BaseTool):
         # Neue Auswahl aus eingefügten Pixeln
         self._selected_pixels.clear()
 
-        for rel_x, rel_y, color_idx in SelectTool._clipboard:
+        for rel_x, rel_y, color_idx, stitch_type in SelectTool._clipboard:
             new_x = px + rel_x
             new_y = py + rel_y
             if self._is_valid_pos(ctx, new_x, new_y):
                 self._selected_pixels.add((new_x, new_y))
                 if color_idx is not None:
-                    changes.append((new_x, new_y, color_idx))
+                    changes.append((new_x, new_y, color_idx, stitch_type))
 
         self._update_bounds()
         self._is_pasting = False
@@ -401,7 +403,7 @@ class LassoSelectTool(BaseTool):
 
     # === Löschen / Füllen ===
 
-    def delete_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def delete_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Löscht den Inhalt der Auswahl."""
         if not self._selected_pixels:
             return []
@@ -409,28 +411,29 @@ class LassoSelectTool(BaseTool):
         changes = []
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, None))
+                changes.append((x, y, None, 0))
 
         self._selection_content = None
         self._content_captured = False
         return changes
 
-    def fill_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
-        """Füllt die Auswahl mit der aktuellen Farbe."""
+    def fill_selection(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
+        """Füllt die Auswahl mit der aktuellen Farbe (immer als voller Stich --
+        bewusst, siehe SelectTool.fill_selection())."""
         if not self._selected_pixels:
             return []
 
         changes = []
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, ctx.current_color_index))
+                changes.append((x, y, ctx.current_color_index, 0))
         return changes
 
     # === Transformieren ===
 
     def rotate_selection(
         self, ctx: ToolContext, clockwise: bool = True
-    ) -> list[tuple[int, int, int | None]]:
+    ) -> list[tuple[int, int, int | None, int]]:
         """Dreht den Inhalt der Auswahl um 90°."""
         if not self._selected_pixels or not self._selection_bounds:
             return []
@@ -438,6 +441,10 @@ class LassoSelectTool(BaseTool):
         layer = ctx.pattern.active_layer
         if not layer:
             return []
+
+        from ...core.stitch import ROTATE_CCW_MAP, ROTATE_CW_MAP
+
+        rotate_map = ROTATE_CW_MAP if clockwise else ROTATE_CCW_MAP
 
         left = self._selection_bounds.left()
         top = self._selection_bounds.top()
@@ -449,38 +456,40 @@ class LassoSelectTool(BaseTool):
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
                 color_idx = layer.get_stitch(x, y)
+                stitch_type = layer.get_stitch_type(x, y)
                 rel_x = x - left
                 rel_y = y - top
-                content.append((rel_x, rel_y, color_idx))
+                content.append((rel_x, rel_y, color_idx, stitch_type))
 
-        # Rotieren
+        # Rotieren -- Stichtyp wird per ROTATE_CW_MAP/ROTATE_CCW_MAP mitgedreht.
         rotated_pixels = set()
         rotated_content = []
 
-        for rel_x, rel_y, color_idx in content:
+        for rel_x, rel_y, color_idx, stitch_type in content:
             if clockwise:
                 new_rel_x = h - 1 - rel_y
                 new_rel_y = rel_x
             else:
                 new_rel_x = rel_y
                 new_rel_y = w - 1 - rel_x
-            rotated_content.append((new_rel_x, new_rel_y, color_idx))
+            new_stitch_type = rotate_map.get(stitch_type, stitch_type)
+            rotated_content.append((new_rel_x, new_rel_y, color_idx, new_stitch_type))
             rotated_pixels.add((left + new_rel_x, top + new_rel_y))
 
         # Änderungen berechnen
-        changes = []
+        changes: list[tuple[int, int, int | None, int]] = []
 
         # Alte Position löschen
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, None))
+                changes.append((x, y, None, 0))
 
         # Neue Position setzen
-        for new_rel_x, new_rel_y, color_idx in rotated_content:
+        for new_rel_x, new_rel_y, color_idx, new_stitch_type in rotated_content:
             gx = left + new_rel_x
             gy = top + new_rel_y
             if self._is_valid_pos(ctx, gx, gy) and color_idx is not None:
-                changes.append((gx, gy, color_idx))
+                changes.append((gx, gy, color_idx, new_stitch_type))
 
         # Auswahl aktualisieren
         self._selected_pixels = rotated_pixels
@@ -489,7 +498,7 @@ class LassoSelectTool(BaseTool):
 
         return changes
 
-    def flip_selection_horizontal(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def flip_selection_horizontal(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Spiegelt den Inhalt horizontal."""
         if not self._selected_pixels or not self._selection_bounds:
             return []
@@ -498,27 +507,30 @@ class LassoSelectTool(BaseTool):
         if not layer:
             return []
 
+        from ...core.stitch import FLIP_H_MAP
+
         left = self._selection_bounds.left()
         w = self._selection_bounds.width()
 
-        changes = []
-        new_content = {}
+        changes: list[tuple[int, int, int | None, int]] = []
+        new_content: dict[tuple[int, int], tuple[int | None, int]] = {}
 
-        # Inhalt lesen und spiegeln
+        # Inhalt lesen und spiegeln -- Stichtyp wird per FLIP_H_MAP mitgespiegelt.
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
                 color_idx = layer.get_stitch(x, y)
+                stitch_type = layer.get_stitch_type(x, y)
                 new_x = left + (w - 1) - (x - left)
-                new_content[(new_x, y)] = color_idx
+                new_content[(new_x, y)] = (color_idx, FLIP_H_MAP.get(stitch_type, stitch_type))
 
         # Löschen und neu setzen
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, None))
+                changes.append((x, y, None, 0))
 
-        for (x, y), color_idx in new_content.items():
+        for (x, y), (color_idx, stitch_type) in new_content.items():
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, color_idx))
+                changes.append((x, y, color_idx, stitch_type))
 
         # Auswahl aktualisieren
         self._selected_pixels = set(new_content.keys())
@@ -527,7 +539,7 @@ class LassoSelectTool(BaseTool):
 
         return changes
 
-    def flip_selection_vertical(self, ctx: ToolContext) -> list[tuple[int, int, int | None]]:
+    def flip_selection_vertical(self, ctx: ToolContext) -> list[tuple[int, int, int | None, int]]:
         """Spiegelt den Inhalt vertikal."""
         if not self._selected_pixels or not self._selection_bounds:
             return []
@@ -536,27 +548,30 @@ class LassoSelectTool(BaseTool):
         if not layer:
             return []
 
+        from ...core.stitch import FLIP_V_MAP
+
         top = self._selection_bounds.top()
         h = self._selection_bounds.height()
 
-        changes = []
-        new_content = {}
+        changes: list[tuple[int, int, int | None, int]] = []
+        new_content: dict[tuple[int, int], tuple[int | None, int]] = {}
 
-        # Inhalt lesen und spiegeln
+        # Inhalt lesen und spiegeln -- Stichtyp wird per FLIP_V_MAP mitgespiegelt.
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
                 color_idx = layer.get_stitch(x, y)
+                stitch_type = layer.get_stitch_type(x, y)
                 new_y = top + (h - 1) - (y - top)
-                new_content[(x, new_y)] = color_idx
+                new_content[(x, new_y)] = (color_idx, FLIP_V_MAP.get(stitch_type, stitch_type))
 
         # Löschen und neu setzen
         for x, y in self._selected_pixels:
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, None))
+                changes.append((x, y, None, 0))
 
-        for (x, y), color_idx in new_content.items():
+        for (x, y), (color_idx, stitch_type) in new_content.items():
             if self._is_valid_pos(ctx, x, y):
-                changes.append((x, y, color_idx))
+                changes.append((x, y, color_idx, stitch_type))
 
         # Auswahl aktualisieren
         self._selected_pixels = set(new_content.keys())
@@ -712,7 +727,7 @@ class LassoSelectTool(BaseTool):
 
         px, py = self._paste_position
 
-        for rel_x, rel_y, color_idx in SelectTool._clipboard:
+        for rel_x, rel_y, color_idx, _ in SelectTool._clipboard:
             if color_idx is None:
                 continue
 
@@ -746,7 +761,7 @@ class LassoSelectTool(BaseTool):
         if not self._selection_content or not self._selection_bounds:
             return
 
-        for rel_x, rel_y, color_idx in self._selection_content:
+        for rel_x, rel_y, color_idx, _ in self._selection_content:
             if color_idx is None:
                 continue
 

@@ -51,6 +51,7 @@ class SignalsConnectorMixin:
         self.canvas.batch_started.connect(self._on_batch_started)
         self.canvas.batch_ended.connect(self._on_batch_ended)
         self.canvas.stitch_placed.connect(self._on_stitch_placed)
+        self.canvas.stitch_placed_typed.connect(self._on_stitch_placed_typed)
         self.canvas.stitch_removed.connect(self._on_stitch_removed)
         self.canvas.backstitch_added.connect(self._on_backstitch_added)
         self.canvas.backstitch_removed.connect(self._on_backstitch_removed)
