@@ -22,10 +22,17 @@ class MouseEventsMixin:
     """Mixin für Maus- und Viewport-Event-Handler."""
 
     def wheelEvent(self: "CrossStitchCanvas", event: QWheelEvent) -> None:
+        # Zoom zu Cursor: die Stelle unter der Maus bleibt beim Zoomen an
+        # Ort und Stelle, statt dass die Ansicht um die Canvas-Mitte springt
+        # (Standard-UX in Zeichenprogrammen). zoom_reset()/zoom_fit()
+        # bleiben bewusst zentriert, nur der Mausrad-Pfad hier bekommt einen
+        # Anker.
+        pos = event.position()
+        anchor_x, anchor_y = int(pos.x()), int(pos.y())
         if event.angleDelta().y() > 0:
-            self.zoom_in()
+            self.zoom_in(anchor_x, anchor_y)
         else:
-            self.zoom_out()
+            self.zoom_out(anchor_x, anchor_y)
 
     def mousePressEvent(self: "CrossStitchCanvas", event: QMouseEvent) -> None:
         # WICHTIG: event.accept() bei Middle-Klick verhindert Windows

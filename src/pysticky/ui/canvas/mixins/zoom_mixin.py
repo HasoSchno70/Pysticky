@@ -15,16 +15,28 @@ if TYPE_CHECKING:
 class ZoomMixin:
     """Mixin für Zoom-Funktionalität."""
 
-    def zoom_in(self: "CrossStitchCanvas") -> None:
+    def zoom_in(
+        self: "CrossStitchCanvas", anchor_x: int | None = None, anchor_y: int | None = None
+    ) -> None:
         """Vergrößert die Ansicht multiplikativ um ZOOM_STEP (mind. +1px,
-        damit kleine Zellgrößen bei ZOOM_STEP nahe 1.0 nicht steckenbleiben)."""
-        target = max(self._cell_size + 1, round(self._cell_size * self.ZOOM_STEP))
-        self._set_cell_size(min(target, self.MAX_CELL_SIZE))
+        damit kleine Zellgrößen bei ZOOM_STEP nahe 1.0 nicht steckenbleiben).
 
-    def zoom_out(self: "CrossStitchCanvas") -> None:
-        """Verkleinert die Ansicht multiplikativ um ZOOM_STEP (mind. -1px)."""
+        anchor_x/anchor_y: Bildschirm-Koordinate, die beim Zoomen an
+        derselben Stelle bleiben soll (z.B. Mausposition beim Mausrad-Zoom).
+        None (Default) = Canvas-Mitte, wie bisher.
+        """
+        target = max(self._cell_size + 1, round(self._cell_size * self.ZOOM_STEP))
+        self._set_cell_size(min(target, self.MAX_CELL_SIZE), anchor_x, anchor_y)
+
+    def zoom_out(
+        self: "CrossStitchCanvas", anchor_x: int | None = None, anchor_y: int | None = None
+    ) -> None:
+        """Verkleinert die Ansicht multiplikativ um ZOOM_STEP (mind. -1px).
+
+        anchor_x/anchor_y: siehe zoom_in().
+        """
         target = min(self._cell_size - 1, round(self._cell_size / self.ZOOM_STEP))
-        self._set_cell_size(max(target, self.MIN_CELL_SIZE))
+        self._set_cell_size(max(target, self.MIN_CELL_SIZE), anchor_x, anchor_y)
 
     def zoom_fit(self: "CrossStitchCanvas") -> None:
         """Passt die Ansicht an das Fenster an."""
@@ -67,8 +79,20 @@ class ZoomMixin:
         """Gibt den aktuellen Zoom in Prozent zurück."""
         return (self._cell_size / self.DEFAULT_CELL_SIZE) * 100.0
 
-    def _set_cell_size(self: "CrossStitchCanvas", size: int) -> None:
-        """Setzt die Zellgröße und aktualisiert die Ansicht."""
+    def _set_cell_size(
+        self: "CrossStitchCanvas",
+        size: int,
+        anchor_x: int | None = None,
+        anchor_y: int | None = None,
+    ) -> None:
+        """Setzt die Zellgröße und aktualisiert die Ansicht.
+
+        anchor_x/anchor_y: Bildschirm-Koordinate, die beim Zoomen an
+        derselben Stelle bleiben soll ("Zoom zu Cursor"). None (Default) =
+        Canvas-Mitte -- so bleiben zoom_reset()/zoom_fit()/set_zoom()
+        weiterhin zentriert, nur zoom_in()/zoom_out() (Mausrad) reichen
+        bewusst einen Anker durch.
+        """
         old_size = self._cell_size
         self._cell_size = size
 
@@ -81,15 +105,14 @@ class ZoomMixin:
             self.invalidate_all()
 
         if self._pattern:
-            # Zoom um Bildschirmmitte
-            center_x = self.width() // 2
-            center_y = self.height() // 2
+            anchor_screen_x = self.width() // 2 if anchor_x is None else anchor_x
+            anchor_screen_y = self.height() // 2 if anchor_y is None else anchor_y
 
-            grid_x = (center_x - self._offset_x) / old_size
-            grid_y = (center_y - self._offset_y) / old_size
+            grid_x = (anchor_screen_x - self._offset_x) / old_size
+            grid_y = (anchor_screen_y - self._offset_y) / old_size
 
-            self._offset_x = int(center_x - grid_x * self._cell_size)
-            self._offset_y = int(center_y - grid_y * self._cell_size)
+            self._offset_x = int(anchor_screen_x - grid_x * self._cell_size)
+            self._offset_y = int(anchor_screen_y - grid_y * self._cell_size)
 
         self.zoom_changed.emit(self._cell_size / self.DEFAULT_CELL_SIZE)
         self.offset_changed.emit(self._offset_x, self._offset_y)
