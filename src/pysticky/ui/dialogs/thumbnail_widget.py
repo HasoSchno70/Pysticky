@@ -132,11 +132,12 @@ class ThumbnailWidget(QFrame):
         # Versuche aus Pattern zu generieren
         pattern_path = Path(self.entry.filepath)
         if pattern_path.exists():
-            try:
-                # Verzögert laden um UI nicht zu blockieren
-                QTimer.singleShot(50, self._generate_thumbnail)
-            except (OSError, ValueError):
-                logger.warning("Thumbnail-Generierung konnte nicht gestartet werden")
+            # Verzögert laden um UI nicht zu blockieren -- singleShot() plant
+            # nur den Callback ein und wirft dabei nichts; ein etwaiger
+            # Fehler in _generate_thumbnail() selbst passiert asynchron
+            # NACH dieser Methode und wuerde von einem try/except hier
+            # ohnehin nie erreicht (totes Fehlerhandling).
+            QTimer.singleShot(50, self._generate_thumbnail)
 
         # Placeholder
         self._thumb_label.setText(f"{self.entry.width}\u00d7{self.entry.height}")

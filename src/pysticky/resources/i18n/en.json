@@ -1021,6 +1021,7 @@
   "Rahmen-Breite:": "Hoop width:",
   "Rahmen-Höhe:": "Hoop height:",
   "Anzahl Stiche die zwei benachbarte Sektoren teilen — verhindert sichtbare Nähte. Empfehlung: 2-5.": "Number of stitches shared by two adjacent sectors — prevents visible seams. Recommended: 2-5.",
+  "Anzahl Drills die zwei benachbarte Sektoren teilen — verhindert sichtbare Nähte. Empfehlung: 2-5.": "Number of drills shared by two adjacent sectors — prevents visible seams. Recommended: 2-5.",
   "Überlappung:": "Overlap:",
   "Position": "Position",
   "X-Bereich": "X range",

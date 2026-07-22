@@ -221,9 +221,23 @@ class PaletteManager:
         logger.debug(f"Palette geladen: {manufacturer} ({len(threads)} Farben)")
 
     def get_palette(self, name: str) -> ThreadPalette | None:
-        """Gibt eine Palette nach Name zurück (thread-sicher)."""
+        """Gibt eine Palette nach Name zurück (thread-sicher).
+
+        Fällt auf einen case-insensitiven Vergleich zurück, wenn die exakte
+        Schreibweise nicht matcht -- z.B. `thread.manufacturer` aus
+        importierten/gespeicherten Mustern kann von der kanonischen
+        Palette-Schreibweise abweichen (war vorher inkonsistent zu
+        thread_cross_ref.find_equivalent's eigenem case-insensitiven Check).
+        """
         with self._lock:
-            return self._palettes.get(name)
+            exact = self._palettes.get(name)
+            if exact is not None:
+                return exact
+            name_lower = name.lower()
+            for palette_name, palette in self._palettes.items():
+                if palette_name.lower() == name_lower:
+                    return palette
+            return None
 
     def find_color_across_palettes(
         self, color: ThreadColor, max_per_palette: int = 3

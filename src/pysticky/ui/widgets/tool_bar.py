@@ -133,6 +133,7 @@ class ToolButton(BaseToolButton):
 
         super().__init__(icon_char, label, tooltip, True, parent)
         self._tool = tool
+        self._shortcut_hint = shortcut
 
         if shortcut:
             self.setShortcut(shortcut)
@@ -144,6 +145,23 @@ class ToolButton(BaseToolButton):
     @tool.setter
     def tool(self, value: Tool) -> None:
         self._tool = value
+
+    def _apply_stylesheet(self) -> None:
+        """Wendet Basis-Style an UND baut den Tooltip neu auf -- der
+        Tooltip baeckt THEME.accent_primary als Inline-Farbe ein, die sonst
+        nach einem Theme-Wechsel stehen bleibt (nur die Tooltip-Farbe,
+        Sichtbarkeit/Text bleiben korrekt)."""
+        super()._apply_stylesheet()
+        self._refresh_tooltip()
+
+    def _refresh_tooltip(self) -> None:
+        tooltip = f"<b>{self._label}</b>"
+        if self._shortcut_hint:
+            tooltip += (
+                f"<br><span style='color:{THEME.accent_primary};'>"
+                f"Taste: {self._shortcut_hint}</span>"
+            )
+        self.setToolTip(tooltip)
 
 
 class ToggleToolButton(ToolButton):
@@ -172,15 +190,19 @@ class ToggleToolButton(ToolButton):
         self._label_filled = label_filled
         self._is_filled = False
 
-        self.setToolTip(
-            f"<b>{label_outline}</b><br>"
-            f"<span style='color:{THEME.accent_primary};'>Erneut klicken: {label_filled}</span>"
-            + (
-                f"<br><span style='color:{THEME.text_muted};'>Taste: {shortcut}</span>"
-                if shortcut
-                else ""
-            )
+        self._refresh_tooltip()
+
+    def _refresh_tooltip(self) -> None:
+        tooltip = (
+            f"<b>{self._label_outline}</b><br>"
+            f"<span style='color:{THEME.accent_primary};'>"
+            f"Erneut klicken: {self._label_filled}</span>"
         )
+        if self._shortcut_hint:
+            tooltip += (
+                f"<br><span style='color:{THEME.text_muted};'>Taste: {self._shortcut_hint}</span>"
+            )
+        self.setToolTip(tooltip)
 
     def toggle_fill_state(self) -> None:
         """Wechselt zwischen Umriss und Gefüllt."""

@@ -191,6 +191,12 @@ class HoopPlannerDialog(QDialog):
         super().__init__(parent)
         self._pattern = pattern
         self._hoop_scale = pattern.fabric_count / 14
+        # "Stickrahmen"-Terminologie bleibt bewusst modus-unabhaengig
+        # (frueherer Audit-Befund, kein Bug), aber die Stich-vs-Drill-
+        # Zaehleinheit soll dem etablierten DP-Vokabular folgen.
+        self._diamond = pattern.mode == "diamond"
+        self._stitch_word = t("Drills") if self._diamond else t("Stiche")
+        self._stitch_word_suffix = t(" Drills") if self._diamond else t(" Stiche")
 
         self.setWindowTitle(t("Rahmenaufteilung"))
         self.setMinimumSize(820, 600)
@@ -203,7 +209,8 @@ class HoopPlannerDialog(QDialog):
         layout.setSpacing(12)
 
         intro = QLabel(
-            f"Pattern-Größe: <b>{self._pattern.width} × {self._pattern.height}</b> Stiche "
+            f"Pattern-Größe: <b>{self._pattern.width} × {self._pattern.height}</b> "
+            f"{self._stitch_word} "
             f"({self._pattern.fabric_count} ct). "
             "Wähle deine Stickrahmen-Größe und die Überlappungs-Zone — die Aufteilung "
             "wird automatisch berechnet."
@@ -254,23 +261,28 @@ class HoopPlannerDialog(QDialog):
         self.spin_w = QSpinBox()
         self.spin_w.setRange(10, 500)
         self.spin_w.setValue(default_hoop)
-        self.spin_w.setSuffix(t(" Stiche"))
+        self.spin_w.setSuffix(self._stitch_word_suffix)
         self.spin_w.valueChanged.connect(self._recalculate)
         form.addRow(t("Rahmen-Breite:"), self.spin_w)
 
         self.spin_h = QSpinBox()
         self.spin_h.setRange(10, 500)
         self.spin_h.setValue(default_hoop)
-        self.spin_h.setSuffix(t(" Stiche"))
+        self.spin_h.setSuffix(self._stitch_word_suffix)
         self.spin_h.valueChanged.connect(self._recalculate)
         form.addRow(t("Rahmen-Höhe:"), self.spin_h)
 
         self.spin_overlap = QSpinBox()
         self.spin_overlap.setRange(0, 50)
         self.spin_overlap.setValue(3)
-        self.spin_overlap.setSuffix(t(" Stiche"))
+        self.spin_overlap.setSuffix(self._stitch_word_suffix)
         self.spin_overlap.setToolTip(
             t(
+                "Anzahl Drills die zwei benachbarte Sektoren teilen — "
+                "verhindert sichtbare Nähte. Empfehlung: 2-5."
+            )
+            if self._diamond
+            else t(
                 "Anzahl Stiche die zwei benachbarte Sektoren teilen — "
                 "verhindert sichtbare Nähte. Empfehlung: 2-5."
             )
@@ -291,7 +303,7 @@ class HoopPlannerDialog(QDialog):
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(
-            ["#", t("Position"), t("X-Bereich"), t("Y-Bereich"), t("Stiche")]
+            ["#", t("Position"), t("X-Bereich"), t("Y-Bereich"), self._stitch_word]
         )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -371,7 +383,7 @@ class HoopPlannerDialog(QDialog):
             self.summary_label.setText(
                 f"<b>{plan.total_sectors}</b> Stickrahmen-Sektoren benötigt "
                 f"({plan.rows} Reihen × {plan.cols} Spalten, "
-                f"Überlappung {plan.overlap} Stiche)."
+                f"Überlappung {plan.overlap} {self._stitch_word})."
             )
 
     def _update_table(self, plan: HoopPlan) -> None:

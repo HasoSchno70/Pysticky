@@ -708,12 +708,14 @@ class Pattern:
             for y, x in positions:
                 yield (int(x), int(y), int(layer.grid[y, x]), layer)
 
-    def fill_rectangle(self, x1: int, y1: int, x2: int, y2: int, color_index: int) -> None:
+    def fill_rectangle(self, x1: int, y1: int, x2: int, y2: int, color_index: int | None) -> None:
         """
         Füllt ein Rechteck auf dem aktiven Layer.
 
         Verwendet numpy-Slicing für direkte Grid-Manipulation
         statt pro-Pixel set_stitch()-Aufrufe.
+
+        color_index=None löscht das Rechteck (analog set_stitch(x,y,None)).
         """
         if color_index is not None and not (0 <= color_index < len(self.color_entries)):
             return
@@ -741,8 +743,12 @@ class Pattern:
                 count = int(np.count_nonzero(old_region == index_val))
                 self.color_entries[index_val].stitch_count -= count
 
-        # Numpy-Slicing für schnelles Füllen
-        layer.grid[min_y : max_y + 1, min_x : max_x + 1] = color_index
+        # Numpy-Slicing für schnelles Füllen -- None (Loeschen) muss auf
+        # NO_STITCH abgebildet werden, sonst TypeError beim Zuweisen von
+        # None in ein int16-Array.
+        layer.grid[min_y : max_y + 1, min_x : max_x + 1] = (
+            NO_STITCH if color_index is None else color_index
+        )
 
         # Neue Stichzahlen addieren
         if color_index is not None and 0 <= color_index < len(self.color_entries):

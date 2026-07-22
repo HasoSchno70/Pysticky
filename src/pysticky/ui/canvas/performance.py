@@ -248,10 +248,15 @@ class PerformanceManager:
         if not self._enabled:
             return
 
+        # rect.right()/bottom() sind inklusiv (Qt-Konvention) -- eine simple
+        # Ganzzahl-Division liefert bereits den korrekten letzten
+        # Chunk-Index. Das vorherige "+ self._chunk_size" vor der Division
+        # markierte dadurch systematisch eine Chunk-Reihe/Spalte zu viel als
+        # dirty.
         start_cx = rect.left() // self._chunk_size
         start_cy = rect.top() // self._chunk_size
-        end_cx = (rect.right() + self._chunk_size) // self._chunk_size
-        end_cy = (rect.bottom() + self._chunk_size) // self._chunk_size
+        end_cx = rect.right() // self._chunk_size
+        end_cy = rect.bottom() // self._chunk_size
 
         for cy in range(start_cy, end_cy + 1):
             for cx in range(start_cx, end_cx + 1):
