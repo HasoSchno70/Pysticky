@@ -6,6 +6,7 @@ Enthält Methoden für Spiegelberechnungen und Auswahl-Spiegelung.
 
 from typing import TYPE_CHECKING
 
+from ....core.stitch import FLIP_H_MAP, FLIP_V_MAP
 from ..enums import MirrorMode
 
 if TYPE_CHECKING:
@@ -190,15 +191,21 @@ class MirrorMixin:
 
         data = []
         for y in range(y1, y2 + 1):
-            row = [layer.get_stitch(x, y) for x in range(x1, x2 + 1)]
+            row = [(layer.get_stitch(x, y), layer.get_stitch_type(x, y)) for x in range(x1, x2 + 1)]
             data.append(row)
 
         for y_idx, row in enumerate(data):
             row.reverse()
-            for x_idx, color_idx in enumerate(row):
+            for x_idx, (color_idx, stitch_type) in enumerate(row):
                 x, y = x1 + x_idx, y1 + y_idx
                 if color_idx is not None:
-                    layer.set_stitch(x, y, color_idx)
+                    # Diagonale Halb-/Viertelstiche drehen bei horizontaler
+                    # Spiegelung ihre Ausrichtung mit (z.B. "/" -> "\"),
+                    # analog zum mirror_horizontal-Plugin und
+                    # ROTATE_CW_MAP/FLIP_V_MAP fuer die Geschwister-Ops.
+                    layer.set_stitch(
+                        x, y, color_idx, stitch_type=FLIP_H_MAP.get(stitch_type, stitch_type)
+                    )
                 else:
                     layer.remove_stitch(x, y)
 
@@ -218,15 +225,17 @@ class MirrorMixin:
 
         data = []
         for y in range(y1, y2 + 1):
-            row = [layer.get_stitch(x, y) for x in range(x1, x2 + 1)]
+            row = [(layer.get_stitch(x, y), layer.get_stitch_type(x, y)) for x in range(x1, x2 + 1)]
             data.append(row)
 
         data.reverse()
         for y_idx, row in enumerate(data):
-            for x_idx, color_idx in enumerate(row):
+            for x_idx, (color_idx, stitch_type) in enumerate(row):
                 x, y = x1 + x_idx, y1 + y_idx
                 if color_idx is not None:
-                    layer.set_stitch(x, y, color_idx)
+                    layer.set_stitch(
+                        x, y, color_idx, stitch_type=FLIP_V_MAP.get(stitch_type, stitch_type)
+                    )
                 else:
                     layer.remove_stitch(x, y)
 

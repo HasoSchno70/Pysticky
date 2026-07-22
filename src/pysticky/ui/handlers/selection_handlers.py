@@ -5,6 +5,8 @@ Auswahl-bezogene Handler für MainWindow.
 from typing import TYPE_CHECKING
 
 from ...core.i18n import t
+from ...core.undo import LayerSnapshotCommand
+from ..notify_scope import NotifyScope
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
@@ -161,24 +163,40 @@ class SelectionHandlersMixin:
     # Spiegel-Aktionen (operieren auf gesamtem Muster, nicht Auswahl)
     # =========================================================================
 
+    def _run_mirror_op(
+        self: "MainWindow", method_name: str, description_text: str, status_template: str
+    ) -> None:
+        """Führt eine Canvas-Spiegel-Methode aus, undo-fähig via `LayerSnapshotCommand`.
+
+        Spiegelt (anders als `_run_selection_op`) das ganze Muster statt nur
+        die Auswahl und ändert eine im Voraus nicht bekannte Anzahl Zellen --
+        Snapshot-Command statt Change-Liste, analog zu `PluginDialog._on_run`.
+        """
+        pattern = self.current_pattern
+        if not self.canvas._selection or not pattern.active_layer:
+            self.status_bar.showMessage(t("Keine Auswahl zum Spiegeln"), 2000)
+            return
+
+        cmd = LayerSnapshotCommand(
+            pattern,
+            layer_index=pattern.layer_stack.active_index,
+            action=getattr(self.canvas, method_name),
+            description_text=description_text,
+        )
+        self.undo_manager.execute(cmd)
+        self._update_undo_actions()
+        self._mark_unsaved()
+        self._notify_panels(NotifyScope.STITCH_VISUAL)
+        self.status_bar.showMessage(t(status_template), 2000)
+
     def _on_mirror_h(self: "MainWindow") -> None:
         """Horizontal spiegeln (über `Canvas.mirror_selection_horizontal`)."""
-        if self.canvas.mirror_selection_horizontal():
-            self._mark_unsaved()
-            self.canvas.update()
-            self.minimap_panel.refresh()
-            self.tile_preview_panel.refresh()
-            self.status_bar.showMessage(t("Horizontal gespiegelt"), 2000)
-        else:
-            self.status_bar.showMessage(t("Keine Auswahl zum Spiegeln"), 2000)
+        self._run_mirror_op(
+            "mirror_selection_horizontal", "Horizontal gespiegelt", "Horizontal gespiegelt"
+        )
 
     def _on_mirror_v(self: "MainWindow") -> None:
         """Vertikal spiegeln."""
-        if self.canvas.mirror_selection_vertical():
-            self._mark_unsaved()
-            self.canvas.update()
-            self.minimap_panel.refresh()
-            self.tile_preview_panel.refresh()
-            self.status_bar.showMessage(t("Vertikal gespiegelt"), 2000)
-        else:
-            self.status_bar.showMessage(t("Keine Auswahl zum Spiegeln"), 2000)
+        self._run_mirror_op(
+            "mirror_selection_vertical", "Vertikal gespiegelt", "Vertikal gespiegelt"
+        )
