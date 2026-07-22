@@ -87,15 +87,16 @@ class ColorSwatch(QWidget):
     def _create_tooltip(self) -> str:
         thread = self._entry.thread
         skip_text = (
-            "<br><b style='color: #ff9800;'>⊘ Wird nicht gestickt</b>"
+            f"<br><b style='color: #ff9800;'>⊘ {t('Wird nicht gestickt')}</b>"
             if self._entry.skip_stitching
             else ""
         )
         return (
             f"<b style='color: {THEME.accent_primary};'>{self._entry.symbol}</b> <b>{thread.name}</b><br>"
             f"<span style='color: {THEME.text_muted};'>{thread.manufacturer or ''}</span><br>"
-            f"Nr: {thread.catalog_number or '-'}<br>"
-            f"<span style='color: {THEME.accent_primary};'>{self._entry.stitch_count} Stiche</span>{skip_text}"
+            f"{t('Nr.')}: {thread.catalog_number or '-'}<br>"
+            f"<span style='color: {THEME.accent_primary};'>"
+            f"{t('{count} Stiche').format(count=self._entry.stitch_count)}</span>{skip_text}"
         )
 
     def get_glow_intensity(self) -> float:

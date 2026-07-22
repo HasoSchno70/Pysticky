@@ -204,12 +204,21 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
     if not isinstance(data["layers"], list) or len(data["layers"]) == 0:
         raise ValueError("Mindestens ein Layer erforderlich")
 
+    # fabric_count wird an mehreren Stellen (info_panel.py, pattern.py::size_cm)
+    # als Divisor benutzt -- eine beschaedigte/handbearbeitete .pxs-Datei mit
+    # fabric_count<=0 wuerde dort einen ZeroDivisionError ausloesen. Kein
+    # Loeschen/Ablehnen der Datei noetig, einfacher Fallback reicht (gleiche
+    # Grosszuegigkeit wie bei width/height oben).
+    loaded_fabric_count = data.get("fabric_count", DEFAULT_FABRIC_COUNT)
+    if not isinstance(loaded_fabric_count, (int, float)) or loaded_fabric_count <= 0:
+        loaded_fabric_count = DEFAULT_FABRIC_COUNT
+
     # Pattern erstellen
     pattern = Pattern(
         name=data["name"],
         width=width,
         height=height,
-        fabric_count=data.get("fabric_count", DEFAULT_FABRIC_COUNT),
+        fabric_count=loaded_fabric_count,
         metadata=data.get("metadata", {}),
         # Quell-Infos laden (für Palettenwechsel-Feature)
         source_image_path=data.get("source_image_path"),

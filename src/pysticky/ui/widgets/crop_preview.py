@@ -6,6 +6,7 @@ from PySide6.QtCore import QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPaintEvent, QPen, QPixmap
 from PySide6.QtWidgets import QLabel
 
+from ...core.i18n import t
 from ...utils import clamp
 
 
@@ -164,7 +165,7 @@ class CropPreviewWidget(QLabel):
         if not self._scaled_pixmap:
             # Kein Bild
             painter.setPen(QColor(96, 96, 128))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Kein Bild geladen")
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, t("Kein Bild geladen"))
             return
 
         # Bild zeichnen (abgedunkelt außerhalb des Ausschnitts)

@@ -32,13 +32,41 @@ from ..styles import THEME
 class StatCard(QFrame):
     """Statistik-Karte mit dunklem Gradient und farbigem Glow."""
 
-    def __init__(self, icon: str, label: str, color: str = None, parent=None) -> None:
+    def __init__(
+        self,
+        icon: str,
+        label: str,
+        color: str | None = None,
+        theme_attr: str | None = None,
+        parent=None,
+    ) -> None:
         super().__init__(parent)
-        self._color = QColor(color or THEME.accent_primary)
+        # theme_attr (z.B. "accent_primary") wird bei jedem _apply_theme()
+        # frisch aus THEME nachgeschlagen -- reine Hex-Literale (color=
+        # "#40c8b0") sind bewusst dekorativ und bleiben ueber Theme-Wechsel
+        # hinweg konstant, siehe MEMORY.md.
+        self._theme_attr = theme_attr
+        self._color = QColor(self._resolve_color(color))
         self._icon = icon
         self._label = label
         self._value = "0"
         self._setup_ui()
+
+    def _resolve_color(self, color: str | None) -> str:
+        if self._theme_attr:
+            return getattr(THEME, self._theme_attr)
+        return color or THEME.accent_primary
+
+    def _icon_container_stylesheet(self) -> str:
+        c1 = self._color.lighter(130).name()
+        c2 = self._color.name()
+        return f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 {c1}, stop:1 {c2});
+                border-radius: 12px;
+            }}
+        """
 
     def _setup_ui(self) -> None:
         self.setMinimumHeight(68)
@@ -48,19 +76,10 @@ class StatCard(QFrame):
         layout.setSpacing(14)
 
         # Icon mit Gradient-Hintergrund
-        icon_container = QFrame()
-        icon_container.setFixedSize(44, 44)
-
-        c1 = self._color.lighter(130).name()
-        c2 = self._color.name()
-        icon_container.setStyleSheet(f"""
-            QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 {c1}, stop:1 {c2});
-                border-radius: 12px;
-            }}
-        """)
-        icon_layout = QHBoxLayout(icon_container)
+        self.icon_container = QFrame()
+        self.icon_container.setFixedSize(44, 44)
+        self.icon_container.setStyleSheet(self._icon_container_stylesheet())
+        icon_layout = QHBoxLayout(self.icon_container)
         icon_layout.setContentsMargins(0, 0, 0, 0)
         self.icon_label = QLabel(self._icon)
         self.icon_label.setStyleSheet(
@@ -68,7 +87,7 @@ class StatCard(QFrame):
         )
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_layout.addWidget(self.icon_label)
-        layout.addWidget(icon_container)
+        layout.addWidget(self.icon_container)
 
         # Text
         text_layout = QVBoxLayout()
@@ -152,6 +171,9 @@ class StatCard(QFrame):
 
     def _apply_theme(self) -> None:
         """Re-applies styles for theme switching."""
+        if self._theme_attr:
+            self._color = QColor(self._resolve_color(None))
+            self.icon_container.setStyleSheet(self._icon_container_stylesheet())
         self.lbl_label.setStyleSheet(f"""
             font-size: 10px;
             color: {THEME.text_muted};

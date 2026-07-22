@@ -70,19 +70,22 @@ class InfoPanel(QWidget):
         layout.addSpacing(6)
 
         # === Statistik-Karten ===
-        self.card_stitches = StatCard("✦", t("Stiche"), THEME.accent_primary)
+        # theme_attr statt eines schon aufgeloesten THEME.*-Werts -- sonst
+        # baekt StatCard die Farbe des Theme zum Konstruktionszeitpunkt fuer
+        # immer ein und bleibt nach einem Live-Theme-Wechsel stehen.
+        self.card_stitches = StatCard("✦", t("Stiche"), theme_attr="accent_primary")
         layout.addWidget(self.card_stitches)
 
-        self.card_colors = StatCard("🎨", t("Farben"), THEME.accent_secondary)
+        self.card_colors = StatCard("🎨", t("Farben"), theme_attr="accent_secondary")
         layout.addWidget(self.card_colors)
 
-        self.card_size = StatCard("📐", t("Größe"), THEME.info)
+        self.card_size = StatCard("📐", t("Größe"), theme_attr="info")
         layout.addWidget(self.card_size)
 
-        self.card_cm = StatCard("📏", t("Maße"), THEME.accent_purple)
+        self.card_cm = StatCard("📏", t("Maße"), theme_attr="accent_purple")
         layout.addWidget(self.card_cm)
 
-        self.card_layers = StatCard("📑", t("Ebenen"), THEME.error)
+        self.card_layers = StatCard("📑", t("Ebenen"), theme_attr="error")
         layout.addWidget(self.card_layers)
 
         self.card_time = StatCard("⏱", t("Stickzeit"), "#40c8b0")
@@ -94,7 +97,7 @@ class InfoPanel(QWidget):
         self.card_progress = StatCard("✅", t("Fortschritt"), "#40c870")
         layout.addWidget(self.card_progress)
 
-        self.card_difficulty = StatCard("🎯", t("Schwierigkeit"), THEME.warning)
+        self.card_difficulty = StatCard("🎯", t("Schwierigkeit"), theme_attr="warning")
         self.card_difficulty.setToolTip(
             t("Heuristik aus Farbanzahl, Spezial-Stichen, Backstitches und Größe.")
         )

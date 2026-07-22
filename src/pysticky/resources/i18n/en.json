@@ -1434,5 +1434,15 @@
   "'{name}' aus der Bibliothek entfernen?\n\nDie Datei selbst wird nicht gelöscht.": "Remove '{name}' from the library?\n\nThe file itself will not be deleted.",
   "{added} neue Muster zur Bibliothek hinzugefügt.": "{added} new patterns added to the library.",
   "Tags für '{name}' (kommagetrennt):": "Tags for '{name}' (comma-separated):",
-  "Kategorie '{category}' wirklich löschen?\n\nDie Muster werden nicht gelöscht, nur die Kategorie-Zuordnung.": "Really delete category '{category}'?\n\nThe patterns will not be deleted, only the category assignment."
+  "Kategorie '{category}' wirklich löschen?\n\nDie Muster werden nicht gelöscht, nur die Kategorie-Zuordnung.": "Really delete category '{category}'?\n\nThe patterns will not be deleted, only the category assignment.",
+  "{count} Stiche": "{count} stitches",
+  "○ S = Start  |  □ E = Ende  |  - - - = Sprung": "○ S = Start  |  □ E = End  |  - - - = Jump",
+  "Zoom: {percent}%  |  Mausrad: Zoom  |  Ziehen: Verschieben": "Zoom: {percent}%  |  Mouse wheel: Zoom  |  Drag: Pan",
+  "Farbe {index}": "Color {index}",
+  "Farbe: {name}": "Color: {name}",
+  "Stiche: {stitches}  |  Sprünge: {jumps}  |  Distanz: {distance:.1f}": "Stitches: {stitches}  |  Jumps: {jumps}  |  Distance: {distance:.1f}",
+  "Schritt {n}  |  Position ({x}, {y})  |  Distanz: {dist:.1f}": "Step {n}  |  Position ({x}, {y})  |  Distance: {dist:.1f}",
+  "⚠ Sprung!": "⚠ Jump!",
+  "{stitches} Stiche, {jumps} Sprünge": "{stitches} stitches, {jumps} jumps",
+  "Kein Bild geladen": "No image loaded"
 }

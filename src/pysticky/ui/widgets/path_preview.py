@@ -30,6 +30,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QWidget
 
 from ...core import ColorPath, Pattern
+from ...core.i18n import t
 from ...utils import clamp
 from ..color_utils import to_qcolor
 from .custom_tooltip import hide_custom_tooltip, show_custom_tooltip
@@ -260,9 +261,11 @@ class PathPreviewWidget(QWidget):
             # Hover-Tooltip
             step = self._stitch_at_pos(event.position())
             if step:
-                tip = f"Schritt {step.step_number}  |  Position ({step.x}, {step.y})  |  Distanz: {step.distance_from_prev:.1f}"
+                tip = t("Schritt {n}  |  Position ({x}, {y})  |  Distanz: {dist:.1f}").format(
+                    n=step.step_number, x=step.x, y=step.y, dist=step.distance_from_prev
+                )
                 if step.is_jump:
-                    tip += "  |  \u26a0 Sprung!"
+                    tip += "  |  " + t("\u26a0 Sprung!")
                 show_custom_tooltip(tip, event.globalPosition().toPoint())
             else:
                 hide_custom_tooltip()
@@ -447,9 +450,13 @@ class PathPreviewWidget(QWidget):
             font.setPixelSize(11)
             font.setBold(False)
             painter.setFont(font)
-            info = f"Zoom: {int(self._zoom * 100)}%  |  Mausrad: Zoom  |  Ziehen: Verschieben"
+            info = t("Zoom: {percent}%  |  Mausrad: Zoom  |  Ziehen: Verschieben").format(
+                percent=int(self._zoom * 100)
+            )
             if self._color_path:
-                info += f"  |  {self._color_path.stitch_count} Stiche, {self._color_path.jump_count} Sprünge"
+                info += "  |  " + t("{stitches} Stiche, {jumps} Sprünge").format(
+                    stitches=self._color_path.stitch_count, jumps=self._color_path.jump_count
+                )
             painter.drawText(5, self.height() - 5, info)
 
     @staticmethod
@@ -505,7 +512,11 @@ class PathPreviewWidget(QWidget):
 
         # Legende hinzufügen
         entry = self._pattern.get_color_entry(self._color_path.color_index)
-        color_name = entry.thread.name if entry else f"Farbe {self._color_path.color_index}"
+        color_name = (
+            entry.thread.name
+            if entry
+            else t("Farbe {index}").format(index=self._color_path.color_index)
+        )
 
         text_color = self._get_text_color()
         painter.setPen(text_color)
@@ -515,7 +526,7 @@ class PathPreviewWidget(QWidget):
         painter.setFont(font)
 
         legend_y = height - 50
-        painter.drawText(margin, legend_y, f"Farbe: {color_name}")
+        painter.drawText(margin, legend_y, t("Farbe: {name}").format(name=color_name))
 
         font.setBold(False)
         font.setPixelSize(12)
@@ -523,14 +534,16 @@ class PathPreviewWidget(QWidget):
         painter.drawText(
             margin,
             legend_y + 18,
-            f"Stiche: {self._color_path.stitch_count}  |  "
-            f"Sprünge: {self._color_path.jump_count}  |  "
-            f"Distanz: {self._color_path.total_distance:.1f}",
+            t("Stiche: {stitches}  |  Sprünge: {jumps}  |  Distanz: {distance:.1f}").format(
+                stitches=self._color_path.stitch_count,
+                jumps=self._color_path.jump_count,
+                distance=self._color_path.total_distance,
+            ),
         )
 
         # Legende für Marker
         painter.drawText(
-            margin, legend_y + 36, "\u25cb S = Start  |  \u25a1 E = Ende  |  - - - = Sprung"
+            margin, legend_y + 36, t("\u25cb S = Start  |  \u25a1 E = Ende  |  - - - = Sprung")
         )
 
         painter.end()

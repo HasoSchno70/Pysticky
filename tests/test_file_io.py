@@ -169,6 +169,29 @@ class TestFileIO:
         with pytest.raises(Exception):  # json.JSONDecodeError oder ähnlich
             load_pattern(str(filepath))
 
+    def test_load_falls_back_to_default_fabric_count_when_zero(self, tmp_path):
+        """Regression (Runde 26): eine beschaedigte/handbearbeitete .pxs-
+        Datei mit "fabric_count": 0 (oder negativ) wurde bisher unveraendert
+        uebernommen -- fabric_count wird an mehreren Stellen als Divisor
+        benutzt (info_panel.py::_calculate_thread_usage,
+        pattern.py::size_cm), ein ZeroDivisionError waere die Folge. Jetzt
+        faellt ein nicht-positiver Wert auf DEFAULT_FABRIC_COUNT zurueck,
+        genau wie width/height bereits validiert werden."""
+        from pysticky.core.constants import DEFAULT_FABRIC_COUNT
+
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "zero_fabric.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        data["pattern"]["fabric_count"] = 0
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        loaded = load_pattern(str(filepath))
+
+        assert loaded.fabric_count == DEFAULT_FABRIC_COUNT
+        assert loaded.size_cm[0] > 0  # darf nicht crashen
+
     def test_save_is_atomic_no_leftover_tmp_file(self, tmp_path):
         """Regression: save_pattern() schrieb frueher direkt in die
         Zieldatei -- ein Crash mitten in json.dump() haette die echte

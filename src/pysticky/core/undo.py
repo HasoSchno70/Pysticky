@@ -244,6 +244,7 @@ class RemoveStitchCommand(Command):
         self._layer_index = layer_index
         self._old_color_index: int | None = None
         self._old_stitch_type: int = 0
+        self._was_completed: bool = False
 
     def execute(self) -> None:
         """Entfernt den Stich und speichert die vorherige Farbe."""
@@ -256,6 +257,11 @@ class RemoveStitchCommand(Command):
             # entfernte Stich hatte (vgl. PlaceStitchCommand, das das schon
             # richtig macht).
             old_stitch_type = layer.get_stitch_type(self._x, self._y)
+            # Fortschritts-Haken (Sticken-Modus) merken -- layer.remove_stitch()
+            # loescht completion_grid[y,x] als Teil des Entfernens; ohne dieses
+            # Merken kam ein bereits abgehakter Stich nach Undo dauerhaft als
+            # nicht-abgehakt zurueck.
+            was_completed = layer.is_completed(self._x, self._y)
             removed = layer.remove_stitch(self._x, self._y)
             if not removed:
                 # Gesperrter Layer -- Grid unveraendert, Stichzahl darf nicht
@@ -263,6 +269,7 @@ class RemoveStitchCommand(Command):
                 return
             self._old_color_index = old_stitch
             self._old_stitch_type = old_stitch_type
+            self._was_completed = was_completed
             # Stichzahl reduzieren
             if 0 <= old_stitch < len(self._pattern.color_entries):
                 self._pattern.color_entries[old_stitch].stitch_count -= 1
@@ -276,6 +283,8 @@ class RemoveStitchCommand(Command):
             )
             if not restored:
                 return
+            if self._was_completed:
+                layer.mark_completed(self._x, self._y)
             # Stichzahl wiederherstellen
             if 0 <= self._old_color_index < len(self._pattern.color_entries):
                 self._pattern.color_entries[self._old_color_index].stitch_count += 1
@@ -913,8 +922,14 @@ class UndoManager:
         if not self._undo_stack:
             return False
 
-        command = self._undo_stack.pop()
+        # Erst NACH erfolgreichem undo() vom Undo- auf den Redo-Stack
+        # verschieben -- ein pop() VOR dem Aufruf wuerde den Command bei
+        # einer waehrend undo() geworfenen Exception aus beiden Stacks
+        # verlieren (weder rueckgaengig machbar noch wiederholbar, obwohl
+        # seine Grid-Mutation ggf. schon teilweise angewendet wurde).
+        command = self._undo_stack[-1]
         command.undo()
+        self._undo_stack.pop()
         self._redo_stack.append(command)
         return True
 
@@ -931,8 +946,11 @@ class UndoManager:
         if not self._redo_stack:
             return False
 
-        command = self._redo_stack.pop()
+        # Gleiche Reihenfolge wie undo(): erst nach erfolgreichem execute()
+        # vom Redo- auf den Undo-Stack verschieben, siehe Kommentar dort.
+        command = self._redo_stack[-1]
         command.execute()
+        self._redo_stack.pop()
         self._undo_stack.append(command)
         return True
 

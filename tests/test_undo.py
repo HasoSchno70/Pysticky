@@ -67,6 +67,68 @@ class TestUndoManager:
 
         assert pattern.active_layer.get_stitch(5, 5) == 0
 
+    def test_undo_keeps_command_on_undo_stack_if_undo_raises(self):
+        """Regression (Runde 26): undo() poppte den Command VOM Undo-Stack,
+        BEVOR command.undo() aufgerufen wurde -- warf undo() eine Exception,
+        war der Command aus BEIDEM Stacks verschwunden (weder rueckgaengig
+        machbar noch wiederholbar), obwohl seine Mutation ggf. schon
+        teilweise angewendet war. Jetzt wird erst nach erfolgreichem
+        undo() vom Undo- auf den Redo-Stack verschoben."""
+
+        class _RaisingCommand:
+            description = "Kaputter Command"
+
+            def execute(self) -> None:
+                pass
+
+            def undo(self) -> None:
+                raise RuntimeError("boom")
+
+        undo = UndoManager()
+        undo.set_pattern(Pattern(width=10, height=10))
+        undo.execute(_RaisingCommand())
+        assert undo.undo_count == 1
+
+        with pytest.raises(RuntimeError):
+            undo.undo()
+
+        assert undo.undo_count == 1, (
+            "Regression: Command verschwand aus dem Undo-Stack, obwohl undo() fehlgeschlagen ist"
+        )
+        assert undo.redo_count == 0
+
+    def test_redo_keeps_command_on_redo_stack_if_execute_raises(self):
+        """Gleiche Regression wie oben, gespiegelt fuer redo()."""
+
+        class _RaisingOnSecondExecute:
+            description = "Kaputter Command"
+
+            def __init__(self):
+                self._calls = 0
+
+            def execute(self) -> None:
+                self._calls += 1
+                if self._calls > 1:
+                    raise RuntimeError("boom")
+
+            def undo(self) -> None:
+                pass
+
+        undo = UndoManager()
+        undo.set_pattern(Pattern(width=10, height=10))
+        cmd = _RaisingOnSecondExecute()
+        undo.execute(cmd)
+        undo.undo()
+        assert undo.redo_count == 1
+
+        with pytest.raises(RuntimeError):
+            undo.redo()
+
+        assert undo.redo_count == 1, (
+            "Regression: Command verschwand aus dem Redo-Stack, obwohl execute() fehlgeschlagen ist"
+        )
+        assert undo.undo_count == 0
+
     def test_max_history(self):
         """Test: Historie wird begrenzt."""
         pattern = Pattern(width=10, height=10)
@@ -144,6 +206,33 @@ class TestLockedLayerStitchCountGuard:
 
         assert pattern.active_layer.get_stitch(5, 5) == 0
         assert pattern.color_entries[0].stitch_count == 1
+
+    def test_remove_stitch_undo_restores_completion_state(self):
+        """Regression (Runde 26): RemoveStitchCommand.undo() stellte Farbe
+        und Stich-Typ wieder her, aber NIE den Fortschritts-Haken (Sticken-
+        Modus). layer.remove_stitch() loescht completion_grid[y,x] als Teil
+        des Entfernens; ohne ihn vorher zu merken kam ein bereits
+        abgehakter Stich nach Undo dauerhaft als nicht-abgehakt zurueck --
+        z.B. bei jedem Radiergummi-Strich ueber schon fertig gestickte
+        Zellen, gefolgt von Strg+Z."""
+        from pysticky.core import RemoveStitchCommand
+
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(5, 5, 0)
+        pattern.color_entries[0].stitch_count = 1
+        pattern.active_layer.mark_completed(5, 5)
+        assert pattern.active_layer.is_completed(5, 5)
+
+        cmd = RemoveStitchCommand(pattern, 5, 5, 0)
+        cmd.execute()
+        assert pattern.active_layer.get_stitch(5, 5) is None
+
+        cmd.undo()
+
+        assert pattern.active_layer.get_stitch(5, 5) == 0
+        assert pattern.active_layer.is_completed(5, 5), (
+            "Regression: Fortschritts-Haken ging beim Entfernen/Wiederherstellen verloren"
+        )
 
     def test_clear_layer_on_locked_layer_leaves_grid_and_stitch_count_unchanged(self):
         """Regression (Runde 16): ClearLayerCommand rief layer.clear() vorher

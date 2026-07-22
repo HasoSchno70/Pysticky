@@ -123,9 +123,9 @@ class BackstitchOptionsPanel(QWidget):
         layout.setSpacing(10)
 
         # Vorschau
-        preview_label = QLabel(t("Vorschau:"))
-        preview_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
-        layout.addWidget(preview_label)
+        self._preview_label = QLabel(t("Vorschau:"))
+        self._preview_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
+        layout.addWidget(self._preview_label)
 
         self._preview = BackstitchPreview()
         layout.addWidget(self._preview)
@@ -184,6 +184,11 @@ class BackstitchOptionsPanel(QWidget):
     def _apply_theme(self) -> None:
         """Re-applies styles for theme switching."""
         self._apply_styles()
+        # Explizit gesetzte Widget-eigene Stylesheets gewinnen im Qt-CSS-
+        # Kaskade gegen den blanket QWidget-QSS von _apply_styles() -- dieses
+        # Label braucht daher ein eigenes Refresh (gleiche Bug-Klasse wie an
+        # anderer Stelle im Panel-System schon mehrfach gefunden).
+        self._preview_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 11px;")
         self._preview._apply_theme()
 
     def _apply_styles(self) -> None:
