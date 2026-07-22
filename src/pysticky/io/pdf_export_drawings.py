@@ -411,7 +411,19 @@ class PDFDrawingsMixin(_Base):
                         drawing, x, y, rx, ry, cell_w, cell_h, fill_color, height
                     )
 
-        # Rückstiche
+        # Rückstiche -- im DP-Modus weglassen. DP kennt kein Rückstich-
+        # Konzept (siehe _create_legend()/_create_preview()-Texte, die das
+        # schon konsistent so behandeln); ein per Pattern.convert_to_mode()
+        # auf Diamond umgeschaltetes Pattern behält aber seine alten
+        # Backstitch-Daten (convert_to_mode() räumt sie nicht auf), sonst
+        # würden hier Rückstich-Linien über der Drill-Vorschau landen --
+        # diese Drawing-Methode wird von Cover/Vorschau/Übersicht geteilt,
+        # also gilt der Fix für alle drei Stellen auf einmal.
+        from .export_common import is_diamond_mode
+
+        if is_diamond_mode(self.pattern):
+            return drawing
+
         half_cell_w = cell_w / 2
         half_cell_h = cell_h / 2
 

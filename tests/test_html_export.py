@@ -188,3 +188,56 @@ def test_html_export_stats_base_has_skip_fields():
     assert hasattr(_ExportBase, "__annotations__")
     assert "_skipped_colors" in _ExportBase.__annotations__
     assert "_stitches_to_do" in _ExportBase.__annotations__
+
+
+def test_html_export_dp_mode_hides_backstitch_lines_in_preview(tmp_path):
+    """Regression: die Vorschau-Seite (_generate_preview) zeichnete
+    Rueckstich-Linien/-Text im DP-Modus trotzdem -- Deckblatt und
+    Uebersichtskarte hatten den is_diamond_mode()-Check schon, die
+    Vorschau-Seite fehlte ihn. Passiert z.B. wenn ein Pattern per
+    Pattern.convert_to_mode() von Stick- auf Diamond-Modus umgeschaltet
+    wird: convert_to_mode() raeumt die alten Backstitch-Daten nicht auf,
+    DP kennt aber gar kein Rueckstich-Konzept (siehe Legende, die das
+    schon korrekt ausblendet)."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.mode = "diamond"
+    idx = pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+    pattern.add_backstitch(0, 0, 4, 4, idx)
+
+    target = tmp_path / "dp_with_backstitch.html"
+    HTMLExporter(pattern).export(target)
+    content = target.read_text(encoding="utf-8")
+
+    # Kein Rueckstich-Konzept im DP-Modus -> darf nirgends auftauchen
+    # (weder als SVG-Linie noch als Text).
+    assert "R&uuml;ckstiche" not in content
+
+
+def test_html_export_mystery_mode_hides_overview_backstitch_note(pattern_with_stitches, tmp_path):
+    """Regression: die Uebersichtskarte (_generate_overview) nannte im
+    Mystery-Modus weiterhin die exakte Rueckstich-Anzahl als Text -- die
+    SVG-Linien der Vorschau waren im selben Abschnitt schon korrekt
+    ausgeblendet, der Info-Text darunter aber nicht. Die reine Anzahl
+    verraet schon Konturen des Motivs (PDF-Export hat diesen Text-Leak
+    nicht, siehe test_pdf_mystery_mode_hides_backstitch_count)."""
+    pattern_with_stitches.add_backstitch(0, 0, 4, 4, 0)
+
+    target = tmp_path / "mystery_overview.html"
+    HTMLExporter(pattern_with_stitches, mystery_mode=True).export(target)
+    content = target.read_text(encoding="utf-8")
+
+    start = content.index("id='uebersicht'")
+    end = content.index("id='seite1'")
+    overview_section = content[start:end]
+
+    assert "R&uuml;ckstiche" not in overview_section
