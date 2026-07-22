@@ -89,6 +89,26 @@ def test_apply_saved_overrides_ignores_non_dict_value(registry):
     assert registry.current("action_new") == "Ctrl+N"
 
 
+def test_apply_saved_overrides_skips_colliding_entry(registry):
+    """Regression (Runde 28): apply_saved_overrides() wandte gespeicherte
+    Overrides bisher OHNE Kollisionspruefung an -- anders als der
+    interaktive Bearbeiten-Pfad in ShortcutsTab, der jede Aenderung vorher
+    gegen find_conflict() prueft. Eine manuell editierte/korrupte
+    QSettings-Datei mit zwei IDs auf demselben Key haette beide Ziele
+    stillschweigend auf denselben Shortcut gesetzt -- Qt macht ihn dann
+    fuer BEIDE wirkungslos ("ambiguous shortcut"), ohne jede Warnung."""
+    settings = _qsettings_with_scope()
+    # action_open behaelt seinen Default Ctrl+O; action_new soll auf
+    # denselben Key umgestellt werden -- das ist ein Konflikt.
+    settings.setValue("shortcuts", {"action_new": "Ctrl+O"})
+    apply_saved_overrides(registry, settings)
+
+    assert registry.current("action_new") == "Ctrl+N", (
+        "Regression: kollidierender gespeicherter Override wurde trotzdem angewendet"
+    )
+    assert registry.current("action_open") == "Ctrl+O"
+
+
 def test_mainwindow_registers_shortcut_targets_without_duplicates(qtbot):
     """End-to-End: MainWindow baut eine Registry ohne doppelt vergebene
     Tastenkuerzel -- genau die Bug-Klasse, die schon zweimal manuell

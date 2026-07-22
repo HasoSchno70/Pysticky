@@ -85,32 +85,58 @@ def test_touch_setting_disabled_releases_gesture(qapp):
 
 
 def test_event_passes_non_gesture_to_super(qapp):
-    """Nicht-Gesture-Events werden an super().event() weitergereicht.
+    """Nicht-Gesture-Events werden an super().event() weitergereicht und
+    landen dadurch bei den regulaeren Qt-Handlern (z.B. keyPressEvent).
 
-    Wir simulieren ein normales QPaintEvent — sollte regulaer behandelt werden
-    ohne Exception.
+    Runde 28: die vorherige Version pruefte nur `isinstance(result, bool)`
+    -- das waere selbst dann True gewesen, wenn TabletGestureMixin.event()
+    JEDES Event verschluckt haette (jeder Rueckgabewert ist ein bool). Jetzt
+    wird per Spy auf keyPressEvent tatsaechlich verifiziert, dass ein
+    Tastatur-Event wirklich durchgereicht und vom Widget behandelt wird.
     """
-    from PySide6.QtCore import QEvent
+    from PySide6.QtCore import QEvent, Qt
+    from PySide6.QtGui import QKeyEvent
 
     canvas = _make_canvas(qapp)
-    # Update-Request ist ein einfacher harmloser Event
-    update_evt = QEvent(QEvent.Type.UpdateRequest)
-    # Sollte keine Exception werfen
-    result = canvas.event(update_evt)
-    # result kann True/False sein — Hauptsache kein Crash
-    assert isinstance(result, bool)
+
+    called = []
+    canvas.keyPressEvent = lambda event: called.append(event)
+
+    key_event = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier)
+    canvas.event(key_event)
+
+    assert len(called) == 1, "Regression: Tastatur-Event wurde nicht an keyPressEvent durchgereicht"
 
 
 def test_pinch_state_resets_scale_on_start(qapp):
-    """Beim Start einer Pinch-Geste wird _gesture_last_scale auf 1.0 zurueckgesetzt."""
+    """Beim Start einer Pinch-Geste wird _gesture_last_scale auf 1.0
+    zurueckgesetzt (Runde 28: die vorherige Version dieses Tests pruefte
+    trotz ihres Docstrings nur `hasattr(canvas, "_gesture_last_scale")` --
+    das waere auch bei komplett fehlendem Reset immer True gewesen, der
+    Test haette also JEDE Regression durchgelassen. Echtes QPinchGesture
+    laesst sich nicht direkt konstruieren (kommt nur vom Qt-Gesture-
+    Recognizer), aber MagicMock(spec=QPinchGesture) besteht den
+    isinstance()-Check in _handle_gesture() und macht so einen echten
+    End-to-End-Test der Reset-Logik moeglich."""
+    from unittest.mock import MagicMock
+
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QGestureEvent, QPinchGesture
+
     canvas = _make_canvas(qapp)
     canvas._gesture_last_scale = 2.5
-    # Wir koennen kein echtes QPinchGesture konstruieren (private/internal),
-    # aber wir verifizieren das Initialwert-Reset im Setup.
-    canvas._apply_touch_setting()  # ruft setup neu
-    # nach apply_touch_setting bleibt _gesture_last_scale unveraendert
-    # (Reset passiert erst bei GestureStarted)
-    assert hasattr(canvas, "_gesture_last_scale")
+
+    pinch = MagicMock(spec=QPinchGesture)
+    pinch.state.return_value = Qt.GestureState.GestureStarted
+    event = MagicMock(spec=QGestureEvent)
+    event.gesture.return_value = pinch
+
+    handled = canvas._handle_gesture(event)
+
+    assert handled is True
+    assert canvas._gesture_last_scale == 1.0, (
+        "Regression: GestureStarted setzte _gesture_last_scale nicht auf 1.0 zurueck"
+    )
 
 
 def test_canvas_has_pinch_gesture_handler(qapp):

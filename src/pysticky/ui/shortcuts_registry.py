@@ -22,6 +22,10 @@ from typing import Protocol
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QKeySequence
 
+from ..utils.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 class _ShortcutTarget(Protocol):
     """Gemeinsame Schnittstelle von QAction und QAbstractButton (ToolButton)."""
@@ -103,5 +107,22 @@ def apply_saved_overrides(registry: ShortcutRegistry, settings: QSettings) -> No
     if not isinstance(overrides, dict):
         return
     for shortcut_id, key_sequence in overrides.items():
-        if key_sequence:
-            registry.set_shortcut(shortcut_id, key_sequence)
+        if not key_sequence:
+            continue
+        # Anders als der interaktive Bearbeiten-Pfad (ShortcutsTab nutzt
+        # find_conflict() vor jeder Aenderung) wurde hier nie auf Kollision
+        # geprueft -- eine manuell editierte/korrupte QSettings-Datei mit
+        # zwei IDs auf demselben Key haette beide Ziele stillschweigend auf
+        # denselben Shortcut gesetzt (Qt macht ihn dann fuer beide
+        # wirkungslos, "ambiguous shortcut", ohne jede Warnung). Symmetrisch
+        # zum interaktiven Pfad jetzt ebenfalls validiert.
+        conflict = registry.find_conflict(key_sequence, exclude_id=shortcut_id)
+        if conflict is not None:
+            logger.warning(
+                "Gespeichertes Tastenkuerzel '%s' fuer '%s' kollidiert mit '%s' -- uebersprungen",
+                key_sequence,
+                shortcut_id,
+                conflict,
+            )
+            continue
+        registry.set_shortcut(shortcut_id, key_sequence)
