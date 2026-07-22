@@ -51,9 +51,19 @@ class ViewHandlersMixin:
             if hasattr(self, "action_show_completion"):
                 self.action_show_completion.setChecked(True)
 
-            # 4. Alle Dock-Panels ausser dem Fortschritts-Dock verstecken
+            # 4. Alle Dock-Panels ausser dem Fortschritts-Dock verstecken.
+            #
+            # Regression: verglich vorher windowTitle() gegen den rohen
+            # deutschen Literal "Fortschritt" -- der Dock-Titel wird aber
+            # ueber t("Fortschritt") gesetzt (mw_docks_mixin.py), ist also
+            # in jeder Nicht-Deutsch-Sprache (z.B. Englisch: "Progress")
+            # NIE gleich diesem Literal. In Englisch versteckte sich dadurch
+            # auch das Fortschritts-Dock selbst beim Aktivieren des Sticken-
+            # Modus -- exakt das Gegenteil des beabsichtigten Verhaltens.
+            # Identitaetsvergleich gegen self.progress_dock ist sprach- und
+            # zukunftssicher (kein erneuter i18n-Key-Abgleich noetig).
             for dock in self.findChildren(QDockWidget):
-                if dock.windowTitle() == "Fortschritt":
+                if dock is self.progress_dock:
                     dock.show()
                     dock.raise_()
                 else:
@@ -525,9 +535,18 @@ class ViewHandlersMixin:
         self.status_bar.showMessage(msg, 2000)
 
     def _on_snap_grid_changed(self: "MainWindow", enabled: bool) -> None:
-        """Magnetisches Raster ein/aus."""
+        """Magnetisches Raster ein/aus.
+
+        Regression: setzte canvas.snap_interval hier unbedingt (auch beim
+        Deaktivieren) auf canvas.minor_grid_interval -- Snap-Intervall und
+        Minor-Grid-Intervall sind zwei unabhaengige Einstellungen (siehe
+        Einstellungen -> Canvas), das hier hat das vom Nutzer konfigurierte
+        Snap-Intervall bei jedem Umschalten der Checkbox stillschweigend
+        ueberschrieben. canvas.snap_interval wird bereits korrekt beim
+        Start/Uebernehmen der Einstellungen gesetzt (misc_handlers.py::
+        _apply_settings_from_dialog) -- hier reicht das reine Toggle.
+        """
         self.canvas.snap_to_grid = enabled
-        self.canvas.snap_interval = self.canvas.minor_grid_interval
         if enabled:
             self.status_bar.showMessage(
                 f"Magnetisches Raster aktiviert (alle {self.canvas.snap_interval} Zellen)", 2000

@@ -105,7 +105,9 @@ def load_pattern(filepath: Path | str) -> Pattern:
     Raises:
         FileNotFoundError: Wenn die Datei nicht existiert
         ValueError: Bei ungültigem Dateiformat oder beschädigter Struktur
-        json.JSONDecodeError: Bei ungültiger JSON-Syntax
+            (fängt auch ungültige JSON-Syntax ab und wirft sie als
+            ValueError weiter, statt json.JSONDecodeError nach aussen
+            durchzulassen)
 
     Example:
         >>> pattern = load_pattern("mein_muster.pxs")

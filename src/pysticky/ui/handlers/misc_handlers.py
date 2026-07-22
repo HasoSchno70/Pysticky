@@ -656,9 +656,6 @@ class MiscHandlersMixin:
     def _on_reset_workspace(self: "MainWindow") -> None:
         """Setzt das Layout auf den Standard zurück."""
         # Alle Dock-Widgets sichtbar machen und an Standard-Positionen setzen
-        for dock in self.findChildren(self.__class__.__mro__[0]):
-            pass  # findChildren gibt MainWindow selbst zurück, skip
-
         from PySide6.QtWidgets import QDockWidget
 
         for dock in self.findChildren(QDockWidget):

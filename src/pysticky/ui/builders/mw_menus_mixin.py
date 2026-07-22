@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QActionGroup
 
+from ...core.color_blindness import ColorBlindType
 from ...core.i18n import t
 
 if TYPE_CHECKING:
@@ -204,6 +205,16 @@ class MenuBuilderMixin:
         (10, "⬤", "Perle (Bead)", "0"),
     )
 
+    # Auf Klassenebene, damit sowohl _create_colorblind_actions() (Menü-
+    # Aufbau) als auch _on_colorblind_changed() (Statusleisten-Meldung)
+    # dieselben, uebersetzbaren Labels nutzen koennen.
+    COLORBLIND_LABELS = {
+        ColorBlindType.NONE: "Keine Simulation",
+        ColorBlindType.PROTANOPIA: "Protanopie (Rot-Blindheit)",
+        ColorBlindType.DEUTERANOPIA: "Deuteranopie (Grün-Blindheit)",
+        ColorBlindType.TRITANOPIA: "Tritanopie (Blau-Blindheit)",
+    }
+
     def _create_stitch_type_actions(self: "MainWindow", menu) -> None:
         """Erstellt die Stichtyp-Auswahl-Aktionen + speichert sie unter `self.actions_stitch_type`."""
         group = QActionGroup(self)
@@ -226,14 +237,23 @@ class MenuBuilderMixin:
         self.canvas._active_stitch_type = stype
 
         # Status-Label aktualisieren
-        glyph, label = "✕", "Voll"
+        glyph, label = "✕", t("Voll")
         for entry_stype, entry_glyph, entry_label, _shortcut in self.STITCH_TYPE_ENTRIES:
             if entry_stype == stype:
                 glyph = entry_glyph
-                # Label kompakter: nur den interessanten Teil
+                # Erst uebersetzen, DANN kuerzen -- wie im Toolbar-Combobox-
+                # Pendant (mw_toolbar_mixin.py) bereits gemacht. Regression:
+                # hier wurde bisher der rohe deutsche entry_label gekuerzt,
+                # nie durch t() geschickt -- Status-Label + Statusleisten-
+                # Meldung zeigten im Englisch-Modus dauerhaft deutschen Text.
+                translated = t(entry_label)
                 label = (
-                    entry_label.split("(")[0].strip().replace("Kreuzstich", "").strip()
-                    or entry_label
+                    translated.split("(")[0]
+                    .strip()
+                    .replace("Kreuzstich", "")
+                    .replace("cross stitch", "")
+                    .strip()
+                    or translated
                 )
                 break
 
@@ -255,7 +275,9 @@ class MenuBuilderMixin:
                 combo.setCurrentIndex(target_index)
                 combo.blockSignals(False)
 
-        self.status_bar.showMessage(f"Stichtyp: {label}", self._status_timeout_ms)
+        self.status_bar.showMessage(
+            t("Stichtyp: {label}").format(label=label), self._status_timeout_ms
+        )
 
     def _create_colorblind_actions(self: "MainWindow", menu) -> None:
         """Erstellt die Farbblindheits-Simulations-Aktionen."""
@@ -264,12 +286,10 @@ class MenuBuilderMixin:
         group = QActionGroup(self)
         group.setExclusive(True)
 
-        labels = {
-            ColorBlindType.NONE: "Keine Simulation",
-            ColorBlindType.PROTANOPIA: "Protanopie (Rot-Blindheit)",
-            ColorBlindType.DEUTERANOPIA: "Deuteranopie (Grün-Blindheit)",
-            ColorBlindType.TRITANOPIA: "Tritanopie (Blau-Blindheit)",
-        }
+        # Auf Klassenebene (statt lokal), damit _on_colorblind_changed()
+        # dieselben (uebersetzten) Labels fuer die Statusleisten-Meldung
+        # wiederverwenden kann, statt cb_type.value roh zu zeigen.
+        labels = self.COLORBLIND_LABELS
 
         for cb_type, label in labels.items():
             action = QAction(t(label), self)
@@ -283,8 +303,14 @@ class MenuBuilderMixin:
     def _on_colorblind_changed(self: "MainWindow", cb_type) -> None:
         """Wechselt den Farbblindheits-Modus."""
         self.canvas.colorblind_mode = cb_type
-        name = cb_type.value if cb_type.value != "none" else "keine"
-        self.status_bar.showMessage(f"Farbblindheits-Simulation: {name}", self._status_timeout_ms)
+        # Regression: nutzte vorher cb_type.value ("protanopia" etc., nie
+        # durch t() geschickt) bzw. das hart-codierte "keine" -- zeigte im
+        # Englisch-Modus dauerhaft deutschen/rohen Enum-Text. Wiederverwendung
+        # derselben uebersetzten Labels wie im Menue (COLORBLIND_LABELS).
+        name = t(self.COLORBLIND_LABELS[cb_type])
+        self.status_bar.showMessage(
+            t("Farbblindheits-Simulation: {name}").format(name=name), self._status_timeout_ms
+        )
 
     def _create_help_menu(self: "MainWindow", menubar) -> None:
         """Erstellt das Hilfe-Menü."""

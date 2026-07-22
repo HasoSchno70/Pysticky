@@ -1114,9 +1114,9 @@
   "Keine leeren Ränder zum Entfernen": "No empty margins to remove",
   "Mustergröße ändern": "Change pattern size",
   "Stiche neu verteilen (Smart-Resize)": "Redistribute stitches (smart resize)",
-  "Aktiv: Pattern wird wie ein Pixelbild bilinear skaliert,\nStiche neu auf die Zellgröße verteilt. Ideal beim Hochskalieren.\n\nAus: klassisches Croppen/Padding mit leeren Zellen am Rand.": "On: pattern is scaled bilinearly like a pixel image,\nstitches redistributed to the cell size. Ideal when scaling up.\n\nOff: classic cropping/padding with empty cells at the edge.",
   "Größe ändern": "Change size",
-  "Das Muster wird verkleinert. Stiche außerhalb des neuen Bereichs gehen verloren.\n\nFortfahren?": "The pattern will be shrunk. Stitches outside the new area will be lost.\n\nContinue?",
+  "Stichtyp: {label}": "Stitch type: {label}",
+  "Farbblindheits-Simulation: {name}": "Colorblind simulation: {name}",
   "90° rechts gedreht": "Rotated 90° clockwise",
   "90° links gedreht": "Rotated 90° counterclockwise",
   "180° gedreht": "Rotated 180°",
@@ -1404,5 +1404,7 @@
   "'{name}' löschen?\n\n": "Delete '{name}'?\n\n",
   "Alle Stiche aus '{name}' entfernen?": "Remove all stitches from '{name}'?",
   "Palette wechseln": "Change palette",
-  "Das Muster wird mit '{name}' neu erstellt.\n\nAlle manuellen Änderungen gehen verloren!\n\nFortfahren?": "The pattern will be recreated with '{name}'.\n\nAll manual changes will be lost!\n\nContinue?"
+  "Das Muster wird mit '{name}' neu erstellt.\n\nAlle manuellen Änderungen gehen verloren!\n\nFortfahren?": "The pattern will be recreated with '{name}'.\n\nAll manual changes will be lost!\n\nContinue?",
+  "Aktiv: Pattern wird wie ein Pixelbild per Nearest-Neighbor\nskaliert, Stiche neu auf die Zellgröße verteilt. Ideal beim\nHochskalieren.\n\nAus: klassisches Croppen/Padding mit leeren Zellen am Rand.": "On: pattern is scaled like a pixel image via nearest-neighbor\nsampling, stitches redistributed to the cell size. Ideal when\nscaling up.\n\nOff: classic cropping/padding with empty cells at the edge.",
+  "Das Muster wird verkleinert. {unit} außerhalb des neuen Bereichs gehen verloren.\n\nFortfahren?": "The pattern will be shrunk. {unit} outside the new area will be lost.\n\nContinue?"
 }

@@ -162,8 +162,6 @@ class FileHandlersMixin:
         Returns:
             True bei Erfolg
         """
-        import json
-
         from ...core import load_pattern
 
         path = Path(path)
@@ -188,7 +186,13 @@ class FileHandlersMixin:
         except PermissionError:
             logger.warning("Zugriff verweigert: %s", path)
             QMessageBox.critical(self, t("Zugriff verweigert"), f"Keine Berechtigung:\n{path}")
-        except json.JSONDecodeError as e:
+        except ValueError as e:
+            # load_pattern() faengt json.JSONDecodeError selbst ab und wirft
+            # es als ValueError weiter (core/file_io.py) -- ein direktes
+            # `except json.JSONDecodeError` hier war daher totes, nie
+            # erreichbares Code, jede beschaedigte Datei fiel stattdessen
+            # in den generischen Exception-Handler unten mit weniger
+            # spezifischer Fehlermeldung ("Fehler" statt "Ungültige Datei").
             logger.exception("Datei beschädigt: %s", path)
             QMessageBox.critical(self, t("Ungültige Datei"), f"Die Datei ist beschädigt:\n{e}")
         except Exception as e:  # catch-all for unexpected format errors
@@ -461,35 +465,21 @@ class FileHandlersMixin:
                 # Prüfen ob XSD/PAT oder PXS
                 suffix = pattern_path.suffix.lower()
 
+                errors: list[str] = []
                 if suffix == ".pxs":
                     pattern = load_pattern(pattern_path)
                 elif suffix == ".xsd":
                     from ...io.formats import import_xsd
 
                     pattern, errors, warnings = import_xsd(pattern_path)
-                    if errors:
-                        joined = "\n".join(errors)
-                        QMessageBox.warning(
-                            self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
-                        )
                 elif suffix == ".pat":
                     from ...io.formats import import_pat
 
                     pattern, errors, warnings = import_pat(pattern_path)
-                    if errors:
-                        joined = "\n".join(errors)
-                        QMessageBox.warning(
-                            self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
-                        )
                 elif suffix == ".oxs":
                     from ...io.formats import import_oxs
 
                     pattern, errors, warnings = import_oxs(pattern_path)
-                    if errors:
-                        joined = "\n".join(errors)
-                        QMessageBox.warning(
-                            self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
-                        )
                 else:
                     QMessageBox.warning(
                         self,
@@ -498,17 +488,35 @@ class FileHandlersMixin:
                     )
                     return
 
-                if pattern:
-                    if suffix == ".pxs":
-                        self.current_file = pattern_path
-                    else:
-                        self.current_file = None
-                    self.set_pattern(pattern)
-                    self._mark_saved()
-                    self._add_recent_file(str(pattern_path))
-                    self.status_bar.showMessage(
-                        f"Aus Bibliothek geöffnet: {pattern_path.name}", 3000
+                # Regression: fehlte vorher -- ein KOMPLETT fehlgeschlagener
+                # Import (pattern is None) zeigte nur den "Import-Warnungen"-
+                # Dialog fuer die errors-Liste (falls ueberhaupt vorhanden)
+                # und tat dann still gar nichts mehr, statt klar als
+                # gescheitert gemeldet zu werden -- wie beim Geschwister-Pfad
+                # _load_external_pattern_file() weiter oben in dieser Datei.
+                if not pattern:
+                    err_text = "\n".join(errors) or "Unbekannter Fehler"
+                    QMessageBox.critical(
+                        self,
+                        t("Import fehlgeschlagen"),
+                        f"Die Datei konnte nicht importiert werden:\n{err_text}",
                     )
+                    return
+
+                if errors:
+                    joined = "\n".join(errors)
+                    QMessageBox.warning(
+                        self, t("Import-Warnungen"), f"Beim Import traten Fehler auf:\n{joined}"
+                    )
+
+                if suffix == ".pxs":
+                    self.current_file = pattern_path
+                else:
+                    self.current_file = None
+                self.set_pattern(pattern)
+                self._mark_saved()
+                self._add_recent_file(str(pattern_path))
+                self.status_bar.showMessage(f"Aus Bibliothek geöffnet: {pattern_path.name}", 3000)
 
             except (OSError, ValueError) as e:
                 logger.exception("Bibliotheks-Muster konnte nicht geöffnet werden")

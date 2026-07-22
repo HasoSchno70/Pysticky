@@ -118,6 +118,20 @@ def test_mainwindow_registers_shortcut_targets_without_duplicates(qtbot):
     assert reg.current("tool_fill") == "F"
 
 
+def test_action_exit_shortcut_is_actually_ctrl_q(qtbot):
+    """Regression (Runde 23): action_exit nutzte QKeySequence.StandardKey.Quit,
+    das sich auf diesem Windows/Qt-Build zur seltenen Multimedia-Taste "Exit"
+    aufloest (verifiziert per QKeySequence(...).toString()), NICHT zu Ctrl+Q --
+    obwohl die eigene Tooltip seit jeher "Beenden (Ctrl+Q)" verspricht. Ctrl+Q
+    tat dadurch schlicht nichts. Jetzt explizit gesetzt."""
+    from pysticky.ui.main_window import MainWindow
+
+    w = MainWindow()
+    qtbot.addWidget(w)
+
+    assert w.action_exit.shortcut().toString() == "Ctrl+Q"
+
+
 def test_mainwindow_shortcut_edit_applies_live(qtbot):
     """Simuliert, was ShortcutsTab.save_settings() tut: Pending-Edit auf
     die Registry anwenden -- muss die echte QAction live umbiegen."""

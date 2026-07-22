@@ -140,7 +140,13 @@ class ActionsBuilderMixin:
         self.action_autosave_settings.triggered.connect(self._on_autosave_settings)
 
         self.action_exit = QAction(t("&Beenden"), self)
-        self.action_exit.setShortcut(QKeySequence.StandardKey.Quit)
+        # QKeySequence.StandardKey.Quit loest sich auf diesem Windows/Qt-
+        # Build zur seltenen Multimedia-Taste "Exit" auf, NICHT zu Ctrl+Q
+        # (verifiziert: QKeySequence(StandardKey.Quit).toString() == "Exit").
+        # Die Tooltip versprach schon immer "(Ctrl+Q)", das aber praktisch
+        # nie funktionierte -- explizit gesetzt statt dem StandardKey
+        # ueberlassen, damit Tooltip und tatsaechliches Verhalten uebereinstimmen.
+        self.action_exit.setShortcut("Ctrl+Q")
         self.action_exit.setToolTip(t("Beenden (Ctrl+Q)"))
         self.action_exit.triggered.connect(self.close)
 

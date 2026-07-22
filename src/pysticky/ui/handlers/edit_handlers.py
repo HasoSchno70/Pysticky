@@ -310,24 +310,31 @@ class EditHandlersMixin:
 
         current_width = self.current_pattern.width
         current_height = self.current_pattern.height
+        # DP/Stitch-Terminologie -- Runde 23: dieser Dialog zeigte bisher
+        # immer "Stiche", auch fuer Diamond-Painting-Muster, anders als
+        # z.B. file_handlers.py::_on_new()s bereits etablierte
+        # Modus-abhaengige Einheit.
+        is_dp = self.current_pattern.mode == "diamond"
+        unit = t("Drills") if is_dp else t("Stiche")
 
         spin_width = QSpinBox()
         spin_width.setRange(10, MAX_PATTERN_SIZE)
         spin_width.setValue(current_width)
-        spin_width.setSuffix(t(" Stiche"))
+        spin_width.setSuffix(f" {unit}")
         layout.addRow(t("Breite:"), spin_width)
 
         spin_height = QSpinBox()
         spin_height.setRange(10, MAX_PATTERN_SIZE)
         spin_height.setValue(current_height)
-        spin_height.setSuffix(t(" Stiche"))
+        spin_height.setSuffix(f" {unit}")
         layout.addRow(t("Höhe:"), spin_height)
 
         chk_smart = QCheckBox(t("Stiche neu verteilen (Smart-Resize)"))
         chk_smart.setToolTip(
             t(
-                "Aktiv: Pattern wird wie ein Pixelbild bilinear skaliert,\n"
-                "Stiche neu auf die Zellgröße verteilt. Ideal beim Hochskalieren.\n\n"
+                "Aktiv: Pattern wird wie ein Pixelbild per Nearest-Neighbor\n"
+                "skaliert, Stiche neu auf die Zellgröße verteilt. Ideal beim\n"
+                "Hochskalieren.\n\n"
                 "Aus: klassisches Croppen/Padding mit leeren Zellen am Rand."
             )
         )
@@ -351,8 +358,8 @@ class EditHandlersMixin:
                         self,
                         t("Größe ändern"),
                         t(
-                            "Das Muster wird verkleinert. Stiche außerhalb des neuen Bereichs gehen verloren.\n\nFortfahren?"
-                        ),
+                            "Das Muster wird verkleinert. {unit} außerhalb des neuen Bereichs gehen verloren.\n\nFortfahren?"
+                        ).format(unit=unit),
                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                     )
                     if reply != QMessageBox.StandardButton.Yes:
