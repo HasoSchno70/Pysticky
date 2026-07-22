@@ -743,6 +743,93 @@ def test_convert_to_mode_persists_backup_through_pxs(tmp_path, empty_pattern):
     assert loaded.color_entries[0].thread.catalog_number == "1"
 
 
+def test_convert_to_mode_backup_survives_color_add_remove_with_same_count(empty_pattern):
+    """Regression: der Mode-Backup-Snapshot wurde frueher als reine
+    Positions-Liste gefuehrt (backups[mode][idx]) und beim Zurueckwechseln
+    per zip() ueber die aktuelle color_entries-Liste reapplied, sobald die
+    Gesamtzahl zufaellig gleich blieb. Wurde zwischen zwei Konvertierungen
+    eine Farbe entfernt und eine andere hinzugefuegt (Netto-Anzahl gleich),
+    landete das Backup der ENTFERNTEN Farbe stillschweigend auf der neu
+    hinzugefuegten Farbe -- falsche Garn-Daten ohne jeden Fehler.
+
+    Fix: der Snapshot wird jetzt per ColorEntry.color_id (stabile Identitaet,
+    nicht Listenposition) zugeordnet.
+    """
+    from pysticky.core import Thread
+
+    pattern = empty_pattern
+    pattern.color_entries.clear()
+    pattern.add_color(
+        Thread.from_hex("Weiss", "#FFFFFF", manufacturer="Anchor", catalog_number="1")
+    )
+    pattern.add_color(
+        Thread.from_hex("Schwarz", "#000000", manufacturer="Anchor", catalog_number="403")
+    )
+
+    pattern.convert_to_mode("diamond")
+    assert len(pattern.color_entries) == 2
+    kept_entry = pattern.color_entries[0]  # ehemals "Weiss"/Anchor 1
+    kept_color_id = kept_entry.color_id
+
+    # Zweite Farbe (ehemals "Schwarz"/Anchor 403) entfernen, eine NEUE
+    # Diamond-Farbe hinzufuegen -- Gesamtzahl bleibt bei 2.
+    pattern.color_entries.pop(1)
+    from pysticky.core.thread_cross_ref import find_equivalent
+
+    new_dp_thread = find_equivalent(
+        Thread.from_hex("Gruen", "#00FF00", manufacturer="DMC", catalog_number="699"),
+        "DMC Diamond Painting",
+    )
+    assert new_dp_thread is not None
+    new_idx = pattern.add_color(new_dp_thread, is_diamond=True)
+    new_entry = pattern.color_entries[new_idx]
+    assert new_entry.color_id != kept_color_id
+
+    pattern.convert_to_mode("stitch")
+
+    # Die beibehaltene Farbe (per color_id gefunden) bekommt ihr echtes
+    # Original-Backup zurueck, unabhaengig von ihrer aktuellen Position.
+    restored_kept = next(e for e in pattern.color_entries if e.color_id == kept_color_id)
+    assert restored_kept.thread.manufacturer == "Anchor"
+    assert restored_kept.thread.catalog_number == "1"
+
+    # Die neue Farbe hatte NIE ein Stick-Backup -- sie darf NICHT die
+    # Backup-Daten der entfernten Farbe (Anchor 403) uebernehmen, sondern
+    # muss stattdessen per Nearest-Match auf eine DMC-Stick-Farbe fallen.
+    restored_new = next(e for e in pattern.color_entries if e.color_id == new_entry.color_id)
+    assert restored_new.thread.catalog_number != "403", (
+        "Regression: neue Farbe hat faelschlich das Backup der entfernten "
+        "Farbe uebernommen (Positions-Matching statt color_id)"
+    )
+    assert restored_new.thread.manufacturer == "DMC"
+
+
+def test_convert_to_mode_fabric_count_survives_pxs_roundtrip(tmp_path, empty_pattern):
+    """Regression: `_stitch_fabric_count` war ein reines Instanzattribut,
+    das NIE in .pxs persistiert wurde -- nach einem Speichern/Laden-Zyklus
+    fiel der Diamond->Stick-Rueckweg immer auf den hartcodierten Default
+    (14) zurueck, statt den echten urspruenglichen Aida-Count (hier 18)
+    wiederherzustellen."""
+    from pysticky.core.file_io import load_pattern, save_pattern
+
+    pattern = empty_pattern
+    pattern.fabric_count = 18
+
+    pattern.convert_to_mode("diamond")
+    assert pattern.fabric_count == 10
+    assert pattern.metadata.get("stitch_fabric_count") == 18
+
+    path = tmp_path / "fabric_count.pxs"
+    save_pattern(pattern, str(path))
+    loaded = load_pattern(str(path))
+
+    loaded.convert_to_mode("stitch")
+    assert loaded.fabric_count == 18, (
+        "Regression: stitch_fabric_count ueberlebte den .pxs-Roundtrip nicht "
+        "(instance attribute statt metadata)"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Export-Terminologie + Inhalt
 # ---------------------------------------------------------------------------

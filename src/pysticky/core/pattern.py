@@ -21,6 +21,7 @@ Example:
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Iterator
+from uuid import uuid4
 
 import numpy as np
 
@@ -112,6 +113,14 @@ class ColorEntry:
     # platziert, in der DP-Ansicht als facettierter
     # Drill dargestellt und in der Legende mit Drill-
     # Codes (statt Garn-Strang-Bedarf) geführt.
+    # Stabile Identitaet unabhaengig von der Listenposition -- wird von
+    # Pattern.convert_to_mode() gebraucht, um einen Mode-Backup-Snapshot
+    # beim Zurueckwechseln wieder der RICHTIGEN Farbe zuzuordnen, auch wenn
+    # zwischen zwei Konvertierungen Farben hinzugefuegt/entfernt wurden
+    # (reines Positions-Matching waere sonst bei zufaellig gleichgebliebener
+    # Listenlaenge still falsch). Wird in .pxs persistiert (file_io.py),
+    # damit der Rueckweg auch nach einem Speichern/Laden noch funktioniert.
+    color_id: str = field(default_factory=lambda: str(uuid4())[:8])
 
     def __repr__(self) -> str:
         skip = " [SKIP]" if self.skip_stitching else ""
@@ -346,10 +355,13 @@ class Pattern:
         TYPICAL_AIDA = {11, 14, 16, 18, 20, 22, 25}
         TYPICAL_DP = {8, 9, 10}
         if target_mode == "diamond" and self.fabric_count in TYPICAL_AIDA:
-            self._stitch_fabric_count = self.fabric_count
+            # In metadata statt einem plain Attribut, damit der Wert einen
+            # .pxs-Speichern/Laden-Zyklus uebersteht (metadata wird als
+            # Ganzes persistiert, ein Instanzattribut nicht).
+            self.metadata["stitch_fabric_count"] = self.fabric_count
             self.fabric_count = 10
         elif target_mode == "stitch" and self.fabric_count in TYPICAL_DP:
-            self.fabric_count = getattr(self, "_stitch_fabric_count", 14)
+            self.fabric_count = self.metadata.get("stitch_fabric_count", 14)
 
         # Lokale Imports: vermeiden Circular-Import-Probleme im Pattern-Modul.
         from .thread import Thread
@@ -361,11 +373,14 @@ class Pattern:
         if self.color_entries:
             backups = self.metadata.setdefault("mode_backups", {})
 
-            # Aktuellen Stand für späteren Rückweg merken.
-            backups[current_mode] = [
-                None
-                if e.is_bead
-                else {
+            # Aktuellen Stand für späteren Rückweg merken -- per color_id
+            # (NICHT Position!), siehe ColorEntry.color_id-Docstring: eine
+            # Positions-Liste war frueher hier verwendet worden und wurde
+            # beim Zurueckwechseln stillschweigend falsch zugeordnet, sobald
+            # zwischen zwei Konvertierungen Farben hinzugefuegt/entfernt
+            # wurden (bei zufaellig gleichgebliebener Gesamtzahl).
+            backups[current_mode] = {
+                e.color_id: {
                     "name": e.thread.name,
                     "color": e.thread.color.to_hex(),
                     "manufacturer": e.thread.manufacturer or "",
@@ -373,17 +388,24 @@ class Pattern:
                     "is_diamond": e.is_diamond,
                 }
                 for e in self.color_entries
-            ]
+                if not e.is_bead
+            }
 
             target_backup = backups.get(target_mode)
-            use_backup = isinstance(target_backup, list) and len(target_backup) == len(
-                self.color_entries
-            )
+            if not isinstance(target_backup, dict):
+                # Kein Backup vorhanden (erste Konvertierung in diesen Modus)
+                # oder Alt-Format aus einer frueheren Version (Positions-
+                # Liste) -- in beiden Faellen faellt jede Farbe einzeln auf
+                # den Nearest-Match-Zweig unten zurueck.
+                target_backup = {}
 
-            if use_backup:
-                for idx, (entry, snapshot) in enumerate(zip(self.color_entries, target_backup)):
-                    if entry.is_bead or snapshot is None:
-                        continue
+            default_palette = "DMC Diamond Painting" if target_mode == "diamond" else "DMC"
+            for idx, entry in enumerate(self.color_entries):
+                if entry.is_bead:
+                    continue
+
+                snapshot = target_backup.get(entry.color_id)
+                if snapshot is not None:
                     entry.thread = Thread.from_hex(
                         name=snapshot["name"],
                         hex_color=snapshot["color"],
@@ -395,27 +417,28 @@ class Pattern:
                         entry.is_diamond = new_is_diamond
                         self._restamp_stitch_type_for_color(idx, entry)
                     changed = True
-            else:
-                default_palette = "DMC Diamond Painting" if target_mode == "diamond" else "DMC"
-                for idx, entry in enumerate(self.color_entries):
-                    if entry.is_bead:
-                        continue
-                    # Wenn schon im Ziel-Format (z.B. is_diamond+target=diamond),
-                    # nicht neu mappen — vermeidet leichte Drift bei Round-Trips.
-                    already_target = (target_mode == "diamond" and entry.is_diamond) or (
-                        target_mode == "stitch" and not entry.is_diamond
-                    )
-                    match = find_equivalent(entry.thread, default_palette)
-                    if match is None:
-                        continue
-                    if already_target and match is entry.thread:
-                        continue
-                    entry.thread = match
-                    new_is_diamond = target_mode == "diamond"
-                    if new_is_diamond != entry.is_diamond:
-                        entry.is_diamond = new_is_diamond
-                        self._restamp_stitch_type_for_color(idx, entry)
-                    changed = True
+                    continue
+
+                # Keine farbspezifische Backup gefunden (z.B. eine erst nach
+                # der letzten Konvertierung hinzugefuegte Farbe) -- Nearest-
+                # Match-Fallback statt der (nicht existierenden) Original-
+                # Zuordnung.
+                # Wenn schon im Ziel-Format (z.B. is_diamond+target=diamond),
+                # nicht neu mappen — vermeidet leichte Drift bei Round-Trips.
+                already_target = (target_mode == "diamond" and entry.is_diamond) or (
+                    target_mode == "stitch" and not entry.is_diamond
+                )
+                match = find_equivalent(entry.thread, default_palette)
+                if match is None:
+                    continue
+                if already_target and match is entry.thread:
+                    continue
+                entry.thread = match
+                new_is_diamond = target_mode == "diamond"
+                if new_is_diamond != entry.is_diamond:
+                    entry.is_diamond = new_is_diamond
+                    self._restamp_stitch_type_for_color(idx, entry)
+                changed = True
 
         self.mode = target_mode
         return changed or current_mode != target_mode

@@ -287,6 +287,7 @@ def _color_entry_to_dict(entry: ColorEntry) -> dict[str, Any]:
         "strands": entry.strands,
         "is_bead": entry.is_bead,
         "is_diamond": entry.is_diamond,
+        "color_id": entry.color_id,
     }
     # Tweed-Blends: Komponenten und Strang-Verhältnisse mitspeichern
     if thread.is_blend:
@@ -350,7 +351,7 @@ def _dict_to_color_entry(data: dict[str, Any]) -> ColorEntry:
         thread.blend_components = components
         thread.strand_ratios = list(data.get("strand_ratios", [1] * len(components)))
 
-    return ColorEntry(
+    entry = ColorEntry(
         thread=thread,
         symbol=data["symbol"],
         stitch_count=data.get("stitch_count", 0),
@@ -359,6 +360,15 @@ def _dict_to_color_entry(data: dict[str, Any]) -> ColorEntry:
         is_bead=data.get("is_bead", False),
         is_diamond=data.get("is_diamond", False),
     )
+    # Aeltere .pxs-Dateien (vor color_id) haben das Feld nicht -- der
+    # ColorEntry-Default (frischer uuid4) greift dann automatisch, sonst
+    # die gespeicherte Identitaet uebernehmen (wichtig fuer
+    # Pattern.convert_to_mode()'s Mode-Backup-Zuordnung ueber einen
+    # Speichern/Laden-Zyklus hinweg).
+    color_id = data.get("color_id")
+    if color_id:
+        entry.color_id = color_id
+    return entry
 
 
 def _layer_to_dict(layer: Layer) -> dict[str, Any]:
