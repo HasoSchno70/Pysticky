@@ -152,6 +152,39 @@ def test_pdf_mystery_mode_hides_backstitch_count(tmp_path):
     assert "Linien" not in preview_text
 
 
+def test_pdf_preview_drawing_hides_backstitches_in_dp_mode():
+    """Regression: _create_preview_drawing() (geteilt von Cover/Vorschau/
+    Uebersicht, siehe pdf_export_sections.py) zeichnete Rueckstich-Linien
+    unbedingt, auch im DP-Modus -- obwohl Legende und Info-Texte (siehe
+    test_pdf_cover_title_matches_pattern_mode-Nachbartests) das schon
+    korrekt ausblenden. Passiert z.B. wenn ein Pattern per
+    Pattern.convert_to_mode() von Stick- auf Diamond-Modus umgeschaltet
+    wird: convert_to_mode() raeumt alte Backstitch-Daten nicht auf."""
+    from reportlab.graphics.shapes import Line
+
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.mode = "diamond"
+    idx = pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+    pattern.add_backstitch(0, 0, 4, 4, idx)
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    drawing = exp._create_preview_drawing(100, 100)
+
+    assert drawing is not None
+    assert not any(isinstance(shape, Line) for shape in drawing.contents)
+
+
 def test_pdf_export_survives_unescaped_angle_bracket_in_notes(pattern_with_stitches, tmp_path):
     """Regression (Runde 20): reportlab's Paragraph() parst Text als eigenes
     XML-artiges Markup -- ein rohes "<" GEFOLGT VON EINEM BUCHSTABEN (wie ein

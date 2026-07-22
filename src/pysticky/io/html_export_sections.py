@@ -468,11 +468,17 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
         # eine Liste, also ein einzelnes Element reicht.
         rows = ["".join(svg_elements)]
 
-        # Rückstiche für Vorschau — im Mystery-Modus weglassen (Kontur).
-        backstitch_svg = "" if mystery else self._generate_backstitches_svg(cell_size)
+        # Rückstiche für Vorschau — im Mystery-Modus weglassen (Kontur),
+        # UND im DP-Modus weglassen (DP kennt kein Rückstich-Konzept; ein
+        # per convert_to_mode() auf Diamond umgeschaltetes Pattern behält
+        # aber seine alten Backstitch-Daten -- siehe Cover/Übersicht, die
+        # dieselbe Prüfung schon haben).
+        backstitch_svg = (
+            "" if (mystery or is_dp_preview) else self._generate_backstitches_svg(cell_size)
+        )
 
         backstitch_info = ""
-        if not mystery and self.pattern.backstitches:
+        if not mystery and not is_dp_preview and self.pattern.backstitches:
             backstitch_info = t(
                 "<div class='backstitch-info'><strong>&#8600; R&uuml;ckstiche:</strong> "
                 "{n} Linien werden &uuml;ber dem Muster gezeigt.</div>"
@@ -816,12 +822,17 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             unit=overview_unit_label,
         )
 
+        # Weder im Mystery-Modus (die reine Anzahl verraet schon Konturen,
+        # siehe backstitch_svg oben, das dieselbe Prüfung schon hat) noch
+        # im DP-Modus (kein Rückstich-Konzept -- ein per convert_to_mode()
+        # umgeschaltetes Pattern kann aber noch alte Backstitch-Daten tragen)
+        # anzeigen.
         overview_backstitch_note = (
             t(
                 "<p><strong>&#8600; R&uuml;ckstiche:</strong> {n} R&uuml;ckstiche werden auf den "
                 "Musterseiten als Linien angezeigt.</p>"
             ).format(n=len(self.pattern.backstitches))
-            if self.pattern.backstitches
+            if (self.pattern.backstitches and not mystery and not is_dp_overview)
             else ""
         )
 
