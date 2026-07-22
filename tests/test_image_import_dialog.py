@@ -124,3 +124,32 @@ def test_seed_from_pattern_with_missing_source_file_stays_blank(qtbot, tmp_path,
     qtbot.addWidget(dlg)
 
     assert dlg._image_path is None
+
+
+def test_load_image_handles_decompression_bomb_error(qtbot, tmp_path, monkeypatch):
+    """get_image_info() -> PIL.Image.open() wirft bei einem sehr grossen
+    (aber technisch validen) Bild ein PIL.Image.DecompressionBombError --
+    eine normale Exception, KEIN OSError. Der schmale `except OSError` in
+    _load_image_from_path() fing das vorher nicht ab: die Exception blieb
+    unbehandelt und der Dialog blieb mit self._image_path auf ein nie
+    tatsaechlich geladenes Bild zeigend haengen, statt sauber auf None
+    zurueckzusetzen und eine Fehlermeldung zu zeigen."""
+    warnings_shown = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a, **k: warnings_shown.append(a) or None)
+    # MAX_IMAGE_PIXELS kuenstlich sehr klein setzen, damit ein normales
+    # kleines Testbild bereits die Decompression-Bomb-Schwelle ueberschreitet
+    # -- ohne dafuer ein echtes riesiges Bild erzeugen zu muessen.
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 10)
+
+    path = tmp_path / "bild.png"
+    Image.new("RGB", (50, 50), (10, 20, 30)).save(path)
+
+    dlg = ImageImportDialog()
+    qtbot.addWidget(dlg)
+
+    dlg._load_image_from_path(str(path))
+
+    assert dlg._image_path is None
+    assert dlg._image_width == 0
+    assert dlg._image_height == 0
+    assert len(warnings_shown) == 1

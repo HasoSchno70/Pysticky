@@ -832,6 +832,16 @@ def change_palette(pattern: Pattern, new_palette_name: str) -> Pattern | None:
     max_colors = pattern.metadata.get("max_colors", len(pattern.color_entries))
     auto_backstitches = pattern.metadata.get("auto_backstitches", False)
     confetti_min_run_size = pattern.metadata.get("confetti_min_run_size", 1)
+    # Bild-Anpassung (Helligkeit/Kontrast/Saettigung) gehoert genauso zu den
+    # "gleichen Parametern" wie Dithering/Quantisierung -- import_image()
+    # speichert sie oben in metadata (Zeilen 236-238) genau dafuer. Ohne
+    # diese drei Zeilen fiel ein Palettenwechsel bei einem mit angepasster
+    # Helligkeit/Kontrast/Saettigung importierten Muster stillschweigend auf
+    # das UNangepasste Originalbild zurueck (ImportSettings-Default 1.0),
+    # das Ergebnis sah je nach Anpassung sichtbar anders aus als erwartet.
+    brightness = pattern.metadata.get("brightness", 1.0)
+    contrast = pattern.metadata.get("contrast", 1.0)
+    saturation = pattern.metadata.get("saturation", 1.0)
 
     # Neue Import-Einstellungen mit gleichen Parametern
     settings = ImportSettings(
@@ -844,6 +854,9 @@ def change_palette(pattern: Pattern, new_palette_name: str) -> Pattern | None:
         keep_aspect_ratio=False,  # Größe exakt beibehalten
         auto_backstitches=auto_backstitches,
         confetti_min_run_size=confetti_min_run_size,
+        brightness=brightness,
+        contrast=contrast,
+        saturation=saturation,
     )
 
     # Neu importieren

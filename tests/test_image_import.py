@@ -410,3 +410,29 @@ def test_can_change_palette_with_imported_pattern(tmp_path):
 
 def test_change_palette_no_source_returns_none(empty_pattern):
     assert change_palette(empty_pattern, "DMC") is None
+
+
+def test_change_palette_preserves_image_adjustments(tmp_path):
+    """change_palette() muss Helligkeit/Kontrast/Saettigung aus den
+    metadata des Originalimports uebernehmen -- sonst faellt ein
+    Palettenwechsel bei einem mit Bildanpassung importierten Muster
+    stillschweigend auf das UNangepasste Originalbild zurueck (die drei
+    Werte fehlten in der ImportSettings-Rekonstruktion, obwohl
+    import_image() sie extra in metadata speichert)."""
+    path = _make_solid_rgb(tmp_path, (120, 60, 200))
+    settings = ImportSettings(
+        width=8,
+        height=8,
+        palette_name="DMC",
+        brightness=1.4,
+        contrast=0.6,
+        saturation=0.2,
+    )
+    pattern = import_image(path, settings)
+
+    new_pattern = change_palette(pattern, "Anchor")
+
+    assert new_pattern is not None
+    assert new_pattern.metadata["brightness"] == pytest.approx(1.4)
+    assert new_pattern.metadata["contrast"] == pytest.approx(0.6)
+    assert new_pattern.metadata["saturation"] == pytest.approx(0.2)

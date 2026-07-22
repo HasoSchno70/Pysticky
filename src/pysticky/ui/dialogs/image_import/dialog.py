@@ -295,7 +295,17 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
             self.btn_import.setEnabled(True)
             self.btn_reset_crop.setEnabled(False)
 
-        except OSError as e:
+        except Exception as e:  # noqa: BLE001 - siehe worker.py::_ImageImportWorker.run()
+            # Bewusst breiter Catch-all statt nur OSError: get_image_info()
+            # ruft PIL.Image.open() auf, das bei einem sehr grossen (aber
+            # technisch validen) Bild ein PIL.Image.DecompressionBombError
+            # wirft -- eine ganz normale Exception, KEIN OSError. Mit dem
+            # schmalen except blieb das hier unbehandelt: self._image_path
+            # zeigte danach auf ein Bild, das nie tatsaechlich geladen wurde,
+            # waehrend Crop-Vorschau/Groesse/Dateiname noch das vorherige
+            # Bild zeigten (oder bei der allerersten Bildwahl auf
+            # inkonsistenten Nullwerten blieben). Gleiche Bug-Klasse wie
+            # worker.py (Runde 14).
             QMessageBox.warning(self, t("Fehler"), f"Bild konnte nicht geladen werden:\n{e}")
             self._image_path = None
             self._image_width = 0
