@@ -300,12 +300,28 @@ class RulerCorner(QWidget):
         self._canvas_y = -1
         self.update()
 
+    @staticmethod
+    def _hover_fill_color() -> QColor:
+        """Semi-transparente Variante von accent_primary fuer den Hover-Fill.
+
+        WICHTIG: nicht per String-Konkatenation `THEME.accent_primary + "40"`
+        bauen -- QColor interpretiert einen 8-stelligen Hex-String als
+        #AARRGGBB (Alpha ZUERST), nicht als #RRGGBBAA. Ein angehaengtes
+        Alpha-Suffix verschiebt dadurch alle Kanaele und ergibt eine voellig
+        falsche (und noch dazu undurchsichtige) Farbe statt eines
+        durchscheinenden accent_primary. `setAlpha()` auf einem echten
+        QColor-Objekt ist der korrekte Weg.
+        """
+        color = QColor(THEME.accent_primary)
+        color.setAlpha(0x40)
+        return color
+
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
 
         if self._hover:
-            painter.fillRect(self.rect(), QColor(THEME.accent_primary + "40"))
+            painter.fillRect(self.rect(), self._hover_fill_color())
         else:
             painter.fillRect(self.rect(), self._bg_color)
 

@@ -826,6 +826,23 @@ class RenderingMixin:
     # Backstitches zeichnen
     # =========================================================================
 
+    @staticmethod
+    def _backstitch_start_point_color() -> QColor:
+        """Semi-transparente Variante von accent_primary fuer den Rueckstich-
+        Start-Punkt-Marker.
+
+        WICHTIG: nicht per String-Konkatenation `THEME.accent_primary + "99"`
+        bauen -- QColor interpretiert einen 8-stelligen Hex-String als
+        #AARRGGBB (Alpha ZUERST), nicht als #RRGGBBAA. Ein angehaengtes
+        Alpha-Suffix verschiebt dadurch alle Kanaele und ergibt eine voellig
+        falsche (und noch dazu undurchsichtige) Farbe statt eines
+        durchscheinenden accent_primary. `setAlpha()` auf einem echten
+        QColor-Objekt ist der korrekte Weg.
+        """
+        color = QColor(THEME.accent_primary)
+        color.setAlpha(0x99)
+        return color
+
     def _draw_backstitches(self: "CrossStitchCanvas", painter: QPainter) -> None:
         """Zeichnet alle Backstitches und die Vorschau."""
         if not self._pattern:
@@ -892,7 +909,7 @@ class RenderingMixin:
                 sy = start[1] * half_cell + self._offset_y
 
                 painter.setPen(QPen(QColor(THEME.accent_primary), 2))
-                painter.setBrush(QColor(THEME.accent_primary + "99"))
+                painter.setBrush(self._backstitch_start_point_color())
                 painter.drawEllipse(sx - 5, sy - 5, 10, 10)
 
             preview = backstitch_tool.preview
