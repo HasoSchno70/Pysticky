@@ -28,6 +28,7 @@ from .export_common import (
     get_pixel_color,
     get_pixel_stitch_type,
     get_pixel_symbol,
+    pdf_text_escape,
 )
 from .pdf_export_drawings import PDFDrawingsMixin
 from .pdf_export_sections import PDFSectionsMixin
@@ -283,7 +284,14 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
                 story.append(Paragraph(t("Notizen"), self._styles["Title2"]))
                 story.append(Spacer(1, 6 * mm))
                 for line in self._notes.strip().split("\n"):
-                    story.append(Paragraph(line or "&nbsp;", self._styles["Normal"]))
+                    # Freitext -- escapen, sonst crasht z.B. eine Notiz mit
+                    # einem rohen "<" den kompletten PDF-Export (reportlab-
+                    # ParaParser-ValueError, siehe pdf_text_escape()-Docstring).
+                    story.append(
+                        Paragraph(
+                            pdf_text_escape(line) if line else "&nbsp;", self._styles["Normal"]
+                        )
+                    )
                 story.append(PageBreak())
 
             # Vorschau

@@ -150,3 +150,55 @@ def test_pdf_mystery_mode_hides_backstitch_count(tmp_path):
     preview_elements = exp._create_preview("Titel", 10.0, 10.0)
     preview_text = "".join(getattr(e, "text", "") for e in preview_elements)
     assert "Linien" not in preview_text
+
+
+def test_pdf_export_survives_unescaped_angle_bracket_in_notes(pattern_with_stitches, tmp_path):
+    """Regression (Runde 20): reportlab's Paragraph() parst Text als eigenes
+    XML-artiges Markup -- ein rohes "<" GEFOLGT VON EINEM BUCHSTABEN (wie ein
+    Tag-Name) liess `doc.build()` vorher mit einem ParaParser-ValueError
+    abstuerzen und den GESAMTEN PDF-Export scheitern lassen, nicht nur die
+    Notizen-Seite. Verifiziert per Hand gegen die echte reportlab-Installation:
+    Paragraph("Kante<Rand", ...) wirft ValueError, waehrend z.B. "x < y" (mit
+    Leerzeichen) oder "x<3" (Ziffer nach "<") vom Parser toleriert werden --
+    daher bewusst ein Payload OHNE Leerzeichen/Ziffer direkt nach "<".
+    """
+    target = tmp_path / "notizen.pdf"
+    exp = PDFExporter(
+        pattern_with_stitches,
+        include_path_preview=False,
+        notes="Kante<Rand beachten",
+    )
+    ok = exp.export(target)
+    assert ok is True
+    assert target.exists()
+
+
+def test_pdf_export_survives_unescaped_angle_bracket_in_metadata(pattern_with_stitches, tmp_path):
+    """Wie oben, aber ueber Pattern-Autor/Copyright (Deckblatt) statt
+    Notizen -- beide landen unescaped in Paragraph()-Aufrufen."""
+    pattern_with_stitches.metadata["author"] = "A<b>Werkstatt"
+    pattern_with_stitches.metadata["copyright"] = "Rot<Orange Studio"
+
+    target = tmp_path / "metadaten.pdf"
+    ok = PDFExporter(pattern_with_stitches, include_path_preview=False).export(target)
+    assert ok is True
+    assert target.exists()
+
+
+def test_pdf_export_survives_unescaped_angle_bracket_in_thread_name(tmp_path):
+    """Wie oben, aber ueber einen Garnnamen/Katalognummer mit "<" -- landet
+    unescaped in der Musterseiten-Mini-Legende (pdf_export_sections.py)."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    idx = pattern.add_color(
+        Thread.from_hex("Rot<Orange", "#FF0000", manufacturer="DMC", catalog_number="A<b>21")
+    )
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+
+    target = tmp_path / "garnname.pdf"
+    ok = PDFExporter(pattern, include_path_preview=False).export(target)
+    assert ok is True
+    assert target.exists()

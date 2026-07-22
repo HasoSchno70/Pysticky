@@ -342,6 +342,79 @@ def test_xsd_import_oversized_pattern_produces_warning(tmp_path):
     assert any("Gro" in w or "gro" in w for w in importer.warnings)
 
 
+def test_xsd_import_rejects_pattern_above_hard_limit(tmp_path):
+    """Regression (Runde 20): width/height kommen aus einem ungeprueften
+    struct.unpack (max. 65535 je Achse). xsd_import.py hatte -- anders als
+    pat_import.py/oxs_io.py/file_io.py -- NUR eine Warnung ab 1000, aber
+    KEINE harte Obergrenze. Eine beschaedigte Datei mit width=height=65535
+    haette dadurch eine Multi-Milliarden-Zellen-Pattern-Allokation
+    ausgeloest, statt sauber mit einer Fehlermeldung abgelehnt zu werden."""
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_pm_header(version=5, width=40000, height=10))
+    importer = XSDImporter()
+    result = importer.import_file(f)
+    assert result is None
+    assert any("zu gro" in e.lower() for e in importer.errors)
+
+
+def test_xsd_import_accepts_pattern_at_hard_limit_boundary(tmp_path):
+    """Exakt 2000x2000 ist noch erlaubt (nur > 2000 wird abgelehnt)."""
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_pm_header(version=5, width=2000, height=2000))
+    importer = XSDImporter()
+    result = importer.import_file(f)
+    assert result is not None
+    assert result.width == 2000 and result.height == 2000
+
+
+# ============================================================================
+# PAT/XSD: Farbindex-Clamping (Runde 20)
+# ============================================================================
+
+
+def test_pat_clamp_color_index_passes_through_valid_index():
+    importer = PATImporter()
+    assert importer._clamp_color_index(3, color_count=10) == 3
+    assert importer._clamp_color_index(None, color_count=10) is None
+
+
+def test_pat_clamp_color_index_drops_out_of_range_index_with_warning():
+    """Regression: ein Grid-Byte, das auf einen Farbindex jenseits der
+    tatsaechlich eingelesenen Palette zeigt (beschaedigte/verkuerzte
+    Datei), wurde bisher klaglos an Layer.set_stitch() durchgereicht --
+    Layer.set_stitch() prueft nur x/y, nicht den Farbindex. Der betroffene
+    Stich fehlte dadurch stillschweigend in allen Statistiken/Exporten."""
+    importer = PATImporter()
+    assert importer._invalid_color_index_warned is False
+
+    result = importer._clamp_color_index(10, color_count=5)
+
+    assert result is None
+    assert importer._invalid_color_index_warned is True
+    assert any("außerhalb der Palette" in w for w in importer.warnings)
+
+
+def test_pat_clamp_color_index_warns_only_once_per_import():
+    importer = PATImporter()
+    importer._clamp_color_index(10, color_count=5)
+    importer._clamp_color_index(11, color_count=5)
+    importer._clamp_color_index(12, color_count=5)
+    assert sum("außerhalb der Palette" in w for w in importer.warnings) == 1
+
+
+def test_xsd_clamp_color_index_passes_through_valid_index():
+    importer = XSDImporter()
+    assert importer._clamp_color_index(3, color_count=10) == 3
+    assert importer._clamp_color_index(None, color_count=10) is None
+
+
+def test_xsd_clamp_color_index_drops_out_of_range_index_with_warning():
+    importer = XSDImporter()
+    result = importer._clamp_color_index(10, color_count=5)
+    assert result is None
+    assert any("außerhalb der Palette" in w for w in importer.warnings)
+
+
 # ============================================================================
 # XSD: Helper-Klassen
 # ============================================================================

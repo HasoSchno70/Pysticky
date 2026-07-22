@@ -69,6 +69,7 @@ class XSDImporter:
     def __init__(self):
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self._invalid_color_index_warned = False
 
     def can_import(self, filepath: Path | str) -> bool:
         """Prüft ob die Datei ein XSD-Format ist."""
@@ -105,6 +106,7 @@ class XSDImporter:
         filepath = Path(filepath)
         self.errors.clear()
         self.warnings.clear()
+        self._invalid_color_index_warned = False
 
         if not filepath.exists():
             self.errors.append(f"Datei nicht gefunden: {filepath}")
@@ -128,6 +130,15 @@ class XSDImporter:
 
         if header.width < 1 or header.height < 1:
             raise XSDImportError(f"Ungültige Dimensionen: {header.width}x{header.height}")
+
+        # Width/Height kommen aus einem ungeprüften struct.unpack ("<HH",
+        # max. 65535 je Achse) -- ohne Obergrenze könnte eine beschädigte
+        # Datei eine ~4,3-Milliarden-Zellen-Allokation auslösen. Gleiche
+        # Grenzen wie file_io.py/pat_import.py/oxs_io.py (harte Grenze).
+        if header.width > 2000 or header.height > 2000:
+            raise XSDImportError(
+                f"Mustergröße zu groß: {header.width}x{header.height} (max. 2000x2000)"
+            )
 
         if header.width > 1000 or header.height > 1000:
             self.warnings.append(f"Große Muster-Dimensionen: {header.width}x{header.height}")
@@ -291,6 +302,8 @@ class XSDImporter:
         if not layer:
             return
 
+        color_count = len(pattern.color_entries)
+
         # Versuche RLE-komprimierte Daten zu lesen
         try:
             # RLE-Marker prüfen
@@ -298,16 +311,39 @@ class XSDImporter:
 
             if marker == b"\xff":
                 # RLE-komprimiert
-                self._read_rle_grid(f, layer, pattern.width, pattern.height)
+                self._read_rle_grid(f, layer, pattern.width, pattern.height, color_count)
             else:
                 # Unkomprimiert - zurücksetzen
                 f.seek(-1, 1)
-                self._read_raw_grid(f, layer, pattern.width, pattern.height)
+                self._read_raw_grid(f, layer, pattern.width, pattern.height, color_count)
 
         except (ValueError, IndexError, struct.error) as e:
             self.warnings.append(f"Fehler beim Lesen der Grid-Daten: {e}")
 
-    def _read_rle_grid(self, f: BinaryIO, layer: Layer, width: int, height: int) -> None:
+    def _clamp_color_index(self, color_index: int | None, color_count: int) -> int | None:
+        """Verwirft einen Farbindex außerhalb der eingelesenen Palette.
+
+        Eine beschädigte/verkürzte Datei kann ein Grid-Byte enthalten, das
+        auf einen Farbeintrag zeigt, den die Palette gar nicht hat --
+        `Layer.set_stitch()` prüft nur x/y, nicht den Farbindex, würde den
+        Wert also klaglos übernehmen. Downstream (Export-Statistiken,
+        Rendering) wird ein solcher Stich dann OHNE Warnung als leere
+        Zelle behandelt -- betroffene Stiche fehlen dem Nutzer sonst
+        stillschweigend.
+        """
+        if color_index is not None and color_index >= color_count:
+            if not self._invalid_color_index_warned:
+                self.warnings.append(
+                    f"Farbindex {color_index} außerhalb der Palette ({color_count} Farben) "
+                    "— betroffene Stiche werden als leer behandelt"
+                )
+                self._invalid_color_index_warned = True
+            return None
+        return color_index
+
+    def _read_rle_grid(
+        self, f: BinaryIO, layer: Layer, width: int, height: int, color_count: int
+    ) -> None:
         """Liest RLE-komprimierte Grid-Daten."""
 
         x, y = 0, 0
@@ -328,7 +364,7 @@ class XSDImporter:
                     if color == 0xFF:
                         color_index = None  # Leer
                     else:
-                        color_index = color
+                        color_index = self._clamp_color_index(color, color_count)
 
                     layer.set_stitch(x, y, color_index)
                     x += 1
@@ -342,7 +378,7 @@ class XSDImporter:
                 if value == 0xFE:
                     color_index = None
                 else:
-                    color_index = value
+                    color_index = self._clamp_color_index(value, color_count)
 
                 layer.set_stitch(x, y, color_index)
                 x += 1
@@ -350,7 +386,9 @@ class XSDImporter:
                     x = 0
                     y += 1
 
-    def _read_raw_grid(self, f: BinaryIO, layer: Layer, width: int, height: int) -> None:
+    def _read_raw_grid(
+        self, f: BinaryIO, layer: Layer, width: int, height: int, color_count: int
+    ) -> None:
         """Liest unkomprimierte Grid-Daten."""
 
         for y in range(height):
@@ -364,7 +402,7 @@ class XSDImporter:
                 if value == 0xFF or value == 0xFE:
                     color_index = None
                 else:
-                    color_index = value
+                    color_index = self._clamp_color_index(value, color_count)
 
                 layer.set_stitch(x, y, color_index)
 

@@ -487,13 +487,16 @@ class PaletteConversionDialog(QDialog):
             if reply != QMessageBox.StandardButton.Yes:
                 return
 
-        # Schlechte Zuordnungen warnen
-        poor = sum(1 for m in self._mapping if m["distance"] > 60)
+        # Schlechte Zuordnungen warnen -- Schwelle (25) muss mit der
+        # "poor"/rot-Einfaerbung der Tabelle (Zeile ~403) uebereinstimmen,
+        # sonst klickt der Nutzer an sichtbar rot markierten Zeilen vorbei,
+        # ohne je eine Warnung zu sehen.
+        poor = sum(1 for m in self._mapping if m["distance"] > 25)
         if poor:
             reply = QMessageBox.question(
                 self,
                 t("Schlechte Zuordnungen"),
-                f"{poor} Farbe(n) haben einen hohen Farbabstand (>60).\nTrotzdem konvertieren?",
+                f"{poor} Farbe(n) haben einen hohen Farbabstand (>25).\nTrotzdem konvertieren?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply != QMessageBox.StandardButton.Yes:

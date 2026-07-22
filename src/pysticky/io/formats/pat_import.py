@@ -71,6 +71,7 @@ class PATImporter:
     def __init__(self):
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self._invalid_color_index_warned = False
 
     def can_import(self, filepath: Path | str) -> bool:
         """Prüft ob die Datei ein PAT-Format ist."""
@@ -102,6 +103,7 @@ class PATImporter:
         filepath = Path(filepath)
         self.errors.clear()
         self.warnings.clear()
+        self._invalid_color_index_warned = False
 
         if not filepath.exists():
             self.errors.append(f"Datei nicht gefunden: {filepath}")
@@ -140,7 +142,7 @@ class PATImporter:
         # Width/Height kommen aus einem ungeprüften struct.unpack ("<HH",
         # max. 65535 je Achse) -- ohne Obergrenze könnte eine beschädigte
         # Datei eine ~4,3-Milliarden-Zellen-Allokation auslösen. Gleiche
-        # Grenzen wie file_io.py (harte Grenze) und xsd_import.py (Warnung).
+        # Grenzen wie file_io.py/xsd_import.py/oxs_io.py (harte Grenze).
         if header.width > 2000 or header.height > 2000:
             raise PATImportError(
                 f"Mustergröße zu groß: {header.width}x{header.height} (max. 2000x2000)"
@@ -343,20 +345,51 @@ class PATImporter:
         if not layer:
             return
 
+        color_count = len(pattern.color_entries)
+
         try:
             if version >= 8:
                 # Neuere Versionen: Grid-Größe vorangestellt
                 grid_size = struct.unpack("<I", f.read(4))[0]
-                self._read_compressed_grid(f, layer, pattern.width, pattern.height, grid_size)
+                self._read_compressed_grid(
+                    f, layer, pattern.width, pattern.height, grid_size, color_count
+                )
             else:
                 # Ältere Versionen: Roh
-                self._read_raw_grid(f, layer, pattern.width, pattern.height)
+                self._read_raw_grid(f, layer, pattern.width, pattern.height, color_count)
 
         except (struct.error, ValueError, IndexError) as e:
             self.warnings.append(f"Fehler beim Lesen der Grid-Daten: {e}")
 
+    def _clamp_color_index(self, color_index: int | None, color_count: int) -> int | None:
+        """Verwirft einen Farbindex außerhalb der eingelesenen Palette.
+
+        Eine beschädigte/verkürzte Datei kann ein Grid-Byte enthalten, das
+        auf einen Farbeintrag zeigt, den die Palette gar nicht hat --
+        `Layer.set_stitch()` prüft nur x/y, nicht den Farbindex, würde den
+        Wert also klaglos übernehmen. Downstream (Export-Statistiken,
+        Rendering) wird ein solcher Stich dann OHNE Warnung als leere
+        Zelle behandelt -- betroffene Stiche fehlen dem Nutzer sonst
+        stillschweigend.
+        """
+        if color_index is not None and color_index >= color_count:
+            if not self._invalid_color_index_warned:
+                self.warnings.append(
+                    f"Farbindex {color_index} außerhalb der Palette ({color_count} Farben) "
+                    "— betroffene Stiche werden als leer behandelt"
+                )
+                self._invalid_color_index_warned = True
+            return None
+        return color_index
+
     def _read_compressed_grid(
-        self, f: BinaryIO, layer: Layer, width: int, height: int, expected_size: int
+        self,
+        f: BinaryIO,
+        layer: Layer,
+        width: int,
+        height: int,
+        expected_size: int,
+        color_count: int,
     ) -> None:
         """Liest komprimierte Grid-Daten."""
 
@@ -380,7 +413,7 @@ class PATImporter:
                 bytes_read += 1
 
                 color = struct.unpack("B", color_byte)[0]
-                color_index = None if color == 0xFF else color
+                color_index = self._clamp_color_index(None if color == 0xFF else color, color_count)
 
                 for _ in range(count):
                     if y >= height:
@@ -392,14 +425,16 @@ class PATImporter:
                         y += 1
             else:
                 # Einzelner Stich
-                color_index = None if value == 0xFF else value
+                color_index = self._clamp_color_index(None if value == 0xFF else value, color_count)
                 layer.set_stitch(x, y, color_index)
                 x += 1
                 if x >= width:
                     x = 0
                     y += 1
 
-    def _read_raw_grid(self, f: BinaryIO, layer: Layer, width: int, height: int) -> None:
+    def _read_raw_grid(
+        self, f: BinaryIO, layer: Layer, width: int, height: int, color_count: int
+    ) -> None:
         """Liest unkomprimierte Grid-Daten."""
 
         for y in range(height):
@@ -409,7 +444,7 @@ class PATImporter:
                 break
 
             for x, value in enumerate(row_data):
-                color_index = None if value == 0xFF else value
+                color_index = self._clamp_color_index(None if value == 0xFF else value, color_count)
                 layer.set_stitch(x, y, color_index)
 
     def _read_backstitches(self, f: BinaryIO, pattern: Pattern, version: int) -> None:

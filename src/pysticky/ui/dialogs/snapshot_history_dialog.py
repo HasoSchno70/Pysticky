@@ -202,6 +202,7 @@ class SnapshotHistoryDialog(QDialog):
             n_stitches = p.total_stitches
             n_colors = len(p.color_entries)
             size = f"{p.width} × {p.height}"
+            unit_label = t("Drills") if getattr(p, "mode", "stitch") == "diamond" else t("Stiche")
         except Exception:  # noqa: BLE001 — Snapshot kann beschädigt sein
             self._detail_label.setText(
                 f"⚠ Diese Version konnte nicht gelesen werden ({path.name})."
@@ -209,7 +210,8 @@ class SnapshotHistoryDialog(QDialog):
             return
         when = ts.strftime("%d.%m.%Y %H:%M:%S") if ts else "?"
         self._detail_label.setText(
-            f"Datum: {when}\nGröße: {size}    ·    Stiche: {n_stitches}    ·    Farben: {n_colors}"
+            f"Datum: {when}\nGröße: {size}    ·    "
+            f"{unit_label}: {n_stitches}    ·    Farben: {n_colors}"
         )
 
     def _on_double_clicked(self, item: QListWidgetItem) -> None:

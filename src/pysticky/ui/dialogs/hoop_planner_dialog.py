@@ -171,7 +171,12 @@ class _HoopPreviewWidget(QFrame):
 class HoopPlannerDialog(QDialog):
     """Dialog zum Aufteilen grosser Muster auf mehrere Stickrahmen."""
 
-    # Gängige Hoop-Größen — Aida 14 ct: ~5.5 Stiche/cm
+    # Gängige Hoop-Größen, kalibriert auf Aida 14 ct (~5.5 Stiche/cm).
+    # Die tatsächlichen Stich-Werte pro Preset-Button werden in _setup_ui()
+    # mit pattern.fabric_count / 14 skaliert -- ohne diese Skalierung waren
+    # die cm-Beschriftungen der Presets für jede Stoffzählung außer 14 ct
+    # schlicht falsch (z.B. "8 Zoll (20 cm)" ergab bei 18 ct einen Rahmen,
+    # der real keine 8 Zoll misst).
     COMMON_HOOPS = [
         ("4 Zoll (10 cm)", 55, 55),
         ("5 Zoll (13 cm)", 71, 71),
@@ -185,6 +190,7 @@ class HoopPlannerDialog(QDialog):
     def __init__(self, pattern: "Pattern", parent=None) -> None:
         super().__init__(parent)
         self._pattern = pattern
+        self._hoop_scale = pattern.fabric_count / 14
 
         self.setWindowTitle(t("Rahmenaufteilung"))
         self.setMinimumSize(820, 600)
@@ -197,7 +203,8 @@ class HoopPlannerDialog(QDialog):
         layout.setSpacing(12)
 
         intro = QLabel(
-            f"Pattern-Größe: <b>{self._pattern.width} × {self._pattern.height}</b> Stiche. "
+            f"Pattern-Größe: <b>{self._pattern.width} × {self._pattern.height}</b> Stiche "
+            f"({self._pattern.fabric_count} ct). "
             "Wähle deine Stickrahmen-Größe und die Überlappungs-Zone — die Aufteilung "
             "wird automatisch berechnet."
         )
@@ -221,8 +228,8 @@ class HoopPlannerDialog(QDialog):
         preset_row.addWidget(QLabel(t("Schnellwahl:")))
         for label, w, h in self.COMMON_HOOPS[:4]:
             btn = QPushButton(t(label))
-            btn.setProperty("hoop_w", w)
-            btn.setProperty("hoop_h", h)
+            btn.setProperty("hoop_w", round(w * self._hoop_scale))
+            btn.setProperty("hoop_h", round(h * self._hoop_scale))
             btn.clicked.connect(self._apply_preset)
             preset_row.addWidget(btn)
         preset_row.addStretch(1)
@@ -233,23 +240,27 @@ class HoopPlannerDialog(QDialog):
         preset_row2.addWidget(QLabel(""))
         for label, w, h in self.COMMON_HOOPS[4:]:
             btn = QPushButton(t(label))
-            btn.setProperty("hoop_w", w)
-            btn.setProperty("hoop_h", h)
+            btn.setProperty("hoop_w", round(w * self._hoop_scale))
+            btn.setProperty("hoop_h", round(h * self._hoop_scale))
             btn.clicked.connect(self._apply_preset)
             preset_row2.addWidget(btn)
         preset_row2.addStretch(1)
         left.addLayout(preset_row2)
 
+        # Default = "6 Zoll (15 cm)"-Preset, skaliert auf die tatsaechliche
+        # Stoffzaehlung (siehe COMMON_HOOPS-Kommentar).
+        default_hoop = round(82 * self._hoop_scale)
+
         self.spin_w = QSpinBox()
         self.spin_w.setRange(10, 500)
-        self.spin_w.setValue(82)
+        self.spin_w.setValue(default_hoop)
         self.spin_w.setSuffix(t(" Stiche"))
         self.spin_w.valueChanged.connect(self._recalculate)
         form.addRow(t("Rahmen-Breite:"), self.spin_w)
 
         self.spin_h = QSpinBox()
         self.spin_h.setRange(10, 500)
-        self.spin_h.setValue(82)
+        self.spin_h.setValue(default_hoop)
         self.spin_h.setSuffix(t(" Stiche"))
         self.spin_h.valueChanged.connect(self._recalculate)
         form.addRow(t("Rahmen-Höhe:"), self.spin_h)

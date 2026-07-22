@@ -360,7 +360,18 @@ class PatternLibraryDialog(QDialog):
             logger.error("Fehler beim Speichern der Bibliothek: %s", e)
 
     def _update_category_list(self) -> None:
-        """Aktualisiert die Kategorie-Liste."""
+        """Aktualisiert die Kategorie-Liste.
+
+        Behaelt die aktuell ausgewaehlte Kategorie bei (z.B. "Favoriten"),
+        statt bei jedem Aufruf (Favorit umschalten, Eintrag entfernen, Tag
+        aendern) stumm auf "Alle" zurueckzuspringen -- sonst verliert der
+        Nutzer nach fast jeder Aktion die gerade aktive Filteransicht.
+        """
+        current_category = None
+        current_row = self._category_list.currentRow()
+        if 0 <= current_row < len(self._library.categories):
+            current_category = self._library.categories[current_row]
+
         self._category_list.clear()
 
         for cat in self._library.categories:
@@ -368,7 +379,12 @@ class PatternLibraryDialog(QDialog):
             item = QListWidgetItem(f"{cat} ({count})")
             self._category_list.addItem(item)
 
-        self._category_list.setCurrentRow(0)
+        new_row = (
+            self._library.categories.index(current_category)
+            if current_category in self._library.categories
+            else 0
+        )
+        self._category_list.setCurrentRow(new_row)
 
     def _count_entries_in_category(self, category: str) -> int:
         """Zählt Einträge in einer Kategorie."""
@@ -469,6 +485,14 @@ class PatternLibraryDialog(QDialog):
 
     def _on_thumbnail_clicked(self, entry: LibraryEntry) -> None:
         """Handler für Thumbnail-Klick."""
+        # Ausstehende Notizen-Aenderung am VORHERIGEN Eintrag sofort sichern,
+        # bevor _selected_entry umgehaengt wird -- sonst wuerde der Debounce-
+        # Timer spaeter auf den neu ausgewaehlten Eintrag feuern und die
+        # Notizen des vorherigen Eintrags gehen verloren.
+        if self._notes_save_timer.isActive():
+            self._notes_save_timer.stop()
+            self._save_notes()
+
         self._selected_entry = entry
 
         # Selektion aktualisieren
@@ -572,7 +596,15 @@ class PatternLibraryDialog(QDialog):
         menu.exec(pos)
 
     def _open_entry(self, entry: LibraryEntry) -> None:
-        """Öffnet einen Eintrag."""
+        """Öffnet einen Eintrag (z.B. übers Kontextmenü, ohne vorherigen Klick)."""
+        # Wie in _on_thumbnail_clicked: `entry` kann ein ANDERER Eintrag sein
+        # als der aktuell in _notes_edit angezeigte -- ohne diesen Flush
+        # wuerde eine ausstehende Notizen-Aenderung sonst dem falschen
+        # (neuen) Eintrag zugeschrieben.
+        if self._notes_save_timer.isActive():
+            self._notes_save_timer.stop()
+            self._save_notes()
+
         self._selected_entry = entry
         self._open_selected()
 
@@ -778,6 +810,18 @@ class PatternLibraryDialog(QDialog):
         if self._selected_entry:
             self._selected_entry.notes = self._notes_edit.toPlainText().strip()
             self._save_library()
+
+    def closeEvent(self, event) -> None:
+        """Sichert eine noch ausstehende, debouncte Notizen-Aenderung sofort.
+
+        _notes_save_timer feuert erst 500ms nach der letzten Eingabe --
+        ohne diesen Flush geht ein Edit verloren, wenn der Dialog (Button/
+        Escape/Fenster-X) innerhalb dieses Fensters geschlossen wird.
+        """
+        if self._notes_save_timer.isActive():
+            self._notes_save_timer.stop()
+            self._save_notes()
+        super().closeEvent(event)
 
     def _add_category(self) -> None:
         """Fügt eine neue Kategorie hinzu."""

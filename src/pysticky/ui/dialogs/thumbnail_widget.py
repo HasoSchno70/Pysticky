@@ -194,6 +194,13 @@ class ThumbnailWidget(QFrame):
 
         except (OSError, ValueError):
             logger.warning("Thumbnail-Cache konnte nicht geschrieben werden")
+        except RuntimeError:
+            # Das Widget kann zwischen dem verzoegerten QTimer.singleShot()
+            # und dessen Ausloesen bereits deleteLater()'d worden sein (z.B.
+            # schneller Kategorie-/Suche-Wechsel in PatternLibraryDialog) --
+            # dann wirft self._thumb_label.setPixmap() auf dem geloeschten
+            # C++-Objekt ein RuntimeError, kein Programmfehler.
+            logger.debug("Thumbnail-Widget wurde vor der Generierung geschlossen")
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Mausklick-Handler."""

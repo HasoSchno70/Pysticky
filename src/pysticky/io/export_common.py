@@ -411,6 +411,24 @@ def get_watermark(pattern: "Pattern") -> tuple[str, str]:
     return author.strip(), copyright_.strip()
 
 
+def pdf_text_escape(text: str) -> str:
+    """
+    Escapt `&`, `<`, `>` für reportlab-`Paragraph()`-Text.
+
+    reportlab's Paragraph parst seinen Text als eigenes XML-artiges
+    Markup (u.a. `<b>`, `<font>`). Unescaped Nutzertext (Pattern-Titel,
+    Autor/Copyright-Wasserzeichen, PDF-Notizen, Garn-Katalognummern) mit
+    einem rohen `<` oder unausgewogenen `&` lässt `doc.build()` mit einem
+    ParaParser-`ValueError` abstürzen und reißt den GESAMTEN PDF-Export
+    mit (verifiziert: `Paragraph("x<y", style)` wirft `ValueError`).
+    Nur auf dynamische/Nutzer-Werte anwenden, NICHT auf die umgebende,
+    absichtlich gesetzte Markup-Vorlage (z.B. `f"<b>{pdf_text_escape(name)}</b>"`).
+    """
+    if not text:
+        return text
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def count_page_colors(
     pattern: "Pattern",
     start_x: int,

@@ -40,7 +40,7 @@ class PDFSectionsMixin(_Base):
         elements = []
 
         from ..core.i18n import t
-        from .export_common import is_diamond_mode
+        from .export_common import is_diamond_mode, pdf_text_escape
 
         is_dp = is_diamond_mode(self.pattern)
 
@@ -49,7 +49,7 @@ class PDFSectionsMixin(_Base):
         # Titel — modusabhaengig, wie beim HTML-Export (html_export_sections.py)
         cover_title = t("💎 DIAMOND-PAINTING-VORLAGE") if is_dp else t("✂ KREUZSTICH-MUSTER")
         elements.append(Paragraph(cover_title, self._styles["Title1"]))
-        elements.append(Paragraph(title, self._styles["Title2"]))
+        elements.append(Paragraph(pdf_text_escape(title), self._styles["Title2"]))
 
         # Wasserzeichen (Author + Copyright)
         from .export_common import get_watermark
@@ -57,14 +57,17 @@ class PDFSectionsMixin(_Base):
         author, copyright_ = get_watermark(self.pattern)
         if author:
             elements.append(
-                Paragraph(t("von {author}").format(author=author), self._styles["CenterText"])
+                Paragraph(
+                    t("von {author}").format(author=pdf_text_escape(author)),
+                    self._styles["CenterText"],
+                )
             )
 
         elements.append(
             Paragraph(t("Erstellt am {date}").format(date=date), self._styles["SmallCenter"])
         )
         if copyright_:
-            elements.append(Paragraph(copyright_, self._styles["SmallCenter"]))
+            elements.append(Paragraph(pdf_text_escape(copyright_), self._styles["SmallCenter"]))
 
         elements.append(Spacer(1, 15 * mm))
 
@@ -715,7 +718,7 @@ class PDFSectionsMixin(_Base):
 
         page_colors = self._count_page_colors(start_x, start_y, end_x, end_y)
         if page_colors:
-            from .export_common import is_diamond_mode
+            from .export_common import is_diamond_mode, pdf_text_escape
 
             is_dp_pg = is_diamond_mode(self.pattern)
             legend_parts = []
@@ -723,7 +726,9 @@ class PDFSectionsMixin(_Base):
                 if stat["index"] in page_colors:
                     thread = stat["thread"]
                     count = page_colors[stat["index"]]
-                    code = thread.catalog_number or thread.name[:8]
+                    # Nutzer-/Herstellerdaten (Katalognummer, Garnname) --
+                    # muessen escaped werden, siehe pdf_text_escape()-Docstring.
+                    code = pdf_text_escape(thread.catalog_number or thread.name[:8])
                     if is_dp_pg:
                         # Farb-HTML-Box als Marker (reportlab unterstützt
                         # einfache <font>-Tags und <b>) — und kein Symbol,
@@ -735,7 +740,11 @@ class PDFSectionsMixin(_Base):
                             f'<font color="{hex_color}">■</font> <b>{code}</b> ({count})'
                         )
                     else:
-                        legend_parts.append(f"{stat['symbol']}={code} ({count})")
+                        # Symbol ist ein einzelnes, vom Nutzer frei waehlbares
+                        # Zeichen (symbol_editor_dialog.py, setMaxLength(1)) --
+                        # koennte theoretisch "<" oder "&" sein.
+                        symbol = pdf_text_escape(stat["symbol"])
+                        legend_parts.append(f"{symbol}={code} ({count})")
 
             legend_text = "  |  ".join(legend_parts[:12])  # Max 12 Farben anzeigen
             if len(page_colors) > 12:
@@ -774,12 +783,14 @@ class PDFSectionsMixin(_Base):
             )
 
         # Footer
+        from .export_common import pdf_text_escape
+
         elements.append(Spacer(1, 2 * mm))
         elements.append(
             Paragraph(
                 "<font size='7' color='#999999'>"
                 + t("{title} · Seite {page}/{total} · {date}").format(
-                    title=title, page=page_num + 1, total=total_pages, date=date
+                    title=pdf_text_escape(title), page=page_num + 1, total=total_pages, date=date
                 )
                 + "</font>",
                 self._styles["CenterText"],
