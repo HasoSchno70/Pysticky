@@ -1448,5 +1448,6 @@
   "Kein Bild geladen": "No image loaded",
   "Rückstich-Optionen": "Backstitch Options",
   "Drills pro Stunde": "Drills per Hour",
-  "Bei täglichem Kleben": "With Daily Gluing"
+  "Bei täglichem Kleben": "With Daily Gluing",
+  "Änderung an der Bibliothek konnte nicht gespeichert werden:\n{error}": "The library change could not be saved:\n{error}"
 }

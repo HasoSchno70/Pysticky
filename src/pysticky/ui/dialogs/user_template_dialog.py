@@ -111,7 +111,12 @@ def save_user_templates(templates: list[UserTemplate]) -> bool:
         with open(templates_path, "w", encoding="utf-8") as f:
             json.dump([asdict(t) for t in templates], f, indent=2, ensure_ascii=False)
         return True
-    except (OSError, json.JSONDecodeError, ValueError):
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        # Aufrufer MUESSEN den Rueckgabewert pruefen (siehe misc_handlers.py
+        # ::_on_save_as_template fuer das etablierte Muster) -- ohne dieses
+        # Logging war ein Schreibfehler hier komplett unsichtbar, selbst im
+        # Log, wenn ein Aufrufer den Rueckgabewert (noch) nicht prueft.
+        logger.warning("Templates konnten nicht gespeichert werden: %s", exc)
         return False
 
 
@@ -450,7 +455,12 @@ class ManageTemplatesDialog(QDialog):
 
         if reply == QMessageBox.StandardButton.Yes:
             del self._templates[row]
-            save_user_templates(self._templates)
+            if not save_user_templates(self._templates):
+                QMessageBox.warning(
+                    self,
+                    t("Fehler"),
+                    t("Template konnte nicht gespeichert werden."),
+                )
             self._refresh_list()
             self.templates_changed.emit()
 
@@ -469,6 +479,11 @@ class ManageTemplatesDialog(QDialog):
 
         if ok and new_name.strip():
             template.name = new_name.strip()
-            save_user_templates(self._templates)
+            if not save_user_templates(self._templates):
+                QMessageBox.warning(
+                    self,
+                    t("Fehler"),
+                    t("Template konnte nicht gespeichert werden."),
+                )
             self._refresh_list()
             self.templates_changed.emit()
