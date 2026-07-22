@@ -32,6 +32,11 @@ class ToolbarBuilderMixin:
         self._emoji_actions: list[tuple[QAction, str, int]] = []
         self._emoji_buttons: list[tuple[QToolButton, str, int]] = []
         self._toolbar_section_buttons: list[tuple[QToolButton, str]] = []
+        # Section-Divider (siehe _add_section_divider) merken sich hier ihre
+        # THEME-Attributnamen (nicht die bereits aufgeloeste Hex-Farbe), damit
+        # _apply_toolbar_theme_colors() sie nach einem Theme-Wechsel mit dem
+        # dann aktuellen THEME neu einfaerben kann.
+        self._toolbar_dividers: list[tuple[QFrame, str]] = []
 
         toolbar = IconToolBar()
         self._toolbar = toolbar
@@ -40,12 +45,12 @@ class ToolbarBuilderMixin:
         self._add_toolbar_action(toolbar, self.action_new, "📄", t("Neu"), section="file")
         self._add_toolbar_action(toolbar, self.action_open, "📂", t("Öffnen"), section="file")
         self._add_toolbar_action(toolbar, self.action_save, "💾", t("Speichern"), section="file")
-        self._add_section_divider(toolbar, THEME.accent_primary)
+        self._add_section_divider(toolbar, "accent_primary")
 
         # === BEARBEITEN === (orange)
         self._add_toolbar_action(toolbar, self.action_undo, "↩️", t("Rückgängig"), section="edit")
         self._add_toolbar_action(toolbar, self.action_redo, "↪️", t("Wiederholen"), section="edit")
-        self._add_section_divider(toolbar, THEME.accent_secondary)
+        self._add_section_divider(toolbar, "accent_secondary")
 
         # === ZOOM === (blau)
         self._add_toolbar_action(
@@ -57,19 +62,19 @@ class ToolbarBuilderMixin:
         self._add_toolbar_action(
             toolbar, self.action_zoom_fit, "⬜", t("Einpassen"), section="zoom"
         )
-        self._add_section_divider(toolbar, THEME.info)
+        self._add_section_divider(toolbar, "info")
 
         # === MODUS === (Cyan/Akzent) — prominenter Stitch/Diamond-Switch
         self._add_mode_switch(toolbar)
-        self._add_section_divider(toolbar, THEME.accent_purple)
+        self._add_section_divider(toolbar, "accent_purple")
 
         # === ANSICHT === (lila)
         self._add_view_toggles(toolbar)
-        self._add_section_divider(toolbar, THEME.accent_purple)
+        self._add_section_divider(toolbar, "accent_purple")
 
         # === SYMMETRIE === (pink-ish error)
         self._add_symmetry_controls(toolbar)
-        self._add_section_divider(toolbar, THEME.error)
+        self._add_section_divider(toolbar, "error")
 
         # === STICH/SNAP === (warning gelb)
         self.chk_snap_grid = self._create_toggle_button(
@@ -78,7 +83,7 @@ class ToolbarBuilderMixin:
         self.chk_snap_grid.toggled.connect(self._on_snap_grid_changed)
         toolbar.addWidget(self.chk_snap_grid)
         self._add_stitch_type_picker(toolbar)
-        self._add_section_divider(toolbar, THEME.warning)
+        self._add_section_divider(toolbar, "warning")
 
         # === EINSTELLUNGEN ===
         # Garn-Vorrat bekommt einen eigenen Toolbar-Button — vorher nur tief
@@ -94,8 +99,23 @@ class ToolbarBuilderMixin:
         toolbar.reapply_hint_style(THEME.accent_primary, THEME.bg_dark)
         toolbar.finalize()
 
-    def _add_section_divider(self, toolbar: IconToolBar, color: str) -> None:
+    def _add_section_divider(self, toolbar: IconToolBar, color_attr: str) -> None:
         """Vertikale Trennlinie in der angegebenen Akzentfarbe.
+
+        Args:
+            color_attr: Name des ``ThemeColors``-Feldes (z.B. "accent_primary"),
+                NICHT die bereits aufgeloeste Hex-Farbe. Regression: die Line
+                bekam frueher direkt den zum Bauzeitpunkt aufgeloesten Hex-Wert
+                (``THEME.accent_primary`` etc.) fest in ihr Stylesheet gebacken.
+                Da diese Divider reine ``QFrame``-Instanzen ohne eigene
+                ``_apply_theme()``-Methode sind, griff weder ``reapply_theme()``
+                (``styles.py::_restyle_widget_tree``, laeuft nur ueber
+                ``_apply_theme()``) noch ``_reapply_all_widget_styles()``
+                (``misc_handlers.py``) hier -- die Trennlinien blieben nach
+                einem Theme-Wechsel dauerhaft in den alten Akzentfarben haengen.
+                Jetzt wird der Attributname gespeichert (``_toolbar_dividers``)
+                und ``_apply_toolbar_theme_colors()`` loest ihn bei jedem
+                Refresh gegen das dann aktuelle THEME neu auf.
 
         WICHTIG: Wrapper + Line werden mit ``parent=toolbar`` konstruiert.
         Sonst sind sie zwischen Konstruktor und ``toolbar.addWidget`` kurz
@@ -113,14 +133,22 @@ class ToolbarBuilderMixin:
         layout.setSpacing(0)
         line = QFrame(wrapper)
         line.setFixedWidth(2)
+        layout.addWidget(line)
+        toolbar.addWidget(wrapper)
+        self._toolbar_dividers.append((line, color_attr))
+        self._style_toolbar_divider(line, color_attr)
+
+    def _style_toolbar_divider(self, line: QFrame, color_attr: str) -> None:
+        """Setzt/aktualisiert das Gradient-Stylesheet einer Section-Divider-Line."""
+        from ..styles import THEME
+
+        color = getattr(THEME, color_attr)
         line.setStyleSheet(
             f"background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
             f"stop:0 transparent, stop:0.2 {color}, "
             f"stop:0.8 {color}, stop:1 transparent); "
             f"border-radius: 1px;"
         )
-        layout.addWidget(line)
-        toolbar.addWidget(wrapper)
 
     def _add_stitch_type_picker(self: "MainWindow", toolbar: IconToolBar) -> None:
         """Fügt einen kompakten Stichtyp-Picker (QComboBox mit Glyphen) hinzu."""
@@ -257,6 +285,7 @@ class ToolbarBuilderMixin:
         label = QLabel(t("Modus:"), toolbar)
         label.setStyleSheet(f"color: {THEME.text_primary}; font-weight: 700; padding: 0 4px 0 8px;")
         toolbar.addWidget(label)
+        self._mode_switch_label = label
 
         self.btn_mode_switch = self._create_toggle_button(
             "🧵",
@@ -340,6 +369,7 @@ class ToolbarBuilderMixin:
         sym_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 14px;")
         sym_label.setToolTip(t("Symmetrie-Einstellungen"))
         toolbar.addWidget(sym_label)
+        self._symmetry_icon_label = sym_label
 
         self.chk_symmetry_h = self._create_toggle_button(
             "↔️", t("Horiz."), t("Horizontal symmetrisch zeichnen"), section="symmetry"
@@ -447,6 +477,37 @@ class ToolbarBuilderMixin:
             action.setIcon(QIcon(self._create_emoji_icon(emoji, size)))
         for btn, emoji, size in self._emoji_buttons:
             btn.setIcon(QIcon(self._create_emoji_icon(emoji, size)))
+
+    def _apply_toolbar_theme_colors(self) -> None:
+        """Aktualisiert Labels + Section-Divider, die ihre THEME-Farbe direkt
+        in ein handgeschriebenes ``setStyleSheet()`` backen, statt einem
+        ``QToolButton``/``QComboBox`` mit zentralem Stylesheet anzugehoeren.
+
+        Regression: ``combo_stitch_type_label`` (Stichtyp-Picker-Beschriftung),
+        ``_mode_switch_label`` ("Modus:"-Beschriftung) und ``_symmetry_icon_label``
+        (Symmetrie-Icon) sind reine ``QLabel``-Instanzen ohne ``_apply_theme()``.
+        ``_reapply_all_widget_styles()`` (misc_handlers.py) ruft zwar auf JEDEM
+        Widget mit ``_apply_theme()`` diese Methode auf, aber ein einfaches
+        QLabel hat keine -- diese drei blieben nach einem Theme-Wechsel also
+        dauerhaft in den Farben des Themes haengen, unter dem die Toolbar
+        urspruenglich gebaut wurde. Gleiches gilt fuer die per
+        ``_add_section_divider`` erzeugten Trennlinien (siehe dort). Wird von
+        ``_reapply_all_widget_styles()`` aufgerufen.
+        """
+        from ..styles import THEME
+
+        if hasattr(self, "combo_stitch_type_label"):
+            self.combo_stitch_type_label.setStyleSheet(
+                f"color: {THEME.text_muted}; padding: 0 4px 0 8px;"
+            )
+        if hasattr(self, "_mode_switch_label"):
+            self._mode_switch_label.setStyleSheet(
+                f"color: {THEME.text_primary}; font-weight: 700; padding: 0 4px 0 8px;"
+            )
+        if hasattr(self, "_symmetry_icon_label"):
+            self._symmetry_icon_label.setStyleSheet(f"color: {THEME.text_muted}; font-size: 14px;")
+        for line, color_attr in getattr(self, "_toolbar_dividers", []):
+            self._style_toolbar_divider(line, color_attr)
 
     def _create_emoji_icon(self, emoji: str, size: int) -> QPixmap:
         """Erstellt ein Pixmap aus einem Emoji."""

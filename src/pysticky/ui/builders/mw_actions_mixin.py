@@ -397,11 +397,15 @@ class ActionsBuilderMixin:
         self.action_diamond_view.setCheckable(True)
         self.action_diamond_view.setChecked(False)
         self.action_diamond_view.setShortcut("Ctrl+D")
+        # Regression: Tooltip behauptete bis 2026-07-22 "...zeigt DMC-Nummern
+        # statt Symbolen" -- das war korrekt bis zum Diamond-Symbol-Konsistenz-
+        # Fix vom 2026-07-18 (siehe MEMORY.md), seitdem zeichnet der Renderer
+        # (rendering_mixin.py::_draw_layer_cells) in BEIDEN Modi dasselbe
+        # Farb-Symbol, diamond_view aendert nur die Zell-FORM (Drill statt
+        # Quadrat). Der Tooltip beschrieb seit vier Tagen ein Verhalten, das
+        # es nicht mehr gab.
         self.action_diamond_view.setToolTip(
-            t(
-                "Rendert volle Stiche als facettierte Drills und zeigt "
-                "DMC-Nummern statt Symbolen (Ctrl+D)"
-            )
+            t("Rendert volle Stiche als facettierte Drills statt als Quadrate (Ctrl+D)")
         )
         self.action_diamond_view.triggered.connect(self._on_toggle_diamond_view)
 

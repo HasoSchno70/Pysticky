@@ -816,6 +816,11 @@ class MiscHandlersMixin:
         # 1b) Emoji-Icons neu rendern mit aktueller Theme-Farbe
         self._refresh_toolbar_icons()
 
+        # 1c) Handgeschriebene Label-/Divider-Stylesheets in der Toolbar
+        # (siehe mw_toolbar_mixin.py::_apply_toolbar_theme_colors)
+        if hasattr(self, "_apply_toolbar_theme_colors"):
+            self._apply_toolbar_theme_colors()
+
         # 2) Symmetrie-ComboBox
         if hasattr(self, "combo_symmetry"):
             self.combo_symmetry.setStyleSheet(self._get_combobox_stylesheet())
