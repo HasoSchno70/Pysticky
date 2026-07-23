@@ -437,16 +437,12 @@ class CrossStitchCanvas(
         import numpy as np
 
         composite = self._pattern.layer_stack.get_composite_grid()
-        # Completion-Mask aus dem oberen sichtbaren Layer pro Cell.
-        # Vereinfachung: wir nehmen das "irgendein Layer hat completion auf
-        # dieser Cell"-Pattern — gleicher Layer-Stack-Composite-Logik wie
-        # Rendering. Präzise: composite-Layer mit Match-Color.
-        completion = np.zeros_like(composite, dtype=bool)
-        for layer in self._pattern.layer_stack:
-            if not layer.visible:
-                continue
-            mask = layer.grid == color_idx
-            completion |= mask & layer.completion_grid
+        # Completion-Status des tatsaechlich sichtbaren (obersten) Stichs pro
+        # Zelle — NICHT ueber alle Layer ORen. Ein verdeckter unterer Layer,
+        # der zufaellig an derselben Position dieselbe Farbe erledigt/nicht
+        # erledigt markiert hat, darf die Navigation nicht verfaelschen (siehe
+        # Runde 25/45-Notiz zu jump_to_next_stitch).
+        completion = self._pattern.layer_stack.get_composite_completion_grid()
 
         target_mask = (composite == color_idx) & ~completion
         positions = np.argwhere(target_mask)  # [[y, x], ...]

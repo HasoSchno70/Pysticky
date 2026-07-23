@@ -71,6 +71,48 @@ def test_jump_returns_false_on_unused_color(patterned_canvas, pattern_with_stitc
     assert canvas.stitch_cursor is None
 
 
+def test_jump_does_not_skip_cell_completed_only_on_hidden_lower_layer(qtbot, pattern_with_colors):
+    """Regressionstest fuer Runde 25/45-Fund in jump_to_next_stitch().
+
+    Zwei Layer, gleiche Farbe an derselben Position (5, 5):
+    - Layer A (oben, sichtbar): Farbe Rot, NICHT erledigt.
+    - Layer B (unten, verdeckt): Farbe Rot, ERLEDIGT markiert.
+
+    Das Composite zeigt/braucht Layer A's Stich (oberste Ebene gewinnt) —
+    der ist nicht erledigt. Die alte OR-ueber-alle-Layer-Logik haette die
+    Zelle faelschlich als "erledigt" behandelt und uebersprungen.
+    """
+    from pysticky.ui.canvas import CrossStitchCanvas
+
+    pattern = pattern_with_colors  # 20x20, leer
+
+    # Unteres Layer (Hintergrund, bereits vorhanden): Stich setzen + erledigt.
+    lower = pattern.layer_stack[0]
+    pattern.set_stitch(5, 5, 2)  # Rot auf aktivem (unterem) Layer
+    assert pattern.mark_stitch_completed(5, 5, 0) is True
+    assert lower.completion_grid[5, 5]
+
+    # Oberes Layer hinzufuegen, gleiche Farbe an derselben Position, NICHT erledigt.
+    pattern.layer_stack.add_layer("Oben")
+    upper_index = len(pattern.layer_stack) - 1
+    pattern.layer_stack.active_index = upper_index
+    pattern.set_stitch(5, 5, 2)
+    assert pattern.layer_stack[upper_index].completion_grid[5, 5] == False  # noqa: E712
+
+    # Composite an (5, 5) muss Layer A's (oberstes) Rot zeigen.
+    assert pattern.layer_stack.get_composite_stitch(5, 5) == 2
+
+    canvas = CrossStitchCanvas()
+    qtbot.addWidget(canvas)
+    canvas.set_pattern(pattern)
+    canvas.resize(800, 600)
+    canvas.set_current_color(2)  # Rot
+
+    found = canvas.jump_to_next_stitch(forward=True)
+    assert found is True
+    assert canvas.stitch_cursor == (5, 5)
+
+
 def test_isolation_dim_render_does_not_crash(patterned_canvas, qtbot):
     """Smoke: paintEvent mit Isolation darf nicht crashen."""
     from PySide6.QtGui import QPixmap
