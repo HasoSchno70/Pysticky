@@ -286,6 +286,32 @@ class StitchPathDialog(QDialog):
         button_layout.addWidget(button_box)
         layout.addLayout(button_layout)
 
+    def _cancel_and_cleanup(self) -> None:
+        """Bricht eine laufende Optimierung ab und räumt Worker/Thread auf.
+
+        Muss aus `accept()`/`reject()` UND `closeEvent()` aufgerufen werden:
+        QDialog::done() (das accept()/reject() intern verwenden) ruft nur
+        hide() auf, NIEMALS close() -- closeEvent() feuert daher nur beim
+        Schliessen über den Fenster-X-Button, nicht über den sichtbaren
+        "Schliessen"-Button (verbunden mit accept()) oder Escape (löst
+        reject() aus). Vorher hing die Cleanup-Logik ausschliesslich in
+        closeEvent(): eine laufende Optimierung lief nach Klick auf
+        "Schliessen" oder Escape unbeaufsichtigt im Hintergrund weiter, bis
+        ihr finished-Signal irgendwann auf den längst als geschlossen
+        geltenden Dialog feuerte.
+        """
+        if self._worker:
+            self._worker.cancel()
+        self._cleanup_worker()
+
+    def accept(self) -> None:
+        self._cancel_and_cleanup()
+        super().accept()
+
+    def reject(self) -> None:
+        self._cancel_and_cleanup()
+        super().reject()
+
     def _set_running(self, running: bool) -> None:
         """Setzt UI-Status während Berechnung."""
         self._is_running = running
@@ -333,10 +359,25 @@ class StitchPathDialog(QDialog):
         self._thread.start()
 
     def _cleanup_worker(self) -> None:
-        """Räumt Worker auf."""
+        """Räumt Worker/Thread auf.
+
+        Bei `wait(1000)`-Timeout (Thread läuft nach der Wartezeit immer
+        noch -- z.B. bei grossen Mustern mit NEAREST_NEIGHBOR-Strategie,
+        deren innere Optimierungsschleife den Abbruch-Flag nur ZWISCHEN
+        Farben prüft, siehe `stitch_path_optimizer.py::optimize()`) dürfen
+        `self._worker`/`self._thread` NICHT auf None gesetzt werden: das
+        wäre die letzte Python-Referenz auf ein Objekt ohne Qt-Parent --
+        ihr Wegfall löscht das C++-QThread-Objekt sofort synchron,
+        WÄHREND der Thread noch läuft (Qt: "QThread: Destroyed while
+        thread is still running"). Die Referenzen bleiben deshalb
+        bestehen; `_thread.finished` ist schon mit `deleteLater()`
+        verbunden und räumt sich selbst auf, sobald der Thread
+        tatsächlich fertig ist.
+        """
         if self._thread and self._thread.isRunning():
             self._thread.quit()
-            self._thread.wait(1000)
+            if not self._thread.wait(1000):
+                return
         self._worker = None
         self._thread = None
 
@@ -668,8 +709,6 @@ class StitchPathDialog(QDialog):
             )
 
     def closeEvent(self, event) -> None:
-        """Aufräumen beim Schließen."""
-        if self._worker:
-            self._worker.cancel()
-        self._cleanup_worker()
+        """Aufräumen beim Schließen (Fenster-X-Button, s. _cancel_and_cleanup())."""
+        self._cancel_and_cleanup()
         super().closeEvent(event)
