@@ -28,6 +28,19 @@ class UndoHandlersMixin:
             # langsam (40.000 Stiche => minutenlanger UI-Freeze).
             self._pending_batch_scopes = getattr(self, "_pending_batch_scopes", set())
             self._pending_batch_scopes.add(scope)
+            # _mark_unsaved() NICHT auf Batch-Ende aufschieben (anders als
+            # die Panel-Benachrichtigung oben) -- add_to_batch() fuehrt den
+            # Command sofort aus, die Grid-Mutation liegt also schon vor,
+            # waehrend die Batch noch offen ist. Ein Drag-Zeichnen spannt
+            # mehrere Maus-Move-Events (= mehrere Event-Loop-Durchlaeufe)
+            # auf, zwischen denen der Autosave-QTimer feuern kann. Ohne
+            # dieses _mark_unsaved() blieb _unsaved_changes waehrend der
+            # gesamten Batch False, wenn sie die erste Aenderung seit dem
+            # letzten Speichern war -- _on_autosave() gab dann sofort auf
+            # (_unsaved_changes==False) und liess bereits ausgefuehrte
+            # Grid-Mutationen bei einem Absturz mitten im Drag ohne jede
+            # Recovery-Moeglichkeit zurueck.
+            self._mark_unsaved()
         else:
             self.undo_manager.execute(command)
             self._update_undo_actions()
