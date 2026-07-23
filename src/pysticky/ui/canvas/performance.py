@@ -16,12 +16,10 @@ from ...utils.logging import get_logger
 logger = get_logger(__name__)
 
 from PySide6.QtCore import QPointF, QRect
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap, Qt
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPixmap, Qt
 
 from ...core.stitch_shapes import (
     bead_radius_factor,
-    diamond_inset_pixels,
-    diamond_should_draw_edge,
     french_knot_radius_factor,
     is_bead,
     is_diamond,
@@ -44,67 +42,15 @@ def _draw_diamond_drill_perf(
 ) -> None:
     """Zeichnet einen Diamond-Painting-Drill im Chunk-Cache-Pfad.
 
-    Duplikat von RenderingMixin._draw_diamond_drill (Direkt-Render-Pfad) --
-    facettiertes Quadrat statt flachem Rechteck.
+    Duenner Wrapper um die geteilte Implementierung in
+    ``ui/diamond_drill_render.py::draw_diamond_drill`` -- dieselbe Funktion
+    nutzen auch der Direkt-Render-Pfad (``RenderingMixin._draw_diamond_drill``)
+    und der Vorschau-Pfad (``PreviewRenderEngine._draw_diamond_drill_preview``),
+    damit alle drei Pfade garantiert identisch rendern.
     """
-    inset = int(diamond_inset_pixels(size))
-    x0 = x + inset
-    y0 = y + inset
-    x1 = x + size - inset
-    y1 = y + size - inset
-    cx = (x0 + x1) / 2.0
-    cy = (y0 + y1) / 2.0
+    from ..diamond_drill_render import draw_diamond_drill
 
-    top = QPainterPath()
-    top.moveTo(x0, y0)
-    top.lineTo(x1, y0)
-    top.lineTo(cx, cy)
-    top.closeSubpath()
-
-    right = QPainterPath()
-    right.moveTo(x1, y0)
-    right.lineTo(x1, y1)
-    right.lineTo(cx, cy)
-    right.closeSubpath()
-
-    bottom = QPainterPath()
-    bottom.moveTo(x1, y1)
-    bottom.lineTo(x0, y1)
-    bottom.lineTo(cx, cy)
-    bottom.closeSubpath()
-
-    left = QPainterPath()
-    left.moveTo(x0, y1)
-    left.lineTo(x0, y0)
-    left.lineTo(cx, cy)
-    left.closeSubpath()
-
-    alpha = color.alpha()
-
-    def _shift(c: "QColor", factor: int) -> "QColor":
-        shifted = c.lighter(factor) if factor >= 100 else c.darker(200 - factor)
-        shifted.setAlpha(alpha)
-        return shifted
-
-    c_top = _shift(color, 145)
-    c_right = _shift(color, 110)
-    c_left = _shift(color, 95)
-    c_bottom = _shift(color, 70)
-
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.fillPath(top, c_top)
-    painter.fillPath(right, c_right)
-    painter.fillPath(bottom, c_bottom)
-    painter.fillPath(left, c_left)
-
-    if diamond_should_draw_edge(size):
-        edge = QColor(0, 0, 0, min(120, alpha))
-        painter.setPen(QPen(edge, 1))
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRect(x0, y0, x1 - x0, y1 - y0)
-
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+    draw_diamond_drill(painter, x, y, size, color)
 
 
 def _fill_partial_stitch_perf(

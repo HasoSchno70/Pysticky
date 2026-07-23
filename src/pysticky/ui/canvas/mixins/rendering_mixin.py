@@ -322,83 +322,16 @@ class RenderingMixin:
     def _draw_diamond_drill(painter: QPainter, x: int, y: int, size: int, color: QColor) -> None:
         """Zeichnet einen Diamond-Painting-Drill: facettiertes Quadrat.
 
-        Echte Drills sind 2.5mm-Quadrate mit pyramidaler Spitze — von oben
-        sieht man vier dreieckige Facetten. Die obere Facette ist die hellste
-        (Glanzlicht), die untere die dunkelste (Schatten), links/rechts mittel.
-        Zusammen ergibt das die typische DP-Optik.
-
-        Inset ist adaptiv: bei kleiner Zelle (<12px) berühren sich die
-        Drills nahtlos, damit das Pattern bei rausgezoomter Ansicht nicht
-        ausgewaschen weiss wirkt.
+        Duenner Wrapper um die geteilte Implementierung in
+        ``ui/diamond_drill_render.py::draw_diamond_drill`` -- siehe dort fuer
+        die eigentliche Facetten-/Schattierungs-Logik. Dieselbe Funktion wird
+        auch vom Chunk-Cache-Pfad (``performance.py``) und vom Vorschau-Pfad
+        (``preview_render_engine.py``) genutzt, damit alle drei Pfade
+        garantiert identisch rendern.
         """
-        from ....core.stitch_shapes import diamond_inset_pixels
+        from ...diamond_drill_render import draw_diamond_drill
 
-        inset = int(diamond_inset_pixels(size))
-        x0 = x + inset
-        y0 = y + inset
-        x1 = x + size - inset
-        y1 = y + size - inset
-        cx = (x0 + x1) / 2.0
-        cy = (y0 + y1) / 2.0
-
-        # Vier Facetten als Dreiecke (jeweils Mittelpunkt + zwei Kanten-Ecken)
-        top = QPainterPath()
-        top.moveTo(x0, y0)
-        top.lineTo(x1, y0)
-        top.lineTo(cx, cy)
-        top.closeSubpath()
-
-        right = QPainterPath()
-        right.moveTo(x1, y0)
-        right.lineTo(x1, y1)
-        right.lineTo(cx, cy)
-        right.closeSubpath()
-
-        bottom = QPainterPath()
-        bottom.moveTo(x1, y1)
-        bottom.lineTo(x0, y1)
-        bottom.lineTo(cx, cy)
-        bottom.closeSubpath()
-
-        left = QPainterPath()
-        left.moveTo(x0, y1)
-        left.lineTo(x0, y0)
-        left.lineTo(cx, cy)
-        left.closeSubpath()
-
-        # Helligkeits-Varianten mit Alpha-Erhalt (lighter/darker normieren auf
-        # 255 Alpha — wir müssen die Original-Alpha aus `color` zurückschreiben,
-        # sonst frisst der Effekt die Layer-Deckkraft).
-        alpha = color.alpha()
-
-        def _shift(c: QColor, factor: int) -> QColor:
-            shifted = c.lighter(factor) if factor >= 100 else c.darker(200 - factor)
-            shifted.setAlpha(alpha)
-            return shifted
-
-        c_top = _shift(color, 145)  # Glanzlicht
-        c_right = _shift(color, 110)
-        c_left = _shift(color, 95)
-        c_bottom = _shift(color, 70)  # Schatten
-
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.fillPath(top, c_top)
-        painter.fillPath(right, c_right)
-        painter.fillPath(bottom, c_bottom)
-        painter.fillPath(left, c_left)
-
-        # Dünner Kantenrand für Trennschärfe zwischen Nachbar-Drills.
-        # Bei kleinem Zoom weglassen, sonst frisst der Rand den Drill auf.
-        from ....core.stitch_shapes import diamond_should_draw_edge
-
-        if diamond_should_draw_edge(size):
-            edge = QColor(0, 0, 0, min(120, alpha))
-            painter.setPen(QPen(edge, 1))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawRect(x0, y0, x1 - x0, y1 - y0)
-
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        draw_diamond_drill(painter, x, y, size, color)
 
     @staticmethod
     def _draw_bead(painter: QPainter, x: int, y: int, size: int, color: QColor) -> None:
