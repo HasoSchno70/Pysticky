@@ -505,11 +505,28 @@ class Pattern:
         if auto_symbol:
             # Nächstes freies Symbol finden
             used_symbols = {entry.symbol for entry in self.color_entries}
-            symbol = "?"
+            symbol = None
             for s in SYMBOLS:
                 if s not in used_symbols:
                     symbol = s
                     break
+            if symbol is None:
+                # Symbol-Pool erschöpft (mehr als len(SYMBOLS) Farben im
+                # Muster): NICHT auf "?" zurückfallen -- das ist derselbe
+                # Platzhalter wie beim manuellen auto_symbol=False-Zweig
+                # unten und kollidiert zudem mit "?", falls es bereits
+                # regulär aus SYMBOLS vergeben wurde (Index 37). Ohne diesen
+                # Zweig teilen sich ALLE Farben jenseits von len(SYMBOLS)
+                # dasselbe Symbol -- in Legende/Export nicht mehr
+                # unterscheidbar, genau die Garantie, die auto_symbol laut
+                # Docstring geben soll. "#" kommt in symbols.txt nicht vor,
+                # daher kann ein "#N"-Fallback nie mit einem echten Symbol
+                # kollidieren; die Schleife stellt zusätzlich Eindeutigkeit
+                # untereinander sicher.
+                n = 1
+                while f"#{n}" in used_symbols:
+                    n += 1
+                symbol = f"#{n}"
         else:
             symbol = "?"
 

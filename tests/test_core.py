@@ -265,6 +265,47 @@ class TestPattern:
         assert index == 0
         assert len(pattern.color_entries) == 1
 
+    def test_add_color_symbol_pool_exhaustion_stays_unique(self):
+        """Regression: Sobald mehr Farben als len(SYMBOLS) hinzugefügt
+        werden, fiel add_color(auto_symbol=True) auf ein hartkodiertes "?"
+        zurück -- OHNE zu prüfen, ob "?" nicht schon regulär vergeben war.
+        Jede weitere Farbe jenseits des Symbol-Pools bekam ebenfalls "?",
+        wodurch beliebig viele Farben in Legende/Export ununterscheidbar
+        wurden (genau die Garantie, die auto_symbol laut Docstring geben
+        soll: "sonst waere jede importierte Farbe ununterscheidbar")."""
+        from pysticky.core.pattern import SYMBOLS
+
+        pattern = Pattern(width=10, height=10)
+        pattern.color_entries.clear()
+
+        num_colors = len(SYMBOLS) + 15
+        for i in range(num_colors):
+            pattern.add_color(Thread.from_hex(f"C{i}", f"#{i:06x}"))
+
+        symbols = [entry.symbol for entry in pattern.color_entries]
+        assert len(symbols) == len(set(symbols)), (
+            f"Symbole nicht eindeutig, Duplikate: {[s for s in symbols if symbols.count(s) > 1]}"
+        )
+
+    def test_add_color_symbol_freed_after_removal(self):
+        """Regression-Absicherung (bereits korrektes Verhalten): Wird eine
+        Farbe entfernt, muss ihr Symbol beim nächsten automatischen
+        add_color() wiederverwendet werden können, statt für immer als
+        "belegt" zu gelten."""
+        pattern = Pattern(width=10, height=10)
+        pattern.color_entries.clear()
+
+        idx_a = pattern.add_color(Thread.from_hex("A", "#111111"))
+        idx_b = pattern.add_color(Thread.from_hex("B", "#222222"))
+        freed_symbol = pattern.color_entries[idx_a].symbol
+
+        pattern.remove_color(idx_a)
+        idx_c = pattern.add_color(Thread.from_hex("C", "#333333"))
+
+        # idx_b ist nach dem Löschen von idx_a auf 0 nachgerückt, idx_c ist 1
+        assert idx_b == 1
+        assert pattern.color_entries[idx_c].symbol == freed_symbol
+
     def test_set_stitch(self):
         """Test: Stich setzen."""
         pattern = Pattern(width=50, height=50)
