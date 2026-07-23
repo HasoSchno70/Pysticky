@@ -95,6 +95,56 @@ def test_load_pattern_file_keeps_loaded_pattern_when_recovery_declined(
     assert not autosave_path.exists()
 
 
+def test_load_pattern_file_recovers_gracefully_from_corrupt_sibling_autosave(
+    main_window, monkeypatch, tmp_path
+):
+    """Regression (Autosave-Recovery-Audit): wenn die Autosave-Datei kaputt
+    ist (hier: eine fremde, versehentlich umbenannte JSON-Datei ohne
+    PySticky-Struktur -- z.B. weil eine aeltere Programmversion sie erzeugt
+    hat oder ein Absturz mitten im Schreiben passierte) und der Nutzer im
+    Recovery-Dialog "Ja" klickt, darf load_pattern() NICHT mit einer
+    ungefangenen Exception durchschlagen und die App beim Start abstuerzen
+    lassen. Stattdessen muss eine verstaendliche Fehlermeldung erscheinen,
+    das bereits geladene Pattern unangetastet bleiben, und die kaputte
+    Autosave-Datei trotzdem aufgeraeumt werden (kein Boot-Loop bei jedem
+    weiteren Start)."""
+    from pysticky.core import Pattern, save_pattern
+
+    monkeypatch.setattr(
+        AutosaveHandlersMixin, "_check_autosave_recovery", _REAL_CHECK_AUTOSAVE_RECOVERY
+    )
+
+    saved_path = tmp_path / "mein_muster.pxs"
+    saved_pattern = Pattern(name="Gespeichert", width=5, height=5)
+    save_pattern(saved_pattern, saved_path)
+
+    # Kaputte Autosave-Datei: gueltiges JSON, aber keine PySticky-Struktur
+    # (z.B. eine fremde Liste statt eines Objekts).
+    autosave_path = saved_path.with_suffix(".pxs.autosave")
+    autosave_path.write_text("[1, 2, 3]", encoding="utf-8")
+
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    warning_calls = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "warning",
+        lambda *a, **k: warning_calls.append(a) or QMessageBox.StandardButton.Ok,
+    )
+
+    # Darf keine Exception nach aussen durchlassen.
+    assert main_window._load_pattern_file(saved_path) is True
+
+    # Nutzer wurde ueber den Fehlschlag informiert.
+    assert len(warning_calls) == 1
+    # Das urspruenglich geoeffnete Pattern bleibt erhalten (kein halb
+    # kaputter Zustand durch den fehlgeschlagenen Recovery-Versuch).
+    assert main_window.current_pattern.name == "Gespeichert"
+    # Kaputte Autosave-Datei wird trotzdem aufgeraeumt -- sonst wuerde bei
+    # jedem weiteren Oeffnen derselben Datei erneut derselbe Fehlschlag
+    # auftreten (Boot-Loop-artiges Verhalten).
+    assert not autosave_path.exists()
+
+
 def test_load_pattern_file_without_sibling_autosave_does_not_prompt(
     main_window, monkeypatch, tmp_path
 ):

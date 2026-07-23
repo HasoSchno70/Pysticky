@@ -169,6 +169,35 @@ class TestFileIO:
         with pytest.raises(Exception):  # json.JSONDecodeError oder ähnlich
             load_pattern(str(filepath))
 
+    def test_load_raises_value_error_for_non_dict_top_level_json(self, tmp_path):
+        """Regression (Autosave-Recovery-Audit): json.load() akzeptiert jedes
+        gueltige JSON-Dokument als Top-Level-Wert, nicht nur Objekte -- eine
+        versehentlich unter dem Autosave-Namen abgelegte fremde Datei (z.B.
+        eine JSON-Liste) liess frueher `data.get("format")` mit einem rohen
+        AttributeError crashen, statt des von load_pattern()'s eigenem
+        Docstring versprochenen ValueError. Besonders relevant fuer
+        _check_autosave_recovery(), das genau diesen Fall abfangen koennen
+        muss."""
+        filepath = tmp_path / "fremde_datei.pxs"
+        filepath.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
+    def test_load_raises_value_error_for_non_dict_pattern_field(self, tmp_path):
+        """Wie oben, aber der Fehler steckt eine Ebene tiefer: "pattern" ist
+        vorhanden, aber kein Objekt. _dict_to_pattern() griff hier vorher mit
+        `field not in data` zu, was fuer eine Zahl einen rohen TypeError statt
+        eines ValueError ausloest."""
+        filepath = tmp_path / "kaputtes_pattern_feld.pxs"
+        filepath.write_text(
+            json.dumps({"format": "pysticky", "version": "1.5", "pattern": 42}),
+            encoding="utf-8",
+        )
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
     def test_load_falls_back_to_default_fabric_count_when_zero(self, tmp_path):
         """Regression (Runde 26): eine beschaedigte/handbearbeitete .pxs-
         Datei mit "fabric_count": 0 (oder negativ) wurde bisher unveraendert
