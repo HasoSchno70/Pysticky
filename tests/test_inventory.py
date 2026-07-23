@@ -8,6 +8,7 @@ from pysticky.core.inventory import (
     _key,
     compute_shopping_list,
     compute_shopping_list_multi,
+    split_key,
 )
 
 
@@ -16,6 +17,66 @@ def test_key_normalizes_none_and_empty():
     assert _key("", "") == "unknown::unknown"
     assert _key("DMC", "310") == "DMC::310"
     assert _key("  DMC ", " 310 ") == "DMC::310"
+
+
+# === Namens-Fallback fuer Farben ohne Hersteller/Katalognummer ===
+#
+# Zurueckgestellter Fund aus Runde 22, hier nachgeholt: `_key()` mappte
+# JEDE Farbe ohne Hersteller UND Katalognummer (z.B. Custom-Farben aus
+# einem Bildimport ohne Palette-Metadaten) auf den identischen Schluessel
+# "unknown::unknown" -- ihr Lagerbestand wurde dadurch fuer ALLE derartigen
+# Farben gemeinsam gefuehrt. `_key()`/`get()`/`set()` bekommen jetzt einen
+# optionalen `name`-Fallback, der nur in genau diesem Sonderfall greift.
+
+
+def test_key_uses_name_fallback_when_manufacturer_and_catalog_both_empty():
+    assert _key(None, None, "Custom Rot") == "unknown::unknown::Custom Rot"
+    assert _key("", "", "Custom Blau") == "unknown::unknown::Custom Blau"
+    # Zwei unterschiedliche Namen ergeben unterschiedliche Schluessel.
+    assert _key(None, None, "Custom Rot") != _key(None, None, "Custom Blau")
+
+
+def test_key_without_name_falls_back_to_generic_unknown():
+    """Rueckwaerts-kompatibel: fehlt der Name auch, bleibt der alte,
+    generische Schluessel erhalten (kein Bruch fuer Aufrufer, die (noch)
+    keinen Namen mitgeben, und fuer bereits gespeicherte alte Eintraege)."""
+    assert _key(None, None, None) == "unknown::unknown"
+    assert _key("", "", "") == "unknown::unknown"
+    assert _key("", "", "   ") == "unknown::unknown"
+
+
+def test_key_ignores_name_when_manufacturer_or_catalog_present():
+    """Der Name wird NUR als Fallback genutzt, wenn Hersteller UND
+    Katalognummer beide fehlen -- fuer bereits identifizierbare Farben
+    aendert sich das Schluessel-Format nicht."""
+    assert _key("DMC", "", "Irgendein Name") == "DMC::unknown"
+    assert _key("", "310", "Irgendein Name") == "unknown::310"
+    assert _key("DMC", "310", "Irgendein Name") == "DMC::310"
+
+
+def test_split_key_roundtrip():
+    assert split_key("DMC::310") == ("DMC", "310", "")
+    assert split_key("unknown::unknown") == ("unknown", "unknown", "")
+    assert split_key("unknown::unknown::Custom Rot") == ("unknown", "unknown", "Custom Rot")
+    # Name selbst enthaelt "::" -- darf nicht am falschen Trenner geschnitten
+    # werden (maxsplit=2 rejoint den Rest korrekt in das dritte Segment).
+    assert split_key("unknown::unknown::Custom::Rot") == ("unknown", "unknown", "Custom::Rot")
+
+
+def test_get_set_distinguish_custom_colors_by_name(tmp_path):
+    """Der eigentliche Bugfix: zwei Custom-Farben ohne Hersteller/
+    Katalognummer, aber mit unterschiedlichem Namen, teilen sich NICHT mehr
+    denselben Lagerbestand."""
+    inv = Inventory(tmp_path / "inv.json")
+    inv.set(None, None, 3, "Custom Rot")
+    inv.set(None, None, 7, "Custom Blau")
+
+    assert inv.get(None, None, "Custom Rot") == 3
+    assert inv.get(None, None, "Custom Blau") == 7
+    # Eine dritte, noch nie gesehene "unbekannte" Farbe bleibt bei 0 --
+    # vorher haette sie faelschlich einen der beiden obigen Werte geerbt.
+    assert inv.get(None, None, "Custom Gruen") == 0
+    assert len(inv) == 2
 
 
 def test_set_and_get_roundtrip(tmp_path):
@@ -72,6 +133,26 @@ def test_load_flat_legacy_format(tmp_path):
     path.write_text(json.dumps({"DMC::310": 4}), encoding="utf-8")
     inv = Inventory(path)
     assert inv.get("DMC", "310") == 4
+
+
+def test_load_legacy_unknown_unknown_key_still_works(tmp_path):
+    """Rueckwaerts-Kompatibilitaet: eine bereits gespeicherte Datei mit dem
+    alten, generischen "unknown::unknown"-Schluessel (vor dem Namens-
+    Fallback-Fix) muss weiterhin ohne Crash ladbar sein und als genereller
+    Fallback-Bestand erhalten bleiben."""
+    path = tmp_path / "inv.json"
+    path.write_text(
+        json.dumps({"version": 1, "stock": {"unknown::unknown": 6, "DMC::310": 2}}),
+        encoding="utf-8",
+    )
+    inv = Inventory(path)
+    assert len(inv) == 2
+    # Ohne Namen fragt get() weiterhin exakt diesen alten Schluessel ab.
+    assert inv.get(None, None) == 6
+    assert inv.get("DMC", "310") == 2
+    # Eine Custom-Farbe MIT Namen greift nicht auf den alten generischen
+    # Eintrag zu (neuer, eigener Schluessel statt Kollision).
+    assert inv.get(None, None, "Custom Rot") == 0
 
 
 def test_shopping_list_to_buy(tmp_path, pattern_with_stitches):
@@ -308,3 +389,60 @@ def test_shopping_list_multi_per_pattern_mode(tmp_path):
     assert dp_item["is_diamond"] is True
     # Keine Division durch spk -- absolute Drill-Anzahl mit Zuschlag.
     assert dp_item["needed_skeins"] == math.ceil(300 * 1.2)
+
+
+# === Custom-Farben ohne Hersteller/Katalognummer in der Einkaufslisten-Rechnung ===
+#
+# compute_shopping_list()/_multi() reichen den Farbnamen jetzt an
+# Inventory.get() durch -- zwei Custom-Farben ohne Palette-Metadaten
+# duerfen sich nicht mehr denselben Bestand teilen, nur weil beide
+# manufacturer/catalog_number leer sind.
+
+
+def test_shopping_list_distinguishes_unknown_colors_by_name(tmp_path):
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+    # Vorrat fuer eine Custom-Farbe eintragen -- die andere bleibt bei 0.
+    inv.set(None, None, 5, "Custom Rot")
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Custom Rot", "#FF0000"))
+    pattern.add_color(Thread.from_hex("Custom Blau", "#0000FF"))
+    pattern.set_stitch(0, 0, 0)
+    pattern.set_stitch(1, 0, 1)
+    pattern.color_entries[0].stitch_count = 100
+    pattern.color_entries[1].stitch_count = 100
+
+    items = compute_shopping_list(pattern, inv, {pattern.fabric_count: 1000})
+    red = next(it for it in items if it["thread"].name == "Custom Rot")
+    blue = next(it for it in items if it["thread"].name == "Custom Blau")
+
+    assert red["on_hand"] == 5
+    # Ohne den Namens-Fallback haette "Custom Blau" faelschlich denselben
+    # Bestand (5) wie "Custom Rot" geerbt (beide "unknown::unknown").
+    assert blue["on_hand"] == 0
+
+
+def test_shopping_list_multi_distinguishes_unknown_colors_by_name(tmp_path):
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+    inv.set(None, None, 8, "Custom Gelb")
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Custom Gelb", "#FFFF00"))
+    pattern.add_color(Thread.from_hex("Custom Lila", "#800080"))
+    pattern.set_stitch(0, 0, 0)
+    pattern.set_stitch(1, 0, 1)
+    pattern.color_entries[0].stitch_count = 100
+    pattern.color_entries[1].stitch_count = 100
+
+    items = compute_shopping_list_multi([pattern], inv, {pattern.fabric_count: 1000})
+    yellow = next(it for it in items if it["thread"].name == "Custom Gelb")
+    purple = next(it for it in items if it["thread"].name == "Custom Lila")
+
+    assert yellow["on_hand"] == 8
+    assert purple["on_hand"] == 0
