@@ -23,6 +23,7 @@ from .logging import (
     warning,
 )
 from .numeric import clamp, clamp_int
+from .os_open import open_path, reveal_in_file_manager
 
 _ERROR_HELPERS = frozenset(
     (
@@ -49,6 +50,9 @@ __all__ = [
     # Numerik
     "clamp",
     "clamp_int",
+    # OS-übergreifendes Öffnen/Anzeigen von Dateien
+    "open_path",
+    "reveal_in_file_manager",
     # Logging
     "setup_logging",
     "get_logger",

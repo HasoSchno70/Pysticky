@@ -492,12 +492,9 @@ class ExportHandlersMixin:
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:
-                    import os
+                    from ...utils import open_path
 
-                    if os.name == "nt":
-                        os.startfile(filepath)
-                    else:
-                        os.system(f'xdg-open "{filepath}"')
+                    open_path(filepath)
             elif export_type == "html":
                 reply = QMessageBox.question(
                     self,
@@ -521,14 +518,12 @@ class ExportHandlersMixin:
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
                 if reply == QMessageBox.StandardButton.Yes:
-                    import os
                     from pathlib import Path
 
+                    from ...utils import open_path
+
                     folder = str(Path(filepath).parent)
-                    if os.name == "nt":
-                        os.startfile(folder)
-                    else:
-                        os.system(f'xdg-open "{folder}"')
+                    open_path(folder)
         else:
             self.status_bar.showMessage(t("Export fehlgeschlagen."), 5000)
             QMessageBox.critical(self, t("Fehler"), f"{label}-Export fehlgeschlagen:\n{message}")

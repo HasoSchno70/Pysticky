@@ -656,15 +656,11 @@ class PatternLibraryDialog(QDialog):
 
     def _show_in_explorer(self, entry: LibraryEntry) -> None:
         """Öffnet den Ordner im Explorer."""
-        import os
-        import subprocess
+        from ...utils import reveal_in_file_manager
 
         filepath = Path(entry.filepath)
         if filepath.exists():
-            if os.name == "nt":
-                subprocess.run(["explorer", "/select,", str(filepath)])
-            else:
-                subprocess.run(["xdg-open", str(filepath.parent)])
+            reveal_in_file_manager(str(filepath))
 
     def _remove_entry(self, entry: LibraryEntry) -> None:
         """Entfernt einen Eintrag aus der Bibliothek."""
