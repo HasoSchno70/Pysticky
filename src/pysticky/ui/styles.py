@@ -734,6 +734,15 @@ def apply_theme_to_app(app) -> None:
             color: {THEME.text_disabled};
             border-color: {THEME.border_dark};
         }}
+        QPushButton:focus {{
+            border: 2px solid {THEME.accent_primary};
+            padding: 5px 15px;  /* kompensiert dickere Border (Basis: 1px/6px 16px) */
+        }}
+
+        /* === ToolButtons (Default Look, z.B. in Dialogen ohne eigenes Styling) === */
+        QToolButton:focus {{
+            border: 2px solid {THEME.accent_primary};
+        }}
 
         /* === Eingabe-Felder === */
         QLineEdit, QPlainTextEdit, QTextEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QTimeEdit {{

@@ -230,6 +230,7 @@ class ToolbarBuilderMixin:
             QToolButton[section="stitch"]:hover   {{ background: {tint(THEME.warning, 90)}; border-color: {THEME.warning}; }}
 
             QToolButton:pressed              {{ background: {THEME.accent_primary}; color: {THEME.bg_dark}; }}
+            QToolButton:focus                {{ border: 2px solid {THEME.accent_primary}; padding: 3px 5px; }}
             QToolButton:checked              {{
                 background: {tint(THEME.accent_primary, 120)};
                 border: 2px solid {THEME.accent_primary};
