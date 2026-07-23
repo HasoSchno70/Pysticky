@@ -209,6 +209,27 @@ class ViewHandlersMixin:
                     color_bar.update_swatches()
                 if hasattr(self, "_mark_unsaved"):
                     self._mark_unsaved()
+
+                # Undo-Historie leeren -- convert_to_mode() stampt
+                # is_diamond/is_bead-Stich-Typen alle betroffenen Zellen einer
+                # Farbe per _restamp_stitch_type_for_color() um, läuft dabei
+                # aber komplett AUSSERHALB des Undo-Systems. Bereits im Stack
+                # liegende PlaceStitchCommand/RemoveStitchCommand-Einträge
+                # haben ihren alten Stich-Typ (z.B. DIAMOND=11) VOR dieser
+                # Konvertierung eingefroren; ein spaeteres undo()/redo() auf
+                # so einem Eintrag wuerde diesen veralteten Stich-Typ auf eine
+                # Zelle zurueckschreiben, deren Farbe inzwischen (nach der
+                # Konvertierung) gar nicht mehr is_diamond ist -- die Zelle
+                # traegt dann DIAMOND(11) in einem Muster im "stitch"-Modus.
+                # Der Renderer prüft `stype == 11` UNGEGATET (siehe
+                # rendering_mixin.py), zeigt also einen Diamant-Drill in
+                # einem Kreuzstich-Muster. Gleicher Mechanismus wie bei
+                # Ebenen-Struktur-Änderungen (_on_layer_structure_changed) und
+                # Farbpaletten-Dialogen (_on_merge_similar_colors,
+                # _on_manage_colors) -- dort wird der Undo-Verlauf aus
+                # demselben Grund bereits geleert.
+                self.undo_manager.clear()
+                self._update_undo_actions()
         finally:
             self.setUpdatesEnabled(True)
 
