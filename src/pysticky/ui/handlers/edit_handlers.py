@@ -2,7 +2,7 @@
 Bearbeiten-bezogene Handler für MainWindow.
 """
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
@@ -36,6 +36,54 @@ class EditHandlersMixin:
             self._update_undo_actions()
             self._mark_unsaved()
             self.status_bar.showMessage(t("Wiederholt"), 2000)
+
+    def _apply_color_changes_per_origin_layer(
+        self: "MainWindow", changes: list[tuple[int, int, int, int]]
+    ) -> None:
+        """Schreibt Farb-/Stichtyp-Aenderungen auf die Ebene, auf der die
+        ersetzte Farbe tatsaechlich lag -- NICHT pauschal auf die aktive Ebene.
+
+        `changes` sind (x, y, neuer_farbindex, stichtyp)-Tupel, wie sie aus
+        einer Iteration ueber iterate_composite_stitches() entstehen (liefert
+        pro Zelle die Farbe der OBERSTEN SICHTBAREN Ebene -- "oberste
+        gewinnt"). Frueher wurde hier trotzdem IMMER ueber
+        canvas._apply_changes()/das stitch_placed_typed-Signal auf
+        layer_stack.active_index geschrieben: auf einem Mehr-Ebenen-Muster,
+        bei dem eine nicht-aktive aber sichtbare obere Ebene die Farbe
+        traegt, blieb der urspruengliche Stich auf seiner tatsaechlichen
+        Ebene unveraendert, UND die aktive Ebene bekam zusaetzlich einen
+        neuen Geister-Stich an derselben Position (Nachfolge-Runde zu
+        Audit-Runde 38).
+
+        Fix: PlaceStitchCommand direkt bauen (es kennt bereits einen
+        beliebigen layer_index-Parameter, nicht nur active_index) und pro
+        Zelle per _find_layer_with_stitch_at() -- dieselbe Ebenen-Ermittlung,
+        die schon fuer Fortschritt-Markierungen genutzt wird -- die
+        tatsaechliche Ursprungs-Ebene ermitteln.
+        """
+        from ...core import PlaceStitchCommand
+
+        for x, y, new_color, stitch_type in changes:
+            layer_index = self._find_layer_with_stitch_at(x, y)
+            if layer_index is None:
+                # Sollte nicht vorkommen -- die Zelle kam aus dem Composite,
+                # also muss irgendeine sichtbare Ebene dort einen Stich
+                # haben. Defensiv trotzdem ueberspringen statt auf
+                # active_index zurueckzufallen (das waere wieder der alte
+                # Bug).
+                continue
+            # Chunk-Pixmap-Cache (OptimizedCrossStitchCanvas) muss die
+            # betroffene Zelle als dirty kennen, sonst zeigt der naechste
+            # paintEvent weiterhin den alten gecachten Chunk-Pixmap -- siehe
+            # canvas._apply_changes(), dessen invalidate_cell()-Aufruf wir
+            # hier nachbilden, da wir bewusst nicht mehr durch die Signal-
+            # Pipeline gehen (die kennt nur active_index).
+            self.canvas.invalidate_cell(x, y)
+            self._execute_command(
+                PlaceStitchCommand(
+                    self.current_pattern, x, y, new_color, layer_index, stitch_type=stitch_type
+                )
+            )
 
     def _on_replace_color(self: "MainWindow") -> None:
         """Zeigt den Dialog zum Farbe ersetzen."""
@@ -72,14 +120,10 @@ class EditHandlersMixin:
                 QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 try:
                     self.canvas.batch_started.emit(t("Farbe ersetzen"))
-                    # _apply_changes() statt manuellem Signal-Loop -- ruft
-                    # u.a. invalidate_cell() auf, sonst bleibt der
-                    # Chunk-Pixmap-Cache (>200x200 Muster) beim alten Bild
-                    # haengen (gleicher Bug wie Runde 4 bei Selection-Ops,
-                    # hier an einer bis Runde 13 uebersehenen Stelle).
-                    self.canvas._apply_changes(
-                        cast("list[tuple[int, int, int | None, int]]", changes)
-                    )
+                    # Pro Zelle auf die tatsaechliche Ursprungs-Ebene
+                    # schreiben statt pauschal auf die aktive -- siehe
+                    # _apply_color_changes_per_origin_layer().
+                    self._apply_color_changes_per_origin_layer(changes)
                     self.canvas.batch_ended.emit()
                 finally:
                     QApplication.restoreOverrideCursor()
@@ -136,7 +180,6 @@ class EditHandlersMixin:
             return
 
         self.canvas.batch_started.emit(t("Farben tauschen"))
-        # _apply_changes() statt manuellem Signal-Loop -- siehe _on_replace_color.
         # Stich-Typ je Zelle mitschicken (4-Tuple) -- sonst geht wie bei
         # _on_replace_color der urspruengliche Halb-/Viertelstich-Typ beim
         # Tauschen verloren (wird durch canvas._active_stitch_type ersetzt).
@@ -144,7 +187,9 @@ class EditHandlersMixin:
         changes = [(x, y, b, int(type_grid[y, x])) for x, y in a_positions] + [
             (x, y, a, int(type_grid[y, x])) for x, y in b_positions
         ]
-        self.canvas._apply_changes(cast("list[tuple[int, int, int | None, int]]", changes))
+        # Pro Zelle auf die tatsaechliche Ursprungs-Ebene schreiben statt
+        # pauschal auf die aktive -- siehe _apply_color_changes_per_origin_layer().
+        self._apply_color_changes_per_origin_layer(changes)
         self.canvas.batch_ended.emit()
 
         self.canvas.update()

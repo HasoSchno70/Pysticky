@@ -72,3 +72,72 @@ def test_replace_color_preserves_stitch_type(main_window, monkeypatch):
     layer = w.current_pattern.active_layer
     assert layer.get_stitch(2, 2) == 1
     assert layer.get_stitch_type(2, 2) == StitchType.HALF_TL_BR.value
+
+
+def _pattern_with_nonactive_visible_top_layer():
+    """2-Layer-Muster fuer das Multi-Layer-Szenario aus der Nachfolge-Runde
+    zu Audit-Runde 38: die OBERE Ebene ist sichtbar aber NICHT aktiv und
+    traegt an (5, 5) Farbe 0 (Rot); die aktive UNTERE Ebene ist dort leer.
+    """
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    pattern.add_color(Thread.from_hex("Blau", "#0000FF"))
+
+    # "Hintergrund" (Index 0) existiert automatisch. add_layer() haengt die
+    # neue Ebene oben an UND macht sie zur aktiven -- danach die aktive
+    # Ebene explizit wieder auf die untere zuruecksetzen, damit die obere
+    # (mit dem Stich) sichtbar-aber-nicht-aktiv bleibt.
+    pattern.layer_stack.add_layer("Oben")
+    top_layer = pattern.layer_stack[1]
+    top_layer.set_stitch(5, 5, 0)
+    pattern.layer_stack.active_index = 0
+
+    assert pattern.layer_stack.active_index == 0
+    assert pattern.layer_stack[1].visible is True
+    return pattern
+
+
+def test_replace_color_writes_to_actual_origin_layer_not_active(main_window, monkeypatch):
+    """Farbe ersetzen muss die Zelle auf der Ebene aendern, auf der sie
+    tatsaechlich liegt (obere, sichtbare, nicht-aktive Ebene) -- nicht
+    pauschal auf der aktiven Ebene einen neuen Geister-Stich anlegen und
+    dabei den urspruenglichen Stich unangetastet lassen."""
+    from pysticky.ui import dialogs as dialogs_mod
+
+    w = main_window
+    pattern = _pattern_with_nonactive_visible_top_layer()
+    w.set_pattern(pattern)
+
+    monkeypatch.setattr(dialogs_mod.ReplaceColorDialog, "exec", lambda self: True)
+    monkeypatch.setattr(dialogs_mod.ReplaceColorDialog, "get_replacements", lambda self: [(0, 1)])
+
+    w._on_replace_color()
+
+    top_layer = pattern.layer_stack[1]
+    active_layer = pattern.layer_stack.active_layer
+    assert active_layer is pattern.layer_stack[0]
+
+    # Ursprungs-Ebene (oben) wurde tatsaechlich ersetzt.
+    assert top_layer.get_stitch(5, 5) == 1
+    # Aktive Ebene (unten) bekam KEINEN Geister-Stich an derselben Position.
+    assert active_layer.get_stitch(5, 5) is None
+
+
+def test_swap_color_pair_writes_to_actual_origin_layer_not_active(main_window):
+    """Analog zu test_replace_color_writes_to_actual_origin_layer_not_active,
+    aber fuer _swap_color_pair()."""
+    w = main_window
+    pattern = _pattern_with_nonactive_visible_top_layer()
+    w.set_pattern(pattern)
+
+    w._swap_color_pair(0, 1)
+
+    top_layer = pattern.layer_stack[1]
+    active_layer = pattern.layer_stack.active_layer
+    assert active_layer is pattern.layer_stack[0]
+
+    assert top_layer.get_stitch(5, 5) == 1
+    assert active_layer.get_stitch(5, 5) is None
