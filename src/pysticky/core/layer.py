@@ -702,6 +702,30 @@ class LayerStack:
 
         return result
 
+    def get_composite_completion_grid(self) -> np.ndarray:
+        """
+        Erstellt ein zusammengesetztes Completion-Grid aller sichtbaren Layer.
+
+        Pro Zelle gilt die Completion-Markierung des obersten sichtbaren
+        Layers, der dort einen Stich hat — analog zu `get_composite_grid`
+        (nicht: ORen über alle Layer). Ein tiefer liegender, verdeckter
+        Layer, der zufaellig an derselben Position denselben Stich als
+        erledigt/nicht-erledigt markiert hat, darf die Sichtbarkeit des
+        tatsaechlich angezeigten (obersten) Stichs nicht überschreiben.
+
+        Returns:
+            numpy-Array (bool) mit dem Completion-Status des sichtbaren
+            Stichs pro Zelle (False bei Zellen ohne Stich).
+        """
+        result = np.zeros((self._height, self._width), dtype=bool)
+
+        for layer in self._layers:
+            if layer.visible:
+                mask = layer.grid != NO_STITCH
+                result[mask] = layer.completion_grid[mask]
+
+        return result
+
     def get_composite_stitch_type_grid(self) -> np.ndarray:
         """
         Erstellt ein zusammengesetztes Stitch-Type-Grid aller sichtbaren Layer.
