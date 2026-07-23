@@ -110,9 +110,17 @@ class MiscHandlersMixin:
             QMessageBox.warning(
                 self, t("Datei nicht gefunden"), f"Die Datei existiert nicht mehr:\n{path}"
             )
-            self._recent_files.remove(path)
-            self._save_recent_files()
-            self._update_recent_menu()
+            # Kann per Menü nicht passieren (Menü-Einträge kommen 1:1 aus
+            # self._recent_files), aber der WelcomeWidget zeigt eine reine
+            # Werte-Kopie (set_recent_files() -> list(files), keine Live-
+            # Referenz) -- wurde der Eintrag zwischenzeitlich per
+            # max_recent_files-Trunkierung verdrängt, ist "path" hier nicht
+            # mehr Teil der aktuellen Liste und .remove() wirft sonst einen
+            # unbehandelten ValueError.
+            if path in self._recent_files:
+                self._recent_files.remove(path)
+                self._save_recent_files()
+                self._update_recent_menu()
             return
         try:
             from ...core import load_pattern
