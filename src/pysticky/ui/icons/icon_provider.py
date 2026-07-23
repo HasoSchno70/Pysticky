@@ -6,7 +6,7 @@ Unterstützt Theme-abhängige Farben.
 """
 
 from PySide6.QtCore import QRect, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QIcon, QPainter, QPixmap
 
 from ..styles import THEME
 
@@ -77,7 +77,28 @@ class IconProvider:
         "symbols": ("🔠", "font"),
     }
 
-    _cache: dict[tuple[str, int, str], QIcon] = {}
+    _cache: dict[tuple[str, int, str, float], QIcon] = {}
+
+    @classmethod
+    def _current_device_pixel_ratio(cls) -> float:
+        """Liest das devicePixelRatio des primären Bildschirms als statische Annäherung.
+
+        Anders als der Chunk-Cache (`ui/canvas/performance.py`), der pro Frame neu
+        rendert und daher live auf `canvas.devicePixelRatioF()` reagieren kann/muss,
+        ist `IconProvider` ein statischer, klassenweiter Cache ohne Bezug zu einem
+        konkreten Widget/Screen. Ein einmalig gelesener Bildschirm-DPR-Wert ist hier
+        ein bewusster, dokumentierter Kompromiss (HiDPI-Audit Runde 40, Nachtrag zu
+        Runde 39): er deckt den weit überwiegenden Fall (ein Monitor, eine Skalierung
+        für die gesamte Sitzung) ab, ohne einen DPR-Parameter durch jeden einzelnen
+        Aufrufer im ganzen Code hindurchzureichen. Ein Wechsel auf einen anders
+        skalierten Monitor *während* der Laufzeit zieht bereits gecachte Icons nicht
+        automatisch nach -- das ist für uniform-uncharfe Icons (nicht größen-
+        eskalierend wie beim Canvas) als geringere Schwere akzeptiert.
+        """
+        screen = QGuiApplication.primaryScreen()
+        if screen is None:
+            return 1.0
+        return screen.devicePixelRatio()
 
     @classmethod
     def get_icon(cls, name: str, size: int = 24, color: str | None = None) -> QIcon:
@@ -95,7 +116,8 @@ class IconProvider:
         if color is None:
             color = THEME.text_primary
 
-        cache_key = (name, size, color)
+        dpr = cls._current_device_pixel_ratio()
+        cache_key = (name, size, color, dpr)
         if cache_key in cls._cache:
             return cls._cache[cache_key]
 
@@ -108,7 +130,7 @@ class IconProvider:
 
         # Versuche zuerst SVG zu laden (wenn implementiert)
         # Aktuell: Emoji-Fallback
-        pixmap = cls._render_emoji_icon(emoji, size, color)
+        pixmap = cls._render_emoji_icon(emoji, size, color, dpr)
 
         icon = QIcon(pixmap)
         cls._cache[cache_key] = icon
@@ -120,9 +142,24 @@ class IconProvider:
         return cls.get_icon(name, size, color).pixmap(QSize(size, size))
 
     @classmethod
-    def _render_emoji_icon(cls, emoji: str, size: int, color: str) -> QPixmap:
-        """Rendert ein Emoji als Icon mit der angegebenen Farbe."""
-        pixmap = QPixmap(size, size)
+    def _render_emoji_icon(
+        cls, emoji: str, size: int, color: str, device_pixel_ratio: float = 1.0
+    ) -> QPixmap:
+        """Rendert ein Emoji als Icon mit der angegebenen Farbe.
+
+        Die Pixmap wird in physischen Pixeln angelegt (`size * device_pixel_ratio`)
+        und per `setDevicePixelRatio()` markiert, damit sie auf einem HiDPI-Bildschirm
+        scharf statt hochskaliert-unscharf erscheint -- dasselbe Muster wie
+        `render_chunk_to_pixmap` (`ui/canvas/performance.py`) und `_get_fabric_pixmap`
+        (`ui/canvas/canvas.py`). Alle Zeichenoperationen bleiben unverändert in
+        logischen Koordinaten, da QPainter das Skalieren für ein Gerät mit gesetztem
+        DPR selbst übernimmt.
+        """
+        pixmap = QPixmap(
+            max(1, round(size * device_pixel_ratio)),
+            max(1, round(size * device_pixel_ratio)),
+        )
+        pixmap.setDevicePixelRatio(device_pixel_ratio)
         pixmap.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(pixmap)
@@ -134,7 +171,7 @@ class IconProvider:
         painter.setFont(font)
         painter.setPen(QColor(color))
 
-        # Zentriert zeichnen
+        # Zentriert zeichnen (logische Koordinaten -- siehe Docstring oben)
         rect = QRect(0, 0, size, size)
         painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, emoji)
 
