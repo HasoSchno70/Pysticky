@@ -229,3 +229,82 @@ def test_shopping_list_multi_skips_skip_stitching(tmp_path, pattern_with_stitche
 def test_shopping_list_multi_empty_pattern_list(tmp_path):
     inv = Inventory(tmp_path / "inv.json")
     assert compute_shopping_list_multi([], inv, {}) == []
+
+
+# === Diamond-Painting-Bewusstsein (Runde 22/25-Nachfolge) ===
+#
+# DP-Muster kennen keine Strang-pro-Stoffzaehlung-Umrechnung -- ein Drill
+# wird stueckweise verbraucht. compute_shopping_list()/_multi() muessen
+# fuer solche Muster die absolute (mit Sicherheitszuschlag versehene)
+# Drill-Anzahl liefern statt durch stitches_per_skein zu teilen, und die
+# Eintraege als is_diamond=True markieren.
+
+
+def test_shopping_list_diamond_mode_ignores_stitches_per_skein(tmp_path):
+    import math
+
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+    pattern = Pattern(name="DP-Test", width=10, height=10, mode="diamond")
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"), is_diamond=True)
+    pattern.set_stitch(0, 0, 0)
+    pattern.color_entries[0].stitch_count = 1234
+
+    # Absichtlich winziger spk-Wert -- wuerde bei Kreuzstich-Rechnung die
+    # Anzahl massiv in die Hoehe treiben. Fuer DP muss das komplett ignoriert
+    # werden: needed_skeins == ceil(count * waste_factor), NICHT
+    # ceil((count / spk) * waste_factor).
+    spk = {14: 5}
+    items = compute_shopping_list(pattern, inv, spk, waste_percent=20.0)
+
+    assert len(items) == 1
+    expected = math.ceil(1234 * 1.2)
+    assert items[0]["needed_skeins"] == expected
+    assert items[0]["is_diamond"] is True
+
+
+def test_shopping_list_stitch_mode_sets_is_diamond_false(tmp_path, pattern_with_stitches):
+    inv = Inventory(tmp_path / "inv.json")
+    items = compute_shopping_list(pattern_with_stitches, inv, {14: 100})
+    assert items
+    assert all(it["is_diamond"] is False for it in items)
+
+
+def test_shopping_list_multi_per_pattern_mode(tmp_path):
+    """Ein Kreuzstich- und ein DP-Projekt zusammen registriert: jedes
+    Pattern behaelt seine eigene Rechnung (Strang-Umrechnung vs. absolute
+    Drill-Anzahl), auch wenn beide in derselben Einkaufsliste landen."""
+    import math
+
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+
+    stitch_pattern = Pattern(name="Kreuzstich", width=10, height=10, fabric_count=14)
+    stitch_pattern.color_entries.clear()
+    stitch_pattern.add_color(Thread.from_hex("Rot", "#FF0000", catalog_number="321"))
+    stitch_pattern.set_stitch(0, 0, 0)
+    stitch_pattern.color_entries[0].stitch_count = 500
+
+    dp_pattern = Pattern(name="DP", width=10, height=10, mode="diamond")
+    dp_pattern.color_entries.clear()
+    dp_pattern.add_color(
+        Thread.from_hex("Blau", "#0000FF", catalog_number="DB123"), is_diamond=True
+    )
+    dp_pattern.set_stitch(0, 0, 0)
+    dp_pattern.color_entries[0].stitch_count = 300
+
+    spk = {14: 500}
+    items = compute_shopping_list_multi([stitch_pattern, dp_pattern], inv, spk, waste_percent=20.0)
+
+    stitch_item = next(it for it in items if it["thread"].catalog_number == "321")
+    dp_item = next(it for it in items if it["thread"].catalog_number == "DB123")
+
+    assert stitch_item["is_diamond"] is False
+    assert stitch_item["needed_skeins"] == math.ceil((500 / 500) * 1.2)
+
+    assert dp_item["is_diamond"] is True
+    # Keine Division durch spk -- absolute Drill-Anzahl mit Zuschlag.
+    assert dp_item["needed_skeins"] == math.ceil(300 * 1.2)

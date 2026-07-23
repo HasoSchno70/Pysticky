@@ -58,6 +58,16 @@ class InventoryDialog(QDialog):
     def __init__(self, pattern: "Pattern", parent=None, current_file: Path | None = None) -> None:
         super().__init__(parent)
         self._pattern = pattern
+        # Diamond-Painting-Muster kennen kein Strang/Skein-Konzept (Drills
+        # werden stueckweise verbraucht) -- Tab 1 ("Im Muster") ist auf genau
+        # dieses eine Pattern bezogen, daher reicht hier der Pattern-weite
+        # Modus-Check (analog zu statistics_tabs/colors_tab.py und
+        # replace_color_dialog.py, die denselben Check fuer ihre
+        # Vokabular-Entscheidung nutzen). Tab 3 ("Mehrere Projekte") kann
+        # mehrere Patterns mit potenziell unterschiedlichem Modus
+        # aggregieren -- dort wird stattdessen pro Eintrag entschieden
+        # (siehe _refresh_multi_shopping()/core.inventory.is_diamond).
+        self._is_diamond = getattr(pattern, "mode", "stitch") == "diamond"
         self._current_file = current_file
         self._inventory = Inventory()
         self._project_list = ProjectList()
@@ -113,14 +123,20 @@ class InventoryDialog(QDialog):
         layout.setContentsMargins(15, 15, 15, 15)
         layout.setSpacing(12)
 
-        intro = self._make_intro_card(
+        intro_text = (
             t(
+                "Trage hier ein, wieviele Drills du von jeder Farbe noch besitzt. "
+                "„Benötigt“ und „Zu kaufen“ zeigen direkt, wie viel das aktuelle "
+                "Muster braucht — die gleiche Rechnung wie im Statistik-Dialog."
+            )
+            if self._is_diamond
+            else t(
                 "Trage hier ein, wieviele Stränge du von jeder Farbe noch besitzt. "
                 "„Benötigt“ und „Zu kaufen“ zeigen direkt, wie viel das aktuelle "
                 "Muster braucht — die gleiche Rechnung wie im Statistik-Dialog."
-            ),
-            THEME.accent_primary,
+            )
         )
+        intro = self._make_intro_card(intro_text, THEME.accent_primary)
         layout.addWidget(intro)
 
         self._tabs = QTabWidget()
@@ -141,7 +157,7 @@ class InventoryDialog(QDialog):
                 t("Hersteller"),
                 t("Nr."),
                 t("Benötigt"),
-                t("Bestand (Stränge)"),
+                t("Bestand (Drills)") if self._is_diamond else t("Bestand (Stränge)"),
                 t("Zu kaufen"),
             ]
         )
@@ -348,7 +364,7 @@ class InventoryDialog(QDialog):
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(on_hand)
-            spin.setSuffix(t(" Strang"))
+            spin.setSuffix(t(" Drill") if self._is_diamond else t(" Strang"))
             spin.valueChanged.connect(lambda val, t=thread: self._on_pattern_value_changed(t, val))
             self._pattern_table.setCellWidget(row, 5, spin)
 
@@ -399,6 +415,20 @@ class InventoryDialog(QDialog):
             return QIcon(color_swatch_icon(c, PATTERN_SWATCH_SIZE))
         return self._unknown_swatch_icon()
 
+    def _stock_suffix_for(self, mfr: str) -> str:
+        """Bestand-Einheit ("Drill" vs. "Strang") für einen Eintrag im
+        globalen "Alle Einträge"-Tab. Dieser Tab ist NICHT pattern-gebunden
+        (anders als Tab 1), daher reicht `self._is_diamond` hier nicht --
+        stattdessen wird nachgeschlagen, ob der Hersteller-Name auf eine
+        bekannte Diamond-Painting-Palette zeigt (gleicher Palette-Lookup
+        wie `_swatch_icon_for()`). Unbekannter Hersteller (manuell getippt,
+        keine Palette gefunden) fällt konservativ auf "Strang" zurück.
+        """
+        from ...core.palette import get_palette_manager
+
+        palette = get_palette_manager().get_palette(mfr)
+        return t(" Drill") if palette is not None and palette.is_diamond else t(" Strang")
+
     def _unknown_swatch_icon(self) -> QIcon:
         size = PATTERN_SWATCH_SIZE
         pm = QPixmap(size, size)
@@ -439,7 +469,7 @@ class InventoryDialog(QDialog):
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(strands)
-            spin.setSuffix(t(" Strang"))
+            spin.setSuffix(self._stock_suffix_for(mfr))
             spin.valueChanged.connect(
                 lambda val, m=mfr, n=num: self._on_all_value_changed(m, n, val)
             )
@@ -494,7 +524,7 @@ class InventoryDialog(QDialog):
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(value)
-            spin.setSuffix(t(" Strang"))
+            spin.setSuffix(self._stock_suffix_for(target_mfr))
             spin.valueChanged.connect(
                 lambda val, m=target_mfr, n=target_num: self._on_all_value_changed(m, n, val)
             )
@@ -565,6 +595,9 @@ class InventoryDialog(QDialog):
         stock_row.addWidget(stock_spin, 1)
         form.addLayout(stock_row)
 
+        def _update_stock_suffix(text: str) -> None:
+            stock_spin.setSuffix(self._stock_suffix_for(text))
+
         def _find_palette_ci(name: str):
             name = name.strip()
             for mfr_name in known_mfrs:
@@ -596,6 +629,7 @@ class InventoryDialog(QDialog):
                 num_edit.setText(thread.catalog_number or "")
 
         mfr_combo.currentTextChanged.connect(_on_mfr_changed)
+        mfr_combo.currentTextChanged.connect(_update_stock_suffix)
         color_combo.currentIndexChanged.connect(_on_color_selected)
 
         buttons = QDialogButtonBox(
@@ -697,6 +731,7 @@ class InventoryDialog(QDialog):
 
         self._multi_shopping_table.setRowCount(len(items))
         total_to_buy = 0
+        buy_item_modes: set[bool] = set()
         for row, item in enumerate(items):
             thread = item["thread"]
             c = thread.color
@@ -715,6 +750,7 @@ class InventoryDialog(QDialog):
                 font.setBold(True)
                 to_buy_item.setFont(font)
                 total_to_buy += item["to_buy"]
+                buy_item_modes.add(bool(item.get("is_diamond", False)))
             else:
                 to_buy_item.setForeground(QColor(THEME.accent_primary))
             self._multi_shopping_table.setItem(row, 4, to_buy_item)
@@ -723,9 +759,18 @@ class InventoryDialog(QDialog):
             self._multi_summary.setStyleSheet(
                 f"font-size: 13px; padding: 6px; color: {THEME.error};"
             )
-            self._multi_summary.setText(
-                f"<b>{total_to_buy}</b> " + t("Stränge insgesamt zu kaufen")
-            )
+            # Registrierte Projekte koennen Kreuzstich- UND Diamond-
+            # Painting-Muster mischen -- die Einheit im Summen-Label muss
+            # daher zur tatsaechlichen Zusammensetzung der "zu kaufen"-
+            # Zeilen passen statt pauschal "Stränge" zu sagen (das war
+            # semantisch falsch, sobald mind. eine DP-Farbe fehlte).
+            if buy_item_modes == {True}:
+                unit_label = t("Drills insgesamt zu kaufen")
+            elif buy_item_modes == {False}:
+                unit_label = t("Stränge insgesamt zu kaufen")
+            else:
+                unit_label = t("Farben insgesamt zu kaufen")
+            self._multi_summary.setText(f"<b>{total_to_buy}</b> " + unit_label)
         else:
             self._multi_summary.setStyleSheet(
                 f"font-size: 13px; padding: 6px; color: {THEME.success};"
