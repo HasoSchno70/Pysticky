@@ -7,7 +7,7 @@ wohnen deshalb hier auf der UI-Seite.
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPainter, QPen, QPixmap
 
 from ..core.thread import ThreadColor
 from .styles import THEME
@@ -68,9 +68,21 @@ def color_swatch_icon(
         size: Kantenlänge in Pixeln.
         rounded: Abgerundete Ecken mit Theme-Rahmen (für Garn-Listen).
         border: Grauer Rahmen um das Quadrat; ohne Rahmen wird nur gefüllt.
+
+    Die Pixmap wird in physischen Pixeln angelegt (HiDPI-Audit Runde 41,
+    Nachtrag zu Runde 40) -- sonst erscheint das Swatch auf einem
+    HiDPI-Bildschirm unscharf hochskaliert, dasselbe Grundmuster wie
+    `IconProvider._render_emoji_icon` (`ui/icons/icon_provider.py`). Alle
+    Zeichenoperationen unten bleiben unverändert in logischen
+    (`size`-basierten) Koordinaten. Nicht gecacht -- wird bei jedem Aufruf
+    frisch gerendert, daher genügt eine statische Bildschirm-DPR-Lesung ohne
+    Cache-Key-Beteiligung.
     """
     qcolor = color if isinstance(color, QColor) else to_qcolor(color)
-    pixmap = QPixmap(size, size)
+    screen = QGuiApplication.primaryScreen()
+    dpr = screen.devicePixelRatio() if screen is not None else 1.0
+    pixmap = QPixmap(max(1, round(size * dpr)), max(1, round(size * dpr)))
+    pixmap.setDevicePixelRatio(dpr)
 
     if rounded:
         pixmap.fill(Qt.GlobalColor.transparent)

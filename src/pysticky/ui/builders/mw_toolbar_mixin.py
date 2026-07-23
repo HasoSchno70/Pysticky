@@ -6,8 +6,8 @@ Enthält die Erstellung der Toolbar und Hilfsmethoden.
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QColor, QFont, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QRect, Qt
+from PySide6.QtGui import QAction, QColor, QFont, QGuiApplication, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QComboBox, QFrame, QLabel, QToolButton, QWidget
 
 from ...core.i18n import t
@@ -511,16 +511,29 @@ class ToolbarBuilderMixin:
             self._style_toolbar_divider(line, color_attr)
 
     def _create_emoji_icon(self, emoji: str, size: int) -> QPixmap:
-        """Erstellt ein Pixmap aus einem Emoji."""
+        """Erstellt ein Pixmap aus einem Emoji.
+
+        Legt die Pixmap in physischen Pixeln an (HiDPI-Audit Runde 41,
+        Nachtrag zu Runde 40) -- sonst erscheinen Toolbar-Icons auf einem
+        HiDPI-Bildschirm unscharf hochskaliert, dasselbe Grundmuster wie
+        `IconProvider._render_emoji_icon` (`ui/icons/icon_provider.py`). Der
+        DPR wird -- wie dort -- einmalig statisch über den primären
+        Bildschirm gelesen statt live durchgereicht, da diese Icons nicht
+        gecacht werden (jeder Theme-/Refresh-Zyklus baut sie neu), ein
+        Widget-Bezug hier aber ebenso fehlt wie in `IconProvider`.
+        """
         from ..styles import THEME
 
-        pixmap = QPixmap(size, size)
+        screen = QGuiApplication.primaryScreen()
+        dpr = screen.devicePixelRatio() if screen is not None else 1.0
+        pixmap = QPixmap(max(1, round(size * dpr)), max(1, round(size * dpr)))
+        pixmap.setDevicePixelRatio(dpr)
         pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         font = QFont("Segoe UI Emoji", int(size * 0.7))
         painter.setFont(font)
         painter.setPen(QColor(THEME.text_primary))
-        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, emoji)
+        painter.drawText(QRect(0, 0, size, size), Qt.AlignmentFlag.AlignCenter, emoji)
         painter.end()
         return pixmap

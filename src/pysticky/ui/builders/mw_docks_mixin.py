@@ -7,7 +7,7 @@ Enthält die Erstellung der Dock-Widgets.
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtGui import QColor, QGuiApplication, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QDockWidget
 
 from ...core.i18n import t
@@ -17,8 +17,20 @@ if TYPE_CHECKING:
 
 
 def _make_dot_icon(color_hex: str, size: int = 14) -> QIcon:
-    """Erstellt ein kleines farbiges Kreis-Icon (für Dock-Tab-Markierungen)."""
-    pixmap = QPixmap(size, size)
+    """Erstellt ein kleines farbiges Kreis-Icon (für Dock-Tab-Markierungen).
+
+    Legt die Pixmap in physischen Pixeln an (HiDPI-Audit Runde 41, Nachtrag zu
+    Runde 40) -- sonst zeichnet Qt den Punkt auf einem HiDPI-Bildschirm
+    unscharf hochskaliert, dasselbe Grundmuster wie bei
+    `IconProvider._render_emoji_icon` (`ui/icons/icon_provider.py`). Der DPR
+    wird hier -- wie dort -- einmalig statisch über den primären Bildschirm
+    gelesen statt live durchgereicht, da dieser Aufruf kein Widget/Screen
+    kennt, dessen `devicePixelRatioF()` man abfragen könnte.
+    """
+    screen = QGuiApplication.primaryScreen()
+    dpr = screen.devicePixelRatio() if screen is not None else 1.0
+    pixmap = QPixmap(max(1, round(size * dpr)), max(1, round(size * dpr)))
+    pixmap.setDevicePixelRatio(dpr)
     pixmap.fill(QColor(0, 0, 0, 0))
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)

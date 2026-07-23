@@ -11,6 +11,7 @@ from PySide6.QtGui import (
     QDragLeaveEvent,
     QDragMoveEvent,
     QDropEvent,
+    QGuiApplication,
     QIcon,
     QMouseEvent,
     QPainter,
@@ -43,9 +44,29 @@ from ...core.layer import Layer, LayerStack
 from ..styles import THEME
 
 
+def _current_device_pixel_ratio() -> float:
+    """Liest das devicePixelRatio des primären Bildschirms als statische
+    Annäherung -- dasselbe Muster wie `IconProvider._current_device_pixel_ratio`
+    (`ui/icons/icon_provider.py`). Diese Icons werden nicht gecacht (jede
+    Sichtbar-/Sperr-Zustandsänderung rendert neu über `_apply_styles()`),
+    daher genügt ein einfacher Lese-Helper ohne Cache-Key-Beteiligung.
+    """
+    screen = QGuiApplication.primaryScreen()
+    return screen.devicePixelRatio() if screen is not None else 1.0
+
+
 def _make_eye_icon(visible: bool, fg: QColor, size: int = 20) -> QIcon:
-    """Zeichnet ein Auge-Symbol — kein Emoji-Rendering nötig, plattform-unabhängig."""
-    pm = QPixmap(size, size)
+    """Zeichnet ein Auge-Symbol — kein Emoji-Rendering nötig, plattform-unabhängig.
+
+    Pixmap wird in physischen Pixeln angelegt (HiDPI-Audit Runde 41, Nachtrag
+    zu Runde 40) -- sonst erscheint das Icon auf einem HiDPI-Bildschirm
+    unscharf hochskaliert, dasselbe Grundmuster wie
+    `IconProvider._render_emoji_icon`. Alle Zeichenoperationen unten bleiben
+    unverändert in logischen (`size`-basierten) Koordinaten.
+    """
+    dpr = _current_device_pixel_ratio()
+    pm = QPixmap(max(1, round(size * dpr)), max(1, round(size * dpr)))
+    pm.setDevicePixelRatio(dpr)
     pm.fill(Qt.GlobalColor.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -74,8 +95,14 @@ def _make_eye_icon(visible: bool, fg: QColor, size: int = 20) -> QIcon:
 
 
 def _make_lock_icon(locked: bool, fg: QColor, size: int = 20) -> QIcon:
-    """Zeichnet ein Schloss-Symbol selbst (gefüllt, offen mit gehobenem Bügel)."""
-    pm = QPixmap(size, size)
+    """Zeichnet ein Schloss-Symbol selbst (gefüllt, offen mit gehobenem Bügel).
+
+    Pixmap wird in physischen Pixeln angelegt (HiDPI-Audit Runde 41, Nachtrag
+    zu Runde 40) -- siehe Docstring von `_make_eye_icon` oben.
+    """
+    dpr = _current_device_pixel_ratio()
+    pm = QPixmap(max(1, round(size * dpr)), max(1, round(size * dpr)))
+    pm.setDevicePixelRatio(dpr)
     pm.fill(Qt.GlobalColor.transparent)
     p = QPainter(pm)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)

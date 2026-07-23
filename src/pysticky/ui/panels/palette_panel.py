@@ -7,6 +7,7 @@ from PySide6.QtGui import (
     QBrush,
     QColor,
     QDrag,
+    QGuiApplication,
     QLinearGradient,
     QPainter,
     QPen,
@@ -418,8 +419,22 @@ class PalettePanel(QWidget):
         self._refresh_color_list()
 
     def _create_color_icon(self, thread: Thread, is_used: bool) -> QPixmap:
+        """Erstellt das Farb-Swatch-Icon für einen Listeneintrag.
+
+        Pixmap wird in physischen Pixeln angelegt (HiDPI-Audit Runde 41,
+        Nachtrag zu Runde 40) -- sonst erscheinen die Farb-Swatches auf einem
+        HiDPI-Bildschirm unscharf hochskaliert, dasselbe Grundmuster wie
+        `IconProvider._render_emoji_icon` (`ui/icons/icon_provider.py`). Alle
+        Zeichenoperationen unten bleiben unverändert in logischen
+        (`size`-basierten) Koordinaten. Nicht gecacht -- wird bei jedem
+        Listenaufbau frisch gerendert, daher genügt eine statische
+        Bildschirm-DPR-Lesung ohne Cache-Key-Beteiligung.
+        """
         size = self.ICON_SIZE
-        pixmap = QPixmap(size, size)
+        screen = QGuiApplication.primaryScreen()
+        dpr = screen.devicePixelRatio() if screen is not None else 1.0
+        pixmap = QPixmap(max(1, round(size * dpr)), max(1, round(size * dpr)))
+        pixmap.setDevicePixelRatio(dpr)
         pixmap.fill(Qt.GlobalColor.transparent)
 
         painter = QPainter(pixmap)
