@@ -351,7 +351,9 @@ def _dict_to_color_entry(data: dict[str, Any]) -> ColorEntry:
 
     Raises:
         ValueError: Bei fehlenden Pflichtfeldern (name, color, symbol) oder
-            wenn data selbst kein Objekt ist
+            wenn data selbst kein Objekt ist; ebenso wenn blend_components
+            kein Objekt ist oder einer seiner Einträge kein Objekt ist bzw.
+            Pflichtfelder (name, color) fehlen
     """
     if not isinstance(data, dict):
         raise ValueError(f"Ungültiger Farbeintrag: Objekt erwartet, gefunden {type(data).__name__}")
@@ -377,15 +379,28 @@ def _dict_to_color_entry(data: dict[str, Any]) -> ColorEntry:
     # Blend-Komponenten rekonstruieren wenn vorhanden
     blend_data = data.get("blend_components")
     if blend_data:
-        components = [
-            Thread.from_hex(
-                name=c["name"],
-                hex_color=c["color"],
-                manufacturer=c.get("manufacturer", ""),
-                catalog_number=c.get("catalog_number", ""),
+        if not isinstance(blend_data, list):
+            raise ValueError(
+                f"Ungültige Blend-Komponenten: Liste erwartet, gefunden {type(blend_data).__name__}"
             )
-            for c in blend_data
-        ]
+        components = []
+        for i, c in enumerate(blend_data):
+            if not isinstance(c, dict):
+                raise ValueError(
+                    f"Ungültige Blend-Komponente bei Index {i}: Objekt erwartet, "
+                    f"gefunden {type(c).__name__}"
+                )
+            for field in ("name", "color"):
+                if field not in c:
+                    raise ValueError(f"Blend-Komponente bei Index {i}: Pflichtfeld '{field}' fehlt")
+            components.append(
+                Thread.from_hex(
+                    name=c["name"],
+                    hex_color=c["color"],
+                    manufacturer=c.get("manufacturer", ""),
+                    catalog_number=c.get("catalog_number", ""),
+                )
+            )
         thread.blend_components = components
         thread.strand_ratios = list(data.get("strand_ratios", [1] * len(components)))
 

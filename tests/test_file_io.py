@@ -312,6 +312,89 @@ class TestFileIO:
         with pytest.raises(ValueError):
             load_pattern(str(filepath))
 
+    def test_load_raises_value_error_for_non_list_blend_components(self, tmp_path):
+        """Nachfolge-Runde auf den Runde-40/43-Fund, noch eine Ebene tiefer:
+        "blend_components" innerhalb eines Farbeintrags ist selbst KEINE
+        Liste (z.B. ein String). _dict_to_color_entry() iterierte hier
+        vorher direkt per `for c in blend_data`, was fuer einen String ueber
+        dessen einzelne Zeichen iteriert und dann bei `c["name"]` mit einem
+        rohen TypeError ("string indices must be integers") crasht statt
+        eines ValueError."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_blend_container.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        data["pattern"]["colors"][0]["blend_components"] = "notalist"
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
+    def test_load_raises_value_error_for_non_dict_blend_component_entry(self, tmp_path):
+        """Wie oben, aber "blend_components" ist eine Liste, in der ein
+        einzelner Eintrag kein Objekt ist (z.B. "blend_components":
+        [{...valide...}, 42]). Frueher griff die List-Comprehension direkt
+        per `c["name"]` zu, was fuer eine Zahl einen rohen TypeError
+        ("int object is not subscriptable") ausloest statt eines
+        ValueError."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_blend_entry.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        data["pattern"]["colors"][0]["blend_components"] = [
+            {"name": "C1", "color": "#ff0000"},
+            42,
+        ]
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
+    def test_load_raises_value_error_for_blend_component_missing_field(self, tmp_path):
+        """Wie oben, aber der Blend-Komponenten-Eintrag ist ein Objekt, dem
+        aber ein Pflichtfeld ("name" oder "color") fehlt. Fruehrer griff
+        Thread.from_hex() direkt per `c["name"]`/`c["color"]` zu, was einen
+        rohen KeyError ausloest statt eines ValueError."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_blend_field.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        # "color" fehlt in der Blend-Komponente
+        data["pattern"]["colors"][0]["blend_components"] = [{"name": "C1"}]
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
+    def test_save_and_load_roundtrip_with_valid_blend_components(self, tmp_path):
+        """Gegenprobe zu den drei Faellen oben: ein valider Tweed-Blend-
+        Farbeintrag (mehrere Garn-Komponenten) muss weiterhin unveraendert
+        ueber einen Speichern/Laden-Zyklus funktionieren -- die neue
+        Validierung darf wohlgeformte Daten nicht beeinflussen."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        blend_thread = Thread.from_hex(name="Blend", hex_color="#808080")
+        blend_thread.blend_components = [
+            Thread.from_hex(name="C1", hex_color="#ff0000"),
+            Thread.from_hex(name="C2", hex_color="#0000ff"),
+        ]
+        blend_thread.strand_ratios = [1, 1]
+        pattern.color_entries[0].thread = blend_thread
+
+        filepath = tmp_path / "valid_blend.pxs"
+        save_pattern(pattern, str(filepath))
+
+        loaded = load_pattern(str(filepath))
+
+        loaded_thread = loaded.color_entries[0].thread
+        assert loaded_thread.is_blend
+        assert len(loaded_thread.blend_components) == 2
+        assert loaded_thread.blend_components[0].name == "C1"
+        assert loaded_thread.blend_components[1].name == "C2"
+        assert loaded_thread.strand_ratios == [1, 1]
+
     def test_save_is_atomic_no_leftover_tmp_file(self, tmp_path):
         """Regression: save_pattern() schrieb frueher direkt in die
         Zieldatei -- ein Crash mitten in json.dump() haette die echte
