@@ -285,10 +285,20 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
             # Prüfen ob der Backstitch im sichtbaren Bereich liegt
             # Backstitch-Koordinaten sind in halben Stichen
             # Stich (0,0) hat halbe Stiche von (0,0) bis (2,2)
-            bs_stitch_x1 = bs.x1 // 2
-            bs_stitch_y1 = bs.y1 // 2
-            bs_stitch_x2 = bs.x2 // 2
-            bs_stitch_y2 = bs.y2 // 2
+            #
+            # Ein Endpunkt exakt auf der rechten/unteren Musterkante
+            # (x1/x2 == 2*width bzw. y1/y2 == 2*height) ist die rechte/
+            # untere Kante der LETZTEN Zelle (Index width-1/height-1),
+            # keine neue Zelle "width"/"height" -- reines "// 2" ergab dort
+            # aber genau diesen (nicht existierenden) Index, wodurch ein
+            # Rueckstich, der komplett auf der aeussersten Gitterlinie
+            # liegt (z.B. eine Kontur-Linie am Musterrand), aus dem Export
+            # herausgefiltert wurde, obwohl das Canvas ihn unveraendert
+            # zeichnet (dort gibt es diese Bereichspruefung gar nicht).
+            bs_stitch_x1 = min(bs.x1 // 2, self.pattern.width - 1)
+            bs_stitch_y1 = min(bs.y1 // 2, self.pattern.height - 1)
+            bs_stitch_x2 = min(bs.x2 // 2, self.pattern.width - 1)
+            bs_stitch_y2 = min(bs.y2 // 2, self.pattern.height - 1)
 
             # Prüfen ob mindestens ein Endpunkt im Bereich liegt
             in_range_1 = (
@@ -436,11 +446,14 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
 
         result = []
         for bs in self.pattern.backstitches:
-            # Backstitch-Koordinaten sind in halben Stichen
-            bs_stitch_x1 = bs.x1 // 2
-            bs_stitch_y1 = bs.y1 // 2
-            bs_stitch_x2 = bs.x2 // 2
-            bs_stitch_y2 = bs.y2 // 2
+            # Backstitch-Koordinaten sind in halben Stichen -- Clamp auf
+            # width-1/height-1 aus demselben Grund wie in
+            # _generate_backstitches_svg (Endpunkt exakt auf der
+            # rechten/unteren Musterkante gehoert noch zur letzten Zelle).
+            bs_stitch_x1 = min(bs.x1 // 2, self.pattern.width - 1)
+            bs_stitch_y1 = min(bs.y1 // 2, self.pattern.height - 1)
+            bs_stitch_x2 = min(bs.x2 // 2, self.pattern.width - 1)
+            bs_stitch_y2 = min(bs.y2 // 2, self.pattern.height - 1)
 
             # Prüfen ob mindestens ein Endpunkt im Bereich liegt
             in_range_1 = start_x <= bs_stitch_x1 <= end_x and start_y <= bs_stitch_y1 <= end_y
