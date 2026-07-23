@@ -137,25 +137,45 @@ def compute_shopping_list(
 ) -> list[dict]:
     """Berechnet die Einkaufsliste für ein konkretes Pattern.
 
+    Diamond-Painting-Muster (`pattern.mode == "diamond"`) kennen keine
+    Strang-pro-Stoffzaehlung-Umrechnung -- ein Drill wird stueckweise
+    verbraucht, nicht nach Aida-Zaehlung aus einem Garnstrang geschnitten.
+    Fuer solche Muster wird "needed_skeins" daher NICHT durch
+    `stitches_per_skein` geteilt, sondern zeigt die (mit Sicherheits-
+    zuschlag versehene) absolute Drill-Anzahl. Es gibt in dieser App keine
+    etablierte Verpackungsgroesse fuer DP-Nachschub (Beutel/Rollen sind
+    herstellerabhaengig und nicht recherchierbar) -- die absolute Stueckzahl
+    ist daher die einzige verlaesslich richtige Zahl (siehe
+    dead-code-and-export-gaps.md).
+
     Args:
         pattern: das Pattern (mit color_entries)
         inventory: globale Vorratsliste
         stitches_per_skein: Mapping fabric_count -> Stiche pro Strang
-        waste_percent: Verschnitt-Zuschlag in Prozent (Default 20, wie
-            statistics_tabs/thread_tab.py's Standard-Vorbelegung -- dieselbe
-            Formel wie dort (`ceil(exact_skeins * (1 + waste_percent/100))`),
-            damit Garnverbrauch- und Einkaufsliste-Tab nicht mehr auf
-            unterschiedliche "benoetigte Straenge"-Zahlen fuer dasselbe
-            Muster kommen (siehe dead-code-and-export-gaps.md).
+            (wird fuer Diamond-Painting-Farben ignoriert, siehe oben)
+        waste_percent: Verschnitt-/Sicherheits-Zuschlag in Prozent (Default
+            20, wie statistics_tabs/thread_tab.py's Standard-Vorbelegung --
+            dieselbe Formel wie dort (`ceil(exact_skeins * (1 +
+            waste_percent/100))`), damit Garnverbrauch- und Einkaufsliste-
+            Tab nicht mehr auf unterschiedliche "benoetigte Straenge"-Zahlen
+            fuer dasselbe Muster kommen (siehe dead-code-and-export-gaps.md).
+            Gilt fuer Diamond-Painting-Farben analog als Puffer fuer
+            verlorene/beschaedigte Drills.
 
     Returns:
         Liste von Dicts pro Farbe: {
-            "thread", "stitch_count", "needed_skeins", "on_hand", "to_buy"
+            "thread", "stitch_count", "needed_skeins", "on_hand", "to_buy",
+            "is_diamond"
         }
     """
     from math import ceil
 
-    spk = stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
+    is_diamond = getattr(pattern, "mode", "stitch") == "diamond"
+    spk = (
+        1
+        if is_diamond
+        else stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
+    )
     waste_factor = 1 + (waste_percent / 100)
     out: list[dict] = []
     for entry in pattern.color_entries:
@@ -175,6 +195,7 @@ def compute_shopping_list(
                 "needed_skeins": needed,
                 "on_hand": on_hand,
                 "to_buy": to_buy,
+                "is_diamond": is_diamond,
             }
         )
     return out
@@ -192,6 +213,11 @@ def compute_shopping_list_multi(
     Patterns, bevor der Vorrat EINMAL insgesamt abgezogen wird — so wird
     derselbe Vorrats-Strang nicht mehrfach (einmal pro Projekt) verrechnet.
 
+    Jedes Pattern behaelt seine eigene Modus-Rechnung (siehe
+    compute_shopping_list()): Diamond-Painting-Patterns liefern die
+    absolute Drill-Stueckzahl statt einer Strang-Umrechnung, auch wenn sie
+    hier zusammen mit Kreuzstich-Projekten aggregiert werden.
+
     Args:
         patterns: die zu aggregierenden Patterns (mit color_entries)
         inventory: globale Vorratsliste
@@ -200,15 +226,28 @@ def compute_shopping_list_multi(
             compute_shopping_list() -- dieselbe Konvention)
 
     Returns:
-        Liste von Dicts pro Farbe: {"thread", "needed_skeins", "on_hand", "to_buy"}
+        Liste von Dicts pro Farbe: {
+            "thread", "needed_skeins", "on_hand", "to_buy", "is_diamond"
+        }
+        "is_diamond" ist True, wenn die Farbe (mindestens einmal) aus einem
+        Diamond-Painting-Pattern stammt -- bei einer Farbe, die in einem
+        Kreuzstich- UND einem DP-Projekt gleichzeitig registriert ist (der
+        gleiche Hersteller/Katalognummer-Schluessel), gewinnt der zuerst
+        gesehene Eintrag, analog zu `thread_by_key.setdefault()` unten.
     """
     from math import ceil
 
     waste_factor = 1 + (waste_percent / 100)
     needed_by_key: dict[str, int] = {}
     thread_by_key: dict[str, "Thread"] = {}
+    is_diamond_by_key: dict[str, bool] = {}
     for pattern in patterns:
-        spk = stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
+        is_diamond = getattr(pattern, "mode", "stitch") == "diamond"
+        spk = (
+            1
+            if is_diamond
+            else stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
+        )
         for entry in pattern.color_entries:
             if entry.skip_stitching:
                 continue
@@ -220,6 +259,7 @@ def compute_shopping_list_multi(
             key = _key(thread.manufacturer, thread.catalog_number)
             needed_by_key[key] = needed_by_key.get(key, 0) + needed
             thread_by_key.setdefault(key, thread)
+            is_diamond_by_key.setdefault(key, is_diamond)
 
     out: list[dict] = []
     for key in sorted(needed_by_key):
@@ -233,6 +273,7 @@ def compute_shopping_list_multi(
                 "needed_skeins": needed,
                 "on_hand": on_hand,
                 "to_buy": to_buy,
+                "is_diamond": is_diamond_by_key[key],
             }
         )
     return out
