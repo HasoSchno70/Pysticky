@@ -291,3 +291,57 @@ class TestDiamondViewToggleClearsUndo:
         main_window.action_diamond_view.trigger()  # diamond -> stitch
 
         assert main_window.undo_manager.can_undo is False
+
+
+class TestDiamondViewToggleClearsSelectClipboard:
+    """Dieselbe Staleness-Klasse wie TestDiamondViewToggleClearsUndo oben,
+    nur ueber Copy/Paste statt Undo/Redo erreicht: SelectTool._clipboard
+    (geteilt zwischen SelectTool und LassoSelectTool) speichert pro Zelle
+    den zum Kopierzeitpunkt gueltigen Stich-Typ. convert_to_mode() stampt
+    bereits PLATZIERTE Zellen im Pattern um, liess den eingefrorenen
+    Clipboard-Snapshot aber unberuehrt -- ein Paste NACH der Konvertierung
+    schrieb den alten Stich-Typ (z.B. DIAMOND=11) auf eine Zelle, deren
+    Farbe inzwischen gar nicht mehr is_diamond ist. Canvas.set_pattern()
+    leert dieselbe Zwischenablage schon beim Wechsel auf ein ANDERES
+    Pattern -- convert_to_mode() aendert aber dasselbe Pattern-Objekt und
+    wurde von diesem Reset nicht erfasst. Fix: _on_toggle_diamond_view()
+    leert jetzt auch SelectTool._clipboard, analog zum Undo-Verlauf."""
+
+    def test_toggling_diamond_view_clears_stale_clipboard(self, main_window):
+        from PySide6.QtCore import QRect
+
+        from pysticky.core.stitch import StitchType
+        from pysticky.ui.tools.select_tool import SelectTool
+        from pysticky.ui.tools.tool_enum import Tool
+
+        pattern = main_window.current_pattern
+        # In der echten App verdrahtet _perform_start_action() (per
+        # QTimer.singleShot) das Canvas mit dem Pattern -- im Test lassen wir
+        # den Timer nicht laufen, also die Verdrahtung direkt nachholen
+        # (sonst ist canvas._pattern noch None und _create_tool_context()
+        # liefert nichts).
+        main_window.canvas.set_pattern(pattern)
+        main_window.action_diamond_view.trigger()  # stitch -> diamond
+        assert pattern.mode == "diamond"
+        assert pattern.color_entries[0].is_diamond is True
+
+        assert pattern.set_stitch(0, 0, 0) is True
+        assert pattern.active_layer.get_stitch_type(0, 0) == StitchType.DIAMOND.value
+
+        main_window.canvas.set_tool(Tool.SELECT)
+        select_tool = main_window.canvas._tool_manager.get_active_select_tool()
+        select_tool._selection = QRect(0, 0, 1, 1)
+        ctx = main_window.canvas._create_tool_context(0, 0)
+        assert select_tool.copy_selection(ctx) is True
+        assert SelectTool._clipboard == [(0, 0, 0, StitchType.DIAMOND.value)]
+
+        main_window.action_diamond_view.trigger()  # diamond -> stitch
+
+        assert SelectTool._clipboard is None, (
+            "Regression: convert_to_mode() macht color_entries[0].is_diamond wieder "
+            "False, aber der VOR der Konvertierung kopierte Clipboard-Eintrag friert "
+            "weiterhin stitch_type=DIAMOND(11) ein. Ein Paste danach wuerde einen "
+            "Diamant-Drill in einem 'stitch'-Modus-Muster erzeugen (Renderer prueft "
+            "stype==11 ungegatet)."
+        )
+        assert SelectTool._clipboard_size == (0, 0)
