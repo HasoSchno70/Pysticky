@@ -651,6 +651,19 @@ class MainWindow(
 
     def set_pattern(self, pattern: Pattern) -> None:
         """Setzt ein neues Pattern und aktualisiert alle Panels."""
+        # Laufender Sticken-Modus haengt am ALTEN Pattern (Session-Timer
+        # steckt in dessen metadata, siehe core/session_timer.py). Ohne
+        # dieses Abschalten bleibt die Sticken-Modus-UI (Progress-Tool,
+        # ausgeblendete Docks, Checkbox) beim neuen Pattern "an", obwohl nie
+        # eine Session dafuer gestartet wurde -- die eigentliche Stickzeit
+        # wuerde bis zum naechsten manuellen Umschalten gar nicht erfasst.
+        # setChecked(False) loest ueber das toggled-Signal ganz regulaer
+        # _on_toggle_stitch_mode(False) aus (stoppt Session-Timer + markiert
+        # unsaved, noch auf dem alten self.current_pattern), analog zum
+        # Pendant in closeEvent().
+        action_stitch_mode = getattr(self, "action_stitch_mode", None)
+        if action_stitch_mode is not None and action_stitch_mode.isChecked():
+            action_stitch_mode.setChecked(False)
         self.current_pattern = pattern
         self.undo_manager.set_pattern(pattern)
         self._notify_panels(NotifyScope.FULL)

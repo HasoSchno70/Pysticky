@@ -79,6 +79,45 @@ def test_snap_grid_toggle_preserves_configured_snap_interval(qtbot):
     assert w.canvas.snap_interval == 10
 
 
+def test_set_pattern_stops_active_stitch_session_on_old_pattern(qtbot):
+    """Runde 38 (Nachaudit zu Runde 32): set_pattern() hat einen laufenden
+    Sticken-Modus nie beendet, wenn waehrend einer aktiven Session ein neues
+    Pattern geladen wurde (Datei -> Neu/Oeffnen/Zuletzt geoeffnet, Drag&Drop,
+    Bildimport-Wiederholen, ...). Der Session-Timer haengt an
+    pattern.metadata (core/session_timer.py) -- ohne Stop blieb die
+    Sitzung auf dem ALTEN Pattern-Objekt fuer immer "aktiv" (verlorene
+    Stickzeit, falls das alte Pattern spaeter noch gespeichert wird), und
+    die Sticken-Modus-UI (Checkbox, Progress-Tool, ausgeblendete Docks)
+    blieb beim NEUEN Pattern faelschlich eingeschaltet, obwohl fuer dieses
+    nie eine Session gestartet wurde."""
+    from pysticky.core import session_timer
+    from pysticky.core.pattern import Pattern
+    from pysticky.ui.main_window import MainWindow
+
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w._check_save_changes = lambda: True
+    w._autosave_timer.stop()
+
+    old_pattern = w.current_pattern
+    w.action_stitch_mode.trigger()  # Sticken-Modus an -> startet Session auf old_pattern
+    assert w.action_stitch_mode.isChecked() is True
+    assert session_timer.is_session_active(old_pattern) is True
+
+    new_pattern = Pattern()
+    w.set_pattern(new_pattern)
+
+    # Alte Session wurde beendet und die verstrichene Zeit persistiert,
+    # nicht stillschweigend auf dem verworfenen Pattern-Objekt liegen
+    # gelassen.
+    assert session_timer.is_session_active(old_pattern) is False
+
+    # Sticken-Modus-UI darf nicht faelschlich "an" fuer das neue Pattern
+    # bleiben -- dafuer wurde nie eine Session gestartet.
+    assert w.action_stitch_mode.isChecked() is False
+    assert session_timer.is_session_active(new_pattern) is False
+
+
 def test_leaving_stitch_mode_restores_completion_checkbox(qtbot):
     """Runde 30: _on_toggle_stitch_mode() setzte beim Aktivieren
     action_show_completion unbedingt auf True (Completion-Overlay soll im
