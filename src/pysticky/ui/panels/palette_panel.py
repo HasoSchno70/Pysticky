@@ -174,8 +174,18 @@ class PalettePanel(QWidget):
         self.list_colors.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.list_colors.setDragEnabled(True)
         self.list_colors.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-        self.list_colors.itemDoubleClicked.connect(self._on_item_double_clicked)
         self.list_colors.itemClicked.connect(self._on_item_clicked)
+        # itemActivated statt itemDoubleClicked: itemActivated feuert bei
+        # Enter/Return auf dem aktuellen Eintrag UND bei Maus-Doppelklick
+        # (Qt-Doku: "activated by the user... e.g. by double-clicking, or
+        # by pressing Return/Enter when the item is current" -- empirisch
+        # bestaetigt, ein Doppelklick loest BEIDE Signale aus). Vorher war
+        # hier nur itemDoubleClicked verdrahtet: ein Tastatur-Nutzer konnte
+        # eine Farbe per Pfeiltasten anwaehlen, aber NIE per Enter zum
+        # Muster hinzufuegen. itemDoubleClicked bewusst NICHT zusaetzlich
+        # verbunden -- ein echter Doppelklick wuerde die Farbe sonst
+        # doppelt hinzufuegen (beide Signale feuern fuer dasselbe Ereignis).
+        self.list_colors.itemActivated.connect(self._on_item_double_clicked)
         self.list_colors.startDrag = self._start_drag
 
         layout.addWidget(self.list_colors, 1)

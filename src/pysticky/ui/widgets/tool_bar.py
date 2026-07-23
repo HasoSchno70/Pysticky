@@ -47,6 +47,13 @@ class BaseToolButton(QToolButton):
         self.setFixedSize(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip(tooltip if tooltip else f"<b>{label}</b>")
+        # Icon+Label werden komplett selbst per paintEvent() gezeichnet
+        # (kein setText()) -- ohne explizite setAccessibleName() liefert
+        # Qt's Accessibility-Bridge fuer den Name-Wert einen leeren String
+        # (Screenreader wie NVDA/Narrator lesen nur die Description/den
+        # Tooltip als Fallback, nicht als vollwertigen Namen). Siehe
+        # set_icon_and_label() fuer die Aktualisierung bei Icon-Wechsel.
+        self.setAccessibleName(label)
 
         self._apply_base_style()
 
@@ -77,12 +84,16 @@ class BaseToolButton(QToolButton):
             QToolButton:pressed {{
                 background: {THEME.bg_lighter};
             }}
+            QToolButton:focus {{
+                border-color: {THEME.accent_primary};
+            }}
         """)
 
     def set_icon_and_label(self, icon: str, label: str) -> None:
         """Ändert Icon und Label."""
         self._icon_char = icon
         self._label = label
+        self.setAccessibleName(label)
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -217,6 +228,7 @@ class ToggleToolButton(ToolButton):
             self._icon_char = self._icon_outline
             self._label = self._label_outline
 
+        self.setAccessibleName(self._label)
         self.toggled_state.emit(self._is_filled)
         self.update()
 
@@ -240,6 +252,7 @@ class ToggleToolButton(ToolButton):
         self._tool = self._tool_outline
         self._icon_char = self._icon_outline
         self._label = self._label_outline
+        self.setAccessibleName(self._label)
         self.update()
 
 
@@ -267,6 +280,9 @@ class ActionButton(BaseToolButton):
             }}
             QToolButton:pressed {{
                 background: {THEME.bg_lighter};
+                border-color: {THEME.accent_secondary};
+            }}
+            QToolButton:focus {{
                 border-color: {THEME.accent_secondary};
             }}
         """)
@@ -307,6 +323,9 @@ class SymmetryToggle(BaseToolButton):
                 background: {THEME.bg_lighter};
                 border-color: {THEME.accent_blue};
                 color: {THEME.accent_blue};
+            }}
+            QToolButton:focus {{
+                border-color: {THEME.accent_blue};
             }}
         """)
 
