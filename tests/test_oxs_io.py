@@ -320,6 +320,47 @@ def test_import_rejects_oversized_dimensions(tmp_path):
     assert any("gross" in e or "groß" in e for e in errors)
 
 
+def test_import_accepts_pattern_at_hard_limit_boundary(tmp_path):
+    """Groessen-Grenzfaelle-Audit (2026-07-23): exakt 2000x2000 muss --
+    konsistent zu pat_import.py/xsd_import.py/file_io.py, die diesen
+    exakten Grenzwert bereits per Regressionstest absichern -- noch
+    erlaubt sein (nur > 2000 wird abgelehnt)."""
+    from pysticky.io.formats import import_oxs
+
+    ok = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="2000" /><chartheight value="2000" /></chart_info>
+  <palette></palette>
+</chart>
+"""
+    f = tmp_path / "boundary_ok.oxs"
+    f.write_text(ok, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is not None
+    assert pattern.width == 2000 and pattern.height == 2000
+
+
+def test_import_rejects_pattern_one_above_hard_limit(tmp_path):
+    """2001x2001 (ein Stich ueber der Grenze) muss abgelehnt werden --
+    dieselbe Off-by-one-Stelle, an der sich Inkonsistenzen zwischen den
+    Importern typischerweise verstecken."""
+    from pysticky.io.formats import import_oxs
+
+    bad = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="2001" /><chartheight value="2001" /></chart_info>
+  <palette></palette>
+</chart>
+"""
+    f = tmp_path / "boundary_bad.oxs"
+    f.write_text(bad, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is None
+    assert any("gross" in e or "groß" in e for e in errors)
+
+
 def test_import_catches_unexpected_parse_errors(tmp_path, monkeypatch):
     """Regression: import_file() fing nur OXSImportError -- jeder andere
     unerwartete Fehler beim Parsen (z.B. ein Bug in einer Hilfsfunktion,

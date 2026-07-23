@@ -56,6 +56,50 @@ def test_stitch_count_in_sectors_sums_at_least_total(pattern_with_stitches):
     assert total_in_sectors >= p.total_stitches
 
 
+def test_1x1_pattern_is_single_trivial_sector():
+    """Groessen-Grenzfaelle-Audit (2026-07-23): kleinstmoegliches Pattern
+    (1x1) darf keine Division-durch-Null/Off-by-one in der
+    Sektor-Aufteilung ausloesen -- ein einziger, trivialer Sektor ist
+    erwartet."""
+    from pysticky.core import Pattern
+
+    p = Pattern(width=1, height=1)
+    plan = plan_hoops(p, hoop_width=40, hoop_height=40)
+    assert plan.fits_single_hoop
+    assert plan.total_sectors == 1
+    assert plan.rows == 1 and plan.cols == 1
+    assert plan.sectors[0].width == 1
+    assert plan.sectors[0].height == 1
+
+
+def test_1xn_pattern_splits_only_along_tall_axis():
+    """1 Stich breit, 500 hoch: Spalten-Aufteilung muss trivial bei 1
+    bleiben, nur die Zeilen-Aufteilung darf mehrere Sektoren ergeben."""
+    from pysticky.core import Pattern
+
+    p = Pattern(width=1, height=500)
+    plan = plan_hoops(p, hoop_width=40, hoop_height=40)
+    assert plan.cols == 1
+    assert plan.rows == 13  # ceil(500/40)
+    assert plan.total_sectors == 13
+    for s in plan.sectors:
+        assert s.width == 1
+
+
+def test_nx1_pattern_splits_only_along_wide_axis():
+    """500 breit, 1 Stich hoch: Zeilen-Aufteilung muss trivial bei 1
+    bleiben, nur die Spalten-Aufteilung darf mehrere Sektoren ergeben."""
+    from pysticky.core import Pattern
+
+    p = Pattern(width=500, height=1)
+    plan = plan_hoops(p, hoop_width=40, hoop_height=40)
+    assert plan.rows == 1
+    assert plan.cols == 13  # ceil(500/40)
+    assert plan.total_sectors == 13
+    for s in plan.sectors:
+        assert s.height == 1
+
+
 def test_invalid_hoop_size_raises():
     from pysticky.core import Pattern
 

@@ -185,6 +185,15 @@ class Pattern:
 
     def __post_init__(self) -> None:
         """Initialisiert Defaults, die von width/height abhängen."""
+        # Dieselbe "min. 1x1"-Grenze, die resize()/crop() schon durchsetzen
+        # (siehe dortige ValueError). Der Konstruktor selbst war bisher die
+        # einzige Stelle, die width/height ungeprüft durchliess -- ein
+        # width=0/height=0-Pattern wuerde spaeter still ein leeres numpy-
+        # Grid erzeugen und an anderer Stelle (z.B. size_cm-Divisionen,
+        # Canvas-Rendering) erst viel spaeter mit einem verwirrenden Fehler
+        # auffallen statt sofort an der Quelle.
+        if self.width < 1 or self.height < 1:
+            raise ValueError(f"Ungültige Mustergröße: {self.width}x{self.height} (min. 1x1)")
         if self.layer_stack is None:
             self.layer_stack = LayerStack(self.width, self.height)
         if self.backstitch_manager is None:
