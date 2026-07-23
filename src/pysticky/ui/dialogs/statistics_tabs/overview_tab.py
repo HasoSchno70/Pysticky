@@ -121,10 +121,14 @@ class OverviewTab(QWidget):
 
         self._card_backstitches.set_value(str(len(pattern.backstitches)))
 
-        # Abdeckung berechnen
+        # Abdeckung berechnen -- covered_cells (Composite über alle Layer,
+        # jede Zelle höchstens 1x gezählt) verwenden, NICHT total_stitches:
+        # letzteres summiert absichtlich pro Layer (siehe get_statistics()-
+        # Docstring) und zeigte bei mehreren übereinanderliegenden, voll
+        # gefüllten Layern eine "Abdeckung" > 100% an.
         total_cells = stats["width"] * stats["height"]
         if total_cells > 0:
-            coverage = (stats["total_stitches"] / total_cells) * 100
+            coverage = (stats["covered_cells"] / total_cells) * 100
             self._card_coverage.set_value(f"{coverage:.1f}%")
         else:
             self._card_coverage.set_value("0%")

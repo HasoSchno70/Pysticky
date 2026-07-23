@@ -274,6 +274,58 @@ class TestPatternStatistics:
         assert "width_cm" in stats
         assert abs(stats["width_cm"] - 2.54) < 0.1
 
+    def test_covered_cells_single_layer_matches_total_stitches(self):
+        """covered_cells und total_stitches muessen bei genau einem Layer
+        uebereinstimmen (keine Ueberlappung moeglich)."""
+        p = Pattern(width=5, height=5)
+        p.color_entries.clear()
+        idx = p.add_color(Thread.from_hex("Rot", "#FF0000"))
+        for y in range(5):
+            for x in range(5):
+                p.set_stitch(x, y, idx)
+        stats = p.get_statistics()
+        assert stats["total_stitches"] == 25
+        assert stats["covered_cells"] == 25
+
+    def test_covered_cells_caps_multi_layer_overlap_at_area(self):
+        """Regression (Runde 50): die "Abdeckung"-Karte im Statistik-Dialog
+        (Overview-Tab) rechnete bisher stats["total_stitches"] / (width *
+        height) * 100 -- total_stitches summiert aber ABSICHTLICH pro
+        Layer (siehe get_statistics()-Docstring: "wie viele Stiche muss ich
+        insgesamt sticken"), zaehlt eine Zelle bei mehreren uebereinander-
+        liegenden, gefuellten Layern also mehrfach. Bei 2 komplett gefuellten
+        5x5-Layern (typisch z.B. Basis-Layer + Sonderstich-/Deko-Layer)
+        zeigte die Abdeckung dadurch 200% statt der erwarteten 100%.
+
+        covered_cells zaehlt stattdessen ueber das sichtbare Composite-Grid
+        (jede Zelle hoechstens 1x) und bleibt deshalb korrekt auf die
+        Musterflaeche begrenzt, waehrend total_stitches weiterhin die volle
+        (nicht gedeckelte) Arbeitsmenge widerspiegelt."""
+        p = Pattern(width=5, height=5)
+        p.color_entries.clear()
+        idx = p.add_color(Thread.from_hex("Rot", "#FF0000"))
+
+        for y in range(5):
+            for x in range(5):
+                p.set_stitch(x, y, idx)
+
+        p.layer_stack.add_layer("Ebene 2")  # setzt active_index automatisch
+        for y in range(5):
+            for x in range(5):
+                p.set_stitch(x, y, idx)
+
+        stats = p.get_statistics()
+        total_cells = stats["width"] * stats["height"]
+
+        # total_stitches summiert bewusst ueber beide Layer (Arbeitsmenge)
+        assert stats["total_stitches"] == 50
+        # covered_cells darf die Musterflaeche nie ueberschreiten
+        assert stats["covered_cells"] == 25
+        assert stats["covered_cells"] <= total_cells
+
+        coverage_percent = (stats["covered_cells"] / total_cells) * 100
+        assert coverage_percent == 100.0
+
 
 class TestPatternTransformations:
     """Tests für Transformationen."""

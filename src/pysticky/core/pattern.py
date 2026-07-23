@@ -677,6 +677,10 @@ class Pattern:
             - used_colors: Anzahl tatsächlich verwendeter Farben
             - skipped_colors: Anzahl übersprungener Farben
             - layer_count: Anzahl Layer
+            - covered_cells: Anzahl Zellen mit mind. einem sichtbaren Stich
+              (Composite über alle Layer, keine Zelle wird mehrfach gezählt
+              -- für eine "wie viel % der Fläche ist bedeckt"-Anzeige;
+              anders als total_stitches, das bewusst pro Layer summiert)
 
         Example:
             >>> stats = pattern.get_statistics()
@@ -702,6 +706,17 @@ class Pattern:
         # nicht in Garnsträngen.
         bead_count = self._count_beads()
 
+        # Belegte Zellen für die "Abdeckung"-Anzeige (Overview-Tab): NICHT
+        # total_stitches verwenden -- das summiert pro Layer (absichtlich,
+        # fuer "wie viele Stiche muss ich insgesamt sticken"), zaehlt eine
+        # Zelle bei mehreren uebereinanderliegenden Layern also mehrfach.
+        # Bei z.B. 2 komplett gefuellten Layern zeigte die Abdeckung dadurch
+        # 200% statt der erwarteten 0-100%. get_composite_grid() liefert pro
+        # Zelle nur den obersten sichtbaren Stich, daher hier ueber das
+        # Composite zaehlen statt ueber alle Layer zu summieren.
+        composite = self.layer_stack.get_composite_grid()
+        covered_cells = int(np.count_nonzero(composite != NO_STITCH))
+
         return {
             "name": self.name,
             "width": self.width,
@@ -717,6 +732,7 @@ class Pattern:
             "skipped_colors": skipped_colors,
             "layer_count": len(self.layer_stack),
             "bead_count": bead_count,
+            "covered_cells": covered_cells,
         }
 
     def _count_beads(self) -> int:
