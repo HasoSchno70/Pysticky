@@ -230,6 +230,24 @@ class ViewHandlersMixin:
                 # demselben Grund bereits geleert.
                 self.undo_manager.clear()
                 self._update_undo_actions()
+
+                # Select/Lasso-Zwischenablage leeren -- exakt dieselbe
+                # Staleness-Klasse wie beim Undo-Verlauf oben, nur ueber
+                # Copy/Paste statt Undo/Redo erreichbar: SelectTool._clipboard
+                # speichert pro Zelle den zum Kopierzeitpunkt gueltigen
+                # Stich-Typ (z.B. DIAMOND=11 fuer eine damals is_diamond-Farbe).
+                # convert_to_mode() stampt bereits PLATZIERTE Zellen um, laesst
+                # aber diesen eingefrorenen Snapshot unberuehrt -- ein Paste
+                # NACH der Konvertierung schreibt den alten Stich-Typ auf eine
+                # Zelle, deren Farbe inzwischen gar nicht mehr is_diamond/
+                # is_bead ist. Canvas.set_pattern() leert dieselbe Zwischen-
+                # ablage bereits beim Wechsel auf ein ANDERES Pattern (siehe
+                # dortiger Kommentar) -- convert_to_mode() aendert dasselbe
+                # Pattern-Objekt, war also von diesem Reset nicht erfasst.
+                from ..tools.select_tool import SelectTool
+
+                SelectTool._clipboard = None
+                SelectTool._clipboard_size = (0, 0)
         finally:
             self.setUpdatesEnabled(True)
 
