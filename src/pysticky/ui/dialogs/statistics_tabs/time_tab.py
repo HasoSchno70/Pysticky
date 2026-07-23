@@ -4,6 +4,7 @@ Zeitschätzung-Tab für den Statistik-Dialog.
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QLocale
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
@@ -72,6 +73,10 @@ class TimeTab(QWidget):
 
         settings_layout.addWidget(QLabel(t("Stunden pro Tag:")))
         self._hours_spin = QDoubleSpinBox()
+        # Siehe thread_tab.py::_price_spin -- erzwingt Punkt-Dezimaltrennzeichen
+        # unabhaengig von der OS-Locale, statt unter einer deutschen
+        # Windows-Regionaleinstellung "2,0 h" zu zeigen.
+        self._hours_spin.setLocale(QLocale.c())
         self._hours_spin.setRange(0.5, 12)
         self._hours_spin.setValue(2)
         self._hours_spin.setSuffix(" h")

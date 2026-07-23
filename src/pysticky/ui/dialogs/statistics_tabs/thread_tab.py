@@ -5,6 +5,7 @@ Garnverbrauch-Rechner-Tab für den Statistik-Dialog.
 import math
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QLocale
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
@@ -81,6 +82,14 @@ class ThreadTab(QWidget):
 
         settings_layout.addWidget(QLabel(t("Preis pro Strang:")), 2, 0)
         self._price_spin = QDoubleSpinBox()
+        # Erzwingt Punkt als Dezimaltrennzeichen unabhaengig von der
+        # OS-Locale (QDoubleSpinBox folgt sonst QLocale.system() -- unter
+        # einer deutschen Windows-Regionaleinstellung wuerde hier "1,50"
+        # stehen, waehrend jede CSV-/HTML-/PDF-Export-Zahl im Rest der App
+        # unveraendert Punkt-formatiert ist, siehe cost:.2f weiter unten
+        # bzw. in statistics_dialog.py). Ohne das: rein kosmetische, aber
+        # verwirrende Inkonsistenz zwischen UI-Anzeige und Export.
+        self._price_spin.setLocale(QLocale.c())
         self._price_spin.setRange(0, 50)
         self._price_spin.setValue(1.50)
         self._price_spin.setSuffix(" €")

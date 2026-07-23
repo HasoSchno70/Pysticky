@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ...core.i18n import t
+from ...core.i18n import current_language, t
 from ...core.snapshots import (
     delete_snapshot,
     list_snapshots,
@@ -34,6 +34,30 @@ from ..styles import THEME, Styles
 
 if TYPE_CHECKING:
     from ...core import Pattern
+
+# datetime.strftime("%A") liefert auf diesem System (und generell ohne
+# expliziten locale.setlocale(LC_TIME, ...)-Aufruf, den PySticky bewusst
+# nirgends macht) IMMER den englischen Wochentagsnamen -- unabhaengig von
+# der App-Sprache und der OS-Locale. In der (deutschen) Default-Sprache
+# der App wuerde das Tooltip also "Thursday, 23.07.2026 ..." mitten in
+# einem sonst komplett deutschen Dialog zeigen. Feste Uebersetzungstabelle
+# statt %A, damit der Wochentag zur restlichen UI-Sprache passt.
+_WEEKDAYS_DE = (
+    "Montag",
+    "Dienstag",
+    "Mittwoch",
+    "Donnerstag",
+    "Freitag",
+    "Samstag",
+    "Sonntag",
+)
+
+
+def _weekday_name(ts: datetime) -> str:
+    """Wochentagsname passend zur aktuellen App-Sprache (nicht OS-Locale)."""
+    if current_language() == "de":
+        return _WEEKDAYS_DE[ts.weekday()]
+    return ts.strftime("%A")
 
 
 class SnapshotHistoryDialog(QDialog):
@@ -153,7 +177,7 @@ class SnapshotHistoryDialog(QDialog):
             item = QListWidgetItem(label)
             item.setData(Qt.ItemDataRole.UserRole, path)
             if ts is not None:
-                item.setToolTip(f"{ts.strftime('%A, %d.%m.%Y %H:%M:%S')}\n{path}")
+                item.setToolTip(f"{_weekday_name(ts)}, {ts.strftime('%d.%m.%Y %H:%M:%S')}\n{path}")
             self._list.addItem(item)
 
         if self._list.count() == 0:
