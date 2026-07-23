@@ -284,3 +284,50 @@ def test_html_export_escapes_script_tag_in_thread_fields(tmp_path):
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in content
     assert "&lt;img src=x onerror=alert(1)&gt;" in content
     assert "&lt;b&gt;310" in content
+
+
+def test_generate_backstitches_svg_includes_line_on_right_border(empty_pattern):
+    """Regression: ein Rueckstich, dessen Endpunkte exakt auf der
+    RECHTEN Musterkante liegen (Halbstich-Koordinate x == 2*width, die
+    rechte Kante der letzten Zelle), wurde durch ein rohes "// 2" beim
+    Bestimmen der beruehrten Stich-Zelle auf Index `width` abgebildet --
+    eine Zelle, die es gar nicht gibt (gueltig ist nur 0..width-1). Die
+    anschliessende Bereichspruefung `< end_stitch_x` (end_stitch_x
+    default = pattern.width) schlug dadurch fuer BEIDE Endpunkte fehl,
+    und die komplette Linie verschwand aus dem SVG -- obwohl das Canvas
+    (ohne diese Bereichspruefung) sie unveraendert zeichnet. Betrifft
+    typische Kontur-Rueckstiche direkt am Musterrand."""
+    pattern = empty_pattern  # 10x10
+    pattern.add_backstitch(2 * pattern.width, 6, 2 * pattern.width, 8, 0)
+
+    exporter = HTMLExporter(pattern)
+    svg = exporter._generate_backstitches_svg(16)
+
+    assert "<line" in svg
+
+
+def test_generate_backstitches_svg_includes_line_on_bottom_border(empty_pattern):
+    """Wie test_generate_backstitches_svg_includes_line_on_right_border,
+    aber fuer die untere Musterkante (y == 2*height)."""
+    pattern = empty_pattern  # 10x10
+    pattern.add_backstitch(6, 2 * pattern.height, 8, 2 * pattern.height, 0)
+
+    exporter = HTMLExporter(pattern)
+    svg = exporter._generate_backstitches_svg(16)
+
+    assert "<line" in svg
+
+
+def test_get_page_backstitches_includes_line_on_right_border(empty_pattern):
+    """Gleicher Off-by-One-Bug wie in den beiden Tests oben, hier fuer
+    _get_page_backstitches() (Seiten-Rueckstichzahl fuer Fusszeile/Mini-
+    Legende jeder Musterseite im paginierten Export)."""
+    pattern = empty_pattern  # 10x10
+    bs = pattern.add_backstitch(2 * pattern.width, 6, 2 * pattern.width, 8, 0)
+
+    exporter = HTMLExporter(pattern)
+    # Letzte Seite eines 10x10-Musters bei Standard-Seitengroesse:
+    # end_x/end_y = width-1/height-1 (inklusiv).
+    result = exporter._get_page_backstitches(0, 0, pattern.width - 1, pattern.height - 1)
+
+    assert bs in result
