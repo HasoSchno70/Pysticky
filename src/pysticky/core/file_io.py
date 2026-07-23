@@ -260,11 +260,22 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
 
     # Farben laden
     pattern.color_entries.clear()
-    for color_data in data["colors"]:
+    for i, color_data in enumerate(data["colors"]):
+        if not isinstance(color_data, dict):
+            raise ValueError(
+                f"Ungültiger Farbeintrag bei Index {i}: Objekt erwartet, "
+                f"gefunden {type(color_data).__name__}"
+            )
         pattern.color_entries.append(_dict_to_color_entry(color_data))
 
     # Layer laden (über öffentliche API statt direktem _layers/_active_index Zugriff)
-    loaded_layers = [_dict_to_layer(ld, width, height) for ld in data["layers"]]
+    loaded_layers = []
+    for i, ld in enumerate(data["layers"]):
+        if not isinstance(ld, dict):
+            raise ValueError(
+                f"Ungültiger Layer bei Index {i}: Objekt erwartet, gefunden {type(ld).__name__}"
+            )
+        loaded_layers.append(_dict_to_layer(ld, width, height))
     active = data.get("active_layer", 0)
 
     pattern.layer_stack = LayerStack(width, height)
@@ -272,7 +283,12 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
 
     # Rückstiche laden (seit v1.1, optional für ältere Dateien)
     pattern.backstitch_manager.clear()
-    for bs_data in data.get("backstitches", []):
+    for i, bs_data in enumerate(data.get("backstitches", [])):
+        if not isinstance(bs_data, dict):
+            raise ValueError(
+                f"Ungültiger Rückstich bei Index {i}: Objekt erwartet, "
+                f"gefunden {type(bs_data).__name__}"
+            )
         bs = _dict_to_backstitch(bs_data)
         pattern.backstitch_manager.add(bs.x1, bs.y1, bs.x2, bs.y2, bs.color_index)
 
@@ -334,8 +350,11 @@ def _dict_to_color_entry(data: dict[str, Any]) -> ColorEntry:
         Rekonstruierter ColorEntry
 
     Raises:
-        ValueError: Bei fehlenden Pflichtfeldern (name, color, symbol)
+        ValueError: Bei fehlenden Pflichtfeldern (name, color, symbol) oder
+            wenn data selbst kein Objekt ist
     """
+    if not isinstance(data, dict):
+        raise ValueError(f"Ungültiger Farbeintrag: Objekt erwartet, gefunden {type(data).__name__}")
     for field in ("name", "color", "symbol"):
         if field not in data:
             raise ValueError(f"Farbeintrag: Pflichtfeld '{field}' fehlt")
@@ -452,7 +471,13 @@ def _dict_to_layer(data: dict[str, Any], width: int, height: int) -> Layer:
 
     Returns:
         Rekonstruiertes Layer mit numpy-Grid
+
+    Raises:
+        ValueError: Wenn data kein Objekt ist
     """
+    if not isinstance(data, dict):
+        raise ValueError(f"Ungültiger Layer: Objekt erwartet, gefunden {type(data).__name__}")
+
     layer = Layer(
         name=data["name"],
         width=width,
@@ -536,7 +561,10 @@ def _dict_to_backstitch(data: dict[str, Any]) -> Backstitch:
 
     Raises:
         ValueError: Bei fehlenden Pflichtfeldern (x1, y1, x2, y2, color_index)
+            oder wenn data selbst kein Objekt ist
     """
+    if not isinstance(data, dict):
+        raise ValueError(f"Ungültiger Rückstich: Objekt erwartet, gefunden {type(data).__name__}")
     for field in ("x1", "y1", "x2", "y2", "color_index"):
         if field not in data:
             raise ValueError(f"Rückstich: Pflichtfeld '{field}' fehlt")

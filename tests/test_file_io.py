@@ -262,6 +262,56 @@ class TestFileIO:
         with pytest.raises(ValueError):
             load_pattern(str(filepath))
 
+    def test_load_raises_value_error_for_non_dict_color_entry(self, tmp_path):
+        """Nachfolge-Runde auf den Runde-38/40-Fund: nicht nur das Top-Level-
+        JSON-Dokument bzw. das "pattern"-Feld kann ein Nicht-Objekt sein,
+        sondern auch ein einzelner Eintrag INNERHALB der "colors"-Liste
+        (z.B. "colors": [{...valide...}, 42]). _dict_to_color_entry() griff
+        hier vorher per `field not in data` zu, was fuer eine Zahl einen
+        rohen TypeError statt eines ValueError ausloest."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_color_entry.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        # Ein kaputter Eintrag zwischen den validen Standard-Farben
+        data["pattern"]["colors"].append(42)
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
+    def test_load_raises_value_error_for_non_dict_layer(self, tmp_path):
+        """Wie oben, aber fuer die "layers"-Liste: ein Nicht-Objekt-Eintrag
+        (z.B. ein String) liess _dict_to_layer() vorher mit einem rohen
+        TypeError beim Zugriff auf data["name"] crashen."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_layer.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        data["pattern"]["layers"].append("kaputt")
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
+    def test_load_raises_value_error_for_non_dict_backstitch(self, tmp_path):
+        """Wie oben, aber fuer die "backstitches"-Liste: ein Nicht-Objekt-
+        Eintrag (z.B. null) liess _dict_to_backstitch() vorher mit einem
+        rohen TypeError bei `field not in data` crashen (data=None)."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        pattern.add_backstitch(0, 0, 4, 4, 0)
+        filepath = tmp_path / "broken_backstitch_entry.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        data["pattern"]["backstitches"].append(None)
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
     def test_save_is_atomic_no_leftover_tmp_file(self, tmp_path):
         """Regression: save_pattern() schrieb frueher direkt in die
         Zieldatei -- ein Crash mitten in json.dump() haette die echte
