@@ -37,6 +37,87 @@ class TestPatternCreation:
         p = Pattern(fabric_count=18)
         assert p.fabric_count == 18
 
+    def test_rejects_zero_width(self):
+        """Regression (Groessen-Grenzfaelle-Audit, 2026-07-23): resize()/
+        crop() setzen die "min. 1x1"-Grenze schon lange per ValueError
+        durch, aber der Pattern()-Konstruktor selbst (__post_init__) liess
+        width/height=0 bisher unvalidiert durch -- ein Pattern(width=0,
+        height=0) liess sich klaglos erzeugen und haette erst viel spaeter
+        (z.B. bei einer size_cm-Division oder beim Canvas-Rendering) mit
+        einem verwirrenden Folgefehler aufgefallen, statt sofort an der
+        Quelle."""
+        with pytest.raises(ValueError, match="min. 1x1"):
+            Pattern(width=0, height=0)
+
+    def test_rejects_negative_width(self):
+        with pytest.raises(ValueError, match="min. 1x1"):
+            Pattern(width=-5, height=10)
+
+    def test_1x1_pattern_smallest_allowed_size(self):
+        """1x1 ist die kleinste erlaubte Mustergroesse und muss sich ganz
+        normal erstellen und bestuecken lassen (Groessen-Grenzfaelle-Audit)."""
+        p = Pattern(width=1, height=1)
+        assert p.width == 1
+        assert p.height == 1
+        assert p.set_stitch(0, 0, 0) is True
+        assert p.get_stitch(0, 0) == 0
+
+
+class TestPattern1x1Operations:
+    """Grenzfall-Tests fuer Transform-Operationen auf einem 1x1-Pattern.
+
+    Off-by-one-Fehler in Koordinaten-/Groessenberechnungen zeigen sich
+    typischerweise genau an den Groessengrenzen (1x1 als Minimum), nicht in
+    der Mitte des erlaubten Bereichs -- daher werden hier alle
+    Transform-Operationen einzeln gegen ein minimales Pattern verifiziert."""
+
+    def _tiny_pattern(self):
+        p = Pattern(name="tiny", width=1, height=1)
+        p.set_stitch(0, 0, 0)
+        return p
+
+    def test_rotate_90_cw_preserves_1x1(self):
+        p = self._tiny_pattern()
+        p.rotate_90_cw()
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
+    def test_rotate_90_ccw_preserves_1x1(self):
+        p = self._tiny_pattern()
+        p.rotate_90_ccw()
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
+    def test_rotate_180_preserves_1x1(self):
+        p = self._tiny_pattern()
+        p.rotate_180()
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
+    def test_flip_horizontal_preserves_1x1(self):
+        p = self._tiny_pattern()
+        p.flip_horizontal()
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
+    def test_flip_vertical_preserves_1x1(self):
+        p = self._tiny_pattern()
+        p.flip_vertical()
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
+    def test_resize_1x1_to_1x1_is_noop(self):
+        p = self._tiny_pattern()
+        p.resize(1, 1)
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
+    def test_crop_1x1_to_1x1(self):
+        p = self._tiny_pattern()
+        assert p.crop(0, 0, 1, 1) is True
+        assert (p.width, p.height) == (1, 1)
+        assert p.get_stitch(0, 0) == 0
+
 
 class TestPatternColors:
     """Tests für Farbverwaltung."""
