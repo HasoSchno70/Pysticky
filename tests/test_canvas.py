@@ -85,6 +85,72 @@ def test_canvas_set_pattern_resets_current_color_index(qtbot, pattern_with_color
     assert canvas._current_color_index == 0
 
 
+def test_canvas_set_pattern_invalidates_select_clipboard(qtbot, pattern_with_colors):
+    """Regression (Clipboard-Audit Juli 2026): SelectTool._clipboard ist eine
+    Klassenvariable, geteilt zwischen SelectTool und LassoSelectTool (siehe
+    select_tool.py), und ueberlebte einen Pattern-Wechsel bislang unveraendert
+    -- genau die Klasse Bug wie oben bei _current_color_index, nur ueber die
+    Zwischenablage statt die Zeichenfarbe. Die Zwischenablage speichert rohe
+    Farb-INDIZES ohne jeden Bezug zum Quell-Pattern: kopiert man aus Pattern A
+    und fuegt nach einem Datei->Neu/Oeffnen in Pattern B ein, faerbt ein
+    Einfuegen die Auswahl (falls der Index in B zufaellig auch existiert)
+    lautlos mit einer komplett unzusammenhaengenden Farbe -- kein Crash, keine
+    Warnung. set_pattern() muss die Zwischenablage daher genauso ungueltig
+    machen wie UndoManager.set_pattern() die Undo-Historie loescht."""
+    from PySide6.QtCore import QRect
+
+    from pysticky.core import Pattern, Thread
+    from pysticky.ui.canvas import CrossStitchCanvas
+    from pysticky.ui.tools.base_tool import ToolContext
+    from pysticky.ui.tools.select_tool import SelectTool
+
+    canvas = CrossStitchCanvas()
+    qtbot.addWidget(canvas)
+    canvas.set_pattern(pattern_with_colors)
+
+    select_tool = canvas._tool_manager.get_select_tool()
+    select_tool._selection = QRect(5, 5, 2, 2)
+    ctx = ToolContext(
+        canvas=canvas,
+        pattern=pattern_with_colors,
+        current_color_index=0,
+        grid_x=5,
+        grid_y=5,
+        screen_x=0,
+        screen_y=0,
+        cell_size=canvas._cell_size,
+        offset_x=0,
+        offset_y=0,
+    )
+    assert select_tool.copy_selection(ctx) is True
+    assert SelectTool._clipboard is not None
+
+    # Pattern-Wechsel: neues, voellig anderes Pattern (andere Palette/Groesse)
+    new_pattern = Pattern(width=5, height=5)
+    new_pattern.color_entries.clear()
+    new_pattern.add_color(Thread.from_hex("Andere Farbe", "#123456"))
+    canvas.set_pattern(new_pattern)
+
+    assert SelectTool._clipboard is None
+    assert SelectTool._clipboard_size == (0, 0)
+
+    # Ein "Geister"-Einfuegen aus dem alten Pattern darf jetzt nicht mehr
+    # moeglich sein.
+    ctx2 = ToolContext(
+        canvas=canvas,
+        pattern=new_pattern,
+        current_color_index=0,
+        grid_x=0,
+        grid_y=0,
+        screen_x=0,
+        screen_y=0,
+        cell_size=canvas._cell_size,
+        offset_x=0,
+        offset_y=0,
+    )
+    assert select_tool.start_paste(ctx2) is False
+
+
 def test_optimized_canvas_paint_with_no_pattern(qtbot):
     """Selbiges fuer die optimierte Variante."""
     from pysticky.ui.canvas import OptimizedCrossStitchCanvas
