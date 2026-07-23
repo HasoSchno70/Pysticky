@@ -287,6 +287,7 @@ class PerformanceManager:
         colorblind_mode: "ColorBlindType | None" = None,
         symbol_font_family: str | None = None,
         symbol_size_offset: int = 0,
+        device_pixel_ratio: float = 1.0,
     ) -> QPixmap | None:
         """
         Gibt den gecachten Chunk zurück, oder None wenn er neu gerendert werden muss.
@@ -307,6 +308,7 @@ class PerformanceManager:
             colorblind_mode,
             symbol_font_family,
             symbol_size_offset,
+            device_pixel_ratio,
         )
 
         # Dirty?
@@ -345,6 +347,7 @@ class PerformanceManager:
         colorblind_mode: "ColorBlindType | None" = None,
         symbol_font_family: str | None = None,
         symbol_size_offset: int = 0,
+        device_pixel_ratio: float = 1.0,
     ) -> None:
         """Speichert einen Chunk im Cache, zusammen mit den Render-Parametern
         gegen die spätere get_cached_chunk()-Aufrufe validieren."""
@@ -363,6 +366,7 @@ class PerformanceManager:
             colorblind_mode,
             symbol_font_family,
             symbol_size_offset,
+            device_pixel_ratio,
         )
         self._chunk_cache[(chunk_x, chunk_y)] = (pixmap, params)
         self._stats["chunks_rendered"] += 1
@@ -406,6 +410,7 @@ def render_chunk_to_pixmap(
     fabric_pixmap: QPixmap | None = None,
     diamond_view: bool = False,
     colorblind_mode: "ColorBlindType | None" = None,
+    device_pixel_ratio: float = 1.0,
 ) -> QPixmap:
     """
     Rendert einen Chunk als QPixmap.
@@ -429,6 +434,16 @@ def render_chunk_to_pixmap(
         colorblind_mode: Farbblindheits-Simulation (wie im Direkt-Render-
             Pfad, `RenderingMixin`) -- ohne das blieb die Simulation auf
             großen (Performance-Mode-)Mustern wirkungslos.
+        device_pixel_ratio: `canvas.devicePixelRatioF()` zum Aufnahmezeitpunkt.
+            Ohne dies wurde die Pixmap immer mit 1 physischem Pixel pro
+            logischem Pixel angelegt -- auf einem HiDPI-Bildschirm (125/150/
+            200% Windows-Skalierung) zeichnet `QPainter.drawPixmap()` sie dann
+            unscharf hochskaliert, weil ihr die physische Auflösung fehlt, die
+            der direkte (Nicht-Chunk-)Renderpfad automatisch bekommt. Die
+            Pixmap wird deshalb in physischen Pixeln angelegt und per
+            `setDevicePixelRatio()` markiert; alle Zeichenoperationen unten
+            bleiben unverändert in logischen Koordinaten, da QPainter das
+            Skalieren für ein Gerät mit gesetztem DPR selbst übernimmt.
 
     Returns:
         QPixmap mit dem gerenderten Chunk
@@ -442,10 +457,16 @@ def render_chunk_to_pixmap(
     if width <= 0 or height <= 0:
         return QPixmap()
 
-    # Pixmap erstellen
+    # Pixmap erstellen -- physische Pixel-Größe, damit die Zellen auf einem
+    # HiDPI-Bildschirm scharf statt hochskaliert-unscharf gezeichnet werden
+    # (siehe device_pixel_ratio-Docstring oben).
     pixel_width = width * cell_size
     pixel_height = height * cell_size
-    pixmap = QPixmap(pixel_width, pixel_height)
+    pixmap = QPixmap(
+        max(1, round(pixel_width * device_pixel_ratio)),
+        max(1, round(pixel_height * device_pixel_ratio)),
+    )
+    pixmap.setDevicePixelRatio(device_pixel_ratio)
 
     if diamond_view:
         pixmap.fill(QColor(235, 232, 220))

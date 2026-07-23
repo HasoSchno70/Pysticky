@@ -184,9 +184,10 @@ class CrossStitchCanvas(
         # — reines Rendering-Override (analog show_symbols).
         self._diamond_view: bool = False
 
-        # Stoff-Textur-Pixmap (lazy generiert, abhängig von cell_size)
+        # Stoff-Textur-Pixmap (lazy generiert, abhängig von cell_size und dpr)
         self._fabric_pixmap: QPixmap | None = None
         self._fabric_pixmap_cell_size: int = 0
+        self._fabric_pixmap_dpr: float = 0.0
 
         # Spiegelmodus
         self._mirror_mode: MirrorMode = MirrorMode.NONE
@@ -296,15 +297,26 @@ class CrossStitchCanvas(
         Liefert eine Tile-Pixmap mit Aida-Stoff-Optik.
 
         Wird beim Render für die leeren Zellen als Brush benutzt. Gecacht
-        pro `cell_size`, damit Zoom-Wechsel nicht jeden Frame neu rendert.
+        pro `cell_size` UND `devicePixelRatioF()`, damit Zoom-Wechsel nicht
+        jeden Frame neu rendert -- die DPR muss mit in den Cache-Key, sonst
+        bleibt die Textur auf einem HiDPI-Bildschirm (oder nach einem Drag
+        auf einen anders skalierten Monitor) unscharf hochskaliert, weil die
+        Pixmap nur mit 1 physischem Pixel pro logischem Pixel angelegt wurde
+        (dieselbe Ursache wie beim Chunk-Cache in performance.py).
         """
         cs = self._cell_size
-        if self._fabric_pixmap is not None and self._fabric_pixmap_cell_size == cs:
+        dpr = self.devicePixelRatioF()
+        if (
+            self._fabric_pixmap is not None
+            and self._fabric_pixmap_cell_size == cs
+            and self._fabric_pixmap_dpr == dpr
+        ):
             return self._fabric_pixmap
 
         from PySide6.QtGui import QPainter as _QP
 
-        pixmap = QPixmap(cs, cs)
+        pixmap = QPixmap(max(1, round(cs * dpr)), max(1, round(cs * dpr)))
+        pixmap.setDevicePixelRatio(dpr)
         pixmap.fill(self._empty_color)
 
         # Subtile Punkt-Textur — nur bei größeren Zellen sichtbar
@@ -325,12 +337,14 @@ class CrossStitchCanvas(
 
         self._fabric_pixmap = pixmap
         self._fabric_pixmap_cell_size = cs
+        self._fabric_pixmap_dpr = dpr
         return pixmap
 
     def _invalidate_fabric_pixmap(self) -> None:
         """Verwirft den Fabric-Pixmap-Cache (z.B. nach Theme-Wechsel)."""
         self._fabric_pixmap = None
         self._fabric_pixmap_cell_size = 0
+        self._fabric_pixmap_dpr = 0.0
 
     # =========================================================================
     # Public API

@@ -208,6 +208,17 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
 
         colorblind_mode = getattr(self, "_colorblind_mode", None)
 
+        # Physische Pixel pro logischem Pixel des aktuellen Bildschirms --
+        # muss Teil des Cache-Keys sein und in die Pixmap-Erzeugung
+        # einfließen, sonst bleiben Chunk-Pixmaps auf HiDPI-Displays (125/
+        # 150/200% Skalierung) unscharf hochskaliert (siehe
+        # render_chunk_to_pixmap-Docstring). Da devicePixelRatioF() sich neu
+        # auflöst nach einem Drag auf einen anders skalierten Monitor, wird
+        # ein dadurch nicht mehr passender Cache-Eintrag automatisch beim
+        # nächsten paintEvent als Cache-Miss erkannt und neu gerendert --
+        # ganz ohne eigene screenChanged-Verdrahtung.
+        dpr = self.devicePixelRatioF()
+
         for cy in range(start_cy, end_cy):
             for cx in range(start_cx, end_cx):
                 # Cache prüfen
@@ -226,6 +237,7 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                     colorblind_mode,
                     self._symbol_font_family,
                     self._symbol_size_offset,
+                    dpr,
                 )
 
                 if pixmap is None:
@@ -246,6 +258,7 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                         fabric_pixmap,
                         diamond_view,
                         colorblind_mode,
+                        dpr,
                     )
                     self._perf_manager.cache_chunk(
                         cx,
@@ -262,6 +275,7 @@ class OptimizedCrossStitchCanvas(CrossStitchCanvas):
                         colorblind_mode,
                         self._symbol_font_family,
                         self._symbol_size_offset,
+                        dpr,
                     )
 
                 # Chunk zeichnen
