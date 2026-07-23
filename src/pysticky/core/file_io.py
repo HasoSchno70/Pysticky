@@ -282,8 +282,11 @@ def _dict_to_pattern(data: dict[str, Any]) -> Pattern:
     pattern.layer_stack.replace_all_layers(loaded_layers, active)
 
     # Rückstiche laden (seit v1.1, optional für ältere Dateien)
+    loaded_backstitches = data.get("backstitches", [])
+    if not isinstance(loaded_backstitches, list):
+        raise ValueError("Ungültiges Rückstich-Format: Liste erwartet")
     pattern.backstitch_manager.clear()
-    for i, bs_data in enumerate(data.get("backstitches", [])):
+    for i, bs_data in enumerate(loaded_backstitches):
         if not isinstance(bs_data, dict):
             raise ValueError(
                 f"Ungültiger Rückstich bei Index {i}: Objekt erwartet, "

@@ -312,6 +312,24 @@ class TestFileIO:
         with pytest.raises(ValueError):
             load_pattern(str(filepath))
 
+    def test_load_raises_value_error_for_non_list_backstitches_container(self, tmp_path):
+        """Nachfolge-Runde auf den Runde-44-Fund: "backstitches" ist selbst
+        KEIN Liste-Container (z.B. eine Zahl), analog zur bereits bestehenden
+        isinstance-Pruefung fuer "colors"/"layers". _dict_to_pattern() rief
+        vorher direkt `enumerate(data.get("backstitches", []))` auf, was fuer
+        einen int mit einem rohen TypeError ("int object is not iterable")
+        crasht statt eines ValueError."""
+        pattern = Pattern(name="Test", width=10, height=10)
+        filepath = tmp_path / "broken_backstitches_container.pxs"
+        save_pattern(pattern, str(filepath))
+
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+        data["pattern"]["backstitches"] = 42
+        filepath.write_text(json.dumps(data), encoding="utf-8")
+
+        with pytest.raises(ValueError):
+            load_pattern(str(filepath))
+
     def test_load_raises_value_error_for_non_list_blend_components(self, tmp_path):
         """Nachfolge-Runde auf den Runde-40/43-Fund, noch eine Ebene tiefer:
         "blend_components" innerhalb eines Farbeintrags ist selbst KEINE
