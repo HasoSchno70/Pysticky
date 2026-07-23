@@ -322,58 +322,15 @@ class PreviewRenderEngine:
     ) -> None:
         """Diamond-Painting-Drill in der Pattern-Vorschau.
 
-        Vier dreieckige Facetten mit Glanzlicht oben (hell), Schatten unten
-        (dunkel), seitlich mittel. Adaptiver Inset: bei kleiner Zelle (<12px)
-        berühren sich die Drills nahtlos, damit die Vorlage nicht ausgewaschen
-        weiss wirkt. Konsistent zur Canvas-Drill-Darstellung.
+        Duenner Wrapper um die geteilte Implementierung in
+        ``ui/diamond_drill_render.py::draw_diamond_drill`` -- dieselbe Funktion
+        nutzen auch der Direkt-Render-Pfad (``RenderingMixin._draw_diamond_drill``)
+        und der Chunk-Cache-Pfad (``performance.py::_draw_diamond_drill_perf``),
+        damit alle drei Pfade garantiert identisch rendern.
         """
-        from PySide6.QtCore import Qt
-        from PySide6.QtGui import QPainterPath
+        from ..diamond_drill_render import draw_diamond_drill
 
-        from ...core.stitch_shapes import diamond_inset_pixels, diamond_should_draw_edge
-
-        inset = int(diamond_inset_pixels(size))
-        x0 = x + inset
-        y0 = y + inset
-        x1 = x + size - inset
-        y1 = y + size - inset
-        cx = (x0 + x1) / 2.0
-        cy = (y0 + y1) / 2.0
-
-        alpha = color.alpha()
-
-        def _shift(c: QColor, factor: int) -> QColor:
-            shifted = c.lighter(factor) if factor >= 100 else c.darker(200 - factor)
-            shifted.setAlpha(alpha)
-            return shifted
-
-        c_top = _shift(color, 145)
-        c_right = _shift(color, 110)
-        c_left = _shift(color, 95)
-        c_bottom = _shift(color, 70)
-
-        # Vier Facetten als Dreiecke (Eckpunkt → benachbarter Eckpunkt → Mitte)
-        for pts, fill in (
-            ([(x0, y0), (x1, y0), (cx, cy)], c_top),
-            ([(x1, y0), (x1, y1), (cx, cy)], c_right),
-            ([(x1, y1), (x0, y1), (cx, cy)], c_bottom),
-            ([(x0, y1), (x0, y0), (cx, cy)], c_left),
-        ):
-            path = QPainterPath()
-            path.moveTo(*pts[0])
-            for px2, py2 in pts[1:]:
-                path.lineTo(px2, py2)
-            path.closeSubpath()
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.fillPath(path, fill)
-
-        if diamond_should_draw_edge(size):
-            edge = QColor(0, 0, 0, min(120, alpha))
-            painter.setPen(QPen(edge, 1))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawRect(x0, y0, x1 - x0, y1 - y0)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        draw_diamond_drill(painter, x, y, size, color)
 
     def _draw_french_knot_fabric(
         self, painter: QPainter, x: int, y: int, size: int, color: QColor
