@@ -13,6 +13,60 @@ project_root = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(project_root))
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _isolate_qsettings_from_real_registry(tmp_path_factory):
+    """Verhindert, dass Tests via echter QSettings(ORG_NAME, APP_NAME)-Kon-
+    struktion (z.B. ueber ein echtes MainWindow()) in die tatsaechliche
+    Windows-Registry des Nutzers unter HKCU\\Software\\PySticky schreiben.
+
+    MainWindow._settings = QSettings(ORG_NAME, APP_NAME) gibt kein Format an.
+    QSettings.setDefaultFormat() allein reicht NICHT aus -- der explizite
+    2-Arg-Konstruktor QSettings(organization, application) ignoriert
+    defaultFormat() nachweislich (per Repro-Skript verifiziert: liefert
+    weiterhin format()==NativeFormat / fileName()=="\\HKEY_CURRENT_USER\\...")
+    und schreibt also trotzdem in die echte Registry. Ohne einen Fix landen
+    Testartefakte (z.B. pytest-tmp-Pfade in "recent_files") direkt in der
+    echten Registry des Nutzers -- reproduzierbar beobachtet: ein Suite-Lauf
+    nach Runde 49 hat vier pytest-tmp-Pfade in den echten recent_files-Wert
+    geschrieben.
+
+    Fix: QSettings.__init__ selbst wird gepatcht, sodass JEDE Konstruktion
+    mit (organization[, application])-Signatur zwingend auf IniFormat +
+    UserScope + ein Session-Temp-Verzeichnis umgeleitet wird -- unabhaengig
+    davon, welches Modul QSettings importiert hat (die Klasse ist ein
+    einziges gemeinsames Objekt, das Patchen wirkt also global). Der
+    parameterlose Konstruktor QSettings() nutzt weiterhin defaultFormat()
+    (hier ebenfalls auf IniFormat gesetzt), fuer den Fall, dass ein Test
+    QCoreApplication.setOrganizationName()/setApplicationName() nutzt.
+    """
+    from PySide6.QtCore import QSettings
+
+    settings_dir = tmp_path_factory.mktemp("qsettings_isolated")
+    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, str(settings_dir))
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.SystemScope, str(settings_dir))
+
+    orig_init = QSettings.__init__
+
+    def _isolated_init(self, *args, **kwargs):
+        if args and isinstance(args[0], str) and not kwargs:
+            organization = args[0]
+            application = args[1] if len(args) >= 2 else ""
+            orig_init(
+                self,
+                QSettings.Format.IniFormat,
+                QSettings.Scope.UserScope,
+                organization,
+                application,
+            )
+        else:
+            orig_init(self, *args, **kwargs)
+
+    QSettings.__init__ = _isolated_init
+    yield
+    QSettings.__init__ = orig_init
+
+
 @pytest.fixture(autouse=True)
 def _no_autosave_side_effects(monkeypatch):
     """Neutralisiert Autosave-Interaktion in ALLEN Tests.
