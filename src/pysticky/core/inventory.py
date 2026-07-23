@@ -37,11 +37,47 @@ def get_inventory_path() -> Path:
     return root / "inventory.json"
 
 
-def _key(manufacturer: str | None, catalog_number: str | None) -> str:
-    """Eindeutiger Inventory-Key. Leerstrings werden in 'unknown' übersetzt."""
-    m = (manufacturer or "unknown").strip()
-    c = (catalog_number or "unknown").strip()
-    return f"{m}::{c}"
+def _key(manufacturer: str | None, catalog_number: str | None, name: str | None = None) -> str:
+    """Eindeutiger Inventory-Key. Leerstrings werden in 'unknown' übersetzt.
+
+    Sonderfall (zurückgestellter Fund aus Runde 22, hier nachgeholt): fehlen
+    manufacturer UND catalog_number BEIDE (z.B. eine per Bildimport ohne
+    Palette-Metadaten importierte oder manuell per Farbwähler angelegte
+    Custom-Farbe), kollidierten vorher ALLE derartigen Farben auf denselben
+    Schlüssel "unknown::unknown" und teilten sich dadurch ungewollt einen
+    gemeinsamen Lagerbestand. Ist in diesem Fall ein Farbname bekannt, wird
+    er als drittes Schlüssel-Segment angehängt ("unknown::unknown::<name>"),
+    um verschiedene "unbekannte" Farben auseinanderzuhalten.
+
+    Rückwärtskompatibilität: Der alte zweiteilige Schlüssel "unknown::unknown"
+    wird nur noch erzeugt, wenn zusätzlich auch kein Name vorliegt -- bereits
+    gespeicherte alte Einträge mit diesem Schlüssel bleiben beim Laden
+    unverändert gültig (siehe `_load()`, das keine Annahme über das Format
+    des Keys trifft), sie werden schlicht nicht mehr neu erzeugt, sobald ein
+    Aufrufer einen Namen mitgibt.
+    """
+    m = (manufacturer or "").strip()
+    c = (catalog_number or "").strip()
+    if not m and not c:
+        n = (name or "").strip()
+        if n:
+            return f"unknown::unknown::{n}"
+        return "unknown::unknown"
+    return f"{m or 'unknown'}::{c or 'unknown'}"
+
+
+def split_key(key: str) -> tuple[str, str, str]:
+    """Zerlegt einen Inventory-Key zurück in (manufacturer, catalog_number, name).
+
+    Inverse zu `_key()`. `name` ist nur beim "unknown::unknown::<name>"-
+    Sonderfall nicht-leer -- bei allen anderen Schlüsseln (inklusive alter,
+    zweiteiliger Legacy-Schlüssel) ist es "".
+    """
+    parts = key.split("::", 2)
+    mfr = parts[0] if len(parts) > 0 else ""
+    num = parts[1] if len(parts) > 1 else ""
+    name = parts[2] if len(parts) > 2 else ""
+    return mfr, num, name
 
 
 class Inventory:
@@ -106,13 +142,33 @@ class Inventory:
 
     # === Accessors ===
 
-    def get(self, manufacturer: str | None, catalog_number: str | None) -> int:
-        """Liefert die Strang-Anzahl, 0 wenn nicht hinterlegt."""
-        return self._data.get(_key(manufacturer, catalog_number), 0)
+    def get(
+        self,
+        manufacturer: str | None,
+        catalog_number: str | None,
+        name: str | None = None,
+    ) -> int:
+        """Liefert die Strang-Anzahl, 0 wenn nicht hinterlegt.
 
-    def set(self, manufacturer: str | None, catalog_number: str | None, strands: int) -> None:
-        """Setzt die Strang-Anzahl. 0 = Eintrag entfernen."""
-        k = _key(manufacturer, catalog_number)
+        `name` ist optional und wird nur als Schlüssel-Fallback genutzt,
+        wenn manufacturer UND catalog_number beide leer sind (siehe
+        `_key()`) -- für Farben mit bekanntem Hersteller/Katalognummer
+        ändert sich dadurch nichts.
+        """
+        return self._data.get(_key(manufacturer, catalog_number, name), 0)
+
+    def set(
+        self,
+        manufacturer: str | None,
+        catalog_number: str | None,
+        strands: int,
+        name: str | None = None,
+    ) -> None:
+        """Setzt die Strang-Anzahl. 0 = Eintrag entfernen.
+
+        `name`: siehe `get()`.
+        """
+        k = _key(manufacturer, catalog_number, name)
         if strands <= 0:
             self._data.pop(k, None)
         else:
@@ -186,7 +242,7 @@ def compute_shopping_list(
         if count <= 0:
             continue
         needed = ceil((count / spk) * waste_factor)
-        on_hand = inventory.get(thread.manufacturer, thread.catalog_number)
+        on_hand = inventory.get(thread.manufacturer, thread.catalog_number, thread.name)
         to_buy = max(0, needed - on_hand)
         out.append(
             {
@@ -256,7 +312,7 @@ def compute_shopping_list_multi(
             if count <= 0:
                 continue
             needed = ceil((count / spk) * waste_factor)
-            key = _key(thread.manufacturer, thread.catalog_number)
+            key = _key(thread.manufacturer, thread.catalog_number, thread.name)
             needed_by_key[key] = needed_by_key.get(key, 0) + needed
             thread_by_key.setdefault(key, thread)
             is_diamond_by_key.setdefault(key, is_diamond)
@@ -265,7 +321,7 @@ def compute_shopping_list_multi(
     for key in sorted(needed_by_key):
         thread = thread_by_key[key]
         needed = needed_by_key[key]
-        on_hand = inventory.get(thread.manufacturer, thread.catalog_number)
+        on_hand = inventory.get(thread.manufacturer, thread.catalog_number, thread.name)
         to_buy = max(0, needed - on_hand)
         out.append(
             {

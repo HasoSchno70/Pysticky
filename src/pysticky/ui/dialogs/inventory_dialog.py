@@ -41,7 +41,12 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.i18n import t
-from ...core.inventory import Inventory, compute_shopping_list, compute_shopping_list_multi
+from ...core.inventory import (
+    Inventory,
+    compute_shopping_list,
+    compute_shopping_list_multi,
+    split_key,
+)
 from ...core.project_list import ProjectList
 from ..color_utils import color_swatch_icon
 from ..styles import THEME
@@ -194,15 +199,21 @@ class InventoryDialog(QDialog):
         al.addWidget(all_intro)
 
         self._search = QLineEdit()
-        self._search.setPlaceholderText(t("🔍 Hersteller oder Nr. suchen…"))
+        self._search.setPlaceholderText(t("🔍 Name, Hersteller oder Nr. suchen…"))
         self._search.setClearButtonEnabled(True)
         self._search.textChanged.connect(self._filter_all_table)
         al.addWidget(self._search)
 
+        # Spalte "Name" (Runde 22/43-Nachfolge): ohne sie waren zwei
+        # "unbekannte" Farben (leerer Hersteller + leere Katalognummer,
+        # z.B. aus einem Bildimport ohne Palette-Metadaten) in dieser
+        # Tabelle nicht auseinanderzuhalten -- beide zeigten nur leere
+        # Hersteller-/Nr.-Zellen, obwohl core.inventory._key() sie inzwischen
+        # per Namens-Fallback als getrennte Lagerbestände fuehrt.
         self._all_table = QTableWidget()
-        self._all_table.setColumnCount(4)
+        self._all_table.setColumnCount(5)
         self._all_table.setHorizontalHeaderLabels(
-            ["", t("Hersteller"), t("Nr."), t("Bestand (Stränge)")]
+            ["", t("Farbe"), t("Hersteller"), t("Nr."), t("Bestand (Stränge)")]
         )
         self._all_table.verticalHeader().setVisible(False)
         self._all_table.verticalHeader().setDefaultSectionSize(34)
@@ -215,6 +226,7 @@ class InventoryDialog(QDialog):
         hdr2.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         hdr2.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         hdr2.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        hdr2.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self._all_table.setColumnWidth(0, PATTERN_SWATCH_SIZE + 12)
         al.addWidget(self._all_table, 1)
 
@@ -327,8 +339,15 @@ class InventoryDialog(QDialog):
         from .statistics_tabs import STITCHES_PER_SKEIN
 
         entries = self._pattern.color_entries
+        # Name als drittes Schluessel-Segment (analog zu core.inventory._key()):
+        # ohne ihn kollidieren zwei "unbekannte" Farben (leerer Hersteller +
+        # leere Katalognummer) im selben Muster auf denselben Lookup-Key.
         needed_by_key = {
-            (item["thread"].manufacturer, item["thread"].catalog_number): item["needed_skeins"]
+            (
+                item["thread"].manufacturer,
+                item["thread"].catalog_number,
+                item["thread"].name,
+            ): item["needed_skeins"]
             for item in compute_shopping_list(self._pattern, self._inventory, STITCHES_PER_SKEIN)
         }
 
@@ -336,7 +355,7 @@ class InventoryDialog(QDialog):
         for row, entry in enumerate(entries):
             thread = entry.thread
             c = thread.color
-            needed = needed_by_key.get((thread.manufacturer, thread.catalog_number), 0)
+            needed = needed_by_key.get((thread.manufacturer, thread.catalog_number, thread.name), 0)
 
             icon_item = QTableWidgetItem("")
             icon_item.setIcon(color_swatch_icon(c, PATTERN_SWATCH_SIZE))
@@ -360,7 +379,7 @@ class InventoryDialog(QDialog):
             needed_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self._pattern_table.setItem(row, 4, needed_item)
 
-            on_hand = self._inventory.get(thread.manufacturer, thread.catalog_number)
+            on_hand = self._inventory.get(thread.manufacturer, thread.catalog_number, thread.name)
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(on_hand)
@@ -386,34 +405,49 @@ class InventoryDialog(QDialog):
         self._pattern_table.setItem(row, 6, item)
 
     def _on_pattern_value_changed(self, thread, value: int) -> None:
-        self._inventory.set(thread.manufacturer, thread.catalog_number, value)
+        self._inventory.set(thread.manufacturer, thread.catalog_number, value, thread.name)
         self._dirty = True
         # "Zu kaufen"-Spalte für diese Zeile neu einfärben, ohne die
-        # komplette Einkaufsliste neu zu berechnen.
+        # komplette Einkaufsliste neu zu berechnen. Name (Spalte 1) wird mit
+        # abgeglichen, damit zwei "unbekannte" Farben (leerer Hersteller +
+        # leere Katalognummer) mit unterschiedlichem Namen nicht dieselbe
+        # Zeile treffen.
         for row in range(self._pattern_table.rowCount()):
-            if self._pattern_table.item(row, 2).text() == (
-                thread.manufacturer or ""
-            ) and self._pattern_table.item(row, 3).text() == (thread.catalog_number or ""):
+            if (
+                self._pattern_table.item(row, 1).text() == thread.name
+                and self._pattern_table.item(row, 2).text() == (thread.manufacturer or "")
+                and self._pattern_table.item(row, 3).text() == (thread.catalog_number or "")
+            ):
                 needed_text = self._pattern_table.item(row, 4).text()
                 needed = 0 if needed_text == "–" else int(needed_text)
                 self._set_pattern_to_buy_cell(row, needed, value)
                 break
         # Auch die "Alle"-Tabelle ggf. updaten
-        self._refresh_all_table_for(thread.manufacturer, thread.catalog_number, value)
+        self._refresh_all_table_for(thread.manufacturer, thread.catalog_number, thread.name, value)
 
     # === Tab 2 Alle ===
+
+    def _lookup_thread(self, mfr: str, num: str):
+        """Sucht den Thread der passenden Palette anhand Hersteller+Nr.
+        (None bei unbekanntem Hersteller oder unbekannter Nr., z.B. bei
+        manuell getipptem Hersteller ohne bekannte Palette, oder einer
+        Custom-Farbe ohne Palette-Metadaten)."""
+        from ...core.palette import get_palette_manager
+
+        palette = get_palette_manager().get_palette(mfr)
+        return palette.find_by_number(num) if palette is not None else None
+
+    def _icon_for_thread(self, thread) -> QIcon:
+        """Farbquadrat für einen bekannten Thread, sonst neutraler
+        Platzhalter."""
+        if thread is not None:
+            return QIcon(color_swatch_icon(thread.color, PATTERN_SWATCH_SIZE))
+        return self._unknown_swatch_icon()
 
     def _swatch_icon_for(self, mfr: str, num: str) -> QIcon:
         """Farbquadrat aus der passenden Palette, sonst neutraler Platzhalter
         (z.B. bei manuell getipptem Hersteller/Nr. ohne bekannte Palette)."""
-        from ...core.palette import get_palette_manager
-
-        palette = get_palette_manager().get_palette(mfr)
-        thread = palette.find_by_number(num) if palette is not None else None
-        if thread is not None:
-            c = thread.color
-            return QIcon(color_swatch_icon(c, PATTERN_SWATCH_SIZE))
-        return self._unknown_swatch_icon()
+        return self._icon_for_thread(self._lookup_thread(mfr, num))
 
     def _stock_suffix_for(self, mfr: str) -> str:
         """Bestand-Einheit ("Drill" vs. "Strang") für einen Eintrag im
@@ -451,57 +485,86 @@ class InventoryDialog(QDialog):
         items = sorted(self._inventory.items(), key=lambda kv: kv[0])
         self._all_table.setRowCount(len(items))
         for row, (key, strands) in enumerate(items):
-            mfr, num = (key.split("::", 1) + ["", ""])[:2]
+            mfr, num, name_from_key = split_key(key)
+            # `name_from_key` ist nur beim "unknown::unknown::<name>"-
+            # Sonderfall nicht-leer (siehe core.inventory._key()). Für
+            # bekannte Hersteller/Nr.-Kombinationen wird der Anzeigename
+            # stattdessen aus der Palette nachgeschlagen (Bonus: macht auch
+            # "normale" Einträge in dieser Tabelle lesbarer).
+            thread = self._lookup_thread(mfr, num)
+            display_name = name_from_key or (thread.name if thread is not None else "")
 
             icon_item = QTableWidgetItem("")
-            icon_item.setIcon(self._swatch_icon_for(mfr, num))
+            icon_item.setIcon(self._icon_for_thread(thread))
             icon_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self._all_table.setItem(row, 0, icon_item)
 
+            name_item = QTableWidgetItem(display_name)
+            name_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            self._all_table.setItem(row, 1, name_item)
+
             mfr_item = QTableWidgetItem(mfr)
             mfr_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self._all_table.setItem(row, 1, mfr_item)
+            self._all_table.setItem(row, 2, mfr_item)
 
             num_item = QTableWidgetItem(num)
             num_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self._all_table.setItem(row, 2, num_item)
+            self._all_table.setItem(row, 3, num_item)
 
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(strands)
             spin.setSuffix(self._stock_suffix_for(mfr))
             spin.valueChanged.connect(
-                lambda val, m=mfr, n=num: self._on_all_value_changed(m, n, val)
+                lambda val, m=mfr, n=num, nm=name_from_key: self._on_all_value_changed(
+                    m, n, nm, val
+                )
             )
-            self._all_table.setCellWidget(row, 3, spin)
+            self._all_table.setCellWidget(row, 4, spin)
 
-    def _on_all_value_changed(self, mfr: str, num: str, value: int) -> None:
-        self._inventory.set(mfr, num, value)
+    def _on_all_value_changed(self, mfr: str, num: str, name: str, value: int) -> None:
+        self._inventory.set(mfr, num, value, name)
         self._dirty = True
-        # Auch Tab 1 ggf. updaten
+        # Auch Tab 1 ggf. updaten. `name` ist nur beim Namens-Fallback
+        # nicht-leer (siehe core.inventory._key()) -- nur dann zur
+        # Unterscheidung zweier "unbekannter" Farben mit heranziehen, sonst
+        # bliebe das Verhalten für Farben mit bekanntem Hersteller/Nr.
+        # unveraendert (dort ist der Name kein Teil des Schluessels).
         for row in range(self._pattern_table.rowCount()):
             thread_mfr = self._pattern_table.item(row, 2).text()
             thread_num = self._pattern_table.item(row, 3).text()
-            if thread_mfr == mfr and thread_num == num:
-                spin = self._pattern_table.cellWidget(row, 5)
-                if spin is not None and spin.value() != value:
-                    spin.blockSignals(True)
-                    spin.setValue(value)
-                    spin.blockSignals(False)
-                    needed_text = self._pattern_table.item(row, 4).text()
-                    needed = 0 if needed_text == "–" else int(needed_text)
-                    self._set_pattern_to_buy_cell(row, needed, value)
-                break
+            if thread_mfr != mfr or thread_num != num:
+                continue
+            if name and self._pattern_table.item(row, 1).text() != name:
+                continue
+            spin = self._pattern_table.cellWidget(row, 5)
+            if spin is not None and spin.value() != value:
+                spin.blockSignals(True)
+                spin.setValue(value)
+                spin.blockSignals(False)
+                needed_text = self._pattern_table.item(row, 4).text()
+                needed = 0 if needed_text == "–" else int(needed_text)
+                self._set_pattern_to_buy_cell(row, needed, value)
+            break
 
-    def _refresh_all_table_for(self, mfr: str | None, num: str | None, value: int) -> None:
+    def _refresh_all_table_for(
+        self, mfr: str | None, num: str | None, name: str | None, value: int
+    ) -> None:
         target_mfr = (mfr or "unknown").strip()
         target_num = (num or "unknown").strip()
+        # Name ist nur Teil des Inventory-Keys, wenn Hersteller UND
+        # Katalognummer BEIDE fehlen (siehe core.inventory._key()) -- nur
+        # dann zur Zeilen-Identifikation heranziehen.
+        target_name = (
+            (name or "").strip() if not (mfr or "").strip() and not (num or "").strip() else ""
+        )
         for row in range(self._all_table.rowCount()):
             if (
-                self._all_table.item(row, 1).text() == target_mfr
-                and self._all_table.item(row, 2).text() == target_num
+                self._all_table.item(row, 2).text() == target_mfr
+                and self._all_table.item(row, 3).text() == target_num
+                and (not target_name or self._all_table.item(row, 1).text() == target_name)
             ):
-                spin = self._all_table.cellWidget(row, 3)
+                spin = self._all_table.cellWidget(row, 4)
                 if spin is not None and spin.value() != value:
                     spin.blockSignals(True)
                     spin.setValue(value)
@@ -511,31 +574,39 @@ class InventoryDialog(QDialog):
         if value > 0:
             row = self._all_table.rowCount()
             self._all_table.insertRow(row)
+            thread = self._lookup_thread(target_mfr, target_num)
             icon_item = QTableWidgetItem("")
-            icon_item.setIcon(self._swatch_icon_for(target_mfr, target_num))
+            icon_item.setIcon(self._icon_for_thread(thread))
             icon_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self._all_table.setItem(row, 0, icon_item)
+            display_name = target_name or (thread.name if thread is not None else "")
+            name_item = QTableWidgetItem(display_name)
+            name_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            self._all_table.setItem(row, 1, name_item)
             mfr_item = QTableWidgetItem(target_mfr)
             mfr_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self._all_table.setItem(row, 1, mfr_item)
+            self._all_table.setItem(row, 2, mfr_item)
             num_item = QTableWidgetItem(target_num)
             num_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self._all_table.setItem(row, 2, num_item)
+            self._all_table.setItem(row, 3, num_item)
             spin = QSpinBox()
             spin.setRange(0, 999)
             spin.setValue(value)
             spin.setSuffix(self._stock_suffix_for(target_mfr))
             spin.valueChanged.connect(
-                lambda val, m=target_mfr, n=target_num: self._on_all_value_changed(m, n, val)
+                lambda val, m=target_mfr, n=target_num, nm=target_name: self._on_all_value_changed(
+                    m, n, nm, val
+                )
             )
-            self._all_table.setCellWidget(row, 3, spin)
+            self._all_table.setCellWidget(row, 4, spin)
 
     def _filter_all_table(self, query: str) -> None:
         q = query.strip().lower()
         for row in range(self._all_table.rowCount()):
-            mfr = self._all_table.item(row, 1).text().lower()
-            num = self._all_table.item(row, 2).text().lower()
-            visible = (not q) or (q in mfr) or (q in num)
+            name = self._all_table.item(row, 1).text().lower()
+            mfr = self._all_table.item(row, 2).text().lower()
+            num = self._all_table.item(row, 3).text().lower()
+            visible = (not q) or (q in name) or (q in mfr) or (q in num)
             self._all_table.setRowHidden(row, not visible)
 
     def _add_manual_entry(self) -> None:
@@ -556,7 +627,7 @@ class InventoryDialog(QDialog):
         palette_mgr = get_palette_manager()
         known_mfrs = sorted(
             set(palette_mgr.available_palettes)
-            | {(k.split("::", 1) + [""])[0] for k, _ in self._inventory.items()}
+            | {split_key(k)[0] for k, _ in self._inventory.items()}
         )
 
         dlg = QDialog(self)
@@ -653,13 +724,12 @@ class InventoryDialog(QDialog):
 
     def _remove_zero_entries(self) -> None:
         # Sammle alle Keys mit Value 0
-        to_remove: list[tuple[str, str]] = []
+        to_remove: list[tuple[str, str, str]] = []
         for key, val in self._inventory.items():
             if val <= 0:
-                mfr, num = (key.split("::", 1) + ["", ""])[:2]
-                to_remove.append((mfr, num))
-        for mfr, num in to_remove:
-            self._inventory.set(mfr, num, 0)
+                to_remove.append(split_key(key))
+        for mfr, num, name in to_remove:
+            self._inventory.set(mfr, num, 0, name)
         # Tabellen neu aufbauen
         self._populate_all_tab()
         self._dirty = True
