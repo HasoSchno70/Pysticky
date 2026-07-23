@@ -125,6 +125,19 @@ def load_pattern(filepath: Path | str) -> Pattern:
         except json.JSONDecodeError as e:
             raise ValueError(f"Fehlerhafte Datei-Syntax: {e}")
 
+    # json.load() akzeptiert jedes gueltige JSON-Dokument als Top-Level-Wert,
+    # nicht nur Objekte -- eine versehentlich umbenannte/vertauschte Datei
+    # (z.B. eine JSON-Liste oder ein einzelner String/Zahl) laedt also
+    # klaglos durch, und das folgende `data.get(...)` wuerde mit einem
+    # rohen AttributeError crashen (list/str/int/None haben kein .get).
+    # Das ist besonders beim Autosave-Recovery-Pfad relevant (_check_
+    # autosave_recovery), der genau diesen Fall (fremde Datei liegt unter
+    # dem erwarteten Autosave-Namen) abfangen koennen muss.
+    if not isinstance(data, dict):
+        raise ValueError(
+            f"Ungültiges Dateiformat: JSON-Objekt erwartet, gefunden {type(data).__name__}"
+        )
+
     if data.get("format") != "pysticky":
         raise ValueError(
             f"Ungültiges Dateiformat: erwartet 'pysticky', "
@@ -134,7 +147,13 @@ def load_pattern(filepath: Path | str) -> Pattern:
     if "pattern" not in data:
         raise ValueError("Datei enthält keine Muster-Daten")
 
-    return _dict_to_pattern(data["pattern"])
+    pattern_data = data["pattern"]
+    if not isinstance(pattern_data, dict):
+        raise ValueError(
+            f"Ungültige Musterdaten: Objekt erwartet, gefunden {type(pattern_data).__name__}"
+        )
+
+    return _dict_to_pattern(pattern_data)
 
 
 def _pattern_to_dict(pattern: Pattern) -> dict[str, Any]:

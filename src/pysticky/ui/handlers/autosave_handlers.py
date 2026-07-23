@@ -125,7 +125,18 @@ class AutosaveHandlersMixin:
                 self.set_pattern(pattern)
                 self._mark_unsaved()
                 self.status_bar.showMessage(t("Autosave wiederhergestellt"), 5000)
-            except (OSError, ValueError) as e:
+            except (OSError, ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+                # Bewusst breiter als load_pattern()'s eigenes Vertragsversprechen
+                # (FileNotFoundError/ValueError): das ist der Recovery-Pfad, der
+                # genau dann greift, wenn etwas mit der Datei nicht stimmt --
+                # eine aeltere Programmversion mit inzwischen entferntem
+                # Pflichtfeld, ein Systemabsturz mitten im os.replace() der
+                # Autosave selbst, oder eine versehentlich umbenannte fremde
+                # Datei koennten theoretisch auch andere Exception-Typen als
+                # die dokumentierten ausloesen. Ein Crash beim naechsten
+                # Programmstart waere hier der schlimmstmoegliche Fall (Nutzer
+                # koennte PySticky gar nicht mehr oeffnen) -- also lieber
+                # defensiv eine verstaendliche Fehlermeldung zeigen.
                 logger.exception("Autosave-Recovery fehlgeschlagen")
                 QMessageBox.warning(
                     self,
