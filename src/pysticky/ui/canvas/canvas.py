@@ -28,6 +28,7 @@ from PySide6.QtWidgets import QWidget
 from ...config import CANVAS_CONFIG
 from ...core import Pattern
 from ..tools.base_tool import ToolContext
+from ..tools.select_tool import SelectTool
 from ..tools.tool_enum import Tool
 from ..tools.tool_manager import ToolManager
 from .cache import CanvasCache
@@ -350,6 +351,23 @@ class CrossStitchCanvas(
         self._current_color_index = 0
         self._isolate_color_index = None
         self._stitch_cursor = None
+        # Select/Lasso-Clipboard ist eine Klassenvariable auf SelectTool
+        # (siehe select_tool.py -- geteilt zwischen SelectTool und
+        # LassoSelectTool), lebt also unabhaengig von diesem Canvas/Pattern
+        # weiter. Ohne diesen Reset ueberlebt ein Copy aus dem VORHERIGEN
+        # Pattern einen Pattern-Wechsel (Datei -> Neu/Oeffnen/Zuletzt
+        # geoeffnet) unveraendert: die Zwischenablage speichert nur rohe
+        # Farb-INDIZES, kein Bezug zur Quelle. Existiert derselbe Index
+        # zufaellig auch im neuen Pattern, faerbt ein Einfuegen die Auswahl
+        # lautlos mit einer voellig anderen, unzusammenhaengenden Farbe (kein
+        # Crash, keine Warnung) -- exakt dieselbe Bug-Klasse wie weiter oben
+        # bei _current_color_index, nur ueber die Zwischenablage statt die
+        # Zeichenfarbe. Existiert der Index nicht (kuerzeres Pattern), wird
+        # das Einfuegen zwar von Pattern.set_stitch()'s Indexpruefung
+        # abgelehnt, aber ein stillschweigend falsch eingefaerbtes Muster ist
+        # der gefaehrlichere Fall.
+        SelectTool._clipboard = None
+        SelectTool._clipboard_size = (0, 0)
         self._center_pattern()
         self.update()
 
