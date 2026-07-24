@@ -772,10 +772,22 @@ class MainWindow(
         BEAD-Stitch-Type platziert.
         """
         for i, entry in enumerate(self.current_pattern.color_entries):
-            if (
-                entry.thread.catalog_number == thread.catalog_number
-                and entry.thread.manufacturer == thread.manufacturer
-            ):
+            existing = entry.thread
+            if existing.manufacturer != thread.manufacturer:
+                continue
+            if existing.catalog_number is None and thread.catalog_number is None:
+                # Beide Threads haben keine Katalog-Identitaet -- z.B. frei
+                # angelegte Farben ohne Hersteller/Nummer, wie sie beim
+                # Import einer eigenen Paletten-JSON-Datei entstehen (siehe
+                # _on_import_palette). Ohne den Farbvergleich wuerde JEDE
+                # weitere katalog-lose Farbe faelschlich auf die ERSTE
+                # bereits vorhandene katalog-lose Farbe zusammenfallen,
+                # unabhaengig vom tatsaechlichen RGB-Wert -- dieselbe
+                # Kollaps-Fehlerklasse wie der Katalognummer-Feld-Bug bei
+                # mitgelieferten Paletten, nur hier auf Pattern-Ebene.
+                if existing.color == thread.color:
+                    return i
+            elif existing.catalog_number == thread.catalog_number:
                 return i
         # Prüfen ob Thread aus einer Bead- oder Diamond-Painting-Palette stammt
         from ..core.palette import get_palette_manager
