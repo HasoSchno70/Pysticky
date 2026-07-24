@@ -534,7 +534,20 @@ class RenderingMixin:
                 self._cursor_color.red(), self._cursor_color.green(), self._cursor_color.blue(), 100
             )
             painter.setPen(QPen(mirror_color, 2))
-            for mx, my in self.get_mirrored_positions(grid_x, grid_y)[1:]:
+            # get_mirrored_positions() baut das Ergebnis intern über ein
+            # `set` auf und gibt es via list(...) zurück -- die Original-
+            # position (grid_x, grid_y) landet dadurch NICHT zuverlässig an
+            # Index 0 (set-Iterationsreihenfolge haengt von den Hashwerten
+            # ab, nicht von der Einfuegereihenfolge). Ein reines `[1:]`-
+            # Slicing hier ueberspringt deshalb manchmal eine ECHTE
+            # gespiegelte Zelle (die dann keinen Vorschau-Rahmen bekommt),
+            # waehrend die Originalzelle stattdessen faelschlich ein
+            # zweites Mal (in der Spiegel-Vorschaufarbe) gezeichnet wird.
+            # Explizit nach der Originalposition filtern statt uns auf die
+            # Listenreihenfolge zu verlassen.
+            for mx, my in self.get_mirrored_positions(grid_x, grid_y):
+                if (mx, my) == (grid_x, grid_y):
+                    continue
                 sx, sy = self._grid_to_screen(mx, my)
                 painter.drawRect(sx, sy, self._cell_size, self._cell_size)
 
