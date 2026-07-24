@@ -134,8 +134,15 @@ class GradientTool(BaseTool):
         if self._start_pos is None or self._end_pos is None:
             return
 
-        if not ctx.pattern or len(ctx.pattern.color_entries) < 2:
+        if not ctx.pattern:
             return
+        # Kein "len(color_entries) < 2"-Erfordernis hier: ein frisches Pattern()
+        # hat per Default genau 1 Farbe (pattern.py __post_init__), und Start-
+        # /Endfarbe duerfen bewusst auf denselben (einzigen) Index zeigen --
+        # get_color_entry() unten liefert bei einem ungueltigen Index ohnehin
+        # sicher None. Die alte >=2-Schranke liess den Verlauf bei genau 1
+        # Palettenfarbe komplett wirkungslos verpuffen (leere Aenderungsliste,
+        # keinerlei Fehlermeldung), obwohl Start=Ende=0 eine gueltige Wahl ist.
 
         x1, y1 = self._start_pos
         x2, y2 = self._end_pos
