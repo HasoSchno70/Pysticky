@@ -871,6 +871,7 @@
   "Beschreibung (optional):": "Description (optional):",
   "Kurze Beschreibung des Templates...": "Short description of the template...",
   "Bitte gib einen Namen ein.": "Please enter a name.",
+  "Es existiert bereits eine Vorlage mit diesem Namen.": "A template with this name already exists.",
   "Templates verwalten": "Manage templates",
   "Eigene Templates:": "Custom templates:",
   "Kein Template ausgewählt": "No template selected",

@@ -299,6 +299,14 @@ class SaveTemplateDialog(QDialog):
             QMessageBox.warning(self, t("Fehler"), t("Bitte gib einen Namen ein."))
             return
 
+        if any(existing.name == name for existing in load_user_templates()):
+            QMessageBox.warning(
+                self,
+                t("Fehler"),
+                t("Es existiert bereits eine Vorlage mit diesem Namen."),
+            )
+            return
+
         self._template = UserTemplate(
             name=name,
             width=self._width,
@@ -478,7 +486,16 @@ class ManageTemplatesDialog(QDialog):
         )
 
         if ok and new_name.strip():
-            template.name = new_name.strip()
+            new_name = new_name.strip()
+            if any(other is not template and other.name == new_name for other in self._templates):
+                QMessageBox.warning(
+                    self,
+                    t("Fehler"),
+                    t("Es existiert bereits eine Vorlage mit diesem Namen."),
+                )
+                return
+
+            template.name = new_name
             if not save_user_templates(self._templates):
                 QMessageBox.warning(
                     self,
