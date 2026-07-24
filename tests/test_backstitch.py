@@ -131,6 +131,24 @@ class TestBackstitchManager:
         mgr = BackstitchManager()
         assert mgr.find_at(5, 5) is None
 
+    def test_find_at_picks_nearest_not_first_inserted(self):
+        """Regression (Runde 57): find_at() gab bei zwei ueberlappenden
+        Toleranzzonen den ERSTEN in Einfuege-Reihenfolge gefundenen Treffer
+        zurueck statt den tatsaechlich naechstgelegenen -- betrifft direkt
+        das Rechtsklick-Loeschen im BackstitchTool. Hier liegt eine aeltere
+        Linie (y=0) UND eine juengere, aber naeher am Klickpunkt liegende
+        Linie (y=1) beide innerhalb der Toleranz von 2 um den Punkt (5, 1):
+        Abstand zur alten Linie ist 1, Abstand zur neuen Linie ist 0.
+        find_at() muss die naeher liegende (neuere) Linie zurueckgeben."""
+        mgr = BackstitchManager()
+        far_older = mgr.add(0, 0, 10, 0, 0)  # y=0, Abstand 1 zum Klickpunkt
+        near_newer = mgr.add(0, 1, 10, 1, 1)  # y=1, Abstand 0 zum Klickpunkt
+
+        found = mgr.find_at(5, 1, tolerance=2)
+
+        assert found is near_newer
+        assert found is not far_older
+
     def test_get_in_area(self):
         """Test: Backstitches in Bereich."""
         mgr = BackstitchManager()

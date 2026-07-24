@@ -250,7 +250,8 @@ class BackstitchManager:
         """
         Findet einen Rückstich an einer Position ohne ihn zu entfernen.
 
-        Nützlich für Hover-Effekte oder Auswahl.
+        Nützlich für Hover-Effekte oder Auswahl (z.B. Rechtsklick-Löschen im
+        BackstitchTool).
 
         Args:
             x: X-Koordinate (in halben Stichen)
@@ -258,12 +259,25 @@ class BackstitchManager:
             tolerance: Maximaler Abstand zur Linie (Standard: 2)
 
         Returns:
-            Der erste gefundene Backstitch oder None
+            Den NAECHSTGELEGENEN Backstitch innerhalb der Toleranz, oder
+            None wenn keiner in Reichweite liegt.
+
+        Note:
+            Waehlt den Rueckstich mit dem geringsten Abstand zum Punkt, nicht
+            einfach den ersten in Einfuege-Reihenfolge gefundenen Treffer
+            (Bug: bei zwei ueberlappenden Toleranzzonen -- z.B. zwei fast
+            parallele, dicht nebeneinander liegende Linien -- traf ein
+            Rechtsklick-Loeschen zuverlaessig immer die AELTESTE der beiden
+            Linien, selbst wenn die andere sichtbar naeher am Klickpunkt lag).
         """
+        best: Backstitch | None = None
+        best_dist = float("inf")
         for bs in self._backstitches:
-            if self._point_on_line(x, y, bs.x1, bs.y1, bs.x2, bs.y2, tolerance):
-                return bs
-        return None
+            dist = self._distance_to_line(x, y, bs.x1, bs.y1, bs.x2, bs.y2)
+            if dist <= tolerance and dist < best_dist:
+                best = bs
+                best_dist = dist
+        return best
 
     def get_in_area(self, x1: int, y1: int, x2: int, y2: int) -> list[Backstitch]:
         """
@@ -359,12 +373,25 @@ class BackstitchManager:
         Returns:
             True wenn der Punkt innerhalb der Toleranz auf der Linie liegt
         """
-        # Bounding-Box prüfen (schnelle Vorprüfung)
-        if px < min(x1, x2) - tol or px > max(x1, x2) + tol:
-            return False
-        if py < min(y1, y2) - tol or py > max(y1, y2) + tol:
-            return False
+        return self._distance_to_line(px, py, x1, y1, x2, y2) <= tol
 
+    def _distance_to_line(self, px: int, py: int, x1: int, y1: int, x2: int, y2: int) -> float:
+        """
+        Berechnet den kuerzesten Abstand eines Punktes zu einem Linien-
+        segment (Projektion auf die Linie, Parameter geklemmt auf [0, 1]).
+
+        Args:
+            px, py: Zu prüfender Punkt
+            x1, y1: Startpunkt der Linie
+            x2, y2: Endpunkt der Linie
+
+        Returns:
+            Euklidischer Abstand des Punktes zur naechsten Stelle auf dem
+            Liniensegment. Die fruehere Bounding-Box-Vorpruefung (schneller
+            False-Ausschluss) entfaellt hier bewusst -- find_at() braucht
+            den tatsaechlichen Abstand fuer JEDEN Rueckstich, um den
+            naechstgelegenen zu bestimmen, nicht nur ein Ja/Nein.
+        """
         # Linien-Richtungsvektor
         dx = x2 - x1
         dy = y2 - y1
@@ -372,7 +399,7 @@ class BackstitchManager:
 
         if length_sq == 0:
             # Linie ist ein Punkt (Start == Ende)
-            return abs(px - x1) <= tol and abs(py - y1) <= tol
+            return ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
 
         # Projektion des Punktes auf die Linie (Parameter t in [0, 1])
         t = max(0, min(1, ((px - x1) * dx + (py - y1) * dy) / length_sq))
@@ -382,8 +409,7 @@ class BackstitchManager:
         proj_y = y1 + t * dy
 
         # Euklidischer Abstand
-        dist = ((px - proj_x) ** 2 + (py - proj_y) ** 2) ** 0.5
-        return dist <= tol
+        return ((px - proj_x) ** 2 + (py - proj_y) ** 2) ** 0.5
 
     def to_list(self) -> list[dict]:
         """
