@@ -101,6 +101,20 @@ class UndoHandlersMixin:
             return
 
         layer_index = self.current_pattern.layer_stack.active_index
+        layer = self.current_pattern.layer_stack[layer_index]
+        # Guard VOR dem Erzeugen des Commands -- gleiche Fehlerklasse wie
+        # _on_stitch_removed() (Runde 54): PlaceStitchCommand.execute() ist
+        # zwar intern schon korrekt gegen eine gesperrte Ebene abgesichert
+        # (self._applied bleibt False, kein Grid-Schreibzugriff, keine
+        # Stichzahl-Drift), aber ohne diesen Guard landete das Command
+        # trotzdem unconditional auf dem Undo-Stack bzw. im laufenden Batch.
+        # Das betraf ALLE Zeichenwerkzeuge (Stift, Linie, Rechteck, Ellipse,
+        # Polygon, Fuellen, Farbverlauf, ...), da sie alle ueber dieses
+        # gemeinsame stitch_placed-Signal laufen -- ein Zeichen-Zug auf einer
+        # gesperrten Ebene liess Strg+Z dadurch einen oder mehrere Schritte
+        # "verpuffen", ohne dass sich je etwas sichtbar aenderte.
+        if layer.locked:
+            return
         self._execute_command(
             PlaceStitchCommand(
                 self.current_pattern, x, y, color_index, layer_index, stitch_type=stitch_type
