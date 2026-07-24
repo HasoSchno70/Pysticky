@@ -363,7 +363,13 @@ class PDFSectionsMixin(_Base):
             col_widths = [10 * mm, 10 * mm, 8 * mm, 30 * mm, 45 * mm]
         col_widths.extend([14 * mm] * n_cross)
         col_widths.extend([18 * mm, 15 * mm, 15 * mm])
-        table = Table(data, colWidths=col_widths)
+        # repeatRows=1: Muster mit sehr vielen Farben (Symbol-Pool-
+        # Erschoepfung ab 86 Farben, siehe Pattern.add_color "#N"-Fallback)
+        # lassen die Legende ueber mehrere PDF-Seiten umbrechen. Ohne
+        # repeatRows erscheint die Spaltenkopfzeile (Nr./Sym./Farbe/...) nur
+        # auf der ersten Seite -- Folgeseiten zeigen nackte Datenzeilen ohne
+        # jede Spaltenbeschriftung.
+        table = Table(data, colWidths=col_widths, repeatRows=1)
 
         # Basis-Style
         style_commands = [
