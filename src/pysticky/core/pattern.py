@@ -575,6 +575,67 @@ class Pattern:
 
         del self.color_entries[index]
 
+    def merge_colors_stitches(self, source_index: int, target_index: int) -> None:
+        """Verschiebt alle Stiche von `source_index` auf allen Layern nach
+        `target_index` (per `Layer.replace_color()`) und haelt dabei den
+        Stich-Typ der verschobenen Zellen konsistent zum Bead-/Diamond-
+        Status der ZIELFARBE.
+
+        Ohne diesen Abgleich blieben verschobene Zellen auf ihrem alten
+        Stich-Typ eingefroren: eine Bead-Farbe, die in eine normale
+        Garnfarbe zusammengefuehrt wurde, hinterliess Zellen mit
+        stitch_type=BEAD unter einer nicht-Bead-Farbe (wurde weiterhin als
+        Perle mit Glanzpunkt gerendert und in get_statistics()["bead_count"]
+        mitgezaehlt, obwohl die Farbe selbst laengst nicht mehr `is_bead`
+        war); umgekehrt behielten in eine Bead-/Diamond-Zielfarbe
+        zusammengefuehrte normale Stiche ihren alten FULL-/Halbstich-Typ und
+        wurden als Quadrat/Dreieck statt als Perle/Drill gerendert (siehe
+        PlaceStitchCommand.execute()/set_stitch() fuer dieselbe Enforcement-
+        Regel beim direkten Platzieren -- Zusammenfuehren lief bisher
+        komplett daran vorbei).
+
+        Bewusst NUR die tatsaechlich verschobenen Zellen betroffen (nicht
+        alle Zellen der Zielfarbe): reine Garnfarbe-zu-Garnfarbe-Merges
+        behalten weiterhin ihre urspruenglichen Halb-/Viertelstich-Formen
+        (Runde 30), es sei denn Quelle oder Ziel ist Bead/Diamond.
+
+        Args:
+            source_index: Farbindex, dessen Stiche verschoben werden.
+            target_index: Ziel-Farbindex.
+        """
+        if source_index == target_index:
+            return
+        if not (0 <= source_index < len(self.color_entries)):
+            return
+        if not (0 <= target_index < len(self.color_entries)):
+            return
+
+        source_entry = self.color_entries[source_index]
+        target_entry = self.color_entries[target_index]
+        needs_restamp = (
+            source_entry.is_bead
+            or source_entry.is_diamond
+            or target_entry.is_bead
+            or target_entry.is_diamond
+        )
+
+        new_type = 0
+        if needs_restamp:
+            from .stitch import StitchType
+
+            if target_entry.is_bead:
+                new_type = StitchType.BEAD.value
+            elif target_entry.is_diamond:
+                new_type = StitchType.DIAMOND.value
+            else:
+                new_type = StitchType.FULL.value
+
+        for layer in self.layer_stack:
+            moved_mask = layer.grid == source_index if needs_restamp else None
+            layer.replace_color(source_index, target_index)
+            if moved_mask is not None:
+                layer.stitch_type_grid[moved_mask] = new_type
+
     def get_color_entry(self, index: int) -> ColorEntry | None:
         """Gibt eine Farbe nach Index zurück."""
         if 0 <= index < len(self.color_entries):

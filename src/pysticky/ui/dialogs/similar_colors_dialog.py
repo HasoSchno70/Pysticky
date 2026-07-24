@@ -283,9 +283,10 @@ class SimilarColorsDialog(QDialog):
                 unique_merges.append((source, target))
 
         for source_idx, target_idx in unique_merges:
-            # Alle Stiche von source nach target verschieben
-            for layer in self._pattern.layer_stack:
-                layer.replace_color(source_idx, target_idx)
+            # Alle Stiche von source nach target verschieben -- haelt dabei
+            # den Stich-Typ konsistent, falls Quelle oder Ziel eine Bead-/
+            # Diamond-Farbe ist (siehe merge_colors_stitches()-Docstring).
+            self._pattern.merge_colors_stitches(source_idx, target_idx)
             # Farbe entfernen (verschiebt Indizes)
             self._pattern.remove_color(source_idx)
             # Target-Index anpassen falls nötig

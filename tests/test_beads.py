@@ -252,3 +252,137 @@ def test_main_window_add_color_detects_bead_palette(qtbot, empty_pattern):
     index = w.add_color_to_pattern(pearl)
 
     assert empty_pattern.color_entries[index].is_bead is True
+
+
+def test_merge_colors_stitches_restamps_moved_cells_to_bead(empty_pattern):
+    """Pattern.merge_colors_stitches(): normale Stiche, die in eine Bead-
+    Zielfarbe zusammengefuehrt werden, muessen als BEAD-Stitch-Type
+    landen -- nicht auf ihrem alten FULL-Typ eingefroren bleiben.
+
+    Regression: Layer.replace_color() (das die alte Merge-Implementierung
+    direkt aufrief) kennt nur den Farbindex, nicht is_bead/is_diamond, und
+    fasst stitch_type_grid grundsaetzlich nicht an. Ohne Restamping wurde
+    eine per "Aehnliche Farben zusammenfuehren" in eine Bead-Farbe
+    verschmolzene Zelle weiterhin als Quadrat gerendert und tauchte nicht
+    in get_statistics()['bead_count'] auf, obwohl ihre Farbe jetzt is_bead
+    ist.
+    """
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+
+    pattern = empty_pattern
+    normal_idx = pattern.add_color(
+        Thread.from_hex("Rot", "#FF0000", manufacturer="DMC", catalog_number="321")
+    )
+    bead_idx = pattern.add_color(
+        Thread.from_hex("Pearl", "#EEEEEE", manufacturer="Mill Hill Beads", catalog_number="02001"),
+        is_bead=True,
+    )
+    pattern.set_stitch(1, 1, normal_idx)
+
+    layer = pattern.layer_stack.active_layer
+    assert layer.get_stitch_type(1, 1) == StitchType.FULL.value
+
+    pattern.merge_colors_stitches(normal_idx, bead_idx)
+
+    assert layer.get_stitch(1, 1) == bead_idx
+    assert layer.get_stitch_type(1, 1) == StitchType.BEAD.value
+
+
+def test_merge_colors_stitches_restamps_bead_source_to_full(empty_pattern):
+    """Umgekehrter Fall: eine Bead-Farbe wird in eine normale Farbe
+    zusammengefuehrt -- die verschobenen Zellen duerfen NICHT auf
+    stitch_type=BEAD haengen bleiben (sonst weiterhin als Perle gerendert
+    und mitgezaehlt, obwohl die Farbe jetzt eine normale Garnfarbe ist)."""
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+
+    pattern = empty_pattern
+    bead_idx = pattern.add_color(
+        Thread.from_hex("Pearl", "#EEEEEE", manufacturer="Mill Hill Beads", catalog_number="02001"),
+        is_bead=True,
+    )
+    normal_idx = pattern.add_color(
+        Thread.from_hex("Rot", "#FF0000", manufacturer="DMC", catalog_number="321")
+    )
+    pattern.set_stitch(2, 2, bead_idx)
+
+    layer = pattern.layer_stack.active_layer
+    assert layer.get_stitch_type(2, 2) == StitchType.BEAD.value
+
+    pattern.merge_colors_stitches(bead_idx, normal_idx)
+
+    assert layer.get_stitch(2, 2) == normal_idx
+    assert layer.get_stitch_type(2, 2) == StitchType.FULL.value
+
+
+def test_merge_colors_stitches_preserves_half_stitch_for_normal_colors(empty_pattern):
+    """Reine Garnfarbe-zu-Garnfarbe-Merges (kein Bead/Diamond beteiligt)
+    behalten weiterhin ihre urspruengliche Halbstich-Form (Runde 30) --
+    das neue Restamping darf diesen bestehenden Anwendungsfall nicht
+    regressieren."""
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+
+    pattern = empty_pattern
+    a = pattern.add_color(Thread.from_hex("A", "#FF0000", manufacturer="DMC", catalog_number="321"))
+    b = pattern.add_color(Thread.from_hex("B", "#FF0101", manufacturer="DMC", catalog_number="322"))
+    pattern.set_stitch(3, 3, a, stitch_type=StitchType.HALF_TL_BR.value)
+
+    pattern.merge_colors_stitches(a, b)
+
+    layer = pattern.layer_stack.active_layer
+    assert layer.get_stitch(3, 3) == b
+    assert layer.get_stitch_type(3, 3) == StitchType.HALF_TL_BR.value
+
+
+def test_similar_colors_dialog_merge_restamps_bead_target(qtbot, empty_pattern):
+    """End-to-End ueber SimilarColorsDialog._on_merge(): eine Farbe wird in
+    eine Bead-Zielfarbe zusammengefuehrt -- der verschmolzene Stich muss
+    danach als BEAD gerendert/gezaehlt werden."""
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+    from pysticky.ui.color_utils import to_qcolor
+    from pysticky.ui.dialogs.similar_colors_dialog import SimilarColorsDialog, _ColorPairRow
+
+    pattern = empty_pattern
+    pattern.color_entries.clear()
+    bead_idx = pattern.add_color(
+        Thread.from_hex("Pearl", "#EEEEEE", manufacturer="Mill Hill Beads", catalog_number="02001"),
+        is_bead=True,
+    )
+    normal_idx = pattern.add_color(
+        Thread.from_hex("Fast-Pearl", "#EFEFEF", manufacturer="DMC", catalog_number="B5200")
+    )
+    pattern.set_stitch(4, 4, normal_idx)
+
+    dialog = SimilarColorsDialog(pattern)
+    qtbot.addWidget(dialog)
+
+    entry_bead = pattern.color_entries[bead_idx]
+    entry_normal = pattern.color_entries[normal_idx]
+    row = _ColorPairRow(
+        bead_idx,
+        normal_idx,
+        entry_bead.thread.name,
+        entry_normal.thread.name,
+        to_qcolor(entry_bead.thread.color),
+        to_qcolor(entry_normal.thread.color),
+        distance=1.0,
+    )
+    row.checkbox.setChecked(True)
+    dialog._pair_rows = [row]
+
+    from PySide6.QtWidgets import QMessageBox
+
+    qtbot_monkeypatch_question = QMessageBox.question
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.StandardButton.Yes)
+    try:
+        dialog._on_merge()
+    finally:
+        QMessageBox.question = qtbot_monkeypatch_question
+
+    assert len(pattern.color_entries) == 1
+    layer = pattern.layer_stack.active_layer
+    assert layer.get_stitch(4, 4) == 0  # bead_idx nach Entfernen von normal_idx
+    assert layer.get_stitch_type(4, 4) == StitchType.BEAD.value
