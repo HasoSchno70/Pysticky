@@ -215,6 +215,22 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
+            # Select/Lasso-Zwischenablage leeren -- dieselbe Staleness-Klasse
+            # wie beim Undo-Verlauf zwei Zeilen darueber, nur ueber Copy/Paste
+            # statt Undo/Redo erreichbar (siehe ausfuehrlicher Kommentar in
+            # Canvas.set_pattern()/view_handlers.py::_apply_pattern_mode()):
+            # SelectTool._clipboard speichert pro Zelle einen rohen
+            # Farb-INDEX, der zum Kopierzeitpunkt in DIESEM Pattern gueltig
+            # war. merge_colors_stitches()+remove_color() oben verschieben
+            # nachfolgende Farbindizes um -1 nach unten (siehe
+            # Pattern.remove_color()) -- der eingefrorene Snapshot im
+            # Clipboard zeigt danach auf eine voellig andere Farbe. Ein Paste
+            # nach diesem Dialog faerbte die eingefuegte Auswahl bisher
+            # lautlos mit der falschen Farbe ein (kein Crash, keine Warnung).
+            from ..tools.select_tool import SelectTool
+
+            SelectTool._clipboard = None
+            SelectTool._clipboard_size = (0, 0)
             self.status_bar.showMessage(
                 t("Ähnliche Farben zusammengeführt"), self._status_timeout_ms
             )
@@ -231,6 +247,15 @@ class EditHandlersMixin:
             self.undo_manager.clear()
             self._update_undo_actions()
             self._mark_unsaved()
+            # Select/Lasso-Zwischenablage leeren -- siehe identischer
+            # Kommentar in _on_merge_similar_colors() oben. ColorManagement-
+            # Dialog._remove_color_at_index() (Loeschen/"Ungenutzte
+            # entfernen"/Zusammenfuehren) verschiebt Farbindizes auf genau
+            # dieselbe Art.
+            from ..tools.select_tool import SelectTool
+
+            SelectTool._clipboard = None
+            SelectTool._clipboard_size = (0, 0)
             self.status_bar.showMessage(t("Farbpalette aktualisiert"), self._status_timeout_ms)
 
     def _on_screen_eyedropper(self: "MainWindow") -> None:
