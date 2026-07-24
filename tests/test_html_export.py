@@ -380,3 +380,52 @@ def test_get_page_backstitches_includes_line_on_right_border(empty_pattern):
     result = exporter._get_page_backstitches(0, 0, pattern.width - 1, pattern.height - 1)
 
     assert bs in result
+
+
+def test_html_export_dp_page_capacity_matches_pdf_reserve(tmp_path):
+    """Regression: HTMLExporter reservierte im DP-Modus fuer die
+    STITCHES_PER_PAGE-Berechnung nur 8mm Hoehe/Breite fuer die komplette
+    Musterseiten-Chrome (Page-Header, Mini-Legende, Page-Footer) -- laut
+    echter Browser-Messung (getBoundingClientRect auf einem real
+    exportierten 200x200-DP-Muster) verbrauchen diese drei Elemente aber
+    zusammen real ca. 296.5px = ca. 78mm Hoehe (Page-Header 102px + Mini-
+    Legende 99.5px + Page-Footer 95px bei 96dpi), nicht 8mm. Diese
+    CSS-Groessen aendern sich beim Drucken NICHT (nur die Grid-Zellen-
+    groesse wird in _dp_print_css() auf den exakten Drill-Pitch gesetzt) --
+    die Musterseite ragt beim echten 1:1-Ausdruck also weit ueber das
+    physische A4-Blatt hinaus und "Seite N von M" landet auf zwei
+    bedruckten Blaettern statt einem. Der PDF-Export reserviert fuer
+    denselben Zweck bereits 50mm (siehe pdf_export.py, empirisch gegen
+    reportlab-LayoutError abgesichert) -- HTML muss dieselbe
+    Groessenordnung reservieren. Nebeneffekt des Fixes: PDF- und
+    HTML-Export kommen fuer dasselbe DP-Muster jetzt auf dieselbe
+    Seitenzahl statt (wie vorher) z.B. 9 vs. 6 Seiten."""
+    import pytest
+
+    from pysticky.core import Pattern, Thread
+    from pysticky.io.pdf_export import PDFExporter, check_reportlab_available
+
+    if not check_reportlab_available():
+        pytest.skip("reportlab nicht installiert")
+
+    pattern = Pattern(width=200, height=200)
+    pattern.mode = "diamond"
+    idx = pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(0, 200, 5):
+        for y in range(0, 200, 5):
+            pattern.set_stitch(x, y, idx)
+
+    html_exp = HTMLExporter(pattern)
+    pdf_exp = PDFExporter(pattern, include_path_preview=False)
+
+    # Beide Exporte muessen fuer dasselbe DP-Muster (gleicher Drill-Pitch,
+    # gleiche A4-Basisgroesse) auf dieselbe Seiten-Kapazitaet kommen --
+    # sonst bekommt derselbe Nutzer beim PDF-Export deutlich mehr/weniger
+    # Seiten als beim HTML-Export desselben Musters.
+    assert html_exp.STITCHES_PER_PAGE_X == pdf_exp.STITCHES_PER_PAGE_X
+    assert html_exp.STITCHES_PER_PAGE_Y == pdf_exp.STITCHES_PER_PAGE_Y
