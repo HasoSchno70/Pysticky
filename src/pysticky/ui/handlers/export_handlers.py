@@ -84,6 +84,7 @@ class ExportWorker(QObject):
                     self._pattern,
                     filepath,
                     pdf_page_format=page_format or "A4",
+                    mystery_mode=self._mystery_mode,
                 )
                 # Skipped-Komponenten in der Status-Message zurückgeben,
                 # damit der User merkt wenn z.B. PDF fehlte.

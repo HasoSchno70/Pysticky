@@ -244,6 +244,39 @@ def test_bundle_export_failure_leaves_existing_bundle_untouched(
     assert not out.with_name(out.name + ".tmp").exists()
 
 
+def test_bundle_propagates_mystery_mode_to_html_and_pdf(pattern_with_stitches, tmp_path):
+    """Regression: export_bundle() ignorierte den globalen Mystery-Modus
+    komplett -- der Aufrufer (ExportWorker._run_export in
+    ui/handlers/export_handlers.py) liest "export/mystery_mode" aus den
+    QSettings und reicht ihn fuer "pdf"/"html"-Exporte an HTMLExporter/
+    PDFExporter durch, aber der "bundle"-Zweig rief export_bundle() ohne
+    jeden mystery_mode-Parameter auf -- export_bundle() hatte gar keinen
+    solchen Parameter. Ein Nutzer, der den globalen Mystery-Modus fuer ein
+    Ueberraschungs-Kit aktiviert hatte, bekam im Bundle trotzdem ein HTML/
+    PDF mit vollstaendig sichtbaren Farben/Symbolen -- das Bundle verriet
+    die Aufloesung, obwohl der eigenstaendige HTML-/PDF-Export das nicht
+    getan haette.
+
+    Der Mystery-Platzhalter (_mystery_svg_rects in html_export_sections.py)
+    schreibt ein eindeutiges "fill='#f5f5f5'"-Rechteck mit "?"-Text anstelle
+    der echten Musterfarben-Rechtecke -- das dient hier als Marker.
+    """
+    out_normal = tmp_path / "normal_bundle.zip"
+    export_bundle(pattern_with_stitches, out_normal, include_pdf=False, mystery_mode=False)
+    with zipfile.ZipFile(out_normal) as zf:
+        html_names = [n for n in zf.namelist() if n.endswith(".html")]
+        normal_html = zf.read(html_names[0]).decode("utf-8")
+
+    out_mystery = tmp_path / "mystery_bundle.zip"
+    export_bundle(pattern_with_stitches, out_mystery, include_pdf=False, mystery_mode=True)
+    with zipfile.ZipFile(out_mystery) as zf:
+        html_names = [n for n in zf.namelist() if n.endswith(".html")]
+        mystery_html = zf.read(html_names[0]).decode("utf-8")
+
+    assert "fill='#f5f5f5'" not in normal_html
+    assert "fill='#f5f5f5'" in mystery_html
+
+
 def test_bundle_safe_basename_handles_special_chars(tmp_path):
     """Pattern-Namen mit Sonderzeichen produzieren saubere Dateinamen im ZIP."""
     from pysticky.core import Pattern
@@ -258,3 +291,34 @@ def test_bundle_safe_basename_handles_special_chars(tmp_path):
     # Keine Slash/Doppelpunkt/Ausrufezeichen im Datei-Namen
     assert "/" not in Path(pxs).stem
     assert ":" not in pxs
+
+
+def test_bundle_target_path_with_umlauts_and_spaces(pattern_with_stitches, tmp_path):
+    """Der ZIP-Zielpfad selbst (Verzeichnis + Dateiname) darf Umlaute/
+    Leerzeichen enthalten -- anders als der ZIP-interne Arcname (siehe
+    _safe_basename) ist das ein normaler Windows/POSIX-Dateipfad, den
+    os.replace()/zipfile klaglos handhaben sollten."""
+    target_dir = tmp_path / "Müster Öxport"
+    target_dir.mkdir()
+    out = target_dir / "Bündel äöü.zip"
+    result = export_bundle(pattern_with_stitches, out, include_pdf=False)
+    assert out.exists()
+    assert out.stat().st_size > 0
+    with zipfile.ZipFile(out) as zf:
+        names = zf.namelist()
+        assert any(n.endswith(".pxs") for n in names)
+    assert result["zip_path"] == str(out)
+
+
+def test_bundle_repeated_export_no_duplicate_zip_entries(pattern_with_stitches, tmp_path):
+    """Ein zweiter Export an denselben Zielpfad darf keine doppelten
+    Eintraege im ZIP erzeugen (files_in_zip wird pro Aufruf frisch in
+    einem neuen TemporaryDirectory aufgebaut, nicht ueber Aufrufe hinweg
+    akkumuliert)."""
+    out = tmp_path / "repeat.zip"
+    export_bundle(pattern_with_stitches, out, include_pdf=False)
+    result2 = export_bundle(pattern_with_stitches, out, include_pdf=False)
+    with zipfile.ZipFile(out) as zf:
+        names = zf.namelist()
+    assert len(names) == len(set(names))
+    assert len(result2["files"]) == len(set(result2["files"]))

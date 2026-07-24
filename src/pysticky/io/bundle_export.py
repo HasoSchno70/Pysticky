@@ -123,6 +123,7 @@ def export_bundle(
     *,
     include_pdf: bool = True,
     pdf_page_format: str = "A4",
+    mystery_mode: bool = False,
 ) -> dict:
     """Packt ein vollständiges Bundle als ZIP.
 
@@ -132,6 +133,12 @@ def export_bundle(
         include_pdf: Wenn True und reportlab vorhanden, PDF mit ins Bundle.
         pdf_page_format: Papierformat-Key für den PDF-Export (siehe
             PDFExporter.PAGE_FORMATS). Default A4.
+        mystery_mode: Wenn True, verstecken das enthaltene HTML/PDF Farben
+            und Konturen (Überraschungs-Kits) -- wie beim eigenständigen
+            HTML-/PDF-Export (siehe Settings → Dateien → Export). Ohne
+            diesen Parameter wuerde ein Bundle-Export die globale
+            Mystery-Einstellung stillschweigend ignorieren und die
+            Aufloesung trotzdem verraten.
 
     Returns:
         dict mit `zip_path`, `files` (Liste der Dateien im Bundle),
@@ -156,7 +163,7 @@ def export_bundle(
         # 2. HTML
         html_path = tmp / f"{base}.html"
         try:
-            HTMLExporter(pattern).export(html_path)
+            HTMLExporter(pattern, mystery_mode=mystery_mode).export(html_path)
             files_in_zip.append(html_path.name)
         except Exception as exc:  # noqa: BLE001
             skipped.append(f"html ({exc})")
@@ -181,7 +188,9 @@ def export_bundle(
 
                 if check_reportlab_available():
                     pdf_path = tmp / f"{base}.pdf"
-                    PDFExporter(pattern, page_format=pdf_page_format).export(pdf_path)
+                    PDFExporter(
+                        pattern, page_format=pdf_page_format, mystery_mode=mystery_mode
+                    ).export(pdf_path)
                     files_in_zip.append(pdf_path.name)
                 else:
                     skipped.append("pdf (reportlab fehlt)")
