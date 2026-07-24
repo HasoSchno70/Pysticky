@@ -228,6 +228,27 @@ def test_pipette_out_of_bounds_click_is_ignored(pattern_with_colors):
     assert tool.picked_color_index is None
 
 
+def test_pipette_on_backstitch_only_cell_is_safe_noop(pattern_with_colors):
+    """Eine Zelle, die NUR einen Rueckstich traegt (keine Flaechenfarbe), hat
+    keinen Flaechen-Stich an dieser Cell-Position -- die Pipette arbeitet
+    ausschliesslich auf Flaechen-Stich-Koordinaten (Pattern.get_stitch),
+    Rueckstich-Koordinaten sind ein eigenes, feineres Koordinatensystem
+    (halbe Stiche, siehe BackstitchManager.add). Erwartung: kein Crash, keine
+    falsche Farbe (z.B. Hintergrund) wird aufgenommen -- die Pipette bleibt
+    schlicht wirkungslos an dieser Zelle."""
+    pattern = pattern_with_colors
+    pattern.backstitch_manager.add(x1=2, y1=2, x2=4, y2=2, color_index=1)
+    # (2,2) in halben Stichen faellt in Zelle (1,1) -- dort ist kein
+    # Flaechen-Stich gesetzt.
+    assert pattern.get_stitch(1, 1) is None
+
+    tool = PipetteTool()
+    ctx = _make_ctx(pattern, 1, 1)
+    changes = tool.on_mouse_press(ctx, _mouse_event())
+    assert changes == []
+    assert tool.picked_color_index is None
+
+
 def test_fill_tool_fills_empty_region(pattern_with_colors):
     """Flood-Fill auf leerem 20x20 Pattern fuellt die ganze Flaeche."""
     tool = FillTool()

@@ -169,6 +169,44 @@ def test_backstitch_width_offset_applied(qtbot):
             s.setValue("backstitch_width", old)
 
 
+def test_pipette_behavior_switches_tool_after_pick(qtbot):
+    """Verifiziert (Runde 54), dass alle drei "Nach Aufnahme"-Modi des
+    Werkzeuge-Settings-Tabs tatsaechlich wirken: 0=Stift, 1=bei Pipette
+    bleiben, 2=Auswahl-Werkzeug. Echter MainWindow()-Lauf unter pytest --
+    conftest.py isoliert QSettings von der echten Registry."""
+    from pysticky.ui.main_window import MainWindow
+    from pysticky.ui.tools.tool_enum import Tool
+
+    s = _qsettings_with_scope()
+    old = s.value("pipette_behavior")
+    try:
+        w = MainWindow()
+        qtbot.addWidget(w)
+        w._check_save_changes = lambda: True
+        w._autosave_timer.stop()
+        assert len(w.current_pattern.color_entries) > 0
+
+        s.setValue("pipette_behavior", 0)
+        w.tool_bar.select_tool(Tool.PIPETTE)
+        w._on_color_picked(0)
+        assert w.tool_bar.current_tool == Tool.PENCIL
+
+        s.setValue("pipette_behavior", 1)
+        w.tool_bar.select_tool(Tool.PIPETTE)
+        w._on_color_picked(0)
+        assert w.tool_bar.current_tool == Tool.PIPETTE
+
+        s.setValue("pipette_behavior", 2)
+        w.tool_bar.select_tool(Tool.PIPETTE)
+        w._on_color_picked(0)
+        assert w.tool_bar.current_tool == Tool.SELECT
+    finally:
+        if old is None:
+            s.remove("pipette_behavior")
+        else:
+            s.setValue("pipette_behavior", old)
+
+
 def test_fill_diagonal_reaches_diagonal_neighbor():
     """Ein rein diagonal verbundener Bereich darf nur bei fill_diagonal=True
     komplett gefuellt werden -- der Standard-Scanline-Algorithmus ist
