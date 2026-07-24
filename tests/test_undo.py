@@ -514,6 +514,68 @@ class TestLayerSnapshotCommand:
         assert layer.get_stitch(0, 0) is None  # zurueckgerollt
         assert layer.get_stitch(1, 1) == 0  # unveraendert erhalten
 
+    def test_undo_after_action_resizes_pattern(self):
+        """Regression: ein Plugin (oder eine andere `action`), das während
+        der Ausführung `pattern.resize()` aufruft, änderte die Shape des
+        aktiven Layer-Grids. Ein anschließendes undo() versuchte trotzdem
+        `layer.grid[:] = <Snapshot in alter Groesse>` und stuerzte mit
+        einem ValueError ("could not broadcast") ab, weil Snapshot- und
+        aktuelles Grid unterschiedliche Shapes hatten. Betrifft jedes
+        Plugin mit vollem Pattern-Zugriff, nicht nur die eingebauten
+        (die aktuell keine Resizes machen)."""
+        from pysticky.core import Thread
+
+        pattern = Pattern(width=3, height=3)
+        pattern.add_color(Thread.from_hex("Zweite Farbe", "#00FF00"))
+        pattern.set_stitch(1, 1, 0)
+
+        def action():
+            pattern.set_stitch(0, 0, 1)
+            pattern.resize(5, 5)  # Mustergroesse waechst waehrend der Aktion
+
+        cmd = LayerSnapshotCommand(
+            pattern, layer_index=pattern.layer_stack.active_index, action=action
+        )
+        cmd.execute()
+        assert (pattern.width, pattern.height) == (5, 5)
+        assert pattern.layer_stack.active_layer.grid.shape == (5, 5)
+
+        cmd.undo()  # durfte vorher nicht crashen
+
+        assert (pattern.width, pattern.height) == (3, 3)
+        layer = pattern.layer_stack.active_layer
+        assert layer.grid.shape == (3, 3)
+        assert layer.get_stitch(1, 1) == 0  # Vorzustand wiederhergestellt
+        assert layer.get_stitch(0, 0) is None
+
+        cmd.execute()  # Redo -- muss ebenfalls ohne Shape-Mismatch klappen
+        assert (pattern.width, pattern.height) == (5, 5)
+        assert pattern.layer_stack.active_layer.get_stitch(0, 0) == 1
+
+    def test_rolls_back_after_resize_then_action_error(self):
+        """Wie test_rolls_back_on_action_error, aber die `action` resized
+        das Pattern VOR dem Absturz -- die Rollback-Zeile im except-Zweig
+        von execute() rief intern denselben _restore()-Pfad auf und
+        crashte deshalb genauso wie ein spaeteres undo()."""
+        pattern = Pattern(width=3, height=3)
+        pattern.set_stitch(1, 1, 0)
+
+        def crashing_action():
+            pattern.resize(4, 4)
+            raise RuntimeError("boom nach Resize")
+
+        cmd = LayerSnapshotCommand(
+            pattern, layer_index=pattern.layer_stack.active_index, action=crashing_action
+        )
+        with pytest.raises(RuntimeError, match="boom nach Resize"):
+            cmd.execute()
+
+        # Rollback muss trotz Groessenaenderung sauber durchlaufen sein.
+        assert (pattern.width, pattern.height) == (3, 3)
+        layer = pattern.layer_stack.active_layer
+        assert layer.grid.shape == (3, 3)
+        assert layer.get_stitch(1, 1) == 0
+
 
 class TestDescriptionTranslation:
     """Regression (Runde 19): jedes Command.description war ein rohes
