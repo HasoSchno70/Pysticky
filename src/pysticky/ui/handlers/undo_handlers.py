@@ -61,8 +61,44 @@ class UndoHandlersMixin:
         for scope in getattr(self, "_pending_batch_scopes", set()):
             self._notify_panels(scope)
         self._pending_batch_scopes = set()
-        QTimer.singleShot(100, self.minimap_panel.refresh)
-        QTimer.singleShot(100, self.tile_preview_panel.refresh)
+        self._schedule_minimap_refresh()
+        self._schedule_tile_preview_refresh()
+
+    def _schedule_minimap_refresh(self: "MainWindow") -> None:
+        """Plant einen verzögerten Minimap-Refresh -- aber höchstens EINEN
+        gleichzeitig ausstehenden.
+
+        Vorher hängte jeder _on_batch_ended()-Aufruf bedingungslos einen neuen
+        QTimer.singleShot(100, ...) an. Bei mehreren schnell aufeinander-
+        folgenden Batches (z.B. eine Undo/Redo-Serie oder mehrere Füllungen
+        kurz hintereinander) stapelten sich dadurch mehrere redundante
+        Rebuilds. Für ein nahezu maximal großes Muster (MAX_PATTERN_SIZE =
+        1000x1000) dauert ein einzelner MinimapWidget._rebuild_cache()-Aufruf
+        messbar >1s (voller Python-Pixel-Loop) -- N redundante Rebuilds
+        summierten sich zu einem mehrsekündigen UI-Freeze, obwohl am Ende
+        ohnehin nur das Ergebnis des letzten Rebuilds sichtbar bleibt.
+        """
+        if getattr(self, "_minimap_refresh_pending", False):
+            return
+        self._minimap_refresh_pending = True
+
+        def _do_refresh() -> None:
+            self._minimap_refresh_pending = False
+            self.minimap_panel.refresh()
+
+        QTimer.singleShot(100, _do_refresh)
+
+    def _schedule_tile_preview_refresh(self: "MainWindow") -> None:
+        """Analog zu _schedule_minimap_refresh() für das Tile-Preview-Panel."""
+        if getattr(self, "_tile_preview_refresh_pending", False):
+            return
+        self._tile_preview_refresh_pending = True
+
+        def _do_refresh() -> None:
+            self._tile_preview_refresh_pending = False
+            self.tile_preview_panel.refresh()
+
+        QTimer.singleShot(100, _do_refresh)
 
     def _on_stitch_placed(self: "MainWindow", x: int, y: int, color_index: int) -> None:
         """Stich platziert (normale Zeichen-Werkzeuge -- Stichtyp kommt vom
