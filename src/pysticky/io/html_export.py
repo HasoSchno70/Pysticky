@@ -93,9 +93,30 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
         if is_diamond_mode(self.pattern):
             self._dp_cell_mm = drill_pitch_mm(self.pattern)
             # A4 mit 15mm Margin -> 180mm Breite/267mm Höhe (Hochformat).
-            # Header-Spalte links + Spalten-Header oben kosten ~8mm.
-            available_mm_w = 180.0 - 8.0
-            available_mm_h = 267.0 - 8.0
+            #
+            # Reserve MUSS neben der Grid-eigenen Header-Spalte/-Zeile
+            # (~8mm) auch die Chrome AUSSERHALB der Tabelle einrechnen:
+            # .page-header (Titel + Info-Zeile), .mini-legend und
+            # .page-footer sind Teil derselben Musterseiten-<div> und
+            # werden von _dp_print_css() NICHT verkleinert -- nur die
+            # Grid-Zellengroesse wird dort auf den exakten Drill-Pitch
+            # gesetzt. Eine Browser-Messung (getBoundingClientRect) auf
+            # einer echten Musterseite ergab ca. 102px Page-Header +
+            # 99.5px Mini-Legende + 95px Page-Footer = ca. 78mm bei 96dpi
+            # -- weit mehr als die ehemals reservierten 8mm. Ohne
+            # ausreichende Reserve ragt die Seite beim echten 1:1-Ausdruck
+            # ueber das physische A4-Blatt hinaus, sodass "Seite N von M"
+            # auf zwei bedruckten Blaettern statt einem landet und das
+            # Zuschneide-/Kleberaster (pages_x/pages_y) nicht mehr stimmt.
+            # Der PDF-Export reserviert fuer denselben Zweck bereits 12mm/
+            # 50mm (siehe pdf_export.py, empirisch gegen reportlab-
+            # LayoutError abgesichert) -- dieselben Werte hier verwenden,
+            # damit PDF- und HTML-Export ausserdem auf dieselbe Seitenzahl
+            # kommen statt (wie vorher) auseinanderzudriften.
+            width_reserve = 12.0
+            height_reserve = 50.0
+            available_mm_w = 180.0 - width_reserve
+            available_mm_h = 267.0 - height_reserve
             self.STITCHES_PER_PAGE_X = max(1, int(available_mm_w / self._dp_cell_mm))
             self.STITCHES_PER_PAGE_Y = max(1, int(available_mm_h / self._dp_cell_mm))
 
