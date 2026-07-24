@@ -37,12 +37,22 @@ class PipetteTool(BaseTool):
         if not self._is_valid_pos(ctx, ctx.grid_x, ctx.grid_y):
             return []
 
-        # Farbe an Position holen
-        layer = ctx.pattern.active_layer
-        if layer:
-            color_idx = layer.get_stitch(ctx.grid_x, ctx.grid_y)
-            if color_idx is not None:
-                self._picked_color_index = color_idx
+        # Farbe an Position holen -- das muss dieselbe Farbe sein, die der
+        # Canvas an dieser Zelle tatsaechlich anzeigt (sichtbares Composite
+        # ueber alle Layer, oberstes sichtbares Layer gewinnt), nicht die des
+        # aktiven Layers. Vorher las die Pipette immer nur
+        # `ctx.pattern.active_layer`: war der aktive Layer an dieser Stelle
+        # leer oder von einem hoeheren sichtbaren Layer ueberdeckt, nahm die
+        # Pipette entweder gar keine Farbe auf oder eine falsche (verdeckte)
+        # Farbe, obwohl der Nutzer visuell eindeutig eine andere Farbe sieht.
+        # Ausnahme: Im "Nur aktive Ebene anzeigen"-Modus zeigt der Canvas
+        # ebenfalls nur den aktiven Layer -- dann muss die Pipette dem folgen.
+        if ctx.canvas.show_only_active_layer:
+            color_idx = ctx.pattern.get_stitch_on_active_layer(ctx.grid_x, ctx.grid_y)
+        else:
+            color_idx = ctx.pattern.get_stitch(ctx.grid_x, ctx.grid_y)
+        if color_idx is not None:
+            self._picked_color_index = color_idx
 
         # Keine Änderungen am Muster
         return []

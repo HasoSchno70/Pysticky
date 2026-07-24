@@ -15,6 +15,7 @@ from pysticky.ui.tools.base_tool import ToolContext
 from pysticky.ui.tools.eraser_tool import EraserTool
 from pysticky.ui.tools.fill_tool import FillTool
 from pysticky.ui.tools.pencil_tool import PencilTool
+from pysticky.ui.tools.pipette_tool import PipetteTool
 from pysticky.ui.tools.tool_enum import Tool
 from pysticky.ui.tools.tool_manager import ToolManager
 
@@ -27,6 +28,7 @@ def _make_ctx(pattern, grid_x: int, grid_y: int, color_index: int = 0) -> ToolCo
     canvas.snap_position.side_effect = lambda x, y: (x, y)
     canvas.snap_to_grid = False
     canvas.snap_interval = 1
+    canvas.show_only_active_layer = False
     return ToolContext(
         canvas=canvas,
         pattern=pattern,
@@ -138,6 +140,92 @@ def test_eraser_emits_none_color(pattern_with_colors):
     ctx = _make_ctx(pattern_with_colors, 5, 5)
     changes = tool.on_mouse_press(ctx, _mouse_event())
     assert changes == [(5, 5, None)]
+
+
+def test_pipette_picks_visible_composite_color_not_active_layer(pattern_with_colors):
+    """Regression (Runde 54): Die Pipette las bisher NUR
+    `pattern.active_layer.get_stitch()`. Ist der aktive Layer an dieser
+    Stelle leer oder von einem darueberliegenden sichtbaren Layer verdeckt,
+    nahm die Pipette entweder gar keine Farbe auf oder eine falsche
+    (verdeckte) Farbe auf -- nicht die Farbe, die der Canvas dem Nutzer
+    tatsaechlich anzeigt (oberstes sichtbares Layer im Composite gewinnt).
+
+    Aufbau: aktiver Layer = Hintergrund (Farbe 0 an (3,4)), darueber ein
+    sichtbarer "Top"-Layer (Farbe 1 an (3,4)). Sichtbar/composite ist Farbe 1
+    (Top gewinnt), die Pipette muss also Farbe 1 aufnehmen -- nicht Farbe 0
+    vom (nicht mehr obersten) aktiven Layer.
+    """
+    pattern = pattern_with_colors
+    pattern.layer_stack.add_layer("Top")  # wird automatisch aktiv, oben
+    pattern.set_stitch(3, 4, 1)  # Farbe 1 auf "Top"
+    pattern.layer_stack.active_index = 0  # zurueck auf Hintergrund (aktiv, aber unten)
+    pattern.set_stitch(3, 4, 0)  # Farbe 0 auf Hintergrund, an derselben Zelle
+
+    # Composite an (3,4) muss Farbe 1 zeigen (Top ist sichtbar und oben).
+    assert pattern.get_stitch(3, 4) == 1
+
+    tool = PipetteTool()
+    ctx = _make_ctx(pattern, 3, 4)
+    changes = tool.on_mouse_press(ctx, _mouse_event())
+    assert changes == []  # Pipette aendert nie das Muster
+    assert tool.picked_color_index == 1
+
+
+def test_pipette_respects_show_only_active_layer_mode(pattern_with_colors):
+    """Ist der Canvas im "Nur aktive Ebene anzeigen"-Modus, zeigt er auch nur
+    den aktiven Layer -- die Pipette muss dann konsistent dem aktiven Layer
+    folgen statt dem vollen Composite (Gegenstueck zum Test oben)."""
+    pattern = pattern_with_colors
+    pattern.layer_stack.add_layer("Top")
+    pattern.set_stitch(3, 4, 1)
+    pattern.layer_stack.active_index = 0
+    pattern.set_stitch(3, 4, 0)
+
+    tool = PipetteTool()
+    ctx = _make_ctx(pattern, 3, 4)
+    ctx.canvas.show_only_active_layer = True
+    changes = tool.on_mouse_press(ctx, _mouse_event())
+    assert changes == []
+    assert tool.picked_color_index == 0  # aktiver Layer (Hintergrund), nicht Composite
+
+
+def test_pipette_empty_cell_leaves_picked_color_unchanged(pattern_with_colors):
+    """Pipette auf einer komplett leeren Zelle darf die zuletzt aufgenommene
+    Farbe nicht auf None zuruecksetzen -- sonst wuerde eine nachfolgende
+    Zeichenoperation, die sich auf `picked_color_index` verlaesst, mit einer
+    ungueltigen Farbe operieren."""
+    tool = PipetteTool()
+    ctx = _make_ctx(pattern_with_colors, 1, 1)
+    changes = tool.on_mouse_press(ctx, _mouse_event())
+    assert changes == []
+    assert tool.picked_color_index is None
+
+    # Vorher schon eine Farbe aufgenommen -- ein Klick auf eine leere Zelle
+    # darf das nicht ueberschreiben.
+    pattern_with_colors.set_stitch(5, 5, 2)
+    ctx2 = _make_ctx(pattern_with_colors, 5, 5)
+    tool.on_mouse_press(ctx2, _mouse_event())
+    assert tool.picked_color_index == 2
+
+    ctx3 = _make_ctx(pattern_with_colors, 1, 1)  # wieder leere Zelle
+    tool.on_mouse_press(ctx3, _mouse_event())
+    assert tool.picked_color_index == 2  # unveraendert, nicht auf None zurueckgesetzt
+
+
+def test_pipette_out_of_bounds_click_is_ignored(pattern_with_colors):
+    """Klick ausserhalb des Musterbereichs darf weder abstuerzen noch eine
+    Farbe aufnehmen."""
+    tool = PipetteTool()
+    ctx = _make_ctx(pattern_with_colors, -1, -1)
+    changes = tool.on_mouse_press(ctx, _mouse_event())
+    assert changes == []
+    assert tool.picked_color_index is None
+
+    ctx2 = _make_ctx(
+        pattern_with_colors, pattern_with_colors.width + 5, pattern_with_colors.height + 5
+    )
+    tool.on_mouse_press(ctx2, _mouse_event())
+    assert tool.picked_color_index is None
 
 
 def test_fill_tool_fills_empty_region(pattern_with_colors):
