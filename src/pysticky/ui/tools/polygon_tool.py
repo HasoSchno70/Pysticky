@@ -58,7 +58,7 @@ class PolygonTool(BaseTool):
             # Polygon schließen und zeichnen
             if len(self._points) >= 3:
                 # Punkte für das Polygon berechnen
-                points = self._get_polygon_points()
+                points = self._get_polygon_points(ctx)
 
                 changes = []
                 for x, y in points:
@@ -107,7 +107,7 @@ class PolygonTool(BaseTool):
             return True
         return False
 
-    def _get_polygon_points(self) -> list[tuple[int, int]]:
+    def _get_polygon_points(self, ctx: ToolContext) -> list[tuple[int, int]]:
         """Berechnet alle Punkte des Polygons."""
         if len(self._points) < 3:
             return []
@@ -124,20 +124,30 @@ class PolygonTool(BaseTool):
 
         if self._filled:
             # Polygon füllen mit Scanline-Algorithmus
-            points.update(self._fill_polygon())
+            points.update(self._fill_polygon(ctx))
 
         return list(points)
 
-    def _fill_polygon(self) -> set[tuple[int, int]]:
+    def _fill_polygon(self, ctx: ToolContext) -> set[tuple[int, int]]:
         """Füllt das Polygon mit Scanline-Algorithmus."""
         if len(self._points) < 3:
             return set()
 
         filled = set()
 
-        # Bounding Box (nur Y wird für die Scanline benötigt)
-        min_y = min(p[1] for p in self._points)
-        max_y = max(p[1] for p in self._points)
+        # Bounding Box auf den gültigen Musterbereich begrenzen. Klickpunkte
+        # können (z.B. bei weit herausgezoomtem/verschobenem Canvas) weit
+        # außerhalb von Pattern.width/height liegen. Ohne Clamping würde die
+        # Scanline über den gesamten rohen Koordinatenbereich laufen -- bei
+        # extremen Ausreißern (Zoom+Pan weit weg vom Muster) potenziell
+        # Millionen nutzloser Zellen erzeugen, die anschließend in
+        # on_mouse_press() ohnehin über _is_valid_pos() verworfen werden.
+        # Gleiches Muster ist bereits in lasso_select_tool.py::_fill_lasso_polygon
+        # umgesetzt.
+        min_y = max(0, min(p[1] for p in self._points))
+        max_y = min(ctx.pattern.height - 1, max(p[1] for p in self._points))
+        min_x = max(0, min(p[0] for p in self._points))
+        max_x = min(ctx.pattern.width - 1, max(p[0] for p in self._points))
 
         # Scanline für jede Y-Zeile
         for y in range(min_y, max_y + 1):
@@ -165,8 +175,8 @@ class PolygonTool(BaseTool):
 
             # Pixel zwischen Paaren von Schnittpunkten füllen
             for i in range(0, len(intersections) - 1, 2):
-                x_start = int(intersections[i])
-                x_end = int(intersections[i + 1])
+                x_start = max(min_x, int(intersections[i]))
+                x_end = min(max_x, int(intersections[i + 1]))
 
                 for x in range(x_start, x_end + 1):
                     filled.add((x, y))
