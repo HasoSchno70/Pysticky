@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ...core.hoop_planner import HoopPlan, plan_hoops
+from ...core.hoop_planner import HoopPlan, estimate_sector_grid, plan_hoops
 from ...core.i18n import t
 from ..color_utils import to_qcolor
 from ..styles import THEME
@@ -186,6 +186,14 @@ class HoopPlannerDialog(QDialog):
         ("10 Zoll (25 cm)", 137, 137),
         ("12 Zoll (30 cm)", 165, 165),
     ]
+
+    # Ein winziger Rahmen kombiniert mit einer fast rahmengroßen Überlappung
+    # (z.B. 10x10-Rahmen, Überlappung 9 -> Schrittweite 1) ergibt bei einem
+    # großen Muster hunderttausende bis Millionen Sektoren. plan_hoops() und
+    # v.a. die Tabellen-/Vorschau-Befüllung laufen synchron auf dem
+    # GUI-Thread -- ohne diese Grenze friert der Dialog dabei für Sekunden
+    # bis Minuten ein (siehe test_hoop_planner_dialog_sector_limit.py).
+    MAX_REASONABLE_SECTORS = 2000
 
     def __init__(self, pattern: "Pattern", parent=None) -> None:
         super().__init__(parent)
@@ -362,12 +370,24 @@ class HoopPlannerDialog(QDialog):
             ov = self.spin_overlap.value()
 
         try:
-            plan = plan_hoops(self._pattern, hw, hh, ov)
+            rows, cols = estimate_sector_grid(self._pattern.width, self._pattern.height, hw, hh, ov)
         except ValueError as e:
             self.summary_label.setText(f"⚠ {e}")
             self.preview.set_plan(None)  # type: ignore[arg-type]
             self.table.setRowCount(0)
             return
+
+        if rows * cols > self.MAX_REASONABLE_SECTORS:
+            self.summary_label.setText(
+                f"⚠ Diese Kombination ergäbe {rows * cols:,} Sektoren "
+                f"({rows} × {cols}) — zu viel für eine sinnvolle Darstellung. "
+                "Bitte einen größeren Rahmen oder eine kleinere Überlappung wählen."
+            )
+            self.preview.set_plan(None)  # type: ignore[arg-type]
+            self.table.setRowCount(0)
+            return
+
+        plan = plan_hoops(self._pattern, hw, hh, ov)
 
         self._update_summary(plan)
         self._update_table(plan)
