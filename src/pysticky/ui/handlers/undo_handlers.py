@@ -179,13 +179,6 @@ class UndoHandlersMixin:
                     f"Keine Stiche bei ({x}, {y}) — Ebene leer oder versteckt", 2000
                 )
             return
-        # Gesperrte Ebene: MarkStitchCompletedCommand waere ohnehin
-        # wirkungslos (layer.mark_completed() blockt das jetzt intern wie
-        # set_stitch()), aber ohne diesen Guard landete trotzdem ein
-        # wirkungsloser Eintrag auf dem Undo-Stack -- gleiche Fehlerklasse wie
-        # der Radiergummi-Guard in _on_stitch_removed().
-        if self.current_pattern.layer_stack[layer_index].locked:
-            return
         self._execute_command(
             MarkStitchCompletedCommand(self.current_pattern, x, y, layer_index),
             scope="progress",
@@ -200,10 +193,6 @@ class UndoHandlersMixin:
 
         layer_index = self._find_layer_with_stitch_at(x, y)
         if layer_index is None:
-            return
-        # Siehe Kommentar in _on_stitch_marked_completed() -- derselbe Guard
-        # gegen einen wirkungslosen Undo-Eintrag auf einer gesperrten Ebene.
-        if self.current_pattern.layer_stack[layer_index].locked:
             return
         self._execute_command(
             UnmarkStitchCompletedCommand(self.current_pattern, x, y, layer_index),

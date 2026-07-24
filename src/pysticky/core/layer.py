@@ -328,13 +328,13 @@ class Layer:
         Returns:
             True wenn erfolgreich (Stich vorhanden und in Bounds)
         """
-        # Gleiche Sperr-Konvention wie set_stitch()/clear(): eine gesperrte
-        # Ebene ist gegen JEDE Grid-Mutation geschuetzt, nicht nur gegen
-        # Farb-/Stichtyp-Aenderungen. Ohne diesen Guard konnte das
-        # Fortschritts-Werkzeug (ProgressTool) den Sperr-Schutz umgehen und
-        # den Fortschritt-Haken auf einer gesperrten Ebene trotzdem setzen.
-        if self.locked:
-            return False
+        # "Gesperrt" schuetzt laut UI ("gegen versehentliches Bearbeiten")
+        # gezielt vor Design-Aenderungen (Farbe/Stichtyp), siehe set_stitch()/
+        # clear(). Fortschritts-Markierung aendert weder Farbe noch Stichtyp
+        # -- sie ist reines Bookkeeping fuer den Stickfortschritt des Nutzers
+        # und bleibt daher bewusst auch auf gesperrten Ebenen moeglich (z.B.
+        # eine fertig entworfene, gesperrte Hintergrund-Ebene soll beim
+        # Abstricken trotzdem abgehakt werden koennen).
         if 0 <= x < self.width and 0 <= y < self.height:
             if self.grid[y, x] != NO_STITCH:
                 self.completion_grid[y, x] = True
@@ -348,8 +348,6 @@ class Layer:
         Returns:
             True wenn erfolgreich (in Bounds)
         """
-        if self.locked:
-            return False
         if 0 <= x < self.width and 0 <= y < self.height:
             self.completion_grid[y, x] = False
             return True
