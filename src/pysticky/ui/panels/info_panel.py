@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...core import Pattern
+from ...core import ColorEntry, Pattern
 from ...core.constants import COMMON_FABRIC_COUNTS
 from ...core.i18n import t
 from ..styles import THEME, Styles
@@ -36,6 +36,14 @@ class InfoPanel(QWidget):
         self._pattern: Pattern | None = None
         self._color_items: list[_ColorListItem] = []
         self._selected_color_index: int | None = None
+        # Merkt sich die selektierte Farbe zusaetzlich per Objekt-Identitaet
+        # (nicht nur per Index) -- analog zu ColorBar._current_entry
+        # (color_bar.py). Pattern.remove_color() verschiebt hoehere Indizes
+        # nach unten; ohne das blieb _selected_color_index nach dem Loeschen
+        # einer FRUEHEREN Farbe entweder auf einem jetzt ungueltigen Index
+        # stehen (keine Zeile mehr markiert) oder markierte die FALSCHE,
+        # nachgerueckte Farbe.
+        self._selected_entry: ColorEntry | None = None
         # Modus: "stitch" (Kreuzstich) oder "diamond" (Diamond Painting).
         # Beeinflusst Labels (Stiche/Drills, Stickzeit/Klebezeit, ...) und
         # Berechnungen (Zeit pro Einheit, Garnbedarf vs. Drill-Anzahl).
@@ -445,6 +453,25 @@ class InfoPanel(QWidget):
         """
         entries = pattern.color_entries
 
+        # Selektions-Index per Objekt-Identitaet nachziehen, bevor er unten
+        # verwendet wird -- siehe Docstring von self._selected_entry oben.
+        # Muss vor dem same_structure-Fruehausstieg passieren: eine geloeschte
+        # Farbe AENDERT die Anzahl (structural rebuild unten), eine reine
+        # Werteaenderung (Stitch-Placed) tut das nicht und braucht diesen
+        # Abgleich auch nicht, schadet hier aber nicht.
+        if self._selected_entry is not None:
+            resolved_index = None
+            for i, e in enumerate(entries):
+                if e is self._selected_entry:
+                    resolved_index = i
+                    break
+            self._selected_color_index = resolved_index
+            if resolved_index is None:
+                # Die zuvor aktive Farbe wurde geloescht -- keine Zeile mehr
+                # markieren statt an einem stehengebliebenen Index eine
+                # andere Farbe faelschlich hervorzuheben.
+                self._selected_entry = None
+
         # Schnell-Pfad: gleiche Anzahl Items wie Farben + alle sind ColorListItems
         # UND alle haben den aktuellen Modus (sonst müssen Symbol-Spalten
         # neu gerendert werden -> Rebuild nötig).
@@ -463,6 +490,13 @@ class InfoPanel(QWidget):
                         pattern.fabric_count,
                         self._calculate_thread_per_color,
                     )
+                    # Items sind an ihre Listenposition i gebunden, nicht an
+                    # eine Farbe -- nach z.B. "Farben tauschen" (gleiche
+                    # Anzahl, andere Reihenfolge) muss die Markierung dem
+                    # oben per Objekt-Identitaet aufgeloesten Index folgen,
+                    # sonst bleibt die alte Zeile hervorgehoben, die jetzt
+                    # eine andere Farbe zeigt.
+                    item.set_selected(i == self._selected_color_index)
             return
 
         # Strukturänderung (Farbe hinzu/weg, Pattern-Wechsel): komplett neu.
@@ -517,6 +551,15 @@ class InfoPanel(QWidget):
         """Markiert die aktive Farbe in der Übersicht (synchron mit ColorBar)
         und scrollt sie sichtbar."""
         self._selected_color_index = index
+        # Objekt-Identitaet mitfuehren, damit ein spaeterer _update_colors_list()
+        # -Aufruf (z.B. nach Farbe-Loeschen/Tauschen) die Markierung der
+        # richtigen Farbe zuordnen kann statt einem stehengebliebenen Index
+        # zu folgen -- siehe Docstring von self._selected_entry.
+        self._selected_entry = (
+            self._pattern.color_entries[index]
+            if self._pattern is not None and 0 <= index < len(self._pattern.color_entries)
+            else None
+        )
         target_item = None
         for i, item in enumerate(self._color_items):
             if isinstance(item, _ColorListItem):
@@ -630,3 +673,4 @@ class InfoPanel(QWidget):
             item.deleteLater()
         self._color_items.clear()
         self._selected_color_index = None
+        self._selected_entry = None
