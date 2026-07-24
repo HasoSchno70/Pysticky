@@ -9,8 +9,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath
+from PySide6.QtCore import QLineF, QPointF, QRectF, Qt
+from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath, QPen
 
 from ..core.stitch_shapes import (
     bead_radius_factor,
@@ -129,6 +129,54 @@ def _fill_bead(painter: QPainter, x: float, y: float, size: float, color: QColor
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
 
+def _draw_backstitches(painter: QPainter, pattern: Pattern, cell_size: int) -> None:
+    """Zeichnet alle Rückstich-Konturlinien des Musters.
+
+    Fehlte bisher komplett im Bild-Export -- HTML- (`html_export.py::
+    _generate_backstitches_svg`), PDF- (`pdf_export_drawings.py`) und
+    Canvas-Renderer (`rendering_mixin.py::_draw_backstitches`) zeichnen
+    Rückstiche seit jeher, der Raster-Export liess sie schlicht weg.
+
+    Koordinaten sind wie überall im Rückstich-System in halben Stichen
+    (siehe `core/backstitch_manager.py`); `half_cell` rechnet das in
+    Pixel um. Schatten + Farblinie mit Rundkappen, analog zum
+    HTML-Export (dort `stroke_width = max(1.5, cell_size / 8)`).
+
+    Im DP-Modus wird nichts gezeichnet -- Diamond Painting kennt kein
+    Rückstich-Konzept (ein per `convert_to_mode()` umgeschaltetes Pattern
+    kann aber noch alte Backstitch-Daten tragen, siehe html_export_sections.py).
+    """
+    if getattr(pattern, "mode", "stitch") == "diamond":
+        return
+    if not pattern.backstitches:
+        return
+
+    half_cell = cell_size / 2.0
+    stroke_width = max(1.5, cell_size / 8.0)
+
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    for bs in pattern.backstitches:
+        entry = pattern.get_color_entry(bs.color_index)
+        color = QColor(0, 0, 0)
+        if entry:
+            tc = entry.thread.color
+            color = QColor(tc.r, tc.g, tc.b)
+
+        line = QLineF(bs.x1 * half_cell, bs.y1 * half_cell, bs.x2 * half_cell, bs.y2 * half_cell)
+
+        # Schatten für Kontrast gegen helle/dunkle Hintergründe.
+        shadow_pen = QPen(QColor(0, 0, 0, 80), stroke_width + 1)
+        shadow_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(shadow_pen)
+        painter.drawLine(line)
+
+        pen = QPen(color, stroke_width)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.drawLine(line)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
+
 class ImageExporter:
     """Exportiert ein Kreuzstich-Muster als Rasterbild."""
 
@@ -244,6 +292,10 @@ class ImageExporter:
                     _fill_bead(painter, px, py, cell_size, color)
                 elif is_partial_stitch(stype):
                     _fill_partial_stitch(painter, stype, px, py, cell_size, color)
+
+            # Rückstich-Konturlinien (fehlten bisher komplett, siehe
+            # _draw_backstitches-Docstring).
+            _draw_backstitches(painter, pattern, cell_size)
 
             # Symbole (optional, zwangsläufig pro Zelle).
             if show_symbols and cell_size >= 8:
