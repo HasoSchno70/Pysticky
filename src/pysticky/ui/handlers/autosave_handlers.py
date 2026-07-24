@@ -50,9 +50,16 @@ class AutosaveHandlersMixin:
         try:
             save_pattern(self.current_pattern, temp_path)
 
-            if autosave_path.exists():
-                autosave_path.unlink()
-            temp_path.rename(autosave_path)
+            # Path.replace() (== os.replace()) statt unlink()+rename(): eine
+            # einzige atomare Betriebssystem-Operation. unlink()+rename() als
+            # zwei getrennte Schritte oeffnet ein Zeitfenster, in dem (nach
+            # einem Crash exakt dazwischen) WEDER die alte noch die neue
+            # Autosave-Datei existiert, obwohl die neuen Daten bereits
+            # vollstaendig auf der Platte liegen (in temp_path) --
+            # _check_autosave_recovery() sucht nur nach dem finalen Namen und
+            # wuerde die Autosave in diesem Fenster faelschlich als "nicht
+            # vorhanden" behandeln.
+            temp_path.replace(autosave_path)
 
             self.status_bar.showMessage(f"Autosave: {autosave_path.name}", self._status_timeout_ms)
         except (OSError, TypeError, ValueError) as e:

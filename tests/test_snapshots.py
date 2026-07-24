@@ -150,4 +150,34 @@ def test_pattern_key_for_uses_file_path_stem(pattern_with_stitches, tmp_path):
 
 def test_pattern_key_for_falls_back_to_pattern_name(pattern_with_stitches):
     pattern_with_stitches.name = "Test-Pattern"
-    assert pattern_key_for(pattern_with_stitches, None) == "Test-Pattern"
+    key = pattern_key_for(pattern_with_stitches, None)
+    assert key.startswith("Test-Pattern")
+    # Stabil ueber wiederholte Aufrufe fuer dasselbe (weiterhin lebende)
+    # Pattern-Objekt -- Snapshots bleiben ueber Umbenennungen/erneute
+    # Aufrufe hinweg im selben Verzeichnis.
+    assert pattern_key_for(pattern_with_stitches, None) == key
+
+
+def test_pattern_key_for_differentiates_same_named_unsaved_patterns():
+    """Regression (Autosave-/Snapshot-Robustheit-Audit): zwei GENUINE
+    unterschiedliche, nie gespeicherte Patterns (current_file is None)
+    tragen beide den identischen Default-Namen "Neues Muster" -- jedes
+    "Datei -> Neu" ohne anschliessendes Umbenennen/Speichern erzeugt
+    diesen Namen. pattern_key_for() bildete den Key bisher ausschliesslich
+    aus dem Namen, wenn kein file_path vorliegt -- zwei komplett
+    unabhaengige, nie gespeicherte Muster landeten dadurch im SELBEN
+    Snapshot-Verzeichnis, ihre "Datei -> Versionen..."-Historien
+    vermischten sich (ein "Restore" auf Pattern A's Versionen-Dialog konnte
+    tatsaechlich einen Snapshot von Pattern B laden)."""
+    from pysticky.core.pattern import Pattern
+
+    p1 = Pattern()
+    p2 = Pattern()
+    assert p1.name == p2.name  # beide der unveraenderte Default "Neues Muster"
+
+    key1 = pattern_key_for(p1, None)
+    key2 = pattern_key_for(p2, None)
+    assert key1 != key2, (
+        "Regression: zwei unterschiedliche, nie gespeicherte Patterns mit "
+        "identischem Default-Namen kollidieren auf denselben Snapshot-Key."
+    )

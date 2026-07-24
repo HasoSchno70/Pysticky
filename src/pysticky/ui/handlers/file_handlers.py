@@ -331,6 +331,15 @@ class FileHandlersMixin:
         """Muster speichern unter."""
         from ...core import save_pattern
 
+        # Datei-spezifische Autosave der ALTEN Datei (falls vorhanden) muss
+        # nach erfolgreichem Speichern unter einem neuen Pfad aufgeraeumt
+        # werden -- sonst bleibt sie als Datenleiche liegen und wird beim
+        # naechsten Oeffnen der alten Datei faelschlich als Recovery
+        # angeboten, obwohl die Arbeit laengst unter dem neuen Namen
+        # weitergefuehrt wird (siehe _check_autosave_recovery-Aufruf in
+        # _load_pattern_file).
+        old_file = self.current_file
+
         # Default-Name aus Pattern-Name vorschlagen, damit der User nicht
         # mit einem leeren Feld konfrontiert wird (besonders nach Demo-Open).
         default_name = ""
@@ -384,6 +393,20 @@ class FileHandlersMixin:
                 self._update_title()
                 self._add_recent_file(path)
                 self.status_bar.showMessage(f"Gespeichert: {path}", self._status_timeout_ms)
+
+                # Alte datei-spezifische Autosave aufraeumen (siehe Kommentar
+                # oben) -- die Daten sind durch den frischen Save unter dem
+                # neuen Namen ohnehin sicher persistiert.
+                if old_file is not None:
+                    old_autosave = old_file.with_suffix(".pxs.autosave")
+                    try:
+                        if old_autosave.exists():
+                            old_autosave.unlink()
+                    except OSError:
+                        logger.warning(
+                            "Alte Autosave-Datei konnte nicht entfernt werden: %s",
+                            old_autosave,
+                        )
             except (OSError, TypeError, ValueError) as e:
                 # json.dump wirft bei nicht-serialisierbarem Zustand TypeError/ValueError,
                 # nicht nur OSError — ohne breiten Catch crasht die App beim Speichern.

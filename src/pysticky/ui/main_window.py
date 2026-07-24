@@ -942,9 +942,17 @@ class MainWindow(
             self._unsaved_changes = False
             self._on_new()
         elif start_action == 2:
-            # Letzte Datei öffnen — Fallback: Welcome wenn keine Recent
+            # Letzte Datei öffnen — Fallback: Welcome wenn keine Recent.
+            # _already_loaded() muss VOR dem Oeffnen geprueft werden: hat die
+            # Autosave-Recovery oben bereits ein (ungespeichertes) Pattern
+            # gesetzt, darf es hier nicht mehr stillschweigend durch die
+            # zuletzt genutzte Datei ersetzt werden (Bug: `_unsaved_changes`
+            # wurde bisher unconditional auf False gesetzt, wodurch
+            # _open_recent_file()'s _check_save_changes()-Abfrage keine
+            # Rueckfrage mehr stellte und ein per Recovery-Dialog bestaetigt
+            # wiederhergestelltes Pattern kommentarlos verworfen wurde).
             opened = False
-            if self._recent_files:
+            if not _already_loaded() and self._recent_files:
                 last_file = self._recent_files[0]
                 if Path(last_file).exists():
                     self._unsaved_changes = False

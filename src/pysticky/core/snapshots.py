@@ -192,9 +192,21 @@ def delete_snapshot(path: Path) -> bool:
 def pattern_key_for(pattern: "Pattern", file_path: Path | None = None) -> str:
     """Liefert den Snapshot-Key für ein Pattern.
 
-    Vorrang: aktueller Dateiname (stem) — sonst der Pattern-Name.
-    So bleiben Snapshots stabil über Pattern-Umbenennungen.
+    Vorrang: aktueller Dateiname (stem) — sonst der Pattern-Name plus ein
+    Objekt-Identitäts-Suffix.
+
+    Der Namens-Fallback allein reicht NICHT aus: jedes nie gespeicherte
+    Pattern trägt den identischen Default-Namen "Neues Muster" (siehe
+    Pattern.name-Default) — zwei komplett unabhängige, nie gespeicherte
+    Muster (z.B. zwei "Datei → Neu" ohne Speichern in derselben oder in
+    zwei parallel laufenden Sitzungen) würden sonst denselben Snapshot-Key
+    und damit dasselbe Snapshot-Verzeichnis teilen; ihre "Datei →
+    Versionen…"-Historien würden sich mischen. `id(pattern)` bleibt für die
+    gesamte Lebensdauer des (in-place mutierten) Pattern-Objekts stabil —
+    Umbenennungen (Pattern.name wird nur mutiert, das Objekt bleibt
+    dasselbe) ändern den Key also weiterhin nicht.
     """
     if file_path is not None:
         return file_path.stem
-    return pattern.name or "_unnamed"
+    name = pattern.name or "_unnamed"
+    return f"{name}__{id(pattern):x}"

@@ -77,7 +77,15 @@ class SnapshotHistoryDialog(QDialog):
         self._pattern = pattern
         self._key = pattern_key_for(pattern, current_file)
 
-        self.setWindowTitle(t("Versionen für {key}").format(key=self._key))
+        # Anzeige-Name fuer den Titel bewusst getrennt vom internen Key:
+        # pattern_key_for() haengt bei nie gespeicherten Patterns ein
+        # Objekt-Identitaets-Suffix an (zur Kollisionsvermeidung zwischen
+        # zwei unabhaengigen, gleichnamigen "Neues Muster"-Patterns) -- das
+        # waere als roher Hex-Wert im Dialogtitel nur verwirrend.
+        display_name = (
+            current_file.stem if current_file is not None else (pattern.name or "_unnamed")
+        )
+        self.setWindowTitle(t("Versionen für {key}").format(key=display_name))
         self.setMinimumSize(560, 480)
         self._setup_ui()
         self._reload()
