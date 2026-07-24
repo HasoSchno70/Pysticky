@@ -10,6 +10,7 @@ Variante des Statistik-Dialogs hat eine andere Signatur und Optik).
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import (
     QColor,
+    QFontMetrics,
     QLinearGradient,
     QMouseEvent,
     QPainter,
@@ -27,6 +28,34 @@ from PySide6.QtWidgets import (
 
 from ...core.i18n import t
 from ..styles import THEME
+
+_SYMBOL_COLUMN_MIN_WIDTH = 14
+_SYMBOL_COLUMN_PADDING = 4
+
+
+def _apply_symbol_column_width(label: QLabel, symbol: str) -> None:
+    """Setzt die Breite der Symbol-Spalte in `_ColorListItem` passend zum
+    tatsächlichen Symbol.
+
+    14px (der bisherige feste Wert) reicht für ein einzelnes Symbol-Font-
+    Glyphen-Zeichen (das normale Alphabet aus resources/symbols.txt). Ist
+    der Symbol-Pool erschöpft, vergibt Pattern.add_color() ein
+    mehrzeichiges "#N"-Ersatzsymbol (z.B. "#12"); bei der festen 14px-Breite
+    wurde das stillschweigend am Zellrand abgeschnitten ("#12" wurde
+    optisch zu "#1" o.ä.), wodurch verschiedene Farben in der Liste
+    ununterscheidbar aussahen.
+
+    Statt die benötigte Breite anhand der Zeichenanzahl zu schätzen (Font-
+    Metriken hängen von Familie/Gewicht/DPI ab und sind zwischen Umgebungen
+    nicht stabil genug für eine feste Pixel-pro-Zeichen-Konstante), wird
+    hier die tatsächliche Textbreite über `ensurePolished()` +
+    `QFontMetrics` gemessen -- das Label muss dafür sein Stylesheet (Font-
+    Größe/-Gewicht) bereits gesetzt haben, bevor diese Funktion aufgerufen
+    wird.
+    """
+    label.ensurePolished()
+    needed = QFontMetrics(label.font()).horizontalAdvance(symbol)
+    label.setFixedWidth(max(_SYMBOL_COLUMN_MIN_WIDTH, needed + _SYMBOL_COLUMN_PADDING))
 
 
 class StatCard(QFrame):
@@ -267,12 +296,12 @@ class _ColorListItem(QFrame):
         # keine eingebürgerte Symbol-Konvention, dort identifiziert man
         # über die Drill-Nummer.
         self.lbl_symbol = QLabel(self._entry.symbol, self)
-        self.lbl_symbol.setFixedWidth(14)
         self.lbl_symbol.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_symbol.setStyleSheet(
             f"color: {THEME.text_primary}; font-size: 11px; "
             f"font-weight: 700; background: transparent;"
         )
+        _apply_symbol_column_width(self.lbl_symbol, self._entry.symbol)
         self.lbl_symbol.setVisible(self._mode != "diamond")
         layout.addWidget(self.lbl_symbol)
 
@@ -351,8 +380,12 @@ class _ColorListItem(QFrame):
         self._fabric_count = fabric_count
         self._calc_thread = calc_thread_fn
 
-        # Symbol kann sich ändern wenn User es geändert hat
+        # Symbol kann sich ändern wenn User es geändert hat -- Breite muss
+        # mitwandern, sonst bleibt sie auf der Zeichenlänge des ursprünglich
+        # bei _setup_ui() zugewiesenen Symbols eingefroren (siehe
+        # _apply_symbol_column_width()-Docstring).
         self.lbl_symbol.setText(entry.symbol)
+        _apply_symbol_column_width(self.lbl_symbol, entry.symbol)
 
         # Swatch/Nummer/Name-Stylesheets neu anwenden -- sonst bleiben sie
         # nach einem Theme-Wechsel auf den alten THEME-Farben haengen, weil
