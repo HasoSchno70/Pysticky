@@ -276,3 +276,111 @@ def test_pdf_export_survives_unescaped_angle_bracket_in_thread_name(tmp_path):
     ok = PDFExporter(pattern, include_path_preview=False).export(target)
     assert ok is True
     assert target.exists()
+
+
+def _extract_pdf_text(pdf_bytes: bytes) -> str:
+    """Minimaler PDF-Content-Stream-Text-Extractor -- nur fuer reportlab-
+    generierte PDFs (ASCII85Decode + FlateDecode content streams, Standard-
+    Fonts/WinAnsiEncoding). Bewusst ohne externe Abhaengigkeit (kein
+    pypdf/pdfplumber im Projekt) -- reicht aus, um Tj/TJ-Textoperatoren aus
+    den dekomprimierten Streams zu extrahieren und auf Vollstaendigkeit /
+    Wiederholung (Kopfzeile) zu pruefen.
+    """
+    import base64
+    import re
+    import zlib
+
+    texts: list[bytes] = []
+    for m in re.finditer(rb"stream\r?\n(.*?)endstream", pdf_bytes, re.DOTALL):
+        raw = m.group(1).rstrip(b"\r\n")
+        if raw.endswith(b"~>"):
+            raw = raw[:-2]
+        try:
+            decompressed = zlib.decompress(base64.a85decode(raw, adobe=False))
+        except (ValueError, zlib.error):
+            continue
+        for tm in re.finditer(rb"\((?:[^()\\]|\\.)*\)\s*Tj", decompressed):
+            s = tm.group(0)
+            texts.append(s[1 : s.rfind(b")")])
+        for tm in re.finditer(rb"\[((?:[^\[\]\\]|\\.)*)\]\s*TJ", decompressed):
+            parts = re.findall(rb"\((?:[^()\\]|\\.)*\)", tm.group(1))
+            texts.append(b"".join(p[1:-1] for p in parts))
+    return b" ".join(texts).decode("latin-1", errors="replace")
+
+
+def _pattern_with_many_colors(n: int):
+    """Baut ein Pattern mit `n` Farben (jenseits des 86er-Symbol-Pools ab
+    Runde 48 -- dann greift der "#N"-Fallback statt eines echten Symbols)."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=10, height=10)
+    pattern.color_entries.clear()
+    for i in range(n):
+        pattern.add_color(
+            Thread.from_hex(
+                f"Farbe{i}",
+                f"#{i % 16:01x}{(i * 3) % 16:01x}{(i * 7) % 16:01x}",
+                manufacturer="DMC",
+                catalog_number=f"XCAT{i:04d}",
+            )
+        )
+    return pattern
+
+
+def test_pdf_legend_header_repeats_on_continuation_pages(tmp_path):
+    """Regression: Bei sehr vielen Farben (Symbol-Pool-Erschoepfung, Runde 48)
+    bricht die Legenden-Tabelle ueber mehrere PDF-Seiten um (reportlab
+    Table-Flowable-Split). Ohne repeatRows=1 (Table in
+    pdf_export_sections.py::_create_legend) erscheint die Spaltenkopfzeile
+    (Nr./Symbol/Farbe/Garnnummer/...) nur auf der ersten Seite -- alle
+    Folgeseiten der Legende zeigen nackte Zahlenkolonnen ohne jede
+    Beschriftung. Pruefung ueber echten PDF-Content (nicht nur den
+    reportlab-Story-Objektbaum), damit ein tatsaechlicher Seitenumbruch
+    verifiziert wird."""
+    pattern = _pattern_with_many_colors(130)
+
+    target = tmp_path / "viele_farben.pdf"
+    ok = PDFExporter(pattern, include_path_preview=False).export(target)
+    assert ok is True
+
+    text = _extract_pdf_text(target.read_bytes())
+
+    # Kopfzeilen-Text muss mehrfach auftauchen -- sonst wuerde er nur auf
+    # der ersten Legenden-Seite stehen.
+    assert text.count("Garnnummer") > 1
+
+
+def test_pdf_legend_all_colors_present_exactly_once_across_page_break(tmp_path):
+    """Regression-Absicherung (bereits korrektes Verhalten): Trotz des
+    mehrseitigen Legenden-Umbruchs bei sehr vielen Farben darf reportlabs
+    automatischer Table-Split keine Zeile verlieren oder duplizieren --
+    jede Katalognummer muss in der erzeugten PDF-Legende genau einmal
+    auftauchen, auch fuer Farben jenseits des 86er-Symbol-Pools (die dort
+    ein mehrstelliges "#N"-Fallback-Symbol statt eines echten Symbols
+    bekommen, siehe Pattern.add_color)."""
+    n = 130
+    pattern = _pattern_with_many_colors(n)
+
+    target = tmp_path / "viele_farben_vollstaendig.pdf"
+    ok = PDFExporter(pattern, include_path_preview=False).export(target)
+    assert ok is True
+
+    text = _extract_pdf_text(target.read_bytes())
+
+    import re
+    from collections import Counter
+
+    codes = re.findall(r"XCAT\d{4}", text)
+    counts = Counter(codes)
+
+    missing = [f"XCAT{i:04d}" for i in range(n) if f"XCAT{i:04d}" not in counts]
+    duplicated = {code: c for code, c in counts.items() if c > 1}
+
+    assert missing == [], f"Farben in der Legende verschwunden: {missing}"
+    assert duplicated == {}, f"Farben in der Legende dupliziert: {duplicated}"
+
+    # "#N"-Fallback-Symbole (ab Farbe 87, Runde 48) muessen unbeschaedigt
+    # (nicht abgeschnitten auf ein einzelnes Zeichen) im PDF-Text auftauchen.
+    hash_symbols = set(re.findall(r"#\d+", text))
+    assert "#1" in hash_symbols
+    assert "#44" in hash_symbols  # 130 - 86 = 44 Fallback-Symbole erwartet
