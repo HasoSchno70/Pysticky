@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ....core.i18n import t
+from ....core.i18n import format_number, t
 from ...styles import THEME
 from ...widgets.statistics_widgets import StatCard
 from ._table_helpers import sortable_percent_item
@@ -120,11 +120,11 @@ class ProgressTab(QWidget):
         self._progress_bar.setValue(int(percent * 10))
         self._progress_bar.setFormat(f"{percent:.1f}%")
         unit = t("Diamanten gesetzt") if self._diamond else t("Stiche gestickt")
-        self._progress_label.setText(f"{completed:,} / {total:,} {unit}")
+        self._progress_label.setText(f"{format_number(completed)} / {format_number(total)} {unit}")
 
         # Karten
-        self._card_progress_done.set_value(f"{completed:,}")
-        self._card_progress_remaining.set_value(f"{total - completed:,}")
+        self._card_progress_done.set_value(format_number(completed))
+        self._card_progress_remaining.set_value(format_number(total - completed))
 
         # Farben komplett fertig zählen
         colors_done = sum(

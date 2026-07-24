@@ -39,7 +39,7 @@ from ...utils.logging import get_logger
 logger = get_logger(__name__)
 
 from ...core.file_io import load_pattern
-from ...core.i18n import t
+from ...core.i18n import format_number, t
 from ..styles import THEME, Styles
 from .pattern_library_data import LibraryData, LibraryEntry
 from .thumbnail_widget import ThumbnailWidget
@@ -536,7 +536,7 @@ class PatternLibraryDialog(QDialog):
             f"<b>{entry.name}</b> | "
             f"{entry.width}×{entry.height} Stiche ({w_cm:.1f}×{h_cm:.1f} cm) | "
             f"{entry.color_count} Farben | "
-            f"{entry.stitch_count:,} Stiche"
+            f"{format_number(entry.stitch_count)} Stiche"
         )
         self._open_btn.setEnabled(True)
 

@@ -42,7 +42,7 @@ from ...core.constants import (
     MAX_ZOOM_PERCENT,
     MIN_ZOOM_PERCENT,
 )
-from ...core.i18n import t
+from ...core.i18n import format_number, t
 from ...utils import clamp_int
 from ..rendering import PreviewRenderEngine, RenderMode
 from ..styles import THEME, Styles
@@ -811,7 +811,7 @@ class PatternPreviewDialog(QDialog):
 
         self._label_size.setText(f"{w_cm:.1f} × {h_cm:.1f} cm")
         unit_label = "Drills" if self._is_dp else "Stiche"
-        self._label_stitches.setText(f"{stats['total_stitches']:,} {unit_label}")
+        self._label_stitches.setText(f"{format_number(stats['total_stitches'])} {unit_label}")
         self._label_colors.setText(f"{stats['used_colors']} Farben")
         self._label_progress.setText(f"{progress['progress_percent']:.1f}%")
 
