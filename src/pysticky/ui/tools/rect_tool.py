@@ -113,13 +113,20 @@ class RectTool(BaseTool):
                 for x in range(min_x, max_x + 1):
                     points.append((x, y))
         else:
-            # Nur Umriss
+            # Nur Umriss. Ein Set statt einer Liste, weil bei einem
+            # entarteten Rechteck (Breite oder Hoehe genau 1 Zelle, z.B. ein
+            # 1-Pixel-Klick oder eine ueber das Rechteck-Werkzeug gezogene
+            # gerade Linie) min_y==max_y bzw. min_x==max_x gilt -- ohne Set
+            # wuerde dieselbe Zelle doppelt in die Changes-Liste aufgenommen
+            # (unnoetig doppelte Undo-Eintraege/Signal-Emissionen pro Zelle).
+            border: set[tuple[int, int]] = set()
             for x in range(min_x, max_x + 1):
-                points.append((x, min_y))
-                points.append((x, max_y))
+                border.add((x, min_y))
+                border.add((x, max_y))
             for y in range(min_y + 1, max_y):
-                points.append((min_x, y))
-                points.append((max_x, y))
+                border.add((min_x, y))
+                border.add((max_x, y))
+            points = list(border)
 
         return points
 
