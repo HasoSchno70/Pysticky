@@ -121,24 +121,37 @@ def handle_errors(
 
 
 def safe_call(
-    func: Callable[P, T], *args: P.args, default: T | None = None, **kwargs: P.kwargs
+    func: Callable[..., T],
+    call_args: tuple[object, ...] = (),
+    call_kwargs: dict[str, object] | None = None,
+    *,
+    default: T | None = None,
 ) -> T | None:
     """
     Ruft eine Funktion auf und fängt alle Exceptions ab.
 
+    `call_args`/`call_kwargs` werden bewusst als eigene Tupel/Dict-Parameter
+    (statt als `*args`/`**kwargs`) entgegengenommen - analog zu
+    `threading.Thread(target, args=..., kwargs=...)`. Würde `func` selbst
+    per `*args`/`**kwargs` durchgereicht, könnte ein an `func` gerichtetes
+    Keyword-Argument namens `default` (ein sehr gebräuchlicher Parameter-
+    name) mit dem eigenen `default`-Parameter von `safe_call` kollidieren
+    und dadurch stillschweigend nie bei `func` ankommen.
+
     Args:
         func: Die aufzurufende Funktion
-        *args: Positionsargumente
+        call_args: Positionsargumente für func
+        call_kwargs: Keyword-Argumente für func
         default: Rückgabewert bei Fehler
-        **kwargs: Keyword-Argumente
 
     Returns:
         Rückgabewert der Funktion oder default bei Fehler
     """
     try:
-        return func(*args, **kwargs)
+        return func(*call_args, **(call_kwargs or {}))
     except Exception as e:  # intentional catch-all
-        logger.warning(f"safe_call fehlgeschlagen für {func.__name__}: {e}")
+        name = getattr(func, "__name__", repr(func))
+        logger.warning(f"safe_call fehlgeschlagen für {name}: {e}")
         return default
 
 
