@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 
 from ...config import UI_CONFIG
 from ...core.constants import MAX_PATTERN_SIZE
-from ...core.i18n import t
+from ...core.i18n import format_number, t
 from ..styles import THEME, Styles
 from .user_template_dialog import load_user_templates
 
@@ -825,7 +825,7 @@ class NewProjectDialog(QDialog):
 
         self._size_info.setText(
             f"📐 Fertige Größe: {width_cm:.1f} × {height_cm:.1f} cm\n"
-            f"🔢 Max. Stiche: {total_stitches:,}\n"
+            f"🔢 Max. Stiche: {format_number(total_stitches)}\n"
             f"🧵 Stoff: {fabric_count} Stiche/Zoll"
         )
 

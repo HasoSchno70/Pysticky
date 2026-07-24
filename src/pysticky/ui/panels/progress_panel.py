@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core import Pattern
-from ...core.i18n import t
+from ...core.i18n import format_number, t
 from ..styles import THEME
 
 
@@ -251,7 +251,7 @@ class ProgressPanel(QWidget):
         self.overall_progress.setValue(int(percent * 10))
         completed = stats["completed_stitches"]
         total = stats["total_stitches"]
-        counts_str = f"{completed:,} / {total:,}".replace(",", ".")
+        counts_str = f"{format_number(completed)} / {format_number(total)}"
         self.lbl_counts.setText(f"{counts_str} {t('Stiche')}")
         # Pro-Farben-Rebuild verzögert anstossen
         if not self._update_timer.isActive():

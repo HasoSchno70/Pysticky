@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ....core.difficulty import compute_difficulty
-from ....core.i18n import t
+from ....core.i18n import format_number, t
 from ...color_utils import to_qcolor
 from ...styles import THEME
 from ...widgets.statistics_widgets import StatCard
@@ -97,9 +97,9 @@ class OverviewTab(QWidget):
 
         # Stiche: Zeige zu stickende Stiche (ohne übersprungene)
         if stats.get("skipped_stitches", 0) > 0:
-            self._card_stitches.set_value(f"{stats['stitches_to_do']:,}")
+            self._card_stitches.set_value(format_number(stats["stitches_to_do"]))
         else:
-            self._card_stitches.set_value(f"{stats['total_stitches']:,}")
+            self._card_stitches.set_value(format_number(stats["total_stitches"]))
 
         # Farben: Zeige verwendete - übersprungene.
         #
@@ -143,7 +143,7 @@ class OverviewTab(QWidget):
         tip = (
             f"Score: {diff['score']} / 12\n"
             f"  Farben: {f['colors']}/3 ({d['used_colors']} verwendet)\n"
-            f"  Stiche: {f['size']}/3 ({d['stitches_to_do']:,} zu sticken)\n"
+            f"  Stiche: {f['size']}/3 ({format_number(d['stitches_to_do'])} zu sticken)\n"
             f"  Sonderstiche: {f['special']}/3 "
             f"({d['special_ratio'] * 100:.1f}% Anteil)\n"
             f"  Backstitches: {f['backstitches']}/3 ({d['backstitches']} Linien)"
@@ -173,7 +173,7 @@ class OverviewTab(QWidget):
                 name_label.setText(f"{entry.symbol} {entry.thread.name}")
                 percent = int((entry.stitch_count / total) * 100)
                 bar.setValue(percent)
-                bar.setFormat(f"{entry.stitch_count:,} ({percent}%)")
+                bar.setFormat(f"{format_number(entry.stitch_count)} ({percent}%)")
             else:
                 color_widget.setStyleSheet(f"background: {THEME.bg_medium}; border-radius: 3px;")
                 name_label.setText("-")

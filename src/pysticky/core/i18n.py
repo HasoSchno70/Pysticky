@@ -190,3 +190,26 @@ def current_language() -> str:
 def available_languages() -> list[str]:
     """Convenience: liefert alle verfügbaren Sprachen."""
     return _manager.available_languages()
+
+
+def format_number(n: int) -> str:
+    """Formatiert eine Ganzzahl mit Tausendertrennzeichen passend zur aktiven
+    App-Sprache (NICHT zur OS-Locale -- siehe QDoubleSpinBox-Fix in
+    statistics_tabs/thread_tab.py bzw. time_tab.py, der bewusst das Gegenteil
+    tut und Punkt-Dezimal unabhaengig von jeder Locale erzwingt).
+
+    Deutsch (Default) -> Punkt ("12.345"), Englisch -> Komma ("12,345").
+
+    Vor dieser Funktion nutzten manche Stellen (info_panel.py,
+    progress_panel.py) einen hartkodierten f"{n:,}".replace(",", ".")-Hack
+    (immer deutsches Format, auch im Englisch-Modus), waehrend andere Stellen
+    (Statistik-Dialog-Tabs, pattern_library_dialog.py, new_project_dialog.py,
+    pattern_preview_dialog.py, hoop_planner_dialog.py) den rohen Python-
+    Default f"{n:,}" (immer Komma, auch im Deutsch-Modus) verwendeten --
+    derselbe Stich-Zaehlwert erschien je nach UI-Stelle mit unterschiedlichem
+    Trennzeichen, unabhaengig von der tatsaechlich eingestellten Sprache.
+    """
+    grouped = f"{n:,}"
+    if _manager.current_language == "en":
+        return grouped
+    return grouped.replace(",", ".")

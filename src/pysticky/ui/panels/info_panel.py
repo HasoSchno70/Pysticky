@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 
 from ...core import ColorEntry, Pattern
 from ...core.constants import COMMON_FABRIC_COUNTS
-from ...core.i18n import t
+from ...core.i18n import format_number, t
 from ..styles import THEME, Styles
 from .info_panel_widgets import SectionHeader, StatCard, _ColorListItem
 
@@ -255,11 +255,11 @@ class InfoPanel(QWidget):
         # Zeige Stiche die gestickt werden (ohne übersprungene)
         stitches_to_do = stats["stitches_to_do"]
         if stats["skipped_stitches"] > 0:
-            stitches_str = f"{stitches_to_do:,}".replace(",", ".")
+            stitches_str = format_number(stitches_to_do)
             # Zeige übersprungene Stiche in Klammern
             self.card_stitches.set_value(f"{stitches_str} (+{stats['skipped_stitches']} überspr.)")
         else:
-            stitches_str = f"{stats['total_stitches']:,}".replace(",", ".")
+            stitches_str = format_number(stats["total_stitches"])
             self.card_stitches.set_value(stitches_str)
 
         # Farben: zeige auch übersprungene
@@ -302,7 +302,7 @@ class InfoPanel(QWidget):
             f"{t('Score')} {diff['score']}/12  —  "
             f"{t('Farben')} {f['colors']}/3, {t('Größe')} {f['size']}/3, "
             f"{t('Sonderstiche')} {f['special']}/3, {t('Backstitches')} {f['backstitches']}/3\n"
-            f"({d['used_colors']} {t('Farben')}, {d['stitches_to_do']:,} {t('Stiche')}, "
+            f"({d['used_colors']} {t('Farben')}, {format_number(d['stitches_to_do'])} {t('Stiche')}, "
             f"{d['special_ratio'] * 100:.1f}% {t('Sonder')}, {d['backstitches']} {t('Linien')})"
         )
 
@@ -349,7 +349,7 @@ class InfoPanel(QWidget):
         if self._mode == "diamond":
             # 10% Reserve für verlorene/abgesprungene Drills
             total_drills = int(total_stitches * 1.10)
-            return f"~{total_drills:,}".replace(",", ".") + " " + t("Drills")
+            return f"~{format_number(total_drills)} " + t("Drills")
 
         base_cm = 5.0 * (14 / pattern.fabric_count)
         total_cm = total_stitches * base_cm
@@ -376,7 +376,7 @@ class InfoPanel(QWidget):
             # bedeutungslose Garn-Meterangabe (Aida-Formel) statt einer
             # Drill-Anzahl.
             total_drills = int(stitch_count * 1.10)
-            return f"~{total_drills:,}".replace(",", ".")
+            return f"~{format_number(total_drills)}"
 
         base_cm = 5.0 * (14 / fabric_count)
         total_cm = stitch_count * base_cm * 1.15

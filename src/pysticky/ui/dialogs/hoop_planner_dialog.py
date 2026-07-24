@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.hoop_planner import HoopPlan, estimate_sector_grid, plan_hoops
-from ...core.i18n import t
+from ...core.i18n import format_number, t
 from ..color_utils import to_qcolor
 from ..styles import THEME
 
@@ -379,7 +379,7 @@ class HoopPlannerDialog(QDialog):
 
         if rows * cols > self.MAX_REASONABLE_SECTORS:
             self.summary_label.setText(
-                f"⚠ Diese Kombination ergäbe {rows * cols:,} Sektoren "
+                f"⚠ Diese Kombination ergäbe {format_number(rows * cols)} Sektoren "
                 f"({rows} × {cols}) — zu viel für eine sinnvolle Darstellung. "
                 "Bitte einen größeren Rahmen oder eine kleinere Überlappung wählen."
             )

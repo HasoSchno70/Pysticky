@@ -90,6 +90,84 @@ def test_snapshot_history_tooltip_uses_german_weekday_name_in_default_language()
         manager.set_language(original_lang)
 
 
+@pytest.fixture
+def _reset_language():
+    """set_language() ist global -- Test muss die App-Sprache danach zurücksetzen."""
+    from pysticky.core.i18n import current_language, set_language
+
+    original = current_language()
+    yield
+    set_language(original)
+
+
+def test_format_number_uses_dot_separator_in_german_app_language(_reset_language):
+    """Runde 71: format_number() muss der App-Sprache (t()/set_language()),
+    NICHT der OS-Locale folgen -- Deutsch gruppiert mit Punkt."""
+    from pysticky.core.i18n import format_number, set_language
+
+    set_language("de")
+    assert format_number(12345) == "12.345"
+
+
+def test_format_number_uses_comma_separator_in_english_app_language(_reset_language):
+    """Gegenprobe: Englisch gruppiert mit Komma (Python-Default)."""
+    from pysticky.core.i18n import format_number, set_language
+
+    set_language("en")
+    assert format_number(12345) == "12,345"
+
+
+def test_info_panel_and_statistics_overview_agree_on_stitch_count_formatting(
+    qtbot, _reset_language
+):
+    """Regression (Runde 71): dieselbe Stich-Anzahl (>= 1000, damit ein
+    Tausendertrennzeichen ueberhaupt sichtbar wird) erschien im Info-Panel-
+    Dock ("12.345", hartkodierter f"{n:,}".replace(",", ".")-Hack -- IMMER
+    deutsches Format) und im Statistik-Dialog-Overview-Tab ("12,345", roher
+    Python-Default f"{n:,}" -- IMMER englisches Format) unterschiedlich
+    formatiert, und zwar VOELLIG UNABHAENGIG von der tatsaechlich
+    eingestellten App-Sprache. Mit format_number() muessen beide Stellen für
+    dieselbe Sprache identisch formatieren.
+    """
+    from pysticky.core import Pattern, Thread
+    from pysticky.core.i18n import set_language
+    from pysticky.ui.dialogs.statistics_tabs.overview_tab import OverviewTab
+    from pysticky.ui.panels.info_panel import InfoPanel
+
+    # 40x40 = 1600 Stiche, eine einzige Farbe, keine übersprungenen Stiche
+    # -> beide Widgets nehmen den "else"-Zweig (kein skip_stitching-Zusatz).
+    pattern = Pattern(width=40, height=40)
+    pattern.color_entries.clear()
+    idx = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    for y in range(40):
+        for x in range(40):
+            pattern.set_stitch(x, y, idx)
+
+    for lang in ("de", "en"):
+        set_language(lang)
+        stats = pattern.get_statistics()
+
+        info = InfoPanel()
+        qtbot.addWidget(info)
+        info.update_info(pattern)
+
+        overview = OverviewTab()
+        qtbot.addWidget(overview)
+        overview.update_stats(pattern, stats)
+
+        info_text = info.card_stitches.lbl_value.text()
+        overview_text = overview._card_stitches._value_label.text()
+
+        assert info_text == overview_text, (
+            f"Sprache={lang!r}: Info-Panel zeigt {info_text!r}, "
+            f"Statistik-Overview zeigt {overview_text!r}"
+        )
+        # Bei 1600 muss ueberhaupt ein Trennzeichen vorkommen (sonst waere
+        # der Test trivial erfuellt, weil beide Seiten zufaellig "1600" ohne
+        # jede Formatierung zeigen wuerden).
+        assert any(sep in info_text for sep in (".", ","))
+
+
 def test_snapshot_history_tooltip_uses_english_weekday_name_in_english_mode():
     """Gegenprobe: im Englisch-Modus soll weiterhin der englische
     Wochentagsname erscheinen (kein hart-codiertes Deutsch mehr fuer alle

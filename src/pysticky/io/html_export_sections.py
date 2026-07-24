@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..core.i18n import t
+from ..core.i18n import format_number, t
 from .html_export import _html_encode
 
 if TYPE_CHECKING:
@@ -324,7 +324,7 @@ td.overlap-cell {{ background-color: rgba(243, 233, 198, 0.45); }}
             action_label = t("Zu kleben:") if is_dp else t("Zu sticken:")
             skip_info_row = (
                 f"<tr><td>&#10010; {action_label}</td>"
-                f"<td>{self._stitches_to_do:,}</td></tr>"
+                f"<td>{format_number(self._stitches_to_do)}</td></tr>"
                 f"<tr><td>&#128683; {t('Stofffarbe')}</td>"
                 f"<td>{t('{n} Farbe(n), wird nicht gestickt').format(n=self._skipped_colors)}</td></tr>"
             )
