@@ -93,6 +93,13 @@ class _CustomTooltip(QWidget):
                     y = widget.mapToGlobal(QPoint(0, 0)).y() - self.height() - 4
                 else:
                     y = global_pos.y() - self.height() - 4
+            # Untergrenze: bei sehr breitem/hohem Tooltip-Inhalt (z.B. ungewoehnlich
+            # langer Text ohne Wortumbruch) kann der Rechts/Unten-Ausgleich oben x/y
+            # weit ins Negative schieben, sodass der Tooltip komplett aus dem
+            # sichtbaren Bereich links/oben herausrutscht. Links/oben deckeln, damit
+            # zumindest der Anfang des Tooltips sichtbar bleibt.
+            x = max(x, geo.left())
+            y = max(y, geo.top())
 
         self.move(x, y)
         self.show()
