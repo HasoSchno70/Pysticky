@@ -495,6 +495,11 @@ class RemoveBackstitchCommand(Command):
         )
 
 
+# Grid/Stitch-Type/Completion-Kopien + stitch_count je Farbe + (width, height)
+# der Ziel-Ebene zum Zeitpunkt der Aufnahme -- siehe LayerSnapshotCommand.
+_LayerSnapshot = tuple["np.ndarray", "np.ndarray", "np.ndarray", list[int], tuple[int, int]]
+
+
 class LayerSnapshotCommand(Command):
     """
     Command für Operationen, die eine unbekannte Anzahl Zellen einer Ebene
@@ -513,6 +518,15 @@ class LayerSnapshotCommand(Command):
     Bekannte Einschränkung: geht davon aus, dass `action` weder Farben
     hinzufügt/entfernt noch Ebenen hinzufügt/entfernt -- gilt für alle
     aktuellen Builtin-Plugins (die nur `pattern.set_stitch()` aufrufen).
+    Aendert `action` die Mustergroesse (z.B. ein Plugin ruft
+    `pattern.resize()` auf), wird das Grid vor dem Zurueckschreiben des
+    Snapshots erst wieder auf die alte Groesse gebracht -- ohne das wuerde
+    `layer.grid[:] = grid` mit einem ValueError abstuerzen, weil Snapshot-
+    und aktuelles Grid unterschiedliche Shapes haben (siehe Regressionstest
+    `TestLayerSnapshotCommand::test_undo_after_action_resizes_pattern` in
+    tests/test_undo.py). Andere Layer sowie Rückstiche werden dabei NICHT
+    auf ihren Vorzustand zurückgesetzt (gleiche Einschränkung wie bei
+    Farben/Ebenen oben).
 
     Example:
         >>> cmd = LayerSnapshotCommand(pattern, layer_index=0,
@@ -532,22 +546,27 @@ class LayerSnapshotCommand(Command):
         self._layer_index = layer_index
         self._action = action
         self._description_text = description_text
-        self._before: tuple[np.ndarray, np.ndarray, np.ndarray, list[int]] | None = None
-        self._after: tuple[np.ndarray, np.ndarray, np.ndarray, list[int]] | None = None
+        self._before: _LayerSnapshot | None = None
+        self._after: _LayerSnapshot | None = None
         self.result: Any = None
 
-    def _snapshot(self, layer) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[int]]:
+    def _snapshot(self, layer) -> _LayerSnapshot:
         return (
             layer.grid.copy(),
             layer.stitch_type_grid.copy(),
             layer.completion_grid.copy(),
             [e.stitch_count for e in self._pattern.color_entries],
+            (self._pattern.width, self._pattern.height),
         )
 
-    def _restore(
-        self, layer, snapshot: tuple[np.ndarray, np.ndarray, np.ndarray, list[int]]
-    ) -> None:
-        grid, stitch_type_grid, completion_grid, stitch_counts = snapshot
+    def _restore(self, layer, snapshot: _LayerSnapshot) -> None:
+        grid, stitch_type_grid, completion_grid, stitch_counts, (width, height) = snapshot
+        if layer.grid.shape != grid.shape:
+            # `action` hat die Mustergroesse veraendert (z.B. ein Plugin,
+            # das pattern.resize() aufruft) -- das Grid erst auf die
+            # Snapshot-Groesse zurueckbringen, sonst wirft die Zuweisung
+            # weiter unten einen ValueError ("could not broadcast").
+            self._pattern.resize(width, height)
         layer.grid[:] = grid
         layer.stitch_type_grid[:] = stitch_type_grid
         layer.completion_grid[:] = completion_grid
