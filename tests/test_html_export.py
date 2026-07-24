@@ -222,6 +222,55 @@ def test_html_export_dp_mode_hides_backstitch_lines_in_preview(tmp_path):
     # (weder als SVG-Linie noch als Text).
     assert "R&uuml;ckstiche" not in content
 
+    # Runde 64: die reale Musterseite (_generate_pattern_pages) rief
+    # _generate_backstitches_svg() bisher UNBEDINGT auf, unabhaengig von
+    # is_dp_page/mystery_page -- nur die Mini-Legenden-ZAEHLUNG war gegated.
+    # Damit landeten die Rueckstich-Linien trotzdem als <line>-SVG-Overlay
+    # auf der echten Musterseite, obwohl der obige Text-Check das nicht
+    # aufdeckt (SVG-Linien enthalten keinen "R&uuml;ckstiche"-Text).
+    start = content.index("id='seite1'")
+    end = content.index("id='seite2'") if "id='seite2'" in content else len(content)
+    page1 = content[start:end]
+    assert "<line" not in page1
+
+
+def test_html_export_mystery_mode_hides_backstitch_on_real_page(pattern_with_stitches, tmp_path):
+    """Regression: die ECHTE Musterseite (id='seite1', die Seite, die
+    tatsaechlich gedruckt/gestickt wird) zeigte im Mystery-Modus weiterhin
+    sowohl den Rueckstich-Hinweistext ("N Rueckstiche" in Kopfzeile und
+    Mini-Legende) als auch die SVG-Konturlinien selbst -- Vorschau,
+    Deckblatt und Uebersichtskarte hatten den Mystery-Guard bereits
+    (siehe test_html_export_mystery_mode_hides_overview_backstitch_note),
+    die eigentliche Musterseite in _generate_pattern_pages() aber nicht.
+    Damit verriet ausgerechnet das Hauptdokument, das den Ueberraschungs-
+    Zweck des Mystery-Modus erfuellen soll, die Kontur des Motivs."""
+    pattern_with_stitches.add_backstitch(0, 0, 4, 4, 0)
+
+    target = tmp_path / "mystery_page.html"
+    HTMLExporter(pattern_with_stitches, mystery_mode=True).export(target)
+    content = target.read_text(encoding="utf-8")
+
+    start = content.index("id='seite1'")
+    end = content.index("id='seite2'") if "id='seite2'" in content else len(content)
+    page1 = content[start:end]
+
+    assert "R&uuml;ckstiche" not in page1
+    assert "<line" not in page1
+
+    # Gegenprobe: ohne Mystery-Modus muss der Rueckstich weiterhin normal
+    # auf der Musterseite erscheinen (kein Overblocking durch den Fix).
+    normal_target = tmp_path / "normal_page.html"
+    HTMLExporter(pattern_with_stitches, mystery_mode=False).export(normal_target)
+    normal_content = normal_target.read_text(encoding="utf-8")
+    normal_start = normal_content.index("id='seite1'")
+    normal_end = (
+        normal_content.index("id='seite2'")
+        if "id='seite2'" in normal_content
+        else len(normal_content)
+    )
+    normal_page1 = normal_content[normal_start:normal_end]
+    assert "<line" in normal_page1
+
 
 def test_html_export_mystery_mode_hides_overview_backstitch_note(pattern_with_stitches, tmp_path):
     """Regression: die Uebersichtskarte (_generate_overview) nannte im

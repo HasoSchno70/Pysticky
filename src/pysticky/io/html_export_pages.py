@@ -181,11 +181,22 @@ class HTMLPagesMixin(_Base):
                 # Farben auf dieser Seite zählen
                 page_color_counts = self._count_page_colors(start_x, start_y, end_x, end_y)
 
-                # Rückstiche auf dieser Seite — im DP-Modus immer leer.
+                # Rückstiche auf dieser Seite — im DP-Modus immer leer, und
+                # im Mystery-Modus bewusst ebenfalls weggelassen (dieselbe
+                # Begründung wie in Vorschau/Übersicht: die reine Anzahl/
+                # Kontur würde das Motiv vor dem Aufdecken verraten). Der
+                # `mystery_page`-Flag steuert unten zusätzlich, ob die
+                # SVG-Linien selbst gezeichnet werden -- vorher wurde nur
+                # diese Zähl-Liste hier gegated, die eigentliche
+                # `_generate_backstitches_svg()`-Zeichnung weiter unten aber
+                # unbedingt aufgerufen, sodass die Konturlinien trotzdem als
+                # SVG-Overlay auf der echten Musterseite auftauchten.
                 is_dp_page = getattr(self.pattern, "mode", "stitch") == "diamond"
+                mystery_page = getattr(self, "mystery_mode", False)
+                hide_page_backstitches = is_dp_page or mystery_page
                 page_backstitches = (
                     []
-                    if is_dp_page
+                    if hide_page_backstitches
                     else self._get_page_backstitches(start_x, start_y, end_x, end_y)
                 )
 
@@ -279,14 +290,21 @@ class HTMLPagesMixin(_Base):
 
                 # Rückstiche-SVG für diese Seite
                 # Offset: Header-Spalte (16px) + Border (2px)
-                backstitch_svg = self._generate_backstitches_svg(
-                    cell_size,
-                    offset_x=cell_size + 2,  # Header-Spalte + Border
-                    offset_y=cell_size + 2,  # Header-Zeile + Border
-                    start_stitch_x=start_x,
-                    start_stitch_y=start_y,
-                    end_stitch_x=end_x + 1,
-                    end_stitch_y=end_y + 1,
+                # Nicht im DP-Modus (kein Rückstich-Konzept) oder Mystery-
+                # Modus (würde die Kontur verraten) zeichnen -- siehe
+                # hide_page_backstitches oben.
+                backstitch_svg = (
+                    ""
+                    if hide_page_backstitches
+                    else self._generate_backstitches_svg(
+                        cell_size,
+                        offset_x=cell_size + 2,  # Header-Spalte + Border
+                        offset_y=cell_size + 2,  # Header-Zeile + Border
+                        start_stitch_x=start_x,
+                        start_stitch_y=start_y,
+                        end_stitch_x=end_x + 1,
+                        end_stitch_y=end_y + 1,
+                    )
                 )
 
                 # Halbstiche/Viertel/Dreiviertel-SVG für diese Seite —
