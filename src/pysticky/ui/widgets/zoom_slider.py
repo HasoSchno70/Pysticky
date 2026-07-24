@@ -185,6 +185,35 @@ class ZoomSlider(QWidget):
             self._slider.blockSignals(False)
             self._update_label()
 
+    def set_zoom_range(self, min_percent: int, max_percent: int) -> None:
+        """Aktualisiert die gültigen Zoom-Grenzen.
+
+        Nötig, weil Canvas.MIN_CELL_SIZE/MAX_CELL_SIZE/DEFAULT_CELL_SIZE
+        bewusst pro-Instanz überschreibbar sind (Einstellungen → Leinwand,
+        siehe _apply_settings_from_dialog() in misc_handlers.py) — ohne
+        diese Methode blieb der Slider auf dem hartcodierten 20-300%-Bereich
+        (MIN_ZOOM_PERCENT/MAX_ZOOM_PERCENT) hängen, während der Canvas mit
+        individuellen Zellgrößen-Einstellungen längst außerhalb davon zoomen
+        konnte: Label zeigte dann einen falschen, geklemmten Wert an, und
+        ein Ziehen am Slider riss den echten Canvas-Zoom beim nächsten
+        Wertwechsel unerwartet in den zu engen Default-Bereich zurück.
+
+        Passt nur die Anzeige an (wie set_zoom_from_factor()) — löst kein
+        zoom_changed aus, damit eine reine Einstellungsänderung nicht
+        nebenbei den aktuellen Canvas-Zoom verstellt.
+        """
+        if min_percent >= max_percent:
+            return  # defensiv: ungültige Grenzen ignorieren
+        self.MIN_ZOOM = min_percent
+        self.MAX_ZOOM = max_percent
+        clamped = clamp_int(self._zoom, min_percent, max_percent)
+        self._zoom = clamped
+        self._slider.blockSignals(True)
+        self._slider.setRange(min_percent, max_percent)
+        self._slider.setValue(clamped)
+        self._slider.blockSignals(False)
+        self._update_label()
+
     @property
     def zoom(self) -> int:
         return self._zoom
