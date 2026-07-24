@@ -108,10 +108,23 @@ class UndoHandlersMixin:
         )
 
     def _on_stitch_removed(self: "MainWindow", x: int, y: int) -> None:
-        """Stich entfernt."""
+        """Stich entfernt.
+
+        Guard VOR dem Erzeugen des Commands: eine bereits leere Zelle oder
+        eine gesperrte Ebene macht RemoveStitchCommand.execute() ohnehin zu
+        einem echten No-Op (kein Grid-Schreibzugriff, alle Zaehler
+        unveraendert) -- ohne diesen Guard landete trotzdem ein wirkungsloser
+        Eintrag auf dem Undo-Stack (bzw. im laufenden Batch), den man per
+        Strg+Z durchklicken musste, ohne dass sich je etwas sichtbar
+        aenderte. Gleiche Fehlerklasse wie der Lasso-Klick-ohne-Drag-No-Op
+        aus einer frueheren Audit-Runde.
+        """
         from ...core import RemoveStitchCommand
 
         layer_index = self.current_pattern.layer_stack.active_index
+        layer = self.current_pattern.layer_stack[layer_index]
+        if layer.locked or layer.get_stitch(x, y) is None:
+            return
         self._execute_command(RemoveStitchCommand(self.current_pattern, x, y, layer_index))
 
     def _on_backstitch_added(
