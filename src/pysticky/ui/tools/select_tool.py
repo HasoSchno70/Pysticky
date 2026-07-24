@@ -189,12 +189,27 @@ class SelectTool(BaseTool):
 
                 if self._selection_content and self._selection and self._original_selection:
                     if self._selection.topLeft() != self._original_selection.topLeft():
-                        changes = self._apply_move(ctx)
-                        self._original_selection = QRect(self._selection)
-                        # Nach dem Verschieben: Inhalt neu erfassen beim nächsten Klick
-                        # Damit werden die Pixel an der neuen Position korrekt erfasst
-                        self._content_captured = False
-                        self._selection_content = None
+                        layer = ctx.pattern.active_layer
+                        if layer is not None and layer.locked:
+                            # Gesperrte Ebene: layer.set_stitch()/remove_stitch()
+                            # lehnen JEDEN Schreibzugriff ab (siehe layer.py), das
+                            # Verschieben waere also ein kompletter No-Op auf dem
+                            # Grid. Die Auswahl darf dann NICHT trotzdem zur neuen
+                            # Position springen -- sonst zeigt das Auswahlrechteck
+                            # auf leere Zellen, waehrend der echte Inhalt
+                            # unveraendert an der alten Position liegt (Auswahl und
+                            # Grid laufen sonst still auseinander, und ein
+                            # nachfolgendes Loeschen/Fuellen traefe die falschen
+                            # Zellen). Auswahl zurueck auf die urspruengliche
+                            # Position, kein Change erzeugt.
+                            self._selection = QRect(self._original_selection)
+                        else:
+                            changes = self._apply_move(ctx)
+                            self._original_selection = QRect(self._selection)
+                            # Nach dem Verschieben: Inhalt neu erfassen beim nächsten Klick
+                            # Damit werden die Pixel an der neuen Position korrekt erfasst
+                            self._content_captured = False
+                            self._selection_content = None
 
         return changes
 

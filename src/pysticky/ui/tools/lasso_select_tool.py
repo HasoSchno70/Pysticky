@@ -273,15 +273,32 @@ class LassoSelectTool(BaseTool):
                 # "Verschieben"-Undo-Eintrag (Loeschen+Wiedereinfuegen
                 # derselben Pixel). Pendant zum gleichwertigen Check in
                 # select_tool.py (Vergleich der topLeft()-Position).
-                moved = (
-                    self._original_bounds is not None
+                if (
+                    self._selection_content
+                    and self._selected_pixels
+                    and self._original_bounds is not None
                     and self._selection_bounds is not None
                     and self._selection_bounds.topLeft() != self._original_bounds.topLeft()
-                )
-                if moved and self._selection_content and self._selected_pixels:
-                    changes = self._apply_move(ctx)
-                    self._content_captured = False
-                    self._selection_content = None
+                ):
+                    layer = ctx.pattern.active_layer
+                    if layer is not None and layer.locked:
+                        # Gesperrte Ebene: analog zum Pendant in select_tool.py
+                        # waere das Verschieben ein kompletter No-Op auf dem Grid
+                        # (layer.set_stitch()/remove_stitch() lehnen jeden
+                        # Schreibzugriff ab). Pixel-Set um die waehrend des Drags
+                        # akkumulierte Verschiebung zurueckrechnen, statt die
+                        # Auswahl auf leeren Zellen stehen zu lassen, waehrend der
+                        # echte Inhalt unveraendert an der alten Position liegt.
+                        dx = self._original_bounds.left() - self._selection_bounds.left()
+                        dy = self._original_bounds.top() - self._selection_bounds.top()
+                        self._selected_pixels = {
+                            (px + dx, py + dy) for px, py in self._selected_pixels
+                        }
+                        self._update_bounds()
+                    else:
+                        changes = self._apply_move(ctx)
+                        self._content_captured = False
+                        self._selection_content = None
 
         return changes
 
