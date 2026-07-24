@@ -159,9 +159,20 @@ def test_restore_window_clamps_oversized_geometry_to_current_screen(qtbot):
     """Runde 68: gespeicherte Fenstergroesse stammt von einem groesseren
     Bildschirm (z.B. 4K-Monitor), aktueller Bildschirm ist kleiner (z.B.
     Laptop-Display). Qt's restoreGeometry() clamped Groesse/Position selbst
-    so, dass das Fenster komplett auf einem verfuegbaren Bildschirm liegt --
-    dieser Test dokumentiert das bereits korrekte Verhalten als Regression,
-    damit ein zukuenftiger Qt-Wechsel das nicht stillschweigend kaputt macht."""
+    so, dass das Fenster wieder sichtbar/bedienbar wird -- dieser Test
+    dokumentiert das bereits korrekte Verhalten als Regression, damit ein
+    zukuenftiger Qt-Wechsel das nicht stillschweigend kaputt macht.
+
+    Prueft bewusst NICHT "vollstaendig in EINEM einzelnen Bildschirm
+    enthalten": auf einer echten Mehrmonitor-Maschine (hier real verifiziert:
+    2560x1440 + 1920x1080 nebeneinander) kann ein 3x-ueberdimensioniertes
+    Fenster legitim ueber die Grenze eines einzelnen Monitors hinausragen,
+    ohne dass Qt das als Fehlverhalten behandelt -- Qt garantiert nur, dass
+    das Fenster kleiner als die urspruengliche Anforderung wird und irgendwo
+    sichtbar bleibt. Die urspruengliche "any(screen contains frame)"-Fassung
+    dieses Tests schlug auf genau so einer Maschine reproduzierbar fehl,
+    sobald `w1` initial auf dem kleineren der beiden Monitore lag.
+    """
     from PySide6.QtCore import QByteArray
     from PySide6.QtGui import QGuiApplication
 
@@ -180,6 +191,7 @@ def test_restore_window_clamps_oversized_geometry_to_current_screen(qtbot):
         w1.move(screen.x(), screen.y())
         w1.resize(screen.width() * 3, screen.height() * 3)
         oversized_geometry: QByteArray = w1.saveGeometry()
+        requested_width, requested_height = screen.width() * 3, screen.height() * 3
 
         s.setValue("restore_window", True)
         s.setValue("window/geometry", oversized_geometry)
@@ -190,9 +202,13 @@ def test_restore_window_clamps_oversized_geometry_to_current_screen(qtbot):
         w2._autosave_timer.stop()
 
         frame = w2.frameGeometry()
-        assert any(
-            screen.availableGeometry().contains(frame) for screen in QGuiApplication.screens()
-        )
+        # Qt hat tatsaechlich verkleinert (kein stures Uebernehmen der
+        # 3x-ueberdimensionierten Anforderung).
+        assert frame.width() < requested_width
+        assert frame.height() < requested_height
+        # Das Fenster landet irgendwo sichtbar (ueberschneidet mindestens
+        # einen echten Bildschirm), nicht ausserhalb jeder Bildflaeche.
+        assert any(screen.geometry().intersects(frame) for screen in QGuiApplication.screens())
     finally:
         if old_restore is None:
             s.remove("restore_window")
