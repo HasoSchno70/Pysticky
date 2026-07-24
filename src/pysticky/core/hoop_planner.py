@@ -63,6 +63,43 @@ class HoopPlan:
         return self.total_sectors <= 1
 
 
+def estimate_sector_grid(
+    pattern_width: int,
+    pattern_height: int,
+    hoop_width: int,
+    hoop_height: int,
+    overlap: int = 0,
+) -> tuple[int, int]:
+    """Berechnet nur (rows, cols) einer Rahmenaufteilung, ohne die teure
+    Sektor-Liste (inkl. Stich-Zählung pro Sektor) aufzubauen.
+
+    Wird von `plan_hoops()` intern genutzt (single source of truth für die
+    Zeilen/Spalten-Formel) und zusätzlich von der UI aufgerufen, um
+    pathologische Kombinationen (winziger Rahmen + fast rahmengroße
+    Überlappung, z.B. Rahmen 10x10 mit Überlappung 9 → Schrittweite 1) VOR
+    der teuren Berechnung zu erkennen. Ohne diesen Vor-Check kann eine
+    solche Kombination bei einem großen Muster hunderttausende bis
+    Millionen Sektoren ergeben und den (synchron auf dem GUI-Thread
+    laufenden) Rahmenaufteilung-Dialog für Sekunden bis Minuten einfrieren.
+
+    Raises:
+        ValueError: dieselben Validierungsfehler wie `plan_hoops()`.
+    """
+    if hoop_width <= 0 or hoop_height <= 0:
+        raise ValueError("hoop_width und hoop_height müssen > 0 sein")
+    if overlap < 0:
+        raise ValueError("overlap muss >= 0 sein")
+    if overlap >= hoop_width or overlap >= hoop_height:
+        raise ValueError("overlap muss kleiner als Hoop-Größe sein")
+
+    step_x = hoop_width - overlap
+    step_y = hoop_height - overlap
+
+    cols = max(1, ceil((pattern_width - overlap) / step_x)) if pattern_width > hoop_width else 1
+    rows = max(1, ceil((pattern_height - overlap) / step_y)) if pattern_height > hoop_height else 1
+    return rows, cols
+
+
 def plan_hoops(
     pattern: "Pattern",
     hoop_width: int,
@@ -81,22 +118,14 @@ def plan_hoops(
     Returns:
         HoopPlan mit Liste aller Sektoren.
     """
-    if hoop_width <= 0 or hoop_height <= 0:
-        raise ValueError("hoop_width und hoop_height müssen > 0 sein")
-    if overlap < 0:
-        raise ValueError("overlap muss >= 0 sein")
-    if overlap >= hoop_width or overlap >= hoop_height:
-        raise ValueError("overlap muss kleiner als Hoop-Größe sein")
-
     pw = pattern.width
     ph = pattern.height
+
+    rows, cols = estimate_sector_grid(pw, ph, hoop_width, hoop_height, overlap)
 
     # Effektive Schritt-Weite pro Sektor: hoop_size minus Overlap
     step_x = hoop_width - overlap
     step_y = hoop_height - overlap
-
-    cols = max(1, ceil((pw - overlap) / step_x)) if pw > hoop_width else 1
-    rows = max(1, ceil((ph - overlap) / step_y)) if ph > hoop_height else 1
 
     sectors: list[HoopSector] = []
     index = 0
