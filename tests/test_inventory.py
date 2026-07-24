@@ -446,3 +446,92 @@ def test_shopping_list_multi_distinguishes_unknown_colors_by_name(tmp_path):
 
     assert yellow["on_hand"] == 8
     assert purple["on_hand"] == 0
+
+
+# === Tweed-Blends in der Einkaufsliste (Runde 58) ===
+#
+# Ein Tweed-Blend-Thread (Thread.blend()) traegt manufacturer="DMC" (bei
+# homogenem Blend) bzw. "Blend" und einen zusammengesetzten
+# catalog_number wie "310+745" -- ein rein synthetischer Schluessel, unter
+# dem niemals echter Vorrat abgelegt ist. Ohne Aufloesung auf die echten
+# Komponenten-Garne erschien fuer jeden Blend ein Phantom-Eintrag mit
+# on_hand=0 (der Nutzer wurde aufgefordert, ein nicht kaufbares "Garn
+# 310+745" zu besorgen), waehrend der tatsaechlich vorhandene Vorrat der
+# beiden echten Garne (DMC 310, DMC 745) komplett ignoriert wurde und
+# diese auch nicht als eigene Zeilen in der Liste auftauchten.
+
+
+def _blend_pattern(stitch_count: int):
+    from pysticky.core import Pattern, Thread
+
+    a = Thread.from_hex("Black", "#000000", manufacturer="DMC", catalog_number="310")
+    b = Thread.from_hex("Cream", "#FFF0D0", manufacturer="DMC", catalog_number="745")
+    blend = Thread.blend([a, b], [1, 1])
+
+    pattern = Pattern(name="Blend-Test", width=10, height=10, fabric_count=14)
+    pattern.color_entries.clear()
+    idx = pattern.add_color(blend)
+    pattern.set_stitch(0, 0, idx)
+    pattern.color_entries[0].stitch_count = stitch_count
+    return pattern
+
+
+def test_shopping_list_splits_blend_into_real_components(tmp_path):
+    """compute_shopping_list() darf fuer einen Tweed-Blend keinen
+    synthetischen 'DMC 310+745'-Phantomeintrag erzeugen, sondern muss
+    Bedarf und Vorrat je Komponente einzeln (DMC 310, DMC 745) fuehren."""
+    inv = Inventory(tmp_path / "inv.json")
+    inv.set("DMC", "310", 5)
+    inv.set("DMC", "745", 5)
+
+    pattern = _blend_pattern(500)
+    items = compute_shopping_list(pattern, inv, {14: 500}, waste_percent=20.0)
+
+    catalog_numbers = {it["thread"].catalog_number for it in items}
+    assert catalog_numbers == {"310", "745"}, (
+        "Erwartet je einen Eintrag pro echter Komponente, kein kombinierter "
+        f"Blend-Schluessel; erhalten: {catalog_numbers}"
+    )
+
+    entry_310 = next(it for it in items if it["thread"].catalog_number == "310")
+    entry_745 = next(it for it in items if it["thread"].catalog_number == "745")
+    # Beide Faeden laufen gemeinsam durch jede Nadel -- jede Komponente
+    # braucht die volle Stichzahl an Straengen, nicht die Haelfte.
+    assert entry_310["needed_skeins"] == entry_745["needed_skeins"] == 2
+    assert entry_310["on_hand"] == 5
+    assert entry_745["on_hand"] == 5
+    assert entry_310["to_buy"] == 0
+    assert entry_745["to_buy"] == 0
+
+
+def test_shopping_list_blend_reports_missing_component_stock(tmp_path):
+    """Ist nur eine der beiden Blend-Komponenten auf Lager, muss die
+    Einkaufsliste genau die fehlende Komponente als 'zu kaufen' ausweisen."""
+    inv = Inventory(tmp_path / "inv.json")
+    inv.set("DMC", "310", 10)
+    # DMC 745 bewusst NICHT im Vorrat
+
+    pattern = _blend_pattern(500)
+    items = compute_shopping_list(pattern, inv, {14: 500}, waste_percent=20.0)
+
+    entry_310 = next(it for it in items if it["thread"].catalog_number == "310")
+    entry_745 = next(it for it in items if it["thread"].catalog_number == "745")
+    assert entry_310["to_buy"] == 0
+    assert entry_745["on_hand"] == 0
+    assert entry_745["to_buy"] == entry_745["needed_skeins"] == 2
+
+
+def test_shopping_list_multi_splits_blend_into_real_components(tmp_path):
+    inv = Inventory(tmp_path / "inv.json")
+    inv.set("DMC", "310", 5)
+
+    pattern = _blend_pattern(500)
+    items = compute_shopping_list_multi([pattern], inv, {14: 500}, waste_percent=20.0)
+
+    catalog_numbers = {it["thread"].catalog_number for it in items}
+    assert catalog_numbers == {"310", "745"}
+
+    entry_310 = next(it for it in items if it["thread"].catalog_number == "310")
+    entry_745 = next(it for it in items if it["thread"].catalog_number == "745")
+    assert entry_310["on_hand"] == 5
+    assert entry_745["on_hand"] == 0
