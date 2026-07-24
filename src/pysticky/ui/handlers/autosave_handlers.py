@@ -5,6 +5,8 @@ Ausgelagert aus file_handlers.py, damit File-I/O- und Autosave-Logik
 nicht in derselben Datei wohnen.
 """
 
+import os
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,6 +19,103 @@ if TYPE_CHECKING:
     from ..main_window import MainWindow
 
 logger = get_logger(__name__)
+
+# Dateiname-Muster fuer die Temp-Autosave nie gespeicherter Patterns. PID-
+# spezifisch, damit zwei gleichzeitig laufende Instanzen (je ein nie
+# gespeichertes Pattern, z.B. zwei "Datei -> Neu"-Fenster) nicht denselben
+# globalen Pfad ueberschreiben -- sonst gewinnt schlicht, wessen Autosave-
+# Timer zuletzt feuert, und die andere Instanz verliert ihren Stand
+# stillschweigend (kein Fehler, keine Warnung).
+_TEMP_AUTOSAVE_PREFIX = "pysticky_autosave_"
+_TEMP_AUTOSAVE_SUFFIX = ".pxs"
+_TEMP_AUTOSAVE_GLOB = f"{_TEMP_AUTOSAVE_PREFIX}*{_TEMP_AUTOSAVE_SUFFIX}"
+
+
+def _own_temp_autosave_path() -> Path:
+    """Pfad der Temp-Autosave dieses Prozesses (PID-spezifisch)."""
+    temp_dir = Path(tempfile.gettempdir())
+    return temp_dir / f"{_TEMP_AUTOSAVE_PREFIX}{os.getpid()}{_TEMP_AUTOSAVE_SUFFIX}"
+
+
+def _stale_temp_autosave_candidates(exclude: Path) -> list[Path]:
+    """Findet alle Temp-Autosave-Dateien anderer (vermutlich abgestuerzter)
+    Prozesse, aelteste zuerst -- falls der Nutzer mehrere Recovery-Angebote
+    hintereinander mit "Ja" bestaetigt, gewinnt so am Ende der NEUESTE Stand
+    (jede Bestaetigung ersetzt das gerade geladene Pattern durch das
+    naechste), statt umgekehrt ein aelterer Stand einen bereits geladenen
+    neueren stillschweigend zu ueberschreiben. `exclude` ist typischerweise
+    der eigene PID-Pfad -- der existiert bei einem frischen Prozess noch
+    nicht, wird also nie ausgefiltert. Nur im (astronomisch seltenen) Fall
+    einer wiederverwendeten PID koennte hier tatsaechlich eine fremde,
+    liegen gebliebene Datei ausgeschlossen werden -- die wird dann einfach
+    beim naechsten Programmstart (mit garantiert anderer PID) gefunden und
+    aufgeraeumt, statt sie faelschlich fuer den eigenen (nicht existenten)
+    Stand zu halten."""
+    temp_dir = Path(tempfile.gettempdir())
+
+    def _mtime(p: Path) -> float:
+        try:
+            return p.stat().st_mtime
+        except OSError:
+            return 0.0
+
+    candidates = [p for p in temp_dir.glob(_TEMP_AUTOSAVE_GLOB) if p != exclude]
+    candidates.sort(key=_mtime)
+    return candidates
+
+
+def _offer_single_autosave_recovery(window: "MainWindow", autosave_path: Path) -> None:
+    """Bietet Recovery fuer genau eine Autosave-Datei an und raeumt sie
+    danach auf (unabhaengig von der Entscheidung).
+
+    Modulfunktion statt Methode auf AutosaveHandlersMixin, damit hier kein
+    weiteres `self: "MainWindow"`-Mixin-Methodensignatur-Muster entsteht
+    (jede solche Methode erzeugt einen zusaetzlichen mypy-"erased type of
+    self"-Fehler -- ein bekanntes, akzeptiertes Rauschen in diesem Projekt,
+    das aber nicht ohne Grund weiter vermehrt werden soll)."""
+    from ...core import load_pattern
+
+    if not autosave_path.exists():
+        return
+
+    reply = QMessageBox.question(
+        window,
+        t("Autosave gefunden"),
+        t(
+            "Es wurde eine ungespeicherte Autosave-Datei gefunden.\n"
+            "Möchten Sie diese wiederherstellen?"
+        ),
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+    )
+    if reply == QMessageBox.StandardButton.Yes:
+        try:
+            pattern = load_pattern(str(autosave_path))
+            window.set_pattern(pattern)
+            window._mark_unsaved()
+            window.status_bar.showMessage(t("Autosave wiederhergestellt"), 5000)
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
+            # Bewusst breiter als load_pattern()'s eigenes Vertragsversprechen
+            # (FileNotFoundError/ValueError): das ist der Recovery-Pfad, der
+            # genau dann greift, wenn etwas mit der Datei nicht stimmt --
+            # eine aeltere Programmversion mit inzwischen entferntem
+            # Pflichtfeld, ein Systemabsturz mitten im os.replace() der
+            # Autosave selbst, oder eine versehentlich umbenannte fremde
+            # Datei koennten theoretisch auch andere Exception-Typen als
+            # die dokumentierten ausloesen. Ein Crash beim naechsten
+            # Programmstart waere hier der schlimmstmoegliche Fall (Nutzer
+            # koennte PySticky gar nicht mehr oeffnen) -- also lieber
+            # defensiv eine verstaendliche Fehlermeldung zeigen.
+            logger.exception("Autosave-Recovery fehlgeschlagen")
+            QMessageBox.warning(
+                window,
+                t("Fehler"),
+                f"Autosave konnte nicht geladen werden:\n{e}",
+            )
+    # Autosave-Datei nach Entscheidung aufräumen
+    try:
+        autosave_path.unlink()
+    except OSError:
+        logger.warning("Autosave-Datei konnte nicht entfernt werden: %s", autosave_path)
 
 
 class AutosaveHandlersMixin:
@@ -41,10 +140,7 @@ class AutosaveHandlersMixin:
         if self.current_file:
             autosave_path = self.current_file.with_suffix(".pxs.autosave")
         else:
-            import tempfile
-
-            temp_dir = Path(tempfile.gettempdir())
-            autosave_path = temp_dir / "pysticky_autosave.pxs"
+            autosave_path = _own_temp_autosave_path()
 
         temp_path = autosave_path.with_suffix(".autosave.tmp")
         try:
@@ -91,8 +187,14 @@ class AutosaveHandlersMixin:
         """
         Prüft ob eine Autosave-Datei existiert und bietet Recovery an.
 
-        Ohne Argument: prüft die Temp-Autosave eines nie gespeicherten
-        Patterns (wird von _perform_start_action beim Start aufgerufen).
+        Ohne Argument: prüft ALLE Temp-Autosaves nie gespeicherter Patterns
+        (wird von _perform_start_action beim Start aufgerufen) -- mehrere
+        koennen existieren, wenn mehrere gleichzeitig laufende Instanzen
+        abgestuerzt sind (jede schreibt PID-spezifisch, siehe
+        _own_temp_autosave_path()). Der eigene, gerade erst ermittelte
+        PID-Pfad wird von der Suche ausgenommen, damit dieser frische
+        Prozess (der garantiert noch keine eigene Autosave geschrieben hat)
+        sich nicht selbst eine Recovery anbietet.
         Mit `autosave_path`: prüft die datei-spezifische `<name>.pxs.autosave`
         neben einer geöffneten Datei (wird von _load_pattern_file nach dem
         Öffnen aufgerufen — _on_autosave schreibt genau dorthin, wenn
@@ -100,51 +202,9 @@ class AutosaveHandlersMixin:
         beim nächsten Öffnen wieder, die datei-spezifische Autosave war
         also faktisch nie wiederherstellbar).
         """
-        from ...core import load_pattern
-
         if autosave_path is None:
-            import tempfile
-
-            autosave_path = Path(tempfile.gettempdir()) / "pysticky_autosave.pxs"
-
-        if not autosave_path.exists():
+            for candidate in _stale_temp_autosave_candidates(exclude=_own_temp_autosave_path()):
+                _offer_single_autosave_recovery(self, candidate)
             return
 
-        reply = QMessageBox.question(
-            self,
-            t("Autosave gefunden"),
-            t(
-                "Es wurde eine ungespeicherte Autosave-Datei gefunden.\n"
-                "Möchten Sie diese wiederherstellen?"
-            ),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            try:
-                pattern = load_pattern(str(autosave_path))
-                self.set_pattern(pattern)
-                self._mark_unsaved()
-                self.status_bar.showMessage(t("Autosave wiederhergestellt"), 5000)
-            except (OSError, ValueError, TypeError, KeyError, AttributeError, IndexError) as e:
-                # Bewusst breiter als load_pattern()'s eigenes Vertragsversprechen
-                # (FileNotFoundError/ValueError): das ist der Recovery-Pfad, der
-                # genau dann greift, wenn etwas mit der Datei nicht stimmt --
-                # eine aeltere Programmversion mit inzwischen entferntem
-                # Pflichtfeld, ein Systemabsturz mitten im os.replace() der
-                # Autosave selbst, oder eine versehentlich umbenannte fremde
-                # Datei koennten theoretisch auch andere Exception-Typen als
-                # die dokumentierten ausloesen. Ein Crash beim naechsten
-                # Programmstart waere hier der schlimmstmoegliche Fall (Nutzer
-                # koennte PySticky gar nicht mehr oeffnen) -- also lieber
-                # defensiv eine verstaendliche Fehlermeldung zeigen.
-                logger.exception("Autosave-Recovery fehlgeschlagen")
-                QMessageBox.warning(
-                    self,
-                    t("Fehler"),
-                    f"Autosave konnte nicht geladen werden:\n{e}",
-                )
-        # Autosave-Datei nach Entscheidung aufräumen
-        try:
-            autosave_path.unlink()
-        except OSError:
-            logger.warning("Autosave-Datei konnte nicht entfernt werden: %s", autosave_path)
+        _offer_single_autosave_recovery(self, autosave_path)
