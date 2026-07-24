@@ -28,11 +28,15 @@ def test_multiple_sessions_sum(empty_pattern):
     assert session_timer.get_total_seconds(empty_pattern) == 90
 
 
-def test_start_while_active_is_noop(empty_pattern):
+def test_start_while_active_resets_to_new_start(empty_pattern):
+    """start_session() waehrend bereits eine Session aktiv ist kann in der
+    Praxis nur eine verwaiste Startzeit aus einer nie gestoppten Session
+    (Crash/Kill) sein -- siehe test_stale_start_after_crash_does_not_poison_next_session.
+    Die neue Startzeit muss daher gelten, nicht die alte (verwaiste)."""
     session_timer.start_session(empty_pattern, now=10.0)
-    session_timer.start_session(empty_pattern, now=99.0)  # ignoriert
-    elapsed = session_timer.stop_session(empty_pattern, now=20.0)
-    assert elapsed == 10  # Erste Startzeit gilt
+    session_timer.start_session(empty_pattern, now=99.0)  # ueberschreibt die verwaiste Zeit
+    elapsed = session_timer.stop_session(empty_pattern, now=100.0)
+    assert elapsed == 1  # Zweite (neue) Startzeit gilt
 
 
 def test_stop_without_start_returns_zero(empty_pattern):
@@ -111,6 +115,37 @@ def test_stop_session_with_corrupt_start_does_not_crash(empty_pattern):
 )
 def test_format_duration(seconds, expected):
     assert session_timer.format_duration(seconds) == expected
+
+
+def test_stale_start_after_crash_does_not_poison_next_session(empty_pattern, temp_pattern_file):
+    """Regression: ein Crash waehrend einer laufenden Session laesst
+    last_session_start unbeendet in der gespeicherten .pxs-Datei stehen
+    (siehe test_session_metadata_round_trips_through_save_load). Wird die
+    Datei kurz danach (< 12h, also unterhalb der Plausibilitaets-Kappung)
+    neu geladen und regulaer eine NEUE Sticken-Modus-Sitzung gestartet,
+    darf start_session() die stehengebliebene alte Startzeit NICHT
+    stillschweigend als "noch laufende Sitzung" behandeln -- sonst wird bei
+    stop_session() die komplette Crash-zu-Neustart-Luecke (App war die
+    ganze Zeit GESCHLOSSEN) faelschlich als Stickzeit mitgezaehlt."""
+    from pysticky.core import load_pattern, save_pattern
+
+    # T=0: Sticken-Modus an, App stuerzt ab -- last_session_start bleibt
+    # ungestoppt in der zuletzt gespeicherten Datei stehen.
+    session_timer.start_session(empty_pattern, now=0.0)
+    save_pattern(empty_pattern, temp_pattern_file)
+
+    # T=5000 (~83 Min spaeter, klar unter der 12h-Plausibilitaetsgrenze):
+    # User oeffnet die Datei erneut und aktiviert den Sticken-Modus neu.
+    reloaded = load_pattern(temp_pattern_file)
+    assert session_timer.is_session_active(reloaded)  # Altlast aus dem Crash
+    session_timer.start_session(reloaded, now=5000.0)
+
+    # T=5060: nach 60 Sekunden echter Arbeit wird der Sticken-Modus wieder
+    # verlassen. Es duerfen nur diese 60 Sekunden gezaehlt werden, nicht die
+    # ~83 Minuten seit dem urspruenglichen (verwaisten) Sitzungsstart.
+    elapsed = session_timer.stop_session(reloaded, now=5060.0)
+    assert elapsed == 60
+    assert session_timer.get_total_seconds(reloaded) == 60
 
 
 def test_session_metadata_round_trips_through_save_load(empty_pattern, temp_pattern_file):

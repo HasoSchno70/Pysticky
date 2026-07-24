@@ -53,9 +53,24 @@ def is_session_active(pattern: "Pattern") -> bool:
 
 
 def start_session(pattern: "Pattern", now: float | None = None) -> None:
-    """Startet eine Session. No-op wenn bereits aktiv."""
-    if is_session_active(pattern):
-        return
+    """Startet eine Session.
+
+    Ueberschreibt eine ggf. bereits vorhandene last_session_start-Zeit.
+    start_session() wird in der Praxis nur ueber den Sticken-Modus-Toggle
+    aufgerufen (_on_toggle_stitch_mode) und ist dort immer 1:1 mit einem
+    stop_session()-Aufruf gepaart (Aus-Klick oder closeEvent/set_pattern
+    erzwingen das Stoppen vor jedem neuen Start). Ist beim Aufruf trotzdem
+    schon ein last_session_start gesetzt, kann das nur eine verwaiste Zeit
+    aus einer VORHERIGEN, nie sauber gestoppten Session sein (Crash/Kill,
+    siehe stop_session()) -- z.B. wenn die .pxs-Datei kurz nach einem Absturz
+    neu geoeffnet und der Sticken-Modus erneut aktiviert wird. Ein simples
+    No-op wuerde diese uralte Startzeit fuer die neue Sitzung weiterverwenden;
+    beim naechsten stop_session() wuerde dann die komplette App-war-
+    geschlossen-Luecke faelschlich als Stickzeit mitgezaehlt (sofern sie
+    unter MAX_PLAUSIBLE_SESSION_SECONDS bleibt und so nicht ohnehin verworfen
+    wird). Deshalb hier hart auf `now` ueberschreiben statt die Altlast
+    stillschweigend zu uebernehmen.
+    """
     pattern.metadata[META_START] = float(now if now is not None else time.time())
 
 
