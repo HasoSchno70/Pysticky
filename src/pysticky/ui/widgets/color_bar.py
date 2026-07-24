@@ -357,21 +357,45 @@ class ColorSwatch(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self.double_clicked.emit(self._index)
 
+    def _swap_source_index(
+        self, event: QDragEnterEvent | QDragMoveEvent | QDropEvent
+    ) -> int | None:
+        """Liest den Quell-Index aus SWAP_MIME, oder None wenn das Mime-Format
+        fehlt, der Payload nicht dekodierbar ist, oder die Quelle diesem
+        Swatch selbst entspricht (kein Swap mit sich selbst)."""
+        if not event.mimeData().hasFormat(SWAP_MIME):
+            return None
+        try:
+            src = int(bytes(event.mimeData().data(SWAP_MIME)).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return None
+        if src == self._index:
+            return None
+        return src
+
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat(SWAP_MIME):
-            try:
-                src = int(bytes(event.mimeData().data(SWAP_MIME)).decode("utf-8"))
-            except (ValueError, UnicodeDecodeError):
-                event.ignore()
-                return
-            if src == self._index:
-                event.ignore()
-                return
-            event.acceptProposedAction()
-            self._drop_hover = True
-            self.update()
-        else:
+        if self._swap_source_index(event) is None:
             event.ignore()
+            return
+        event.acceptProposedAction()
+        self._drop_hover = True
+        self.update()
+
+    # Ohne diesen Override greift QWidgets Standardimplementierung von
+    # dragMoveEvent(), die das Event ignoriert (siehe Qt-Quellcode) --
+    # dragEnterEvent() akzeptiert zwar beim Betreten des Swatches, aber
+    # JEDE folgende Mausbewegung *innerhalb* des Swatches (bei einem
+    # echten Drag praktisch immer, da die Hand nie exakt stillsteht)
+    # feuert ein neues dragMoveEvent statt erneut dragEnterEvent. Bleibt
+    # das unbeantwortet, merkt sich Qts Drag-Manager an dieser Position
+    # "abgelehnt" und liefert beim Loslassen der Maustaste gar kein
+    # dropEvent mehr aus -- der Farbtausch per Drag&Drop war dadurch
+    # de facto nur moeglich, wenn man exakt auf dem Eintritts-Pixel losliess.
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if self._swap_source_index(event) is None:
+            event.ignore()
+            return
+        event.acceptProposedAction()
 
     def dragLeaveEvent(self, event) -> None:
         self._drop_hover = False
@@ -380,15 +404,8 @@ class ColorSwatch(QWidget):
     def dropEvent(self, event: QDropEvent) -> None:
         self._drop_hover = False
         self.update()
-        if not event.mimeData().hasFormat(SWAP_MIME):
-            event.ignore()
-            return
-        try:
-            src = int(bytes(event.mimeData().data(SWAP_MIME)).decode("utf-8"))
-        except (ValueError, UnicodeDecodeError):
-            event.ignore()
-            return
-        if src == self._index:
+        src = self._swap_source_index(event)
+        if src is None:
             event.ignore()
             return
         event.acceptProposedAction()
