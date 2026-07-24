@@ -2,6 +2,7 @@
 Minimap-Widget zur Übersicht für große Muster.
 """
 
+import numpy as np
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
     QColor,
@@ -17,7 +18,6 @@ from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 from ...core import Pattern
 from ...core.i18n import t
 from ...utils import clamp
-from ..color_utils import to_qcolor
 from ..styles import THEME, Styles
 
 
@@ -84,30 +84,49 @@ class MinimapWidget(QFrame):
         img_w = max(10, img_w)
         img_h = max(10, img_h)
 
-        image = QImage(img_w, img_h, QImage.Format.Format_RGB32)
-        image.fill(QColor(250, 250, 245))
+        self._cached_image = self._render_cache_image(img_w, img_h)
 
-        scale_x = img_w / self._pattern.width
-        scale_y = img_h / self._pattern.height
+    def _render_cache_image(self, img_w: int, img_h: int) -> QImage:
+        """Rendert das Minimap-Bild vektorisiert statt per Pro-Stich-Loop.
 
-        for y in range(self._pattern.height):
-            for x in range(self._pattern.width):
-                color_idx = self._pattern.get_stitch(x, y)
-                if color_idx is not None:
-                    entry = self._pattern.get_color_entry(color_idx)
-                    if entry:
-                        px = int(x * scale_x)
-                        py = int(y * scale_y)
-                        px_end = max(px + 1, int((x + 1) * scale_x))
-                        py_end = max(py + 1, int((y + 1) * scale_y))
+        Ein reiner Python-Loop über jeden Stich (bis zu MAX_PATTERN_SIZE**2 =
+        1e6 Zellen) mit QImage.setPixel() pro Pixel brauchte für ein volles
+        1000x1000-Muster empirisch ~1.5s -- ein spürbarer UI-Freeze bei jedem
+        Undo/Redo/Fuellen/Laden (ausgeloest ueber den Debounce in
+        undo_handlers.py::_schedule_minimap_refresh, Runde 63). Stattdessen:
+        composite-Grid als numpy-Array holen, per Nearest-Neighbor-Indexing
+        direkt auf Zielaufloesung downsamplen (das Minimap-Bild ist ohnehin
+        i.d.R. um Groessenordnungen kleiner als das Muster, jeden einzelnen
+        Stich zu besuchen ist unnoetig) und ueber eine Farb-LUT in einen
+        zusammenhaengenden RGB888-Puffer schreiben, aus dem die QImage in
+        einem Rutsch entsteht.
+        """
+        assert self._pattern is not None
+        pattern = self._pattern
+        grid = pattern.layer_stack.get_composite_grid()
 
-                        color = to_qcolor(entry.thread.color).rgb()
+        src_x = np.minimum(pattern.width - 1, (np.arange(img_w) * pattern.width) // img_w)
+        src_y = np.minimum(pattern.height - 1, (np.arange(img_h) * pattern.height) // img_h)
+        sampled = grid[np.ix_(src_y, src_x)]
 
-                        for py2 in range(py, min(py_end, img_h)):
-                            for px2 in range(px, min(px_end, img_w)):
-                                image.setPixel(px2, py2, color)
+        n_colors = len(pattern.color_entries)
+        lut = np.empty((max(n_colors, 1), 3), dtype=np.uint8)
+        for idx, entry in enumerate(pattern.color_entries):
+            color = entry.thread.color
+            lut[idx] = (color.r, color.g, color.b)
 
-        self._cached_image = image
+        rgb = np.empty((img_h, img_w, 3), dtype=np.uint8)
+        rgb[:, :] = (250, 250, 245)
+
+        valid = (sampled >= 0) & (sampled < n_colors)
+        rgb[valid] = lut[sampled[valid]]
+
+        rgb = np.ascontiguousarray(rgb)
+        image = QImage(rgb.data, img_w, img_h, 3 * img_w, QImage.Format.Format_RGB888)
+        # .copy() loest den Puffer von der numpy-Allokation, die sonst mit
+        # Rueckkehr aus dieser Methode freigegeben wuerde (die QImage wraps
+        # sie nur, kopiert sie nicht automatisch).
+        return image.copy()
 
     def paintEvent(self, event: QPaintEvent) -> None:
         super().paintEvent(event)
