@@ -166,8 +166,34 @@ class PlaceStitchCommand(Command):
         old_stitch = layer.get_stitch(self._x, self._y)
         old_stitch_type = layer.get_stitch_type(self._x, self._y) if old_stitch is not None else 0
 
+        # Bead-/Diamond-Farben werden immer als BEAD-/DIAMOND-Stitch-Type
+        # platziert, unabhaengig vom uebergebenen stitch_type -- exakt
+        # dieselbe Regel wie in Pattern.set_stitch() (siehe dort). Dieser
+        # Command ruft aber bewusst layer.set_stitch() direkt auf (er kennt
+        # einen beliebigen layer_index, nicht nur den aktiven Layer wie
+        # Pattern.set_stitch()) und dupliziert damit dessen Enforcement
+        # nicht automatisch mit. Ohne diesen Abgleich landete jeder ueber
+        # das normale stitch_placed-Signal frisch gesetzte Diamond-/Bead-
+        # Stich (Stift, Linie, Farbverlauf, Fuellen, ...) mit stitch_type=0
+        # (FULL) im Grid -- nur durch einen Rendering-Fallback in
+        # ui/canvas/performance.py ("is_diamond(stype) or (diamond_view and
+        # stype == 0)") optisch verdeckt, waehrend Export/Statistik/jede
+        # andere is_diamond(stitch_type)-Abfrage weiterhin den falschen Typ
+        # sah.
+        stitch_type = self._stitch_type
+        if stitch_type == 0 and 0 <= self._color_index < len(self._pattern.color_entries):
+            entry = self._pattern.color_entries[self._color_index]
+            if entry.is_bead:
+                from .stitch import StitchType
+
+                stitch_type = StitchType.BEAD.value
+            elif entry.is_diamond:
+                from .stitch import StitchType
+
+                stitch_type = StitchType.DIAMOND.value
+
         self._applied = layer.set_stitch(
-            self._x, self._y, self._color_index, stitch_type=self._stitch_type
+            self._x, self._y, self._color_index, stitch_type=stitch_type
         )
         if not self._applied:
             return
