@@ -72,6 +72,28 @@ from .widgets.canvas_container import CanvasContainer
 from .widgets.color_bar import ColorBar
 from .widgets.tool_bar import ToolBar
 
+# Bildformate für Drag&Drop -- muss deckungsgleich mit dem Dateifilter in
+# ImageImportDialog._on_browse (ui/dialogs/image_import/dialog.py) bleiben.
+# War vorher eine kuerzere, unabhaengig gepflegte Liste hier im MainWindow
+# (nur png/jpg/jpeg/gif/bmp) -- ein per Drag&Drop gezogenes .webp/.tiff/.tif/
+# .avif/.avifs wurde dadurch schon im dragEnterEvent abgelehnt (Qt zeigt den
+# "nicht erlaubt"-Cursor), obwohl genau dieses Format ueber "Datei" ->
+# "Bild importieren..." anstandslos importiert werden kann.
+DRAG_DROP_IMAGE_EXTENSIONS = (
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".bmp",
+    ".gif",
+    ".webp",
+    ".tiff",
+    ".tif",
+    ".avif",
+    ".avifs",
+)
+# Externe Pattern-Formate für Drag&Drop (siehe _load_external_pattern_file).
+DRAG_DROP_EXTERNAL_PATTERN_EXTENSIONS = (".oxs", ".xsd", ".pat")
+
 
 class MainWindow(
     QMainWindow,
@@ -792,21 +814,12 @@ class MainWindow(
     def dragEnterEvent(self, event) -> None:
         """Akzeptiert Drag&Drop von .pxs-, Bild- und externen Pattern-Dateien."""
         if event.mimeData().hasUrls():
+            accepted_extensions = (
+                (".pxs",) + DRAG_DROP_IMAGE_EXTENSIONS + DRAG_DROP_EXTERNAL_PATTERN_EXTENSIONS
+            )
             for url in event.mimeData().urls():
                 lower = url.toLocalFile().lower()
-                if lower.endswith(
-                    (
-                        ".pxs",
-                        ".png",
-                        ".jpg",
-                        ".jpeg",
-                        ".gif",
-                        ".bmp",
-                        ".oxs",
-                        ".xsd",
-                        ".pat",
-                    )
-                ):
+                if lower.endswith(accepted_extensions):
                     event.acceptProposedAction()
                     return
         event.ignore()
@@ -821,10 +834,10 @@ class MainWindow(
                     return
                 self._load_pattern_file(filepath)
                 return
-            elif lower.endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp")):
+            elif lower.endswith(DRAG_DROP_IMAGE_EXTENSIONS):
                 self._on_import_image(filepath)
                 return
-            elif lower.endswith((".oxs", ".xsd", ".pat")):
+            elif lower.endswith(DRAG_DROP_EXTERNAL_PATTERN_EXTENSIONS):
                 if not self._check_save_changes():
                     return
                 self._load_external_pattern_file(filepath)
