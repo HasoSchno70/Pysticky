@@ -125,7 +125,7 @@ class ColorsTab(QWidget):
         if index >= 0:
             self.combo_default_palette.setCurrentIndex(index)
         self.chk_show_catalog.setChecked(settings.value("show_catalog", True, type=bool))
-        font_family = settings.value("symbol_font", "Segoe UI Symbol")
+        font_family = settings.value("symbol_font", "Segoe UI Symbol", type=str)
         self.combo_symbol_font.setCurrentFont(QFont(font_family))
         self.spin_symbol_size.setValue(settings.value("symbol_size", 10, type=int))
         self.chk_auto_symbols.setChecked(settings.value("auto_symbols", True, type=bool))

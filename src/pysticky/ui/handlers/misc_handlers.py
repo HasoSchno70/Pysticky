@@ -737,8 +737,12 @@ class MiscHandlersMixin:
         self.canvas.minor_grid_interval = self._settings.value(
             "minor_grid_interval", CANVAS_CONFIG.minor_grid_interval, type=int
         )
-        self.canvas.grid_major_color = QColor(self._settings.value("grid_color_major", "#404060"))
-        self.canvas.grid_minor_color = QColor(self._settings.value("grid_color_minor", "#303050"))
+        self.canvas.grid_major_color = QColor(
+            self._settings.value("grid_color_major", "#404060", type=str)
+        )
+        self.canvas.grid_minor_color = QColor(
+            self._settings.value("grid_color_minor", "#303050", type=str)
+        )
 
         # Zellgroessen-Grenzen (wirken erst beim naechsten Zoom-Reset bzw.
         # neuen Muster -- die aktuell offene Ansicht wird nicht rueckwirkend
@@ -777,8 +781,10 @@ class MiscHandlersMixin:
         # bewusst, damit leere Zellen wie echter Aida-Stoff aussehen (nicht
         # das dunkle App-Theme) -- muss mit canvas_tab.py's Default gleich
         # bleiben, siehe grid-contrast-fix Folgebug in dieser Session.
-        self.canvas.bg_color = QColor(self._settings.value("canvas_bg", "#1a1a2e"))
-        self.canvas.empty_cell_color = QColor(self._settings.value("empty_cell_color", "#fafaf5"))
+        self.canvas.bg_color = QColor(self._settings.value("canvas_bg", "#1a1a2e", type=str))
+        self.canvas.empty_cell_color = QColor(
+            self._settings.value("empty_cell_color", "#fafaf5", type=str)
+        )
 
         # Farben-Tab -- ebenfalls vorher komplett totes UI (8 von 8 Einstellungen).
         self.canvas.symbol_font_family = self._settings.value(

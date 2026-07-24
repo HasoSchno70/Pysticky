@@ -148,8 +148,8 @@ class CanvasTab(QWidget):
             settings.value("major_grid_interval", MAJOR_GRID_INTERVAL, type=int)
         )
         self.spin_minor_grid.setValue(settings.value("minor_grid_interval", 5, type=int))
-        self.btn_grid_color_major.color = settings.value("grid_color_major", "#404060")
-        self.btn_grid_color_minor.color = settings.value("grid_color_minor", "#303050")
+        self.btn_grid_color_major.color = settings.value("grid_color_major", "#404060", type=str)
+        self.btn_grid_color_minor.color = settings.value("grid_color_minor", "#303050", type=str)
         self.spin_default_cell_size.setValue(
             settings.value("default_cell_size", DEFAULT_CELL_SIZE, type=int)
         )
@@ -158,8 +158,8 @@ class CanvasTab(QWidget):
         self.slider_zoom_speed.setValue(settings.value("zoom_speed", 12, type=int))
         self.chk_snap_enabled.setChecked(settings.value("snap_enabled", False, type=bool))
         self.spin_snap_interval.setValue(settings.value("snap_interval", 5, type=int))
-        self.btn_canvas_bg.color = settings.value("canvas_bg", "#1a1a2e")
-        self.btn_empty_cell.color = settings.value("empty_cell_color", "#fafaf5")
+        self.btn_canvas_bg.color = settings.value("canvas_bg", "#1a1a2e", type=str)
+        self.btn_empty_cell.color = settings.value("empty_cell_color", "#fafaf5", type=str)
         self.chk_fabric_texture.setChecked(settings.value("fabric_texture", True, type=bool))
 
     def save_settings(self, settings: QSettings) -> None:

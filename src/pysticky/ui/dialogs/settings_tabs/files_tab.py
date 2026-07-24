@@ -193,10 +193,10 @@ class FilesTab(QWidget):
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         self.edit_default_path.setText(
-            settings.value("default_path", str(Path.home() / "Documents"))
+            settings.value("default_path", str(Path.home() / "Documents"), type=str)
         )
-        self.edit_library_path.setText(settings.value("library_path", ""))
-        self.edit_templates_path.setText(settings.value("templates_path", ""))
+        self.edit_library_path.setText(settings.value("library_path", "", type=str))
+        self.edit_templates_path.setText(settings.value("templates_path", "", type=str))
         self.spin_pdf_cells_per_page.setValue(settings.value("pdf_cells_per_page", 40, type=int))
         self.spin_import_max_colors.setValue(
             settings.value("import_max_colors", DEFAULT_MAX_IMPORT_COLORS, type=int)
