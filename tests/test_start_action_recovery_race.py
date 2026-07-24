@@ -29,7 +29,7 @@ Fix: der start_action==2-Zweig prueft jetzt genau wie die anderen Zweige
 `_already_loaded()`, bevor er die letzte Datei oeffnet.
 """
 
-from pathlib import Path
+import tempfile
 
 import pytest
 from PySide6.QtWidgets import QMessageBox
@@ -64,7 +64,7 @@ def test_recent_file_start_action_does_not_discard_autosave_recovery(
     """Bestaetigte Autosave-Recovery beim Start darf nicht durch die
     Start-Aktion "Letzte Datei oeffnen" stillschweigend wieder verworfen
     werden."""
-    import tempfile
+    import os
 
     from pysticky.core import Pattern, save_pattern
 
@@ -72,10 +72,20 @@ def test_recent_file_start_action_does_not_discard_autosave_recovery(
     monkeypatch.setattr(
         AutosaveHandlersMixin, "_check_autosave_recovery", _REAL_CHECK_AUTOSAVE_RECOVERY
     )
+    monkeypatch.setattr(tempfile, "gettempdir", lambda: str(tmp_path))
+    # Eigene, "frische" PID des Testprozesses -- muss sich von der PID der
+    # (simuliert) abgestuerzten Instanz unterscheiden: _check_autosave_
+    # recovery() schliesst den eigenen PID-Pfad seit dem Multi-Instanz-Fix
+    # bewusst von der Suche aus (ein frischer Prozess kann ihn unmoeglich
+    # selbst geschrieben haben), sonst wuerde die Autosave-Datei hier
+    # faelschlich uebersehen.
+    monkeypatch.setattr(os, "getpid", lambda: 9999)
 
-    # Nie gespeichertes Pattern ("current_file is None") stuerzte ab -- die
-    # globale Temp-Autosave existiert.
-    global_autosave_path = Path(tempfile.gettempdir()) / "pysticky_autosave.pxs"
+    # Nie gespeichertes Pattern ("current_file is None") stuerzte in einer
+    # ANDEREN Instanz (PID 1234) ab -- seit dem Multi-Instanz-Fix schreibt
+    # _on_autosave() nicht mehr auf den einen globalen Pfad
+    # "pysticky_autosave.pxs", sondern PID-spezifisch.
+    global_autosave_path = tmp_path / "pysticky_autosave_1234.pxs"
     recovered_pattern = Pattern(name="Wiederhergestelltes Muster", width=5, height=5)
     save_pattern(recovered_pattern, global_autosave_path)
 
