@@ -100,6 +100,56 @@ def test_seed_from_pattern_reproduces_settings_object(qtbot, seeded_pattern):
     assert settings.confetti_min_run_size == 3
 
 
+def test_repeated_reimport_updates_metadata_each_time(qtbot, source_image_path):
+    """ "Bildimport wiederholen" mehrfach hintereinander mit jeweils
+    geaenderten Einstellungen ausgefuehrt -- die metadata-Felder des
+    resultierenden Patterns muessen JEDES Mal die zuletzt gewaehlten
+    Werte tragen, nicht die vom allerersten Import eingefrorenen (jeder
+    import_image()-Aufruf baut sein metadata-Dict frisch aus den
+    uebergebenen ImportSettings, siehe core/image_import.py)."""
+    settings_v1 = ImportSettings(width=16, height=12, max_colors=12, confetti_min_run_size=1)
+    pattern_v1 = import_image(source_image_path, settings_v1, crop=(0, 0, 1, 1))
+    assert pattern_v1.metadata["max_colors"] == 12
+    assert pattern_v1.metadata["confetti_min_run_size"] == 1
+
+    # Reimport 1: aus pattern_v1 vorbefuellter Dialog, max_colors geaendert
+    dlg1 = ImageImportDialog(seed_pattern=pattern_v1)
+    qtbot.addWidget(dlg1)
+    assert dlg1.spin_colors.value() == 12  # aus pattern_v1 uebernommen
+    dlg1.spin_colors.setValue(20)
+    dlg1.spin_confetti.setValue(3)
+    settings_v2 = dlg1._get_settings()
+    pattern_v2 = import_image(source_image_path, settings_v2, crop=dlg1._crop)
+    assert pattern_v2.metadata["max_colors"] == 20
+    assert pattern_v2.metadata["confetti_min_run_size"] == 3
+
+    # Reimport 2: aus pattern_v2 vorbefuellter Dialog -- muss v2-Werte
+    # zeigen, nicht auf v1 zurueckfallen.
+    dlg2 = ImageImportDialog(seed_pattern=pattern_v2)
+    qtbot.addWidget(dlg2)
+    assert dlg2.spin_colors.value() == 20
+    assert dlg2.spin_confetti.value() == 3
+
+
+def test_seed_from_pattern_diamond_mode_reselects_diamond_palette(qtbot, source_image_path):
+    """Ein Diamond-Painting-Muster (mode="diamond") wiederholt importieren
+    muss wieder eine DP-Palette vorauswaehlen -- nicht nur beim allerersten
+    Bildimport (siehe diamond-symbol-consistency-2026-07.md), sondern auch
+    beim WIEDERHOLTEN Import ueber Wizard Recall. Die Palette kommt hier
+    aus pattern.source_palette_name (in _seed_from_pattern gesetzt), die
+    exakte gleiche DP-Palette wie beim urspruenglichen Import muss also
+    stabil erhalten bleiben."""
+    settings = ImportSettings(width=8, height=6, max_colors=8, palette_name="DMC Diamond Painting")
+    pattern = import_image(source_image_path, settings, crop=(0, 0, 1, 1))
+    assert pattern.mode == "diamond"
+    assert pattern.source_palette_name == "DMC Diamond Painting"
+
+    dlg = ImageImportDialog(prefer_diamond=True, seed_pattern=pattern)
+    qtbot.addWidget(dlg)
+
+    assert dlg.combo_palette.currentText() == "DMC Diamond Painting"
+
+
 def test_seed_from_pattern_without_source_image_stays_blank(qtbot):
     """Pattern ohne source_image_path (z.B. von Hand gezeichnet) -- der
     Dialog darf nicht crashen und bleibt einfach leer."""

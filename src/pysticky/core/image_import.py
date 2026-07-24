@@ -242,9 +242,20 @@ def import_image(
 
     # Farben hinzufügen — DP/Bead-Flags pro Entry setzen, damit
     # set_stitch() automatisch den richtigen Stitch-Type erzeugt.
+    #
+    # Symbol-Zuweisung bei mehr als len(SYMBOLS) Farben (max_colors bis
+    # 100 ist waehlbar, symbols.txt hat nur 86 Eintraege): frueher wurde
+    # hier mit "SYMBOLS[i % len(SYMBOLS)]" modulo gerechnet, sodass sich
+    # Farbe 87 mit Farbe 1 usw. das Symbol teilte -- in Legende/Export
+    # nicht mehr unterscheidbar. Gleiche "#N"-Fallback-Konvention wie in
+    # Pattern.add_color() (siehe dort): "#" kommt in symbols.txt nicht
+    # vor, kollidiert also nie mit einem echten Symbol.
     thread_to_index: dict[str, int] = {}
     for i, thread in enumerate(used_threads):
-        symbol = SYMBOLS[i % len(SYMBOLS)]
+        if i < len(SYMBOLS):
+            symbol = SYMBOLS[i]
+        else:
+            symbol = f"#{i - len(SYMBOLS) + 1}"
         entry = ColorEntry(
             thread=thread,
             symbol=symbol,

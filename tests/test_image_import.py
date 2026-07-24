@@ -259,6 +259,39 @@ def test_import_median_cut_quantization(tmp_path):
     assert pattern.width == 15
 
 
+def test_import_more_than_symbol_pool_assigns_unique_symbols(tmp_path):
+    """Regression: max_colors ist bis 100 waehlbar (Settings-Dialog UND
+    Wizard-Recall koennen das gespeicherte max_colors aus einem alten
+    Muster wiederverwenden), aber resources/symbols.txt hat nur 86
+    Eintraege. import_image() wies Symbole frueher per
+    "SYMBOLS[i % len(SYMBOLS)]" zu -- Farbe 87 bekam also dasselbe
+    Symbol wie Farbe 1, Farbe 88 dasselbe wie Farbe 2 usw. Zwei
+    verschiedene Farben mit identischem Symbol sind in Legende/Export
+    nicht mehr unterscheidbar. Pattern.add_color() hat fuer den
+    manuellen Farbe-hinzufuegen-Pfad schon einen "#N"-Fallback (Runde
+    48) -- import_image() baut ColorEntries aber direkt und nutzte
+    diesen Fallback nicht mit."""
+    import random
+
+    rng = random.Random(42)
+    size = 32
+    arr = np.zeros((size, size, 3), dtype=np.uint8)
+    for y in range(size):
+        for x in range(size):
+            arr[y, x] = [rng.randint(0, 255), rng.randint(0, 255), rng.randint(0, 255)]
+    path = tmp_path / "viele_farben.png"
+    Image.fromarray(arr).save(path)
+
+    settings = ImportSettings(
+        width=size, height=size, max_colors=95, quantization_method="median_cut"
+    )
+    pattern = import_image(path, settings)
+
+    assert len(pattern.color_entries) > 86, "Testbild muss tatsaechlich >86 Farben liefern"
+    symbols = [entry.symbol for entry in pattern.color_entries]
+    assert len(symbols) == len(set(symbols)), "jede Farbe braucht ein eindeutiges Symbol"
+
+
 def test_import_floyd_steinberg_dithering(tmp_path):
     """Dithering-Pfad laeuft ohne Crash und produziert valides Pattern."""
     path = _make_gradient(tmp_path)
