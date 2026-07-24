@@ -104,6 +104,95 @@ def test_remove_color_recalculates_stitch_counts(pattern_with_stitches, qtbot):
     assert [e.stitch_count for e in pattern.color_entries] == expected
 
 
+def test_merge_colors_preserves_half_stitch_for_normal_colors(empty_pattern, qtbot, monkeypatch):
+    """_on_merge_colors() darf den Stich-Typ verschobener Zellen nicht auf
+    FULL zuruecksetzen, wenn weder Quelle noch Ziel Bead/Diamond ist.
+
+    Regression: die alte Implementierung rief `layer.set_stitch(x, y,
+    target_index)` ohne stitch_type-Parameter auf, was JEDE verschobene
+    Zelle stillschweigend auf FULL (Vollstich) zurueckstampfte -- ein
+    bereits vorhandener Halbstich ging beim Zusammenfuehren verloren
+    (analog zum Runde-30-Fix fuer "Farbe ersetzen"/"Farben tauschen").
+    """
+    from PySide6.QtWidgets import QMessageBox
+
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+    from pysticky.ui.dialogs.color_management_dialog import ColorListItem
+
+    pattern = empty_pattern
+    pattern.color_entries.clear()
+    # "a" bleibt Zielfarbe (selectedItems()[0] -> selected[0] in
+    # _on_merge_colors() ist immer der Eintrag mit dem niedrigsten Index,
+    # da QListWidget.selectedItems() in Listenreihenfolge liefert). "b" ist
+    # die Quellfarbe, die verschmolzen und danach entfernt wird -- der
+    # Halbstich muss deshalb auf "b" liegen, nicht auf dem Ziel.
+    a = pattern.add_color(Thread.from_hex("A", "#FF0000", manufacturer="DMC", catalog_number="321"))
+    b = pattern.add_color(Thread.from_hex("B", "#FF0101", manufacturer="DMC", catalog_number="322"))
+    pattern.set_stitch(3, 3, b, stitch_type=StitchType.HALF_TL_BR.value)
+
+    dialog = _make_dialog(pattern, qtbot)
+    dialog._populate_list()
+
+    for i in range(dialog._color_list.count()):
+        item = dialog._color_list.item(i)
+        assert isinstance(item, ColorListItem)
+        item.setSelected(item.index in (a, b))
+
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    dialog._on_merge_colors()
+
+    layer = pattern.active_layer
+    assert layer is not None
+    assert layer.get_stitch(3, 3) == a
+    assert layer.get_stitch_type(3, 3) == StitchType.HALF_TL_BR.value
+
+
+def test_merge_colors_restamps_bead_target(empty_pattern, qtbot, monkeypatch):
+    """_on_merge_colors(): eine normale Farbe in eine Bead-Zielfarbe zu
+    mergen muss die verschobenen Zellen auf BEAD umstempeln.
+
+    Ohne dieses Restamping blieben verschmolzene Zellen als Quadrat
+    gerendert und tauchten nicht in get_statistics()['bead_count'] auf,
+    obwohl ihre Farbe jetzt is_bead ist (Runde-55-Enforcement wurde durch
+    das direkte layer.set_stitch() ohne Typ-Angabe umgangen)."""
+    from PySide6.QtWidgets import QMessageBox
+
+    from pysticky.core import Thread
+    from pysticky.core.stitch import StitchType
+    from pysticky.ui.dialogs.color_management_dialog import ColorListItem
+
+    pattern = empty_pattern
+    pattern.color_entries.clear()
+    bead_idx = pattern.add_color(
+        Thread.from_hex("Pearl", "#EEEEEE", manufacturer="Mill Hill Beads", catalog_number="02001"),
+        is_bead=True,
+    )
+    normal_idx = pattern.add_color(
+        Thread.from_hex("Fast-Pearl", "#EFEFEF", manufacturer="DMC", catalog_number="B5200")
+    )
+    pattern.set_stitch(4, 4, normal_idx)
+
+    dialog = _make_dialog(pattern, qtbot)
+    dialog._populate_list()
+
+    # Bead-Farbe steht auf Zeile 0 -> selectedItems()[0] -> bleibt Zielfarbe
+    # (Reihenfolge in _color_list entspricht der Einfuegereihenfolge/dem
+    # Index in color_entries, siehe _populate_list()).
+    for i in range(dialog._color_list.count()):
+        item = dialog._color_list.item(i)
+        assert isinstance(item, ColorListItem)
+        item.setSelected(item.index in (bead_idx, normal_idx))
+
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Yes)
+    dialog._on_merge_colors()
+
+    layer = pattern.active_layer
+    assert layer is not None
+    assert layer.get_stitch(4, 4) == bead_idx
+    assert layer.get_stitch_type(4, 4) == StitchType.BEAD.value
+
+
 def test_remove_color_at_last_index_has_no_stitches_to_shift(pattern_with_stitches, qtbot):
     """Randfall: die letzte Farbe (kein hoeherer Index existiert) loeschen
     darf ebenfalls nicht abstuerzen."""

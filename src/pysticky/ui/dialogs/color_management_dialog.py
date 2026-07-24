@@ -782,13 +782,14 @@ class ColorManagementDialog(QDialog):
         target_index = target.index
         source_indices = sorted([s.index for s in sources], reverse=True)
 
-        # Stiche umfärben
-        for layer in self._pattern.layer_stack:
-            for y in range(self._pattern.height):
-                for x in range(self._pattern.width):
-                    color_index = layer.get_stitch(x, y)
-                    if color_index in source_indices:
-                        layer.set_stitch(x, y, target_index)
+        # Stiche umfärben. Nutzt Pattern.merge_colors_stitches() statt
+        # layer.set_stitch() ohne stitch_type: set_stitch() ohne Typ-Angabe
+        # stampft jede verschobene Zelle stillschweigend auf FULL zurueck
+        # (Halb-/Viertelstiche gingen verloren) und ignoriert Bead-/Diamond-
+        # Faerbung des Ziels komplett -- siehe merge_colors_stitches()-
+        # Docstring fuer beide Faelle.
+        for source_index in source_indices:
+            self._pattern.merge_colors_stitches(source_index, target_index)
 
         # Backstitches umfärben
         for bs in self._pattern.backstitches:
