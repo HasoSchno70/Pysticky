@@ -94,6 +94,156 @@ def test_image_export_empty_pattern(empty_pattern, tmp_path):
     assert target.exists()
 
 
+def test_image_export_dp_mode_renders_diamond_drill_not_flat_square(tmp_path):
+    """DP-Modus (Diamond Painting): FULL-Stiche muessen als facettierter
+    Drill gerendert werden (analog PDF-/HTML-Export und Canvas-Renderer),
+    nicht als flaches Kreuzstich-Rechteck.
+
+    Regression: `ImageExporter` kannte weder den expliziten DIAMOND-
+    Stitch-Type (11) noch die Pattern.mode=='diamond'-Konvention (FULL-
+    Stiche als Drill, siehe pdf_export_drawings.py::_add_stitch_shape) und
+    rendere DP-Zellen deshalb immer als schlichtes eingefaerbtes Quadrat.
+
+    Verifikation ueber echte Pixelfarben: der Drill hat vier facettierte
+    Ecken mit unterschiedlicher Helligkeit (hell oben, dunkel unten) --
+    ein flaches Rechteck haette ueberall exakt dieselbe Farbe.
+    """
+    from PySide6.QtGui import QImage
+
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(name="DP-Test", width=4, height=4, mode="diamond")
+    pattern.color_entries.clear()
+    thread = Thread.from_hex(
+        "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="1"
+    )
+    pattern.add_color(thread)
+    # Ein einzelner Drill in der Mitte des kleinen Patterns.
+    pattern.set_stitch(1, 1, 0)
+
+    target = tmp_path / "dp.png"
+    cell_size = 40  # gross genug, damit Facetten + Kantenrand sichtbar sind
+    ok = ImageExporter(pattern).export(target, cell_size=cell_size, show_grid=False)
+    assert ok is True
+
+    img = QImage(str(target))
+    cx = 1 * cell_size + cell_size // 2
+    cy = 1 * cell_size + cell_size // 2
+    top_px = img.pixelColor(cx, cy - cell_size // 3)
+    bottom_px = img.pixelColor(cx, cy + cell_size // 3)
+
+    # Facettierter Drill: obere Facette (Glanzlicht) ist heller als die
+    # untere (Schatten) -- bei einem flachen Rechteck waeren beide exakt
+    # identisch (reine Rot-Palettenfarbe #FF0000 ueberall).
+    assert (top_px.red(), top_px.green(), top_px.blue()) != (
+        bottom_px.red(),
+        bottom_px.green(),
+        bottom_px.blue(),
+    )
+    flat_red = (255, 0, 0)
+    assert (top_px.red(), top_px.green(), top_px.blue()) != flat_red
+    assert (bottom_px.red(), bottom_px.green(), bottom_px.blue()) != flat_red
+
+
+def test_image_export_stitch_mode_full_stitch_stays_flat_square(pattern_with_stitches, tmp_path):
+    """Gegenprobe: im normalen Kreuzstich-Modus (mode='stitch') bleibt ein
+    FULL-Stich weiterhin ein flaches, einfarbiges Quadrat -- die DP-Drill-
+    Sonderbehandlung darf NICHT auf Nicht-DP-Pattern durchschlagen."""
+    from PySide6.QtGui import QImage
+
+    target = tmp_path / "flat.png"
+    cell_size = 10
+    ImageExporter(pattern_with_stitches).export(target, cell_size=cell_size, show_grid=False)
+
+    img = QImage(str(target))
+    # (6,6) ist Teil der roten Fuellung im pattern_with_stitches-Fixture.
+    cx = 6 * cell_size + cell_size // 2
+    cy = 6 * cell_size + cell_size // 2
+    top_px = img.pixelColor(cx, cy - 3)
+    bottom_px = img.pixelColor(cx, cy + 3)
+    assert (top_px.red(), top_px.green(), top_px.blue()) == (
+        bottom_px.red(),
+        bottom_px.green(),
+        bottom_px.blue(),
+    )
+    assert (top_px.red(), top_px.green(), top_px.blue()) == (255, 0, 0)
+
+
+def test_image_export_draws_backstitch_contour_lines(tmp_path):
+    """Rueckstich-Konturlinien muessen im PNG-Export sichtbar sein.
+
+    Regression: `ImageExporter` las `pattern.backstitches` bisher gar
+    nicht -- HTML- (`html_export.py::_generate_backstitches_svg`), PDF-
+    (`pdf_export_drawings.py`) und Canvas-Renderer (`rendering_mixin.py::
+    _draw_backstitches`) zeichnen Rueckstiche seit jeher, der Bild-Export
+    liess sie komplett weg (eigenstaendige Luecke, nicht die bereits
+    bekannte HTML-Off-by-One-Baustelle und nicht die Mystery-Modus-Luecke).
+
+    Verifikation ueber echte Pixelfarben: auf der Rueckstich-Linie muss
+    die Blau-Farbe des Rueckstichs sichtbar sein, nicht der helle
+    Hintergrund.
+    """
+    from PySide6.QtGui import QImage
+
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(name="Backstitch-Test", width=5, height=5)
+    pattern.color_entries.clear()
+    thread = Thread.from_hex("Blau", "#0000FF", manufacturer="DMC", catalog_number="796")
+    pattern.add_color(thread)
+    # Waagrechte Ruechstich-Linie entlang der oberen Kante von Zeile 2
+    # (halbe Stiche: eine Zeile Hoehe = 2 Einheiten -> y=4).
+    pattern.add_backstitch(0, 4, 10, 4, color_index=0)
+
+    target = tmp_path / "backstitch.png"
+    cell_size = 20
+    ok = ImageExporter(pattern).export(target, cell_size=cell_size, show_grid=False)
+    assert ok is True
+
+    img = QImage(str(target))
+    # Punkt mitten auf der Linie (y = 2 Zeilen * cell_size = 40px).
+    on_line = img.pixelColor(cell_size * 2, cell_size * 2)
+    # Punkt weit weg von der Linie (Zeile 0, Hintergrund).
+    off_line = img.pixelColor(cell_size * 2, 2)
+
+    assert (off_line.red(), off_line.green(), off_line.blue()) == (250, 250, 245)
+    # Blauanteil auf der Linie muss deutlich dominieren (Rueckstich-Farbe
+    # ueberlagert per Alpha-Blending mit dem Schatten, daher kein exaktes
+    # (0,0,255), aber klar erkennbar blau-dominiert).
+    assert on_line.blue() > on_line.red()
+    assert on_line.blue() > on_line.green()
+    assert on_line.blue() > 100
+
+
+def test_image_export_dp_mode_skips_backstitches(tmp_path):
+    """DP-Modus kennt kein Rueckstich-Konzept -- ein per convert_to_mode()
+    umgeschaltetes Pattern kann noch alte Backstitch-Daten tragen (siehe
+    html_export_sections.py-Kommentar), die dann NICHT ueber der
+    Drill-Vorschau landen duerfen. Analog zur bestehenden PDF-Export-
+    Behandlung (pdf_export_drawings.py, Zeile ~414)."""
+    from PySide6.QtGui import QImage
+
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(name="DP-Backstitch-Test", width=5, height=5, mode="diamond")
+    pattern.color_entries.clear()
+    thread = Thread.from_hex(
+        "Blau", "#0000FF", manufacturer="DMC Diamond Painting", catalog_number="796"
+    )
+    pattern.add_color(thread)
+    pattern.add_backstitch(0, 4, 10, 4, color_index=0)
+
+    target = tmp_path / "dp_backstitch.png"
+    cell_size = 20
+    ImageExporter(pattern).export(target, cell_size=cell_size, show_grid=False)
+
+    img = QImage(str(target))
+    on_line = img.pixelColor(cell_size * 2, cell_size * 2)
+    # Ohne DP-Sonderbehandlung waere das reiner Hintergrund (kein Drill an
+    # dieser Zelle platziert) -- die Linie darf da nicht durchscheinen.
+    assert (on_line.red(), on_line.green(), on_line.blue()) == (250, 250, 245)
+
+
 def test_image_export_unwritable_path_raises(pattern_with_stitches, tmp_path):
     """Fehlschlag liefert kein stilles False mehr, sondern eine Exception
     mit Detail (Ziel-Pfad), damit das UI den Grund anzeigen kann."""

@@ -9,13 +9,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath
+from PySide6.QtCore import QLineF, QPointF, QRectF, Qt
+from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath, QPen
 
 from ..core.stitch_shapes import (
     bead_radius_factor,
+    diamond_inset_pixels,
+    diamond_should_draw_edge,
     french_knot_radius_factor,
     is_bead,
+    is_diamond,
     is_french_knot,
     is_partial_stitch,
     partial_stitch_points,
@@ -55,6 +58,59 @@ def _fill_french_knot(painter: QPainter, x: float, y: float, size: float, color:
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
 
+def _fill_diamond_drill(painter: QPainter, x: float, y: float, size: float, color: QColor) -> None:
+    """Zeichnet einen Diamond-Painting-Drill: facettiertes Quadrat.
+
+    Eigenständige Kopie der Facetten-Geometrie aus
+    `ui/diamond_drill_render.py::draw_diamond_drill` (dort für die drei
+    QPainter-Canvas-Pfade). `io/` importiert bewusst nichts aus `ui/`
+    (Layering), daher hier dupliziert statt geteilt -- die reine Geometrie
+    (Inset/Edge-Schwellwerte) kommt weiterhin aus `core/stitch_shapes.py`.
+    """
+    inset = diamond_inset_pixels(size)
+    x0, y0 = x + inset, y + inset
+    x1, y1 = x + size - inset, y + size - inset
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+
+    top = QPainterPath()
+    top.moveTo(x0, y0)
+    top.lineTo(x1, y0)
+    top.lineTo(cx, cy)
+    top.closeSubpath()
+
+    right = QPainterPath()
+    right.moveTo(x1, y0)
+    right.lineTo(x1, y1)
+    right.lineTo(cx, cy)
+    right.closeSubpath()
+
+    bottom = QPainterPath()
+    bottom.moveTo(x1, y1)
+    bottom.lineTo(x0, y1)
+    bottom.lineTo(cx, cy)
+    bottom.closeSubpath()
+
+    left = QPainterPath()
+    left.moveTo(x0, y1)
+    left.lineTo(x0, y0)
+    left.lineTo(cx, cy)
+    left.closeSubpath()
+
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.fillPath(top, color.lighter(145))
+    painter.fillPath(right, color.lighter(110))
+    painter.fillPath(left, color.darker(200 - 95))
+    painter.fillPath(bottom, color.darker(200 - 70))
+
+    if diamond_should_draw_edge(size):
+        edge = QColor(0, 0, 0, 120)
+        painter.setPen(edge)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRect(QRectF(x0, y0, x1 - x0, y1 - y0))
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
+
 def _fill_bead(painter: QPainter, x: float, y: float, size: float, color: QColor) -> None:
     """Zeichnet eine Perle: größere Kugel mit Glanzpunkt."""
     radius = max(1.5, size * bead_radius_factor())
@@ -70,6 +126,54 @@ def _fill_bead(painter: QPainter, x: float, y: float, size: float, color: QColor
     painter.setBrush(highlight)
     h_r = max(1.0, radius / 3.0)
     painter.drawEllipse(QPointF(cx - radius / 2.5, cy - radius / 2.5), h_r, h_r)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+
+
+def _draw_backstitches(painter: QPainter, pattern: Pattern, cell_size: int) -> None:
+    """Zeichnet alle Rückstich-Konturlinien des Musters.
+
+    Fehlte bisher komplett im Bild-Export -- HTML- (`html_export.py::
+    _generate_backstitches_svg`), PDF- (`pdf_export_drawings.py`) und
+    Canvas-Renderer (`rendering_mixin.py::_draw_backstitches`) zeichnen
+    Rückstiche seit jeher, der Raster-Export liess sie schlicht weg.
+
+    Koordinaten sind wie überall im Rückstich-System in halben Stichen
+    (siehe `core/backstitch_manager.py`); `half_cell` rechnet das in
+    Pixel um. Schatten + Farblinie mit Rundkappen, analog zum
+    HTML-Export (dort `stroke_width = max(1.5, cell_size / 8)`).
+
+    Im DP-Modus wird nichts gezeichnet -- Diamond Painting kennt kein
+    Rückstich-Konzept (ein per `convert_to_mode()` umgeschaltetes Pattern
+    kann aber noch alte Backstitch-Daten tragen, siehe html_export_sections.py).
+    """
+    if getattr(pattern, "mode", "stitch") == "diamond":
+        return
+    if not pattern.backstitches:
+        return
+
+    half_cell = cell_size / 2.0
+    stroke_width = max(1.5, cell_size / 8.0)
+
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    for bs in pattern.backstitches:
+        entry = pattern.get_color_entry(bs.color_index)
+        color = QColor(0, 0, 0)
+        if entry:
+            tc = entry.thread.color
+            color = QColor(tc.r, tc.g, tc.b)
+
+        line = QLineF(bs.x1 * half_cell, bs.y1 * half_cell, bs.x2 * half_cell, bs.y2 * half_cell)
+
+        # Schatten für Kontrast gegen helle/dunkle Hintergründe.
+        shadow_pen = QPen(QColor(0, 0, 0, 80), stroke_width + 1)
+        shadow_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(shadow_pen)
+        painter.drawLine(line)
+
+        pen = QPen(color, stroke_width)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.drawLine(line)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
 
@@ -127,12 +231,24 @@ class ImageExporter:
 
         valid = (composite != NO_STITCH) & (composite >= 0) & (composite < n_colors)
 
-        # Sonder-Stiche (French Knot / Bead / Partial) werden weiter einzeln
-        # gezeichnet; alle anderen (Vollstiche) rendern wir vektorisiert.
+        # Im DP-Modus rendern FULL-Stiche (Typ 0) ebenfalls als Diamond-Drill,
+        # analog PDF-/HTML-Export (siehe pdf_export_drawings.py::_add_stitch_shape)
+        # und Canvas-Renderer (rendering_mixin.py, dort ueber diamond_view-Flag).
+        is_dp_mode = getattr(pattern, "mode", "stitch") == "diamond"
+
+        # Sonder-Stiche (French Knot / Bead / Partial / Diamond-Drill) werden
+        # weiter einzeln gezeichnet; alle anderen (Vollstiche ausserhalb des
+        # DP-Modus) rendern wir vektorisiert.
         special = np.zeros_like(type_grid, dtype=bool)
         for st in np.unique(type_grid):
             sti = int(st)
-            if is_french_knot(sti) or is_bead(sti) or is_partial_stitch(sti):
+            if (
+                is_french_knot(sti)
+                or is_bead(sti)
+                or is_partial_stitch(sti)
+                or is_diamond(sti)
+                or (is_dp_mode and sti == 0)
+            ):
                 special |= type_grid == st
 
         # Basisbild (1 Pixel/Stich): Hintergrund, dann Vollstiche einfärben.
@@ -168,12 +284,18 @@ class ImageExporter:
                 px = int(x) * cell_size
                 py = int(y) * cell_size
                 stype = int(type_grid[y, x])
-                if is_french_knot(stype):
+                if is_diamond(stype) or (is_dp_mode and stype == 0):
+                    _fill_diamond_drill(painter, px, py, cell_size, color)
+                elif is_french_knot(stype):
                     _fill_french_knot(painter, px, py, cell_size, color)
                 elif is_bead(stype):
                     _fill_bead(painter, px, py, cell_size, color)
                 elif is_partial_stitch(stype):
                     _fill_partial_stitch(painter, stype, px, py, cell_size, color)
+
+            # Rückstich-Konturlinien (fehlten bisher komplett, siehe
+            # _draw_backstitches-Docstring).
+            _draw_backstitches(painter, pattern, cell_size)
 
             # Symbole (optional, zwangsläufig pro Zelle).
             if show_symbols and cell_size >= 8:
