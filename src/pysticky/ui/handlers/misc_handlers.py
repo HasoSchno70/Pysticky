@@ -753,6 +753,21 @@ class MiscHandlersMixin:
             "default_cell_size", CANVAS_CONFIG.default_cell_size, type=int
         )
 
+        # Zoom-Slider-Bereich an eventuell individuelle Zellgroessen-Grenzen
+        # anpassen -- sonst bleibt der Slider auf dem hartcodierten
+        # 20-300%-Bereich haengen, zeigt bei Nicht-Standard-Einstellungen
+        # einen falschen (geklemmten) Wert an und reisst den Canvas-Zoom
+        # beim naechsten Ziehen unerwartet in den zu engen Default-Bereich
+        # zurueck (siehe ZoomSlider.set_zoom_range()-Docstring).
+        if hasattr(self, "zoom_slider"):
+            min_zoom_percent = round(
+                self.canvas.MIN_CELL_SIZE / self.canvas.DEFAULT_CELL_SIZE * 100
+            )
+            max_zoom_percent = round(
+                self.canvas.MAX_CELL_SIZE / self.canvas.DEFAULT_CELL_SIZE * 100
+            )
+            self.zoom_slider.set_zoom_range(min_zoom_percent, max_zoom_percent)
+
         # Zoom-Geschwindigkeit: Slider-Wert 10-50 zeigt "1.0x".."5.0x" an,
         # deckungsgleich mit dem multiplikativen ZOOM_STEP-Faktor.
         zoom_speed = self._settings.value("zoom_speed", 12, type=int)
