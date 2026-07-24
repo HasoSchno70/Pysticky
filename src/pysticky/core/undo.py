@@ -528,6 +528,17 @@ class LayerSnapshotCommand(Command):
     auf ihren Vorzustand zurückgesetzt (gleiche Einschränkung wie bei
     Farben/Ebenen oben).
 
+    Die Ziel-Ebene wird bei Konstruktion EINMALIG per Objektreferenz
+    aufgeloest (`self._layer`), nicht bei jedem execute()/undo() erneut
+    ueber `layer_index` indiziert. Ohne das wuerde eine spaetere, vom
+    Undo-System unabhaengige Struktur-Aenderung am Layer-Stack (Ebene
+    hinzufuegen/entfernen/verschieben -- z.B. ueber das Ebenen-Panel,
+    NICHT ueber diesen Command) den Index verschieben: ein Undo dieses
+    Commands traefe dann still eine voellig andere Ebene, waehrend die
+    eigentliche Plugin-Ziel-Ebene nie zurueckgesetzt wird (siehe
+    Regressionstest
+    `TestLayerSnapshotCommand::test_undo_targets_wrong_layer_after_layer_inserted`).
+
     Example:
         >>> cmd = LayerSnapshotCommand(pattern, layer_index=0,
         ...     action=lambda: run_plugin(plugin, pattern, ctx),
@@ -543,7 +554,20 @@ class LayerSnapshotCommand(Command):
         description_text: str = "Aktion",
     ) -> None:
         self._pattern = pattern
-        self._layer_index = layer_index
+        # Das Layer-OBJEKT wird sofort bei Konstruktion aufgeloest und
+        # gemerkt -- NICHT nur der Index. Wuerde spaeter (bei execute()/
+        # undo()/redo(), die potenziell erst nach vielen weiteren
+        # Undo-Schritten passieren) immer wieder per `self._layer_index`
+        # frisch in layer_stack indiziert, wuerde jede dazwischenliegende
+        # Ebenen-Hinzufuegung/-Entfernung/-Verschiebung (die layer_index
+        # NICHT ueber das Undo-System laeuft und daher unbemerkt passieren
+        # kann) den Index verschieben: undo()/redo() traefe dann still eine
+        # voellig andere Ebene, waehrend die eigentliche Ziel-Ebene nie
+        # zurueckgesetzt wird (Datenkorruption ohne Fehlermeldung). Durch
+        # das Festhalten der Objektreferenz bleibt der Command auch nach
+        # spaeteren Struktur-Aenderungen am Layer-Stack an der richtigen
+        # Ebene "angeheftet".
+        self._layer = pattern.layer_stack[layer_index]
         self._action = action
         self._description_text = description_text
         self._before: _LayerSnapshot | None = None
@@ -576,7 +600,7 @@ class LayerSnapshotCommand(Command):
     def execute(self) -> None:
         """Erster Aufruf: führt `action` aus. Bei Redo: stellt nur den
         aufgezeichneten Nachher-Zustand wieder her (kein erneuter Aufruf)."""
-        layer = self._pattern.layer_stack[self._layer_index]
+        layer = self._layer
         if self._before is None:
             self._before = self._snapshot(layer)
             try:
@@ -596,8 +620,7 @@ class LayerSnapshotCommand(Command):
     def undo(self) -> None:
         """Stellt den Zustand vor `action` wieder her."""
         assert self._before is not None
-        layer = self._pattern.layer_stack[self._layer_index]
-        self._restore(layer, self._before)
+        self._restore(self._layer, self._before)
 
     @property
     def description(self) -> str:

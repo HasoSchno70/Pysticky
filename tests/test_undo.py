@@ -576,6 +576,53 @@ class TestLayerSnapshotCommand:
         assert layer.grid.shape == (3, 3)
         assert layer.get_stitch(1, 1) == 0
 
+    def test_undo_targets_wrong_layer_after_layer_inserted(self):
+        """Regression: LayerSnapshotCommand merkt sich nur einen Integer-
+        Index (`self._layer_index`), nicht das Layer-Objekt selbst. Fuegt
+        der Nutzer NACH einem Plugin-Lauf (der auf Layer-Index 1 arbeitet)
+        eine neue Ebene VOR diesem Index ein -- z.B. per "Ebene hinzufuegen"
+        an Position 0 -- rutscht die eigentliche Plugin-Ziel-Ebene auf
+        Index 2, waehrend Index 1 nun eine voellig andere Ebene (die alte
+        Hintergrund-Ebene) bezeichnet. Ein anschliessendes Undo des Plugin-
+        Commands schreibt den Snapshot dann in die FALSCHE Ebene zurueck
+        (stille Datenkorruption) und die eigentliche Ziel-Ebene bleibt
+        fuer immer im Nachher-Zustand haengen."""
+        pattern = Pattern(width=3, height=3)
+        background = pattern.layer_stack[0]
+        background.set_stitch(0, 0, 0)
+
+        target = pattern.layer_stack.add_layer("Ziel-Ebene")
+        target_index = pattern.layer_stack.get_layer_index(target)
+        assert target_index == 1
+
+        def action():
+            for x in range(3):
+                for y in range(3):
+                    target.set_stitch(x, y, 0)
+
+        cmd = LayerSnapshotCommand(pattern, layer_index=target_index, action=action)
+        cmd.execute()
+        assert target.get_stitch(0, 0) == 0
+        assert target.get_stitch(2, 2) == 0
+
+        # Nutzer fuegt danach eine neue Ebene VOR der Ziel-Ebene ein --
+        # verschiebt "Ziel-Ebene" von Index 1 auf Index 2, waehrend Index 1
+        # jetzt die alte Hintergrund-Ebene ist.
+        pattern.layer_stack.add_layer("Neu eingefuegt", index=0)
+        assert pattern.layer_stack.get_layer_index(target) == 2
+        assert pattern.layer_stack.get_layer_index(background) == 1
+
+        cmd.undo()
+
+        # Die tatsaechliche Plugin-Ziel-Ebene muss zurueckgerollt sein --
+        # NICHT die Hintergrund-Ebene, die zufaellig jetzt an Index 1 sitzt.
+        assert background.get_stitch(0, 0) == 0, (
+            "Hintergrund-Ebene wurde faelschlich vom Undo ueberschrieben"
+        )
+        assert all(target.get_stitch(x, y) is None for x in range(3) for y in range(3)), (
+            "Ziel-Ebene des Plugins wurde NICHT zurueckgerollt (falscher Layer getroffen)"
+        )
+
 
 class TestDescriptionTranslation:
     """Regression (Runde 19): jedes Command.description war ein rohes
