@@ -185,6 +185,47 @@ def test_pdf_preview_drawing_hides_backstitches_in_dp_mode():
     assert not any(isinstance(shape, Line) for shape in drawing.contents)
 
 
+def test_pdf_preview_drawing_keeps_backstitch_exactly_on_pattern_edge():
+    """Regression-Check (Runde 51): Der HTML-Export hatte einen Off-by-One-Bug
+    (Runde 47-50, html_export.py), bei dem ein Rueckstich-Endpunkt exakt auf
+    der rechten/unteren Musterkante (Halbstich-Koordinate == 2*width/2*height)
+    per rohem `// 2` auf den nicht existierenden Zell-Index `width`/`height`
+    abgebildet wurde und die Linie dadurch lautlos aus dem Export verschwand.
+
+    _create_preview_drawing() im PDF-Export (pdf_export_drawings.py) rechnet
+    Rueckstich-Endpunkte NICHT per Ganzzahldivision auf einen Zell-Index um --
+    es skaliert die halben-Stich-Koordinaten direkt proportional in
+    Zeichnungs-Koordinaten (`bs.x1 * half_cell_w` usw.), ohne Rundung auf
+    einen Bucket-Index. Deshalb existiert die HTML-Bugklasse hier strukturell
+    nicht. Dieser Test haelt das fest, falls jemand die Skalierung spaeter
+    durch eine Zell-Index-basierte Logik ersetzt."""
+    from reportlab.graphics.shapes import Line
+
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    idx = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+
+    # Endpunkt exakt auf der rechten/unteren Musterkante: (8,8) -> (10,10),
+    # wobei 10 == 2*width == 2*height (die problematische Grenz-Koordinate).
+    pattern.add_backstitch(8, 8, 10, 10, idx)
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    drawing = exp._create_preview_drawing(100, 100)
+
+    assert drawing is not None
+    lines = [shape for shape in drawing.contents if isinstance(shape, Line)]
+    # Erwarteter Endpunkt: exakt an der rechten (x=100) unteren (y=0) Kante
+    # der 100x100-Zeichnung -- keine Verschiebung, kein Verschwinden.
+    matching = [ln for ln in lines if abs(ln.x2 - 100.0) < 0.01 and abs(ln.y2 - 0.0) < 0.01]
+    coords = [(ln.x1, ln.y1, ln.x2, ln.y2) for ln in lines]
+    assert len(matching) == 1, f"Rueckstich am Musterrand fehlt oder falsch platziert: {coords}"
+
+
 def test_pdf_export_survives_unescaped_angle_bracket_in_notes(pattern_with_stitches, tmp_path):
     """Regression (Runde 20): reportlab's Paragraph() parst Text als eigenes
     XML-artiges Markup -- ein rohes "<" GEFOLGT VON EINEM BUCHSTABEN (wie ein
