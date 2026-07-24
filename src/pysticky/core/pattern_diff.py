@@ -116,9 +116,25 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
     new_has = new_val != NO_STITCH
     both = old_has & new_has
 
+    # old_val/new_val enthalten rohe Farb-INDIZES (Position in
+    # pattern.color_entries) -- NICHT die Farbe selbst. Ein Snapshot-Diff
+    # vergleicht aber typischerweise zwei UNABHAENGIGE Pattern-Objekte
+    # (Snapshot von der Platte vs. aktuelles Pattern im Speicher), deren
+    # Paletten zwischenzeitlich bearbeitet worden sein koennen (Farbe
+    # geloescht -> Pattern.remove_color() schiebt alle hoeheren Indizes um 1
+    # runter, siehe pattern.py). Ein roher Index-Vergleich haette dann bei
+    # unveraenderten Zellen faelschlich CHANGED gemeldet (weil derselbe
+    # Stich jetzt einen anderen Index traegt), und umgekehrt echte
+    # Farbaenderungen uebersehen, wenn zwei verschiedene Paletten zufaellig
+    # denselben Index fuer unterschiedliche Farben verwenden. Deshalb wird
+    # hier auf die TATSAECHLICHE Farbe jedes Patterns aufgeloest (per Index
+    # -> RGB-Lookup-Tabelle, vektorisiert per numpy fuer grosse Grids).
+    old_colors = _resolve_colors(old_val, _color_key_lookup(old_pattern))
+    new_colors = _resolve_colors(new_val, _color_key_lookup(new_pattern))
+
     added_mask = ~old_has & new_has
     removed_mask = old_has & ~new_has
-    changed_mask = both & ((old_val != new_val) | (old_t != new_t))
+    changed_mask = both & ((old_colors != new_colors) | (old_t != new_t))
     same_mask = both & ~changed_mask
 
     mask[added_mask] = DIFF_ADDED
@@ -130,9 +146,7 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
     changed = int(np.count_nonzero(changed_mask))
     same = int(np.count_nonzero(same_mask))
 
-    backstitches_added, backstitches_removed = _diff_backstitches(
-        old_pattern.backstitches, new_pattern.backstitches
-    )
+    backstitches_added, backstitches_removed = _diff_backstitches(old_pattern, new_pattern)
 
     stats = DiffStats(
         added=added,
@@ -148,10 +162,40 @@ def compute_diff(old_pattern: Pattern, new_pattern: Pattern) -> DiffResult:
     return DiffResult(mask=mask, stats=stats)
 
 
-def _diff_backstitches(
-    old_backstitches: list[Backstitch],
-    new_backstitches: list[Backstitch],
-) -> tuple[int, int]:
+def _color_key_lookup(pattern: Pattern) -> np.ndarray:
+    """Baut eine Index -> Farbwert-Lookup-Tabelle für ein Pattern.
+
+    Jede Farbe wird als einzelnes int32 kodiert (r<<16 | g<<8 | b), damit
+    sich Farben zwischen zwei Patterns mit unterschiedlichen/verschobenen
+    Paletten per einfachem Zahlenvergleich vergleichen lassen — unabhängig
+    davon, an welcher Position die Farbe jeweils in `color_entries` steht.
+    """
+    n = len(pattern.color_entries)
+    keys = np.empty(n, dtype=np.int32)
+    for i, entry in enumerate(pattern.color_entries):
+        color = entry.thread.color
+        keys[i] = (color.r << 16) | (color.g << 8) | color.b
+    return keys
+
+
+def _resolve_colors(index_grid: np.ndarray, color_keys: np.ndarray) -> np.ndarray:
+    """Löst ein Farb-INDEX-Grid vektorisiert in tatsächliche Farbwerte auf.
+
+    NO_STITCH-Zellen bleiben auf -1 (Sentinel außerhalb des gültigen
+    Farbwert-Bereichs 0..0xFFFFFF, kollidiert also nie mit einer echten
+    Farbe). Indizes außerhalb der Palette (sollte nicht vorkommen, aber
+    defensiv gegen inkonsistente Daten) werden auf 0 geklemmt, bevor sie
+    als Lookup-Index verwendet werden.
+    """
+    out = np.full(index_grid.shape, -1, dtype=np.int32)
+    valid = index_grid != NO_STITCH
+    if color_keys.size > 0 and valid.any():
+        safe_idx = np.clip(index_grid, 0, color_keys.size - 1)
+        out[valid] = color_keys[safe_idx[valid]]
+    return out
+
+
+def _diff_backstitches(old_pattern: Pattern, new_pattern: Pattern) -> tuple[int, int]:
     """Vergleicht zwei Rückstich-Listen als Multimengen (Wert-Identität).
 
     Rückstiche haben keine stabile ID über Snapshots hinweg — nur Koordinaten
@@ -162,16 +206,30 @@ def _diff_backstitches(
     gegen Reihenfolge UND gegen echte Duplikate (zwei identische Rückstiche
     zählen als zwei, nicht als einer).
 
+    Der Vergleichs-Key löst `color_index` in die tatsächliche RGB-Farbe DES
+    JEWEILIGEN Patterns auf (statt den rohen Index zu vergleichen) — aus
+    demselben Grund wie beim Kreuzstich-Grid oben: verschiebt sich die
+    Palette zwischen Snapshot und aktuellem Pattern (Farbe gelöscht/neu
+    sortiert), bliebe ein reiner Index-Vergleich an farblich identischen
+    Rückstichen hängen und würde sie faelschlich als "entfernt + hinzugefügt"
+    zählen.
+
     Returns:
         (hinzugefügt, entfernt) — Anzahl Rückstich-Linien, die nur im neuen
         bzw. nur im alten Pattern vorkommen.
     """
 
-    def _key(bs: Backstitch) -> tuple[int, int, int, int, int]:
-        return (bs.x1, bs.y1, bs.x2, bs.y2, bs.color_index)
+    def _color_key(pattern: Pattern, color_index: int) -> int:
+        if 0 <= color_index < len(pattern.color_entries):
+            color = pattern.color_entries[color_index].thread.color
+            return (color.r << 16) | (color.g << 8) | color.b
+        return -1
 
-    old_counts = Counter(_key(bs) for bs in old_backstitches)
-    new_counts = Counter(_key(bs) for bs in new_backstitches)
+    def _key(pattern: Pattern, bs: Backstitch) -> tuple[int, int, int, int, int]:
+        return (bs.x1, bs.y1, bs.x2, bs.y2, _color_key(pattern, bs.color_index))
+
+    old_counts = Counter(_key(old_pattern, bs) for bs in old_pattern.backstitches)
+    new_counts = Counter(_key(new_pattern, bs) for bs in new_pattern.backstitches)
 
     added = new_counts - old_counts
     removed = old_counts - new_counts

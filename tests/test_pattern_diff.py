@@ -206,6 +206,90 @@ def test_diff_detects_removed_and_reordered_backstitches(pattern_with_colors):
     assert diff.stats.backstitches_removed == 1
 
 
+def test_diff_ignores_pure_palette_index_shift():
+    """Wird eine ungenutzte Farbe aus der Palette geloescht (verschiebt
+    Pattern.remove_color() alle hoeheren Indizes um 1), aber die tatsaechlich
+    gestickten Farben bleiben gleich, darf compute_diff KEINE Aenderung
+    melden.
+
+    Regression: compute_diff() verglich alte gegen neue rohe Farb-INDIZES
+    (Position in color_entries) statt der tatsaechlichen Farbe. Ein
+    Snapshot-Diff vergleicht aber typischerweise zwei unabhaengige
+    Pattern-Objekte (Snapshot von der Platte vs. aktuelles Pattern), deren
+    Paletten sich zwischenzeitlich verschoben haben koennen -- z.B. weil der
+    Nutzer eine ungenutzte Farbe geloescht hat. Das zeigte frueher an jeder
+    farblich unveraenderten Zelle faelschlich DIFF_CHANGED."""
+    import copy
+
+    from pysticky.core import Pattern, Thread
+    from pysticky.core.pattern_diff import DIFF_CHANGED, compute_diff
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Schwarz", "#000000"))  # index 0, ungenutzt
+    pattern.add_color(Thread.from_hex("Weiss", "#FFFFFF"))  # index 1
+    pattern.add_color(Thread.from_hex("Blau", "#0000FF"))  # index 2
+    pattern.set_stitch(2, 2, 1)  # Weiss
+    pattern.set_stitch(3, 3, 2)  # Blau
+
+    old = copy.deepcopy(pattern)  # Snapshot VOR der Palette-Bearbeitung
+
+    pattern.remove_color(0)  # loescht "Schwarz" (ungenutzt), verschiebt Indizes
+    assert pattern.get_stitch(2, 2) == 0  # Weiss jetzt Index 0
+    assert pattern.get_stitch(3, 3) == 1  # Blau jetzt Index 1
+
+    diff = compute_diff(old, pattern)
+    assert diff.stats.changed == 0
+    assert diff.mask[2, 2] != DIFF_CHANGED
+    assert diff.mask[3, 3] != DIFF_CHANGED
+
+
+def test_diff_detects_real_color_change_at_identical_index():
+    """Umgekehrter Fall: zwei Patterns mit unterschiedlichen Paletten haben
+    zufaellig denselben numerischen Index an einer Zelle, aber die Farbe
+    dahinter ist verschieden -- muss als CHANGED erkannt werden."""
+    from pysticky.core import Pattern, Thread
+    from pysticky.core.pattern_diff import DIFF_CHANGED, compute_diff
+
+    old = Pattern(name="Old", width=5, height=5)
+    old.color_entries.clear()
+    old.add_color(Thread.from_hex("Rot", "#FF0000"))  # index 0
+    old.set_stitch(0, 0, 0)
+
+    new = Pattern(name="New", width=5, height=5)
+    new.color_entries.clear()
+    new.add_color(Thread.from_hex("Blau", "#0000FF"))  # index 0, andere Farbe!
+    new.set_stitch(0, 0, 0)
+
+    diff = compute_diff(old, new)
+    assert diff.stats.changed == 1
+    assert diff.mask[0, 0] == DIFF_CHANGED
+
+
+def test_diff_backstitches_ignore_pure_palette_index_shift():
+    """Gleiches Problem bei Rueckstichen: der Vergleichs-Key darf nicht auf
+    dem rohen color_index basieren, sonst erkennt ein reiner Paletten-
+    Index-Shift eine farblich identische Rueckstich-Linie faelschlich als
+    entfernt+hinzugefuegt."""
+    import copy
+
+    from pysticky.core import Pattern, Thread
+    from pysticky.core.pattern_diff import compute_diff
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Schwarz", "#000000"))  # index 0, ungenutzt
+    pattern.add_color(Thread.from_hex("Weiss", "#FFFFFF"))  # index 1
+    pattern.add_backstitch(0, 0, 2, 2, color_index=1)  # Weiss
+
+    old = copy.deepcopy(pattern)
+    pattern.remove_color(0)  # Weiss rutscht auf Index 0, Backstitch folgt mit
+
+    diff = compute_diff(old, pattern)
+    assert diff.stats.backstitches_added == 0
+    assert diff.stats.backstitches_removed == 0
+
+
 def test_diff_has_changes_property():
     """has_changes ist True wenn total_changes > 0."""
     from pysticky.core import Pattern, Thread
