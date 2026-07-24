@@ -314,18 +314,24 @@ class PatternStatisticsDialog(QDialog):
 
                     skip_flag = "Ja" if entry.skip_stitching else "Nein"
 
-                    row = [
-                        entry.symbol,
-                        entry.thread.name,
-                        entry.thread.manufacturer or "-",
-                        entry.thread.catalog_number or "-",
-                        entry.stitch_count,
-                        percent,
-                    ]
-                    if not is_diamond:
-                        row += [with_waste, f"{cost:.2f}"]
-                    row.append(skip_flag)
-                    writer.writerow(row)
+                    # Tweed-Blends (entry.thread.is_blend) werden in ihre
+                    # ECHTEN Komponenten-Garne aufgeloest (siehe
+                    # Thread.real_components()) -- pro Komponente eine
+                    # eigene Zeile mit der vollen Stichzahl, da jeder Stich
+                    # einen vollen Strang JEDER Komponente verbraucht.
+                    for real_thread in entry.thread.real_components():
+                        row = [
+                            entry.symbol,
+                            real_thread.name,
+                            real_thread.manufacturer or "-",
+                            real_thread.catalog_number or "-",
+                            entry.stitch_count,
+                            percent,
+                        ]
+                        if not is_diamond:
+                            row += [with_waste, f"{cost:.2f}"]
+                        row.append(skip_flag)
+                        writer.writerow(row)
 
             QMessageBox.information(
                 self, t("Export erfolgreich"), f"Statistiken exportiert nach:\n{path}"

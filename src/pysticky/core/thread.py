@@ -215,6 +215,24 @@ class Thread:
         """True wenn dieser Thread ein Blend aus mehreren Komponenten ist."""
         return self.blend_components is not None and len(self.blend_components) >= 2
 
+    def real_components(self) -> list["Thread"]:
+        """Liefert die tatsaechlich existierenden (kaufbaren/zaehlbaren) Garne.
+
+        Fuer einen normalen Thread ist das nur er selbst. Fuer einen Tweed-
+        Blend (`is_blend`) waeren Hersteller/Katalognummer des Blends selbst
+        eine synthetische Kombination (z.B. "DMC" / "310+745", siehe
+        `Thread.blend()`) -- kein Geschaeft verkauft ein Garn mit dieser
+        Katalognummer, und ein bereits vorhandener Vorrat der beiden ECHTEN
+        Komponenten-Garne (DMC 310, DMC 745) wuerde nie gefunden werden.
+        Jede Konsumentin dieser Liste (Einkaufsliste, Garnverbrauch-Tab,
+        CSV-Export) muss die volle Stichzahl pro Komponente ansetzen, nicht
+        aufgeteilt -- beide Faeden laufen gemeinsam durch dieselbe Nadel,
+        jeder Stich verbraucht also einen vollen Strang JEDER Komponente.
+        """
+        if self.is_blend and self.blend_components:
+            return list(self.blend_components)
+        return [self]
+
     @classmethod
     def blend(
         cls,

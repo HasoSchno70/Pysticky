@@ -185,19 +185,28 @@ class ThreadTab(QWidget):
         waste_factor = 1 + (self._waste_spin.value() / 100)
         price = self._price_spin.value()
 
-        # Nur nicht-übersprungene Farben
-        entries = [e for e in self._pattern.color_entries if not e.skip_stitching]
-        self._thread_table.setRowCount(len(entries))
+        # Nur nicht-übersprungene Farben. Tweed-Blends (entry.thread.is_blend)
+        # werden in ihre ECHTEN Komponenten-Garne aufgeloest (siehe
+        # Thread.real_components()) -- die Naeherin verbraucht pro Stich
+        # einen vollen Strang JEDER Komponente, nicht einen halben Strang
+        # des (nicht kaeuflichen) synthetischen Blend-Garns.
+        rows = [
+            (entry, real_thread)
+            for entry in self._pattern.color_entries
+            if not entry.skip_stitching
+            for real_thread in entry.thread.real_components()
+        ]
+        self._thread_table.setRowCount(len(rows))
 
         total_skeins = 0
         total_cost = 0
 
-        for row, entry in enumerate(entries):
+        for row, (entry, real_thread) in enumerate(rows):
             # Farbe
-            self._thread_table.setItem(row, 0, color_swatch_item(entry.thread.color))
+            self._thread_table.setItem(row, 0, color_swatch_item(real_thread.color))
 
             # Name
-            self._thread_table.setItem(row, 1, QTableWidgetItem(entry.thread.name))
+            self._thread_table.setItem(row, 1, QTableWidgetItem(real_thread.name))
 
             # Stiche
             self._thread_table.setItem(row, 2, sortable_count_item(entry.stitch_count))

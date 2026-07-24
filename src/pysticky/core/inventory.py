@@ -66,28 +66,6 @@ def _key(manufacturer: str | None, catalog_number: str | None, name: str | None 
     return f"{m or 'unknown'}::{c or 'unknown'}"
 
 
-def _shoppable_threads(thread: "Thread") -> list["Thread"]:
-    """Liefert die tatsaechlich kaufbaren Garne fuer einen Einkaufslisten-Eintrag.
-
-    Fuer einen normalen Thread ist das nur er selbst. Fuer einen Tweed-Blend
-    (`thread.is_blend`) waeren Hersteller/Katalognummer des Blends selbst
-    eine synthetische Kombination (z.B. "DMC" / "310+745", siehe
-    `Thread.blend()`) -- kein Geschaeft verkauft ein Garn mit dieser
-    Katalognummer, und ein bereits vorhandener Vorrat der beiden ECHTEN
-    Komponenten-Garne (DMC 310, DMC 745) wuerde nie gefunden, weil er unter
-    deren eigenen Schluesseln liegt. Ohne diese Aufloesung erschien fuer
-    jeden Blend ein Phantom-Eintrag, der nie mit echtem Vorrat abgeglichen
-    werden konnte (immer on_hand=0), waehrend die beiden echten Garne in
-    der Liste komplett fehlten. Jede Blend-Komponente braucht fuer JEDEN
-    Stich einen eigenen vollen Strang (beide Faeden laufen gemeinsam durch
-    dieselbe Nadel) -- die Stichzahl wird daher pro Komponente in voller
-    Hoehe gezaehlt, nicht aufgeteilt.
-    """
-    if thread.is_blend and thread.blend_components:
-        return list(thread.blend_components)
-    return [thread]
-
-
 def split_key(key: str) -> tuple[str, str, str]:
     """Zerlegt einen Inventory-Key zurück in (manufacturer, catalog_number, name).
 
@@ -265,8 +243,8 @@ def compute_shopping_list(
             continue
         needed = ceil((count / spk) * waste_factor)
         # Tweed-Blends: gegen die ECHTEN Komponenten-Garne abgleichen statt
-        # gegen den synthetischen Blend-Thread (siehe _shoppable_threads()).
-        for real_thread in _shoppable_threads(thread):
+        # gegen den synthetischen Blend-Thread (siehe Thread.real_components()).
+        for real_thread in thread.real_components():
             on_hand = inventory.get(
                 real_thread.manufacturer, real_thread.catalog_number, real_thread.name
             )
@@ -341,9 +319,9 @@ def compute_shopping_list_multi(
             needed = ceil((count / spk) * waste_factor)
             # Tweed-Blends: auf die ECHTEN Komponenten-Garne aufteilen statt
             # unter dem synthetischen Blend-Schluessel zu sammeln (siehe
-            # _shoppable_threads()) -- sonst landet der Bedarf unter einem
-            # Schluessel, den kein Vorrat je erreichen kann.
-            for real_thread in _shoppable_threads(thread):
+            # Thread.real_components()) -- sonst landet der Bedarf unter
+            # einem Schluessel, den kein Vorrat je erreichen kann.
+            for real_thread in thread.real_components():
                 key = _key(real_thread.manufacturer, real_thread.catalog_number, real_thread.name)
                 needed_by_key[key] = needed_by_key.get(key, 0) + needed
                 thread_by_key.setdefault(key, real_thread)
