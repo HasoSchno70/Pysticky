@@ -55,7 +55,14 @@ def _write_thread_csv(pattern: "Pattern", path: Path) -> None:
     is_dp = is_diamond_mode(pattern)
     stitches_per_skein = STITCHES_PER_SKEIN.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
 
-    with open(path, "w", encoding="utf-8", newline="") as f:
+    # "utf-8-sig" statt "utf-8": schreibt eine UTF-8-BOM an den Dateianfang.
+    # Ohne BOM interpretiert Excel eine per Doppelklick geoeffnete CSV ueber
+    # die System-Codepage (auf deutschem Windows meist cp1252) statt UTF-8 --
+    # Umlaute im Garnnamen (z.B. "Türkisblau") werden dann als Mojibake
+    # ("TÃ¼rkisblau") angezeigt, obwohl die Datei selbst korrekt kodiert ist.
+    # csv.reader/Python liest beide Varianten unveraendert korrekt, das BOM
+    # stoert dort nicht (siehe test_bundle_csv_excel_bom_for_umlauts).
+    with open(path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f, delimiter=";")
         if is_dp:
             writer.writerow(["Symbol", "Hersteller", "Nr.", "Name", "Hex", "Drills"])

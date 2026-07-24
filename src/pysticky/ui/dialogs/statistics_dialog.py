@@ -276,7 +276,14 @@ class PatternStatisticsDialog(QDialog):
             # Diese Spalten werden im DP-Modus jetzt komplett weggelassen.
             is_diamond = self._pattern.mode == "diamond"
 
-            with open(path, "w", encoding="utf-8", newline="") as f:
+            # "utf-8-sig" statt "utf-8": schreibt eine UTF-8-BOM an den
+            # Dateianfang. Ohne BOM interpretiert Excel eine per Doppelklick
+            # geoeffnete CSV ueber die System-Codepage (auf deutschem
+            # Windows meist cp1252) statt UTF-8 -- Umlaute im Garnnamen
+            # (z.B. "Türkisblau") wurden dann als Mojibake ("TÃ¼rkisblau")
+            # angezeigt, obwohl die Datei selbst korrekt kodiert war.
+            # csv.reader/Python liest beide Varianten unveraendert korrekt.
+            with open(path, "w", encoding="utf-8-sig", newline="") as f:
                 writer = csv.writer(f)
                 header = ["Symbol", "Name", "Hersteller", "Katalognummer", "Stiche", "Prozent"]
                 if not is_diamond:

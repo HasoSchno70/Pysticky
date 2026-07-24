@@ -55,10 +55,40 @@ def test_bundle_garnliste_has_thread_rows(pattern_with_stitches, tmp_path):
     export_bundle(pattern_with_stitches, out, include_pdf=False)
     with zipfile.ZipFile(out) as zf:
         with zf.open("garnliste.csv") as f:
-            content = f.read().decode("utf-8")
+            # "utf-8-sig" statt "utf-8": die Garnliste-CSV traegt seit dem
+            # Excel-BOM-Fix (siehe test_bundle_garnliste_csv_has_utf8_bom_for_excel)
+            # ein UTF-8-BOM, das sonst als "﻿" vor "Symbol" haengen bliebe.
+            content = f.read().decode("utf-8-sig")
     lines = content.strip().split("\n")
     assert lines[0].startswith("Symbol")  # Header
     assert len(lines) >= 2  # Header + mindestens eine Datenzeile
+
+
+def test_bundle_garnliste_csv_has_utf8_bom_for_excel(pattern_with_stitches, tmp_path):
+    """Regression (Runde 62): die Garnliste-CSV wurde als reines "utf-8"
+    (ohne BOM) geschrieben. Oeffnet man so eine Datei per Doppelklick in
+    Excel (der naheliegendste Weg fuer eine Einkaufsliste), interpretiert
+    Excel die Bytes ohne BOM ueber die System-Codepage (auf deutschem
+    Windows meist cp1252) statt UTF-8 -- Umlaute in Garnnamen wurden dann
+    als Mojibake dargestellt, obwohl die Datei selbst korrekt UTF-8-kodiert
+    war. "utf-8-sig" schreibt die fuehrende BOM, die Excel als UTF-8-Signal
+    erkennt; Python liest die Datei unveraendert korrekt (mit oder ohne
+    explizites BOM-Stripping)."""
+    from pysticky.core import Thread
+
+    pattern_with_stitches.add_color(
+        Thread.from_hex("Türkisblau", "#00CED1", manufacturer="DMC", catalog_number="807")
+    )
+
+    out = tmp_path / "test_bundle_umlaut.zip"
+    export_bundle(pattern_with_stitches, out, include_pdf=False)
+    with zipfile.ZipFile(out) as zf:
+        with zf.open("garnliste.csv") as f:
+            raw = f.read()
+
+    assert raw.startswith(b"\xef\xbb\xbf"), "Garnliste-CSV sollte ein UTF-8-BOM tragen"
+    # Der Farbname bleibt unabhaengig vom BOM korrekt lesbar
+    assert "Türkisblau".encode("utf-8") in raw
 
 
 def test_bundle_garnliste_uses_drill_vocabulary_in_dp_mode(pattern_with_stitches, tmp_path):
