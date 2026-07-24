@@ -84,7 +84,15 @@ class UndoHandlersMixin:
 
         def _do_refresh() -> None:
             self._minimap_refresh_pending = False
-            self.minimap_panel.refresh()
+            try:
+                self.minimap_panel.refresh()
+            except RuntimeError:
+                # Das Fenster (und damit minimap_panel) kann zwischen dem
+                # Planen dieses Timers und dessen Ausloesen bereits
+                # geschlossen/zerstoert worden sein -- dann wirft der Zugriff
+                # auf das C++-Objekt ein RuntimeError, kein Programmfehler
+                # (gleiche Konvention wie in thumbnail_widget.py).
+                pass
 
         QTimer.singleShot(100, _do_refresh)
 
@@ -96,7 +104,11 @@ class UndoHandlersMixin:
 
         def _do_refresh() -> None:
             self._tile_preview_refresh_pending = False
-            self.tile_preview_panel.refresh()
+            try:
+                self.tile_preview_panel.refresh()
+            except RuntimeError:
+                # Siehe Kommentar in _schedule_minimap_refresh().
+                pass
 
         QTimer.singleShot(100, _do_refresh)
 
