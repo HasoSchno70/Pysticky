@@ -155,6 +155,131 @@ def test_restore_window_falls_back_when_saved_geometry_is_off_screen(qtbot):
             s.setValue("window/geometry", old_geo)
 
 
+def test_restore_window_clamps_oversized_geometry_to_current_screen(qtbot):
+    """Runde 68: gespeicherte Fenstergroesse stammt von einem groesseren
+    Bildschirm (z.B. 4K-Monitor), aktueller Bildschirm ist kleiner (z.B.
+    Laptop-Display). Qt's restoreGeometry() clamped Groesse/Position selbst
+    so, dass das Fenster komplett auf einem verfuegbaren Bildschirm liegt --
+    dieser Test dokumentiert das bereits korrekte Verhalten als Regression,
+    damit ein zukuenftiger Qt-Wechsel das nicht stillschweigend kaputt macht."""
+    from PySide6.QtCore import QByteArray
+    from PySide6.QtGui import QGuiApplication
+
+    from pysticky.ui.main_window import MainWindow
+
+    s = _qsettings_with_scope()
+    old_restore = s.value("restore_window")
+    old_geo = s.value("window/geometry")
+    try:
+        w1 = MainWindow()
+        qtbot.addWidget(w1)
+        w1._check_save_changes = lambda: True
+        w1._autosave_timer.stop()
+
+        screen = w1.screen().availableGeometry()
+        w1.move(screen.x(), screen.y())
+        w1.resize(screen.width() * 3, screen.height() * 3)
+        oversized_geometry: QByteArray = w1.saveGeometry()
+
+        s.setValue("restore_window", True)
+        s.setValue("window/geometry", oversized_geometry)
+
+        w2 = MainWindow()
+        qtbot.addWidget(w2)
+        w2._check_save_changes = lambda: True
+        w2._autosave_timer.stop()
+
+        frame = w2.frameGeometry()
+        assert any(
+            screen.availableGeometry().contains(frame) for screen in QGuiApplication.screens()
+        )
+    finally:
+        if old_restore is None:
+            s.remove("restore_window")
+        else:
+            s.setValue("restore_window", old_restore)
+        if old_geo is None:
+            s.remove("window/geometry")
+        else:
+            s.setValue("window/geometry", old_geo)
+
+
+def test_restore_window_corrupted_geometry_bytes_do_not_crash(qtbot):
+    """Runde 68: ein beschaedigter/inkompatibler QSettings-Wert fuer
+    window/geometry (z.B. von einer anderen Qt-Version oder manuell
+    verfaelscht) darf beim Start nicht crashen -- restoreGeometry() gibt in
+    dem Fall False zurueck und MainWindow muss sauber auf die Standard-
+    Fenstergroesse zurueckfallen."""
+    from PySide6.QtCore import QByteArray
+
+    from pysticky.ui.main_window import MainWindow
+
+    s = _qsettings_with_scope()
+    old_restore = s.value("restore_window")
+    old_geo = s.value("window/geometry")
+    try:
+        s.setValue("restore_window", True)
+        s.setValue("window/geometry", QByteArray(b"\x00\x01\x02garbage-not-real-geometry"))
+
+        w2 = MainWindow()
+        qtbot.addWidget(w2)
+        w2._check_save_changes = lambda: True
+        w2._autosave_timer.stop()
+
+        # Kein Crash bis hierher -- zusaetzlich eine plausible Fallback-Groesse.
+        assert w2.size().width() > 0
+        assert w2.size().height() > 0
+    finally:
+        if old_restore is None:
+            s.remove("restore_window")
+        else:
+            s.setValue("restore_window", old_restore)
+        if old_geo is None:
+            s.remove("window/geometry")
+        else:
+            s.setValue("window/geometry", old_geo)
+
+
+def test_restore_window_preserves_maximized_state(qtbot):
+    """Runde 68: war das Fenster beim letzten Beenden maximiert, muss das
+    beim naechsten Start (mit aktivem restore_window) wiederhergestellt
+    werden -- saveGeometry()/restoreGeometry() serialisieren den Maximiert-
+    Zustand zusammen mit der Geometrie, nicht nur Position/Groesse."""
+    from PySide6.QtCore import QByteArray, Qt
+
+    from pysticky.ui.main_window import MainWindow
+
+    s = _qsettings_with_scope()
+    old_restore = s.value("restore_window")
+    old_geo = s.value("window/geometry")
+    try:
+        w1 = MainWindow()
+        qtbot.addWidget(w1)
+        w1._check_save_changes = lambda: True
+        w1._autosave_timer.stop()
+        w1.setWindowState(Qt.WindowState.WindowMaximized)
+        maximized_geometry: QByteArray = w1.saveGeometry()
+
+        s.setValue("restore_window", True)
+        s.setValue("window/geometry", maximized_geometry)
+
+        w2 = MainWindow()
+        qtbot.addWidget(w2)
+        w2._check_save_changes = lambda: True
+        w2._autosave_timer.stop()
+
+        assert w2.isMaximized()
+    finally:
+        if old_restore is None:
+            s.remove("restore_window")
+        else:
+            s.setValue("restore_window", old_restore)
+        if old_geo is None:
+            s.remove("window/geometry")
+        else:
+            s.setValue("window/geometry", old_geo)
+
+
 def test_autosave_backup_creates_bak_file(qtbot, tmp_path, monkeypatch):
     from pysticky.core import Pattern
     from pysticky.ui.main_window import MainWindow
