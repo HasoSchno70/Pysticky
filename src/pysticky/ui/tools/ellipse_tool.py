@@ -108,7 +108,18 @@ class EllipseTool(BaseTool):
         ry = abs(y2 - y1) // 2
 
         if rx == 0 and ry == 0:
-            return [(cx, cy)]
+            if x1 == x2 and y1 == y2:
+                return [(cx, cy)]
+            # Zug von hoechstens 2 Zellen in beiden Achsen (z.B. eine
+            # 2x2-Diagonale oder eine 2-Zellen-Linie) -- der Midpoint-
+            # Algorithmus braucht Radius >= 1 in mind. einer Achse. Ohne
+            # diesen Sonderfall rundet Integer-Division dx=dy=1 auf
+            # rx=ry=0 und es wuerde nur EIN Punkt statt der gesamten
+            # gezogenen Flaeche zurueckgegeben.
+            for y in range(min(y1, y2), max(y1, y2) + 1):
+                for x in range(min(x1, x2), max(x1, x2) + 1):
+                    points.add((x, y))
+            return list(points)
 
         if rx == 0:
             # Vertikale Linie

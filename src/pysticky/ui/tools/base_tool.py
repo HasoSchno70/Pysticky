@@ -152,7 +152,21 @@ class BaseTool(ABC):
         return 0 <= x < ctx.pattern.width and 0 <= y < ctx.pattern.height
 
     def _get_line_points(self, x1: int, y1: int, x2: int, y2: int) -> list[tuple[int, int]]:
-        """Bresenham-Algorithmus für Linien."""
+        """Bresenham-Algorithmus für Linien.
+
+        Traversiert intern immer in einer kanonischen Richtung (kleinerer
+        Punkt zuerst), unabhaengig davon, in welcher Reihenfolge Start-/
+        Endpunkt uebergeben wurden. Der klassische Bresenham-Algorithmus ist
+        bei bestimmten Steigungen (z.B. exakt 2:1) NICHT symmetrisch: die
+        Fehlerterm-Tiebreaks bei e2 > -dy / e2 < dx entscheiden je nach
+        Zugrichtung unterschiedlich, welche Zelle bei einem diagonalen
+        Schritt gewaehlt wird. Ohne Kanonisierung zeichnete eine Linie von
+        oben-links nach unten-rechts eine sichtbar andere Treppenstufen-Form
+        als dieselbe Linie von unten-rechts nach oben-links.
+        """
+        if (x1, y1) > (x2, y2):
+            x1, y1, x2, y2 = x2, y2, x1, y1
+
         points = []
         dx = abs(x2 - x1)
         dy = abs(y2 - y1)
