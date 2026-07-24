@@ -318,17 +318,30 @@ class CanvasContainer(QWidget):
         canvas_width = self._canvas.width()
         canvas_height = self._canvas.height()
 
+        # WICHTIG: blockSignals() muss auch setRange() umschliessen, nicht
+        # nur setValue()! Qt clamped den AKTUELLEN (noch nicht
+        # synchronisierten) Scrollbar-Wert automatisch auf die neuen Grenzen,
+        # sobald der sich veraendert -- und feuert dabei ungeblockt
+        # valueChanged, falls der alte Wert ausserhalb der neuen Range liegt
+        # (z.B. nach Zoom-zu-Cursor am Musterrand, wo sich die Range durch
+        # die neue Zellgroesse drastisch aendert). _on_h_scroll/_on_v_scroll
+        # haengt an valueChanged und schreibt canvas._offset_x/_offset_y
+        # direkt -- ohne den Block hier ueberschrieb dieses stille
+        # Zwischen-Signal den gerade erst korrekt berechneten
+        # Zoom-zu-Cursor-Offset mit einem veralteten, falschen Wert, BEVOR
+        # der folgende (bereits geblockte) setValue()-Aufruf ueberhaupt zum
+        # Zug kam.
+        self._h_scrollbar.blockSignals(True)
         h_range = max(0, pattern_width - canvas_width + 100)
         self._h_scrollbar.setRange(-50, h_range)
         self._h_scrollbar.setPageStep(canvas_width)
-        self._h_scrollbar.blockSignals(True)
         self._h_scrollbar.setValue(-offset_x)
         self._h_scrollbar.blockSignals(False)
 
+        self._v_scrollbar.blockSignals(True)
         v_range = max(0, pattern_height - canvas_height + 100)
         self._v_scrollbar.setRange(-50, v_range)
         self._v_scrollbar.setPageStep(canvas_height)
-        self._v_scrollbar.blockSignals(True)
         self._v_scrollbar.setValue(-offset_y)
         self._v_scrollbar.blockSignals(False)
 
