@@ -40,7 +40,16 @@ if TYPE_CHECKING:
 
 
 def _composite_color_grid(pattern: "Pattern") -> np.ndarray:
-    """Komposit-Farb-Index pro Zelle (numpy int32, -1 = leer)."""
+    """Komposit-Farb-Index pro Zelle (numpy int32, -1 = leer).
+
+    Zellen mit einer als `skip_stitching` markierten Farbe (z.B. eine
+    Stofffarbe, die absichtlich nicht gestickt wird) werden wie leere Zellen
+    behandelt. Sonst würden diese Farben fälschlich in die Dichte- und
+    Farbenvielfalt-Achsen der Heatmap einfließen, obwohl an dieser Stelle
+    tatsächlich kein Stich gesetzt wird -- analog zur bestehenden
+    skip_stitching-Behandlung in core/difficulty.py und
+    Pattern.estimate_remaining_stitches().
+    """
     H, W = pattern.height, pattern.width
     out = np.full((H, W), NO_STITCH, dtype=np.int32)
     for layer in reversed(pattern.layer_stack.layers):
@@ -54,16 +63,30 @@ def _composite_color_grid(pattern: "Pattern") -> np.ndarray:
         mask = (slot == NO_STITCH) & (lg != NO_STITCH)
         if mask.any():
             slot[mask] = lg[mask]
+    skip_indices = [i for i, entry in enumerate(pattern.color_entries) if entry.skip_stitching]
+    if skip_indices:
+        out[np.isin(out, skip_indices)] = NO_STITCH
     return out
 
 
 def _density_heatmap(composite: np.ndarray, block_size: int) -> np.ndarray:
-    """Stichdichte pro Block: 2D-Array von floats in [0,1]."""
+    """Stichdichte pro Block: 2D-Array von floats in [0,1].
+
+    Geht block_size nicht glatt in width/height auf, sind die Blöcke am
+    rechten/unteren Rand kleiner als block_size x block_size (z.B. 7x3 statt
+    10x10). Damit ein voll gestickter Randblock nicht fälschlich dunkler
+    erscheint als ein voll gestickter Innenblock (nur weil seine absolute
+    Stichzahl wegen der kleineren Fläche niedriger ist), wird zuerst pro
+    Block die tatsächliche Füllrate (Stiche / echte Blockfläche) berechnet.
+    Erst danach wird relativ zum dichtesten Block im Pattern skaliert, damit
+    der ursprünglich beabsichtigte Kontrast (dichtester Block = 1.0) erhalten
+    bleibt.
+    """
     H, W = composite.shape
     bs = max(1, block_size)
     bh = (H + bs - 1) // bs
     bw = (W + bs - 1) // bs
-    counts = np.zeros((bh, bw), dtype=np.int32)
+    local_density = np.zeros((bh, bw), dtype=np.float64)
     occupied = (composite != NO_STITCH).astype(np.int32)
     for by in range(bh):
         y0 = by * bs
@@ -71,11 +94,13 @@ def _density_heatmap(composite: np.ndarray, block_size: int) -> np.ndarray:
         for bx in range(bw):
             x0 = bx * bs
             x1 = min(x0 + bs, W)
-            counts[by, bx] = occupied[y0:y1, x0:x1].sum()
-    max_count = counts.max() if counts.size else 0
-    if max_count == 0:
-        return counts.astype(np.float32)
-    return counts.astype(np.float32) / float(max_count)
+            area = (y1 - y0) * (x1 - x0)
+            if area > 0:
+                local_density[by, bx] = occupied[y0:y1, x0:x1].sum() / float(area)
+    max_density = local_density.max() if local_density.size else 0.0
+    if max_density == 0.0:
+        return local_density.astype(np.float32)
+    return (local_density / max_density).astype(np.float32)
 
 
 def _color_variety_heatmap(composite: np.ndarray, block_size: int) -> np.ndarray:
