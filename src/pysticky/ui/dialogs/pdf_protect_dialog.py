@@ -72,7 +72,12 @@ class PdfProtectDialog(QDialog):
 
     @property
     def password(self) -> str | None:
-        return self.edit_password.text() or None
+        # Wie watermark: fuehrende/nachgestellte Leerzeichen sind kein
+        # bewusst vergebenes Passwort (Tipp-/Copy-Paste-Unfall) und ein
+        # rein aus Leerzeichen bestehendes Feld gilt als "leer" -- sonst
+        # entsteht ein PDF-Passwort, das der Nutzer nie wissentlich
+        # gesetzt hat und sich nicht merken kann.
+        return self.edit_password.text().strip() or None
 
     @property
     def watermark(self) -> str | None:

@@ -94,6 +94,79 @@ def test_pdf_export_with_watermark_produces_valid_file(pattern_with_stitches, tm
     assert data[:4] == b"%PDF"
 
 
+def test_permission_restriction_without_password_still_encrypts(pattern_with_stitches, tmp_path):
+    """Druck-/Kopier-Einschraenkung ohne Passwort muss trotzdem verschluesseln.
+
+    Bug: die Checkboxen "Drucken erlauben"/"Kopieren erlauben" waren komplett
+    wirkungslos, wenn kein Passwort gesetzt war -- export() setzte den
+    Encrypt-Kwarg nur, wenn self.password truthy war. Ein Nutzer, der beide
+    Checkboxen bewusst deaktiviert aber kein Passwort vergibt (klassisches
+    "frei oeffenbar, aber Druck/Kopie gesperrt"-Szenario), bekam ein voellig
+    ungeschuetztes PDF ohne jede Fehlermeldung.
+    """
+    pytest.importorskip("reportlab")
+    from pysticky.io import PDFExporter
+
+    out = tmp_path / "restricted_no_password.pdf"
+    exp = PDFExporter(
+        pattern_with_stitches, password=None, allow_printing=False, allow_copying=False
+    )
+    assert exp.export(out) is True
+    data = out.read_bytes()
+    assert data[:4] == b"%PDF"
+    assert b"/Encrypt" in data
+
+
+def test_permission_restriction_without_password_opens_without_prompt(
+    pattern_with_stitches, tmp_path
+):
+    """Tiefenpruefung mit pypdf (falls installiert): Datei oeffnet ohne
+    Passwort (leeres User-Passwort), aber /P-Bits verbieten Drucken/Kopieren
+    -- reine Berechtigungs-Restriktion ohne Oeffnen-Passwort."""
+    pytest.importorskip("reportlab")
+    pypdf = pytest.importorskip("pypdf")
+    from pysticky.io import PDFExporter
+
+    out = tmp_path / "restricted_no_password2.pdf"
+    exp = PDFExporter(
+        pattern_with_stitches, password=None, allow_printing=False, allow_copying=False
+    )
+    exp.export(out)
+
+    reader = pypdf.PdfReader(str(out))
+    assert reader.is_encrypted
+    result = reader.decrypt("")  # oeffnet ohne Passwort
+    assert result != pypdf.PasswordType.NOT_DECRYPTED
+    perms = int(reader.user_access_permissions)
+    assert not (perms & 0b0100)  # canPrint
+    assert not (perms & 0b10000)  # canCopy
+
+
+def test_no_restriction_no_password_stays_unencrypted(pattern_with_stitches, tmp_path):
+    """Regression: Standardfall (alles erlaubt, kein Passwort) bleibt
+    unverschluesselt -- die Restriction-Only-Logik darf harmlose Exporte
+    nicht unnoetig verschluesseln."""
+    pytest.importorskip("reportlab")
+    from pysticky.io import PDFExporter
+
+    out = tmp_path / "no_protection.pdf"
+    exp = PDFExporter(pattern_with_stitches, password=None, allow_printing=True, allow_copying=True)
+    assert exp.export(out) is True
+    data = out.read_bytes()
+    assert b"/Encrypt" not in data
+
+
+def test_whitespace_only_password_normalized_to_none_at_exporter(pattern_with_stitches):
+    """PDFExporter.password muss wie watermark_text getrimmt/normalisiert
+    werden -- ein rein aus Leerzeichen bestehendes Passwort ist de-facto
+    'leer' und darf nicht als Schutz durchgehen."""
+    pytest.importorskip("reportlab")
+    from pysticky.io import PDFExporter
+
+    assert PDFExporter(pattern_with_stitches, password="   ").password is None
+    assert PDFExporter(pattern_with_stitches, password="  secret  ").password == "secret"
+
+
 def test_pdf_export_with_all_protection_features(pattern_with_stitches, tmp_path):
     """Alle Schutz-Features zusammen: encrypt + watermark + allow_printing=False."""
     pytest.importorskip("reportlab")
@@ -145,3 +218,31 @@ def test_pdf_protect_dialog_returns_set_values(qtbot):
     assert dialog.watermark == "DRAFT"
     assert dialog.allow_printing is False
     assert dialog.allow_copying is False
+
+
+def test_pdf_protect_dialog_whitespace_only_password_is_none(qtbot):
+    """Ein rein aus Leerzeichen bestehendes Passwort ist fuer den Nutzer
+    de-facto 'leer' -- analog zum Wasserzeichen-Feld (das bereits strippt)
+    muss dialog.password dann None liefern, sonst entsteht ein PDF mit
+    einem Passwort, das der Nutzer nie wissentlich vergeben hat."""
+    pytest.importorskip("PySide6")
+    from pysticky.ui.dialogs import PdfProtectDialog
+
+    dialog = PdfProtectDialog()
+    qtbot.addWidget(dialog)
+    dialog.edit_password.setText("   ")
+
+    assert dialog.password is None
+
+
+def test_pdf_protect_dialog_password_with_surrounding_whitespace_is_trimmed(qtbot):
+    """Kopier-/Tipp-Unfaelle mit fuehrenden/nachgestellten Leerzeichen duerfen
+    nicht Teil des tatsaechlichen Passworts werden (analog Wasserzeichen)."""
+    pytest.importorskip("PySide6")
+    from pysticky.ui.dialogs import PdfProtectDialog
+
+    dialog = PdfProtectDialog()
+    qtbot.addWidget(dialog)
+    dialog.edit_password.setText("  secret  ")
+
+    assert dialog.password == "secret"
