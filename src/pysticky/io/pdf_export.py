@@ -169,8 +169,11 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
         # Working-Chart-Pages: Overlap-Stiche an jeder Seite rechts/unten
         self.page_overlap_stitches: int = max(0, int(page_overlap_stitches))
 
-        # PDF-Schutz: optionales Password und Wasserzeichen
-        self.password: str | None = password or None
+        # PDF-Schutz: optionales Password und Wasserzeichen. Wie beim
+        # Wasserzeichen wird getrimmt -- ein rein aus Leerzeichen
+        # bestehendes Passwort gilt als "kein Passwort" (Tipp-/Copy-
+        # Paste-Unfall statt bewusster Wahl).
+        self.password: str | None = (password or "").strip() or None
         self.watermark_text: str | None = (watermark_text or "").strip() or None
         self.allow_printing: bool = bool(allow_printing)
         self.allow_copying: bool = bool(allow_copying)
@@ -255,14 +258,32 @@ class PDFExporter(PDFDrawingsMixin, PDFSectionsMixin):
                 "topMargin": self._margin,
                 "bottomMargin": self._margin,
             }
-            if self.password:
+            needs_restriction = not self.allow_printing or not self.allow_copying
+            if self.password or needs_restriction:
                 # reportlab StandardEncryption: setzt Open-Password und
-                # konfiguriert die User-Permissions
+                # konfiguriert die User-Permissions.
+                #
+                # Ohne eigenes Passwort (nur die Checkboxen "Drucken
+                # erlauben"/"Kopieren erlauben" deaktiviert) darf der
+                # Export NICHT unverschluesselt bleiben -- sonst sind die
+                # Checkboxen komplett wirkungslos. Stattdessen: leeres
+                # User-Passwort (Datei bleibt frei oeffenbar) + ein
+                # interner, dem Nutzer nie angezeigter Owner-Passwort-
+                # Zufallswert, der ausschliesslich die Berechtigungen im
+                # PDF verankert ("reine Berechtigungs-Restriktion").
                 from reportlab.lib.pdfencrypt import StandardEncryption
 
+                if self.password:
+                    user_pw = owner_pw = self.password
+                else:
+                    import secrets
+
+                    user_pw = ""
+                    owner_pw = secrets.token_urlsafe(16)
+
                 doc_kwargs["encrypt"] = StandardEncryption(
-                    userPassword=self.password,
-                    ownerPassword=self.password,
+                    userPassword=user_pw,
+                    ownerPassword=owner_pw,
                     canPrint=1 if self.allow_printing else 0,
                     canModify=0,
                     canCopy=1 if self.allow_copying else 0,
