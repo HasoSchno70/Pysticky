@@ -2,6 +2,7 @@
 Dialog für Raster-Optionen.
 """
 
+from PySide6.QtCore import QSettings
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -61,6 +62,12 @@ class ColorButton(QPushButton):
 class GridOptionsDialog(QDialog):
     """Dialog für Raster-Einstellungen."""
 
+    # Oberes Ende der urspruenglichen Neben-Raster-Range (spin_minor.setRange
+    # unten) -- als Konstante gehalten, weil _sync_minor_max() sie erneut
+    # braucht, um das Maximum bei einem KLEINEN Haupt-Intervall nicht ueber
+    # diesen Wert hinaus zu erlauben.
+    _MINOR_INTERVAL_MAX = 20
+
     def __init__(self, canvas, parent=None):
         super().__init__(parent)
         self.canvas = canvas
@@ -91,11 +98,21 @@ class GridOptionsDialog(QDialog):
         interval_layout.addRow(self.chk_minor)
 
         self.spin_minor = QSpinBox()
-        self.spin_minor.setRange(1, 20)
+        self.spin_minor.setRange(1, self._MINOR_INTERVAL_MAX)
         self.spin_minor.setSuffix(t(" Stiche"))
         interval_layout.addRow(t("Neben-Raster:"), self.spin_minor)
 
         self.chk_minor.toggled.connect(self.spin_minor.setEnabled)
+
+        # Neben-Intervall muss echt KLEINER als das Haupt-Intervall bleiben:
+        # ist minor >= major, ist jedes Vielfache von minor zwangslaeufig
+        # auch ein Vielfaches von major, und die Haupt-Linien-Pruefung im
+        # Renderer (rendering_mixin.py::_draw_grid, "if x % major == 0"
+        # steht VOR dem elif fuer minor) gewinnt dann immer zuerst -- die
+        # Neben-Linien wuerden nie sichtbar gezeichnet, obwohl der Dialog
+        # das klaglos als gueltige Einstellung akzeptiert hat.
+        self.spin_major.valueChanged.connect(self._sync_minor_max)
+        self._sync_minor_max(self.spin_major.value())
 
         layout.addWidget(interval_group)
 
@@ -150,6 +167,14 @@ class GridOptionsDialog(QDialog):
         button_box.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self._apply)
         layout.addWidget(button_box)
 
+    def _sync_minor_max(self, major_value: int) -> None:
+        """Haelt das Neben-Intervall zwangsweise unter dem Haupt-Intervall
+        (siehe Kommentar in _setup_ui()). Faengt auch den Fall ab, dass ein
+        zuvor gueltiger Wert durch Verkleinern des Haupt-Intervalls
+        ungueltig wird -- QSpinBox.setMaximum() klemmt einen zu hohen
+        aktuellen Wert automatisch auf das neue Maximum."""
+        self.spin_minor.setMaximum(min(self._MINOR_INTERVAL_MAX, max(1, major_value - 1)))
+
     def _load_values(self) -> None:
         """Lädt die aktuellen Werte vom Canvas."""
         self.spin_major.setValue(self.canvas.major_grid_interval)
@@ -170,6 +195,22 @@ class GridOptionsDialog(QDialog):
         self.canvas.grid_color = self.btn_color_normal.color
         self.canvas.grid_minor_color = self.btn_color_minor.color
         self.canvas.grid_major_color = self.btn_color_major.color
+
+        # Vorher wirkte dieser Dialog NUR auf das laufende Canvas-Objekt und
+        # schrieb nie in QSettings -- ein Klick auf "OK" fuehlte sich wie ein
+        # dauerhaftes Speichern an, ging aber beim naechsten App-Start bzw.
+        # sobald der allgemeine Einstellungen-Dialog seine (unveraenderten)
+        # alten QSettings-Werte erneut anwendet (MainWindow.
+        # _apply_settings_from_dialog() in misc_handlers.py), sofort wieder
+        # verloren. show_minor_grid und die normale Gitterfarbe hatten davor
+        # ueberhaupt keinen QSettings-Schluessel im Projekt.
+        settings = QSettings()
+        settings.setValue("major_grid_interval", self.canvas.major_grid_interval)
+        settings.setValue("minor_grid_interval", self.canvas.minor_grid_interval)
+        settings.setValue("show_minor_grid", self.canvas.show_minor_grid)
+        settings.setValue("grid_color_normal", self.canvas.grid_color.name())
+        settings.setValue("grid_color_minor", self.canvas.grid_minor_color.name())
+        settings.setValue("grid_color_major", self.canvas.grid_major_color.name())
 
     def _on_accept(self) -> None:
         self._apply()

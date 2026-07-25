@@ -743,6 +743,18 @@ class MiscHandlersMixin:
         self.canvas.grid_minor_color = QColor(
             self._settings.value("grid_color_minor", "#303050", type=str)
         )
+        # show_minor_grid + grid_color_normal (Raster-Optionen-Dialog, siehe
+        # ui/dialogs/grid_options_dialog.py): hatten frueher gar keinen
+        # QSettings-Schluessel, der Dialog wirkte nur auf das laufende
+        # Canvas-Objekt und wurde bei jedem Aufruf dieser Methode (App-Start
+        # UND jedes Mal, wenn der allgemeine Einstellungen-Dialog geschlossen
+        # wird) stillschweigend wieder auf den Canvas-Default zurueckgesetzt.
+        self.canvas.show_minor_grid = bool(
+            self._settings.value("show_minor_grid", self.canvas.show_minor_grid, type=bool)
+        )
+        self.canvas.grid_color = QColor(
+            self._settings.value("grid_color_normal", self.canvas.grid_color.name(), type=str)
+        )
 
         # Zellgroessen-Grenzen (wirken erst beim naechsten Zoom-Reset bzw.
         # neuen Muster -- die aktuell offene Ansicht wird nicht rueckwirkend
