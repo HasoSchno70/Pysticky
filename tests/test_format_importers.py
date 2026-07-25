@@ -529,6 +529,182 @@ def test_pat_import_keeps_in_range_backstitch_color_index(tmp_path):
 
 
 # ============================================================================
+# PAT: Rueckstich-Koordinaten-Grenzen (Runde 78)
+#
+# Grid-Farbindizes (Runde 20) und Backstitch-Farbindizes (Runde 30) werden
+# schon gegen die eingelesene Palette geprueft -- Backstitch-KOORDINATEN
+# wurden aber nirgends gegen die Mustergroesse geprueft. Weder
+# Pattern.add_backstitch() noch BackstitchManager.add() validieren x/y, ein
+# korruptes .pat mit Koordinaten weit ausserhalb des Grids (negativ oder >
+# 2x Breite/Hoehe) landete dadurch klaglos im Pattern -- der Rueckstich war
+# dann irgendwo unsichtbar weit ausserhalb des Canvas "verschwunden", ohne
+# dass der Nutzer je von verworfenen Daten erfuhr.
+# ============================================================================
+
+
+def _build_pat_with_backstitch_coords(x1: int, y1: int, x2: int, y2: int) -> bytes:
+    """Baut eine minimale, vollstaendige Legacy-PAT-Datei (Version 5:
+    Header + 1 Farbe + leeres 2x2-Grid + 1 Backstitch mit den gegebenen
+    Koordinaten in ganzen Stichen)."""
+    header = _build_pat_legacy_header(version=5, width=2, height=2, color_count=1)
+    color_data = (
+        struct.pack("BBB", 255, 0, 0)  # RGB
+        + b"\x00" * 6  # DMC-Nummer (Legacy: 6 Bytes)
+        + b"Red".ljust(20, b"\x00")  # Name (Legacy: 20 Bytes)
+        + b"\x00"  # Symbol (optional, fehlt hier -> Fallback-Symbol)
+    )
+    grid_data = bytes([0xFF, 0xFF, 0xFF, 0xFF])  # 2x2, alle Zellen leer (Sentinel 0xFF)
+    backstitch_data = (
+        struct.pack("<I", 1)  # count (Legacy: 4 Bytes)
+        + struct.pack("<hhhh", x1, y1, x2, y2)
+        + struct.pack("B", 0)  # Farbindex (gueltig, einzige eingelesene Farbe)
+    )
+    return header + color_data + grid_data + backstitch_data
+
+
+def test_pat_import_drops_backstitch_far_outside_pattern_bounds(tmp_path):
+    """Regression: Koordinaten weit ausserhalb (2x2-Muster -> halbe Stiche
+    max. 4x4) wurden bislang klaglos, ohne Warnung uebernommen."""
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_with_backstitch_coords(0, 0, 5000, 5000))
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Mustergrenzen" in w for w in importer.warnings)
+
+
+def test_pat_import_drops_backstitch_with_negative_coords(tmp_path):
+    """Negative Koordinaten sind ebenso ausserhalb des gueltigen Bereichs
+    wie zu grosse -- beide Richtungen muessen abgefangen werden."""
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_with_backstitch_coords(-50, -50, 2, 2))
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Mustergrenzen" in w for w in importer.warnings)
+
+
+def test_pat_import_keeps_backstitch_within_pattern_bounds(tmp_path):
+    """Gegenprobe: Koordinaten innerhalb des 2x2-Musters (max. 4x4 halbe
+    Stiche) duerfen weiterhin normal ankommen."""
+    f = tmp_path / "data.pat"
+    f.write_bytes(_build_pat_with_backstitch_coords(0, 0, 2, 2))
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert len(pattern.backstitches) == 1
+    assert not any("außerhalb der Mustergrenzen" in w for w in importer.warnings)
+
+
+def test_pat_import_warns_only_once_for_multiple_bad_backstitch_coords(tmp_path):
+    """Wie beim Farbindex-Clamping (Runde 20): mehrere kaputte Rueckstiche
+    sollen nur eine einzige Sammel-Warnung erzeugen, keine Spam-Flut."""
+    header = _build_pat_legacy_header(version=5, width=2, height=2, color_count=1)
+    color_data = struct.pack("BBB", 255, 0, 0) + b"\x00" * 6 + b"Red".ljust(20, b"\x00") + b"\x00"
+    grid_data = bytes([0xFF, 0xFF, 0xFF, 0xFF])
+    backstitch_data = (
+        struct.pack("<I", 3)  # count: 3 kaputte Rueckstiche
+        + struct.pack("<hhhh", 0, 0, 5000, 5000)
+        + struct.pack("B", 0)
+        + struct.pack("<hhhh", -10, -10, 0, 0)
+        + struct.pack("B", 0)
+        + struct.pack("<hhhh", 0, 0, 9999, 0)
+        + struct.pack("B", 0)
+    )
+    f = tmp_path / "data.pat"
+    f.write_bytes(header + color_data + grid_data + backstitch_data)
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert sum("außerhalb der Mustergrenzen" in w for w in importer.warnings) == 1
+
+
+# ============================================================================
+# PAT: Unvollstaendige komprimierte Grid-Daten (Runde 78, Version 8+)
+#
+# _read_raw_grid() (Legacy-Versionen) warnt schon lange bei einer
+# unvollstaendigen Zeile. _read_compressed_grid() (Version 8+) lief bei
+# genau demselben Szenario -- Datei/behaupteter Grid-Block endet, bevor
+# alle Zeilen gelesen sind -- bislang klaglos aus. Die fehlenden unteren
+# Zeilen blieben stillschweigend leer.
+# ============================================================================
+
+
+def _pat_v8_pascal(s: str) -> bytes:
+    b = s.encode("cp1252")
+    return struct.pack("B", len(b)) + b
+
+
+def _build_pat_v8_header(width: int, height: int, color_count: int = 1) -> bytes:
+    body = (
+        struct.pack("<HH", width, height)
+        + struct.pack("<H", color_count)
+        + struct.pack("<H", 14)  # fabric_count
+        + _pat_v8_pascal("Test")  # title
+        + _pat_v8_pascal("")  # author
+        + _pat_v8_pascal("")  # copyright
+    )
+    return b"PAT" + struct.pack("B", 8) + struct.pack("<I", len(body)) + body
+
+
+def _build_pat_v8_color(r: int, g: int, b: int) -> bytes:
+    return (
+        struct.pack("BBB", r, g, b)
+        + _pat_v8_pascal("310")  # DMC-Nummer
+        + _pat_v8_pascal("Black")  # Name
+        + struct.pack("B", ord("X"))  # Symbol
+    )
+
+
+def test_pat_import_warns_on_incomplete_compressed_grid(tmp_path):
+    """Header behauptet eine 4x4-Datei mit grid_size=1000, tatsaechlich
+    stehen nur 2 Bytes (RLE fuer 2 Zellen) zur Verfuegung -- die Datei
+    endet mitten im Grid-Block."""
+    data = _build_pat_v8_header(width=4, height=4, color_count=1)
+    data += _build_pat_v8_color(255, 0, 0)
+    truncated_grid = bytes([0x82, 0x00])  # RLE: 2 Zellen Farbe 0
+    data += struct.pack("<I", 1000) + truncated_grid  # behauptete Groesse: 1000
+
+    f = tmp_path / "data.pat"
+    f.write_bytes(data)
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert any("Unvollständige komprimierte Grid-Daten" in w for w in importer.warnings)
+
+
+def test_pat_import_no_warning_for_complete_compressed_grid(tmp_path):
+    """Gegenprobe: ein vollstaendiges komprimiertes Grid darf keine
+    Unvollstaendigkeits-Warnung ausloesen."""
+    data = _build_pat_v8_header(width=2, height=2, color_count=1)
+    data += _build_pat_v8_color(255, 0, 0)
+    full_grid = bytes([0x84, 0xFF])  # RLE: 4 Zellen (2x2), alle leer (0xFF)
+    data += struct.pack("<I", len(full_grid)) + full_grid
+
+    f = tmp_path / "data.pat"
+    f.write_bytes(data)
+
+    importer = PATImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert not any("Unvollständige komprimierte Grid-Daten" in w for w in importer.warnings)
+
+
+# ============================================================================
 # XSD: Helper-Klassen
 # ============================================================================
 

@@ -72,6 +72,7 @@ class PATImporter:
         self.errors: list[str] = []
         self.warnings: list[str] = []
         self._invalid_color_index_warned = False
+        self._invalid_backstitch_coords_warned = False
 
     def can_import(self, filepath: Path | str) -> bool:
         """Prüft ob die Datei ein PAT-Format ist."""
@@ -104,6 +105,7 @@ class PATImporter:
         self.errors.clear()
         self.warnings.clear()
         self._invalid_color_index_warned = False
+        self._invalid_backstitch_coords_warned = False
 
         if not filepath.exists():
             self.errors.append(f"Datei nicht gefunden: {filepath}")
@@ -432,6 +434,18 @@ class PATImporter:
                     x = 0
                     y += 1
 
+        # Die Datei ist zu Ende oder die im Header angegebene Grid-Groesse
+        # (expected_size) war zu klein, bevor alle Zeilen gelesen wurden --
+        # anders als _read_raw_grid (das bei einer unvollstaendigen Zeile
+        # warnt) lief diese Schleife bislang klaglos aus, sobald `byte`
+        # leer war oder `bytes_read >= expected_size` erreicht wurde. Die
+        # fehlenden unteren Zeilen blieben dadurch stillschweigend leer,
+        # ohne dass der Nutzer je erfuhr, dass Stiche verloren gingen.
+        if y < height:
+            self.warnings.append(
+                f"Unvollständige komprimierte Grid-Daten: nur {y} von {height} Zeilen gelesen"
+            )
+
     def _read_raw_grid(
         self, f: BinaryIO, layer: Layer, width: int, height: int, color_count: int
     ) -> None:
@@ -446,6 +460,32 @@ class PATImporter:
             for x, value in enumerate(row_data):
                 color_index = self._clamp_color_index(None if value == 0xFF else value, color_count)
                 layer.set_stitch(x, y, color_index)
+
+    def _validate_backstitch_coords(
+        self, x1: int, y1: int, x2: int, y2: int, width: int, height: int
+    ) -> bool:
+        """Prüft Rückstich-Koordinaten (in halben Stichen) gegen die
+        Mustergrenzen.
+
+        Eine beschädigte/manipulierte Datei kann Koordinaten weit
+        außerhalb des Grids enthalten (negativ oder > 2x Breite/Höhe) --
+        weder `Pattern.add_backstitch()` noch `BackstitchManager.add()`
+        prüfen das, die Werte würden also klaglos übernommen. Der Stich
+        wäre dann irgendwo unsichtbar weit außerhalb des Canvas
+        "verschwunden", ohne dass der Nutzer je erfährt, dass Daten
+        verworfen wurden. Gleiche Grenzen wie die Crop-Clip-Logik in
+        `Pattern.crop()` (0..2*width, 0..2*height).
+        """
+        max_x, max_y = 2 * width, 2 * height
+        if 0 <= x1 <= max_x and 0 <= y1 <= max_y and 0 <= x2 <= max_x and 0 <= y2 <= max_y:
+            return True
+        if not self._invalid_backstitch_coords_warned:
+            self.warnings.append(
+                "Rückstich-Koordinaten außerhalb der Mustergrenzen "
+                "— betroffene Rückstiche werden verworfen"
+            )
+            self._invalid_backstitch_coords_warned = True
+        return False
 
     def _read_backstitches(self, f: BinaryIO, pattern: Pattern, version: int) -> None:
         """Liest Backstitch-Daten."""
@@ -491,7 +531,13 @@ class PATImporter:
                     continue
 
                 # In halbe Stiche konvertieren (PAT verwendet ganze Koordinaten)
-                pattern.add_backstitch(x1 * 2, y1 * 2, x2 * 2, y2 * 2, clamped)
+                hx1, hy1, hx2, hy2 = x1 * 2, y1 * 2, x2 * 2, y2 * 2
+                if not self._validate_backstitch_coords(
+                    hx1, hy1, hx2, hy2, pattern.width, pattern.height
+                ):
+                    continue
+
+                pattern.add_backstitch(hx1, hy1, hx2, hy2, clamped)
 
         except (struct.error, ValueError, IndexError) as e:
             self.warnings.append(f"Fehler beim Lesen der Backstitch-Daten: {e}")
