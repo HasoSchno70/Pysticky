@@ -108,6 +108,7 @@ class OXSImporter:
     # palette_item" unterscheiden kann.
     known_palindices: set[int] = field(default_factory=set)
     _unknown_palindex_warned: set[int] = field(default_factory=set)
+    _invalid_backstitch_coords_warned: bool = False
 
     def can_import(self, filepath: Path | str) -> bool:
         filepath = Path(filepath)
@@ -127,6 +128,7 @@ class OXSImporter:
         self.warnings.clear()
         self.known_palindices.clear()
         self._unknown_palindex_warned.clear()
+        self._invalid_backstitch_coords_warned = False
 
         if not filepath.exists():
             self.errors.append(f"Datei nicht gefunden: {filepath}")
@@ -450,6 +452,33 @@ class OXSImporter:
                 continue
             self._place_stitch(pattern, x - 1, y - 1, color_index, StitchType.THREE_QUARTER.value)
 
+    def _validate_backstitch_coords(
+        self, x1: int, y1: int, x2: int, y2: int, width: int, height: int
+    ) -> bool:
+        """Prüft Rückstich-Koordinaten (in halben Stichen) gegen die
+        Mustergrenzen.
+
+        Eine beschädigte/manipulierte Datei kann Koordinaten weit
+        außerhalb des Grids enthalten (negativ oder > 2x Breite/Höhe) --
+        weder `Pattern.add_backstitch()` noch `BackstitchManager.add()`
+        prüfen das, die Werte würden also klaglos übernommen. Der Stich
+        wäre dann irgendwo unsichtbar weit außerhalb des Canvas
+        "verschwunden", ohne dass der Nutzer je erfährt, dass Daten
+        verworfen wurden. Gleiche Grenzen wie die Crop-Clip-Logik in
+        `Pattern.crop()` (0..2*width, 0..2*height), identisch zu
+        pat_import.py/xsd_import.py (Runde 78).
+        """
+        max_x, max_y = 2 * width, 2 * height
+        if 0 <= x1 <= max_x and 0 <= y1 <= max_y and 0 <= x2 <= max_x and 0 <= y2 <= max_y:
+            return True
+        if not self._invalid_backstitch_coords_warned:
+            self.warnings.append(
+                "Rückstich-Koordinaten außerhalb der Mustergrenzen "
+                "— betroffene Rückstiche werden verworfen"
+            )
+            self._invalid_backstitch_coords_warned = True
+        return False
+
     def _read_backstitches(
         self,
         root: ET.Element,
@@ -477,6 +506,10 @@ class OXSImporter:
             hy1 = int(round((y1 - 1) * 2))
             hx2 = int(round((x2 - 1) * 2))
             hy2 = int(round((y2 - 1) * 2))
+            if not self._validate_backstitch_coords(
+                hx1, hy1, hx2, hy2, pattern.width, pattern.height
+            ):
+                continue
             pattern.add_backstitch(hx1, hy1, hx2, hy2, color_index)
 
     def _read_ornaments(

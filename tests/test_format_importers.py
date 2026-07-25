@@ -631,6 +631,115 @@ def test_pat_import_warns_only_once_for_multiple_bad_backstitch_coords(tmp_path)
 
 
 # ============================================================================
+# XSD: Rueckstich-Koordinaten-Grenzen (Runde 79, analog PAT Runde 78)
+#
+# Dieselbe Luecke wie beim PAT-Importer: XSD-Rueckstich-Koordinaten wurden
+# nirgends gegen die Mustergroesse geprueft, bevor sie an
+# Pattern.add_backstitch() weitergereicht wurden.
+# ============================================================================
+
+
+def _build_xsd_with_backstitch_coords(x1: int, y1: int, x2: int, y2: int) -> bytes:
+    """Baut eine minimale, vollstaendige XSD-Datei (Header + 1 Farbe +
+    leeres 2x2-Grid + 1 Backstitch mit den gegebenen Koordinaten in
+    halben Stichen -- XSD liefert diese bereits unskaliert)."""
+    header = (
+        b"PMX"
+        + struct.pack("<B", 5)  # version
+        + struct.pack("<HH", 2, 2)  # width, height
+        + struct.pack("<H", 1)  # color_count
+        + struct.pack("<H", 0x01)  # flags: has_backstitches
+        + b"Title".ljust(64, b"\x00")
+        + b"Author".ljust(32, b"\x00")
+    )
+    color_data = (
+        struct.pack("BBB", 255, 0, 0)  # RGB
+        + b"Red".ljust(32, b"\x00")  # Name
+        + b"\x00" * 8  # DMC-Nummer
+        + b"\x00"  # Symbol (verworfen)
+    )
+    grid_data = bytes([0xFE, 0xFE, 0xFE, 0xFE])  # 2x2, alle Zellen leer
+    backstitch_data = (
+        struct.pack("<H", 1)  # count
+        + struct.pack("<hhhh", x1, y1, x2, y2)  # Koordinaten
+        + struct.pack("B", 0)  # Farbindex (gueltig, einzige eingelesene Farbe)
+    )
+    return header + color_data + grid_data + backstitch_data
+
+
+def test_xsd_import_drops_backstitch_far_outside_pattern_bounds(tmp_path):
+    """Regression: Koordinaten weit ausserhalb (2x2-Muster -> halbe Stiche
+    max. 4x4) wurden bislang klaglos, ohne Warnung uebernommen."""
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_xsd_with_backstitch_coords(0, 0, 5000, 5000))
+
+    importer = XSDImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Mustergrenzen" in w for w in importer.warnings)
+
+
+def test_xsd_import_drops_backstitch_with_negative_coords(tmp_path):
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_xsd_with_backstitch_coords(-50, -50, 2, 2))
+
+    importer = XSDImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Mustergrenzen" in w for w in importer.warnings)
+
+
+def test_xsd_import_keeps_backstitch_within_pattern_bounds(tmp_path):
+    """Gegenprobe: Koordinaten innerhalb des 2x2-Musters (max. 4x4 halbe
+    Stiche) duerfen weiterhin normal ankommen."""
+    f = tmp_path / "data.xsd"
+    f.write_bytes(_build_xsd_with_backstitch_coords(0, 0, 2, 2))
+
+    importer = XSDImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert len(pattern.backstitches) == 1
+    assert not any("außerhalb der Mustergrenzen" in w for w in importer.warnings)
+
+
+def test_xsd_import_warns_only_once_for_multiple_bad_backstitch_coords(tmp_path):
+    header = (
+        b"PMX"
+        + struct.pack("<B", 5)
+        + struct.pack("<HH", 2, 2)
+        + struct.pack("<H", 1)
+        + struct.pack("<H", 0x01)
+        + b"Title".ljust(64, b"\x00")
+        + b"Author".ljust(32, b"\x00")
+    )
+    color_data = struct.pack("BBB", 255, 0, 0) + b"Red".ljust(32, b"\x00") + b"\x00" * 8 + b"\x00"
+    grid_data = bytes([0xFE, 0xFE, 0xFE, 0xFE])
+    backstitch_data = (
+        struct.pack("<H", 3)  # count: 3 kaputte Rueckstiche
+        + struct.pack("<hhhh", 0, 0, 5000, 5000)
+        + struct.pack("B", 0)
+        + struct.pack("<hhhh", -10, -10, 0, 0)
+        + struct.pack("B", 0)
+        + struct.pack("<hhhh", 0, 0, 9999, 0)
+        + struct.pack("B", 0)
+    )
+    f = tmp_path / "data.xsd"
+    f.write_bytes(header + color_data + grid_data + backstitch_data)
+
+    importer = XSDImporter()
+    pattern = importer.import_file(f)
+
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert sum("außerhalb der Mustergrenzen" in w for w in importer.warnings) == 1
+
+
+# ============================================================================
 # PAT: Unvollstaendige komprimierte Grid-Daten (Runde 78, Version 8+)
 #
 # _read_raw_grid() (Legacy-Versionen) warnt schon lange bei einer

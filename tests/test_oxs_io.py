@@ -636,6 +636,97 @@ def test_import_warns_on_duplicate_palette_index(tmp_path):
     assert pattern.color_entries[color_index].thread.catalog_number == "311"
 
 
+# ============================================================================
+# OXS: Rueckstich-Koordinaten-Grenzen (Runde 79, analog PAT/XSD Runde 78/79)
+#
+# Dieselbe Luecke wie bei den binaeren Importern: OXS-Rueckstich-
+# Koordinaten (aus fremdem, potenziell manipuliertem XML) wurden nirgends
+# gegen die Mustergroesse geprueft, bevor sie an Pattern.add_backstitch()
+# weitergereicht wurden.
+# ============================================================================
+
+
+def _oxs_with_backstitch(x1: str, y1: str, x2: str, y2: str) -> str:
+    """Minimal-OXS (5x5) mit einem Backstitch mit den gegebenen
+    OXS-1-basierten Koordinaten."""
+    return f"""<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="1" number="310" name="DMC 310" symbol="X" color="000000" />
+  </palette>
+  <backstitches>
+    <backstitch x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" palindex="1" />
+  </backstitches>
+</chart>
+"""
+
+
+def test_import_drops_backstitch_far_outside_pattern_bounds(tmp_path):
+    """Regression: Koordinaten weit ausserhalb (5x5-Muster -> halbe Stiche
+    max. 10x10) wurden bislang klaglos, ohne Warnung uebernommen."""
+    from pysticky.io.formats import import_oxs
+
+    f = tmp_path / "far_outside.oxs"
+    f.write_text(_oxs_with_backstitch("1", "1", "5000", "5000"), encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Mustergrenzen" in w for w in warnings)
+
+
+def test_import_drops_backstitch_with_negative_coords(tmp_path):
+    from pysticky.io.formats import import_oxs
+
+    f = tmp_path / "negative.oxs"
+    f.write_text(_oxs_with_backstitch("-50", "-50", "2", "2"), encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert any("außerhalb der Mustergrenzen" in w for w in warnings)
+
+
+def test_import_keeps_backstitch_within_pattern_bounds(tmp_path):
+    """Gegenprobe: Koordinaten innerhalb des 5x5-Musters duerfen weiterhin
+    normal ankommen."""
+    from pysticky.io.formats import import_oxs
+
+    f = tmp_path / "within.oxs"
+    f.write_text(_oxs_with_backstitch("1", "1", "2", "2"), encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is not None
+    assert len(pattern.backstitches) == 1
+    assert not any("außerhalb der Mustergrenzen" in w for w in warnings)
+
+
+def test_import_warns_only_once_for_multiple_bad_backstitch_coords(tmp_path):
+    from pysticky.io.formats import import_oxs
+
+    oxs = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="1" number="310" name="DMC 310" symbol="X" color="000000" />
+  </palette>
+  <backstitches>
+    <backstitch x1="1" y1="1" x2="5000" y2="5000" palindex="1" />
+    <backstitch x1="-50" y1="-50" x2="1" y2="1" palindex="1" />
+    <backstitch x1="1" y1="1" x2="9999" y2="1" palindex="1" />
+  </backstitches>
+</chart>
+"""
+    f = tmp_path / "multi_bad.oxs"
+    f.write_text(oxs, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert pattern is not None
+    assert pattern.backstitches == []
+    assert sum("außerhalb der Mustergrenzen" in w for w in warnings) == 1
+
+
 def test_can_import_returns_false_for_malicious_xml(tmp_path):
     """can_import lehnt bösartiges XML ab statt zu werfen."""
     from pysticky.io.formats.oxs_io import OXSImporter
