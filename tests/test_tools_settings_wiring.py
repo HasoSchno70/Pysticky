@@ -169,6 +169,65 @@ def test_backstitch_width_offset_applied(qtbot):
             s.setValue("backstitch_width", old)
 
 
+def test_backstitch_width_offset_survives_tool_selection(qtbot):
+    """Reproduziert Runde 83: _apply_settings_from_dialog() (bzw. bereits
+    der MainWindow-Start) uebernimmt backstitch_width korrekt aus
+    QSettings in canvas.backstitch_width_offset -- aber allein das
+    Anwaehlen des Rueckstich-Werkzeugs (_on_tool_changed) ueberschrieb
+    diesen Wert bisher unbedingt mit dem hartcodierten Konstruktor-Default
+    des BackstitchOptionsPanel (Dicke 2), weil das Panel selbst nie aus
+    QSettings initialisiert wurde. Die persistierte Einstellung ging
+    dadurch beim ersten Werkzeugwechsel sofort wieder verloren."""
+    from pysticky.ui.main_window import MainWindow
+    from pysticky.ui.tools.tool_enum import Tool
+
+    s = _qsettings_with_scope()
+    old = s.value("backstitch_width")
+    try:
+        s.setValue("backstitch_width", 5)
+        w = MainWindow()
+        qtbot.addWidget(w)
+        w._check_save_changes = lambda: True
+        w._autosave_timer.stop()
+        assert w.canvas.backstitch_width_offset == 3  # 5 - 2 (Default), vor Werkzeugwahl
+
+        w.tool_bar.select_tool(Tool.BACKSTITCH)
+        assert w.canvas.backstitch_width_offset == 3  # muss die Werkzeugwahl ueberleben
+    finally:
+        if old is None:
+            s.remove("backstitch_width")
+        else:
+            s.setValue("backstitch_width", old)
+
+
+def test_backstitch_snap_survives_tool_selection(qtbot):
+    """Analog zu test_backstitch_width_offset_survives_tool_selection fuer
+    backstitch_snap: das Werkzeug-Anwaehlen ueberschrieb backstitch_tool.
+    snap_to_grid bisher mit dem Panel-Default (True), unabhaengig vom
+    tatsaechlich persistierten Wert."""
+    from pysticky.ui.main_window import MainWindow
+    from pysticky.ui.tools.tool_enum import Tool
+
+    s = _qsettings_with_scope()
+    old = s.value("backstitch_snap")
+    try:
+        s.setValue("backstitch_snap", False)
+        w = MainWindow()
+        qtbot.addWidget(w)
+        w._check_save_changes = lambda: True
+        w._autosave_timer.stop()
+        tool = w.canvas._tool_manager.get_backstitch_tool()
+        assert tool.snap_to_grid is False
+
+        w.tool_bar.select_tool(Tool.BACKSTITCH)
+        assert tool.snap_to_grid is False  # muss die Werkzeugwahl ueberleben
+    finally:
+        if old is None:
+            s.remove("backstitch_snap")
+        else:
+            s.setValue("backstitch_snap", old)
+
+
 def test_pipette_behavior_switches_tool_after_pick(qtbot):
     """Verifiziert (Runde 54), dass alle drei "Nach Aufnahme"-Modi des
     Werkzeuge-Settings-Tabs tatsaechlich wirken: 0=Stift, 1=bei Pipette
