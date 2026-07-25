@@ -1434,6 +1434,7 @@
   "Tetrade +180°": "Tetradic +180°",
   "Tetrade +270°": "Tetradic +270°",
   "Hinzufügen ({count})": "Add ({count})",
+  "{count} Farben verfügbar": "{count} colors available",
   "{first} ↔ {second} {unit} werden getauscht": "{first} ↔ {second} {unit} will be swapped",
   "{missing} Farbe(n) haben keine Zuordnung.\nBitte weisen Sie allen Farben ein Ziel-Garn zu.": "{missing} color(s) have no assignment.\nPlease assign a target thread to all colors.",
   "{poor} Farbe(n) haben einen hohen Farbabstand (>25).\nTrotzdem konvertieren?": "{poor} color(s) have a large color distance (>25).\nConvert anyway?",

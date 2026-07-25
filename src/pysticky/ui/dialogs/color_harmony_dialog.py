@@ -432,7 +432,6 @@ class ColorHarmonyDialog(QDialog):
         self._palette_manager = get_palette_manager()
         self._current_palette: ThreadPalette | None = None
         self._harmony_swatches: list[ColorSwatch] = []
-        self._selected_threads: list[Thread] = []
 
         self.setWindowTitle(t("Farb-Harmonien"))
         self.setMinimumSize(780, 620)
@@ -687,7 +686,9 @@ class ColorHarmonyDialog(QDialog):
         """Palette wurde geändert."""
         self._current_palette = self._palette_manager.get_palette(palette_name)
         if self._current_palette:
-            self._info_label.setText(f"{len(self._current_palette)} Farben verfügbar")
+            self._info_label.setText(
+                t("{count} Farben verfügbar").format(count=len(self._current_palette))
+            )
         self._update_harmonies()
 
     def _update_harmonies(self) -> None:
@@ -700,7 +701,6 @@ class ColorHarmonyDialog(QDialog):
             swatch.setParent(None)
             swatch.deleteLater()
         self._harmony_swatches.clear()
-        self._selected_threads.clear()
 
         if not self._current_palette:
             self._current_palette = self._palette_manager.get_palette(
@@ -746,41 +746,61 @@ class ColorHarmonyDialog(QDialog):
         self._update_add_button()
 
     def _on_swatch_clicked(self, thread: Thread) -> None:
-        """Ein Swatch wurde geklickt."""
-        if thread in self._selected_threads:
-            self._selected_threads.remove(thread)
-        else:
-            self._selected_threads.append(thread)
+        """Ein Swatch wurde geklickt (der visuelle Toggle passiert bereits in
+        ColorSwatch.mousePressEvent) — nur Button-Text/Enabled-State ableiten."""
         self._update_add_button()
+
+    def _collect_selected_threads(self) -> list[Thread]:
+        """Liest die aktuelle Auswahl direkt aus dem `selected`-Flag jedes
+        Swatches, statt sie in einer separat mitgeführten Liste per
+        Farbwert-Gleichheit (`in`/`remove`) zu verfolgen.
+
+        Vorher: zwei Harmonie-Vorschläge, die auf dasselbe nächstgelegene
+        Garn der Palette matchten (z.B. Triade ±120° bei einer kleinen/
+        Bead-Palette oder einer nahezu neutralen Ausgangsfarbe), landeten in
+        derselben Liste. Klick auf den zweiten Swatch fand das Garn dort
+        bereits vor und *entfernte* es wieder — obwohl der zweite Swatch
+        selbst weiterhin den Auswahl-Haken zeigte. Jetzt ist die Liste
+        einfach eine Ableitung aus dem sichtbaren Zustand, kann also nicht
+        mehr davon abweichen. Dieselbe Garn-Instanz wird dedupliziert
+        (per Objekt-Identität), damit der Zähler zur tatsächlichen Anzahl
+        neuer Palette-Einträge passt.
+        """
+        seen: set[int] = set()
+        result: list[Thread] = []
+        for swatch in self._harmony_swatches:
+            thread = swatch.thread
+            if swatch.selected and thread is not None and id(thread) not in seen:
+                seen.add(id(thread))
+                result.append(thread)
+        return result
 
     def _update_add_button(self) -> None:
         """Aktualisiert den Hinzufügen-Button."""
-        count = len(self._selected_threads)
+        count = len(self._collect_selected_threads())
         self._add_btn.setText(t("Hinzufügen ({count})").format(count=count))
         self._add_btn.setEnabled(count > 0)
 
     def _select_all(self) -> None:
         """Wählt alle Farben aus."""
-        self._selected_threads.clear()
         for swatch in self._harmony_swatches:
             if swatch.thread:
                 swatch.selected = True
-                self._selected_threads.append(swatch.thread)
         self._update_add_button()
 
     def _select_none(self) -> None:
         """Wählt keine Farben aus."""
-        self._selected_threads.clear()
         for swatch in self._harmony_swatches:
             swatch.selected = False
         self._update_add_button()
 
     def _on_add(self) -> None:
         """Fügt die ausgewählten Farben hinzu."""
-        if self._selected_threads:
-            self.colors_selected.emit(self._selected_threads)
+        selected = self._collect_selected_threads()
+        if selected:
+            self.colors_selected.emit(selected)
         self.accept()
 
     @property
     def selected_threads(self) -> list[Thread]:
-        return self._selected_threads
+        return self._collect_selected_threads()
