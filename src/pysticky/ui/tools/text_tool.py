@@ -2,7 +2,7 @@
 Text-Werkzeug zum Platzieren von Text als Stiche.
 """
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QImage, QMouseEvent, QPainter, QPen
 
 from ...utils import clamp_int
@@ -127,9 +127,18 @@ class TextTool(BaseTool):
         font.setBold(self._bold)
         font.setItalic(self._italic)
 
-        # Textgröße berechnen
+        # Textgröße berechnen.
+        #
+        # WICHTIG: Die Einzelstring-Ueberladung von boundingRect()/drawText()
+        # (also boundingRect(text) bzw. drawText(x, y, text)) behandelt
+        # eingebettete "\n"-Zeichen NICHT als Zeilenumbruch, sondern als
+        # unsichtbares Zeichen ohne Vorschub -- mehrzeiliger Text wuerde
+        # dadurch komplett auf einer Zeile uebereinandergequetscht gezeichnet.
+        # Die QRect-Ueberladung behandelt "\n" dagegen korrekt als
+        # Zeilenumbruch, daher hier ein bewusst grosszuegiges Referenz-Rect.
         metrics = QFontMetrics(font)
-        rect = metrics.boundingRect(self._text)
+        bounds = QRect(0, 0, 100_000, 100_000)
+        rect = metrics.boundingRect(bounds, 0, self._text)
 
         width = rect.width() + 4
         height = rect.height() + 4
@@ -146,7 +155,11 @@ class TextTool(BaseTool):
         painter = QPainter(image)
         painter.setFont(font)
         painter.setPen(QColor(0, 0, 0))
-        painter.drawText(-rect.left() + 2, -rect.top() + 2, self._text)
+        painter.drawText(
+            QRect(-rect.left() + 2, -rect.top() + 2, rect.width(), rect.height()),
+            0,
+            self._text,
+        )
         painter.end()
 
         # Schwarze Pixel sammeln
