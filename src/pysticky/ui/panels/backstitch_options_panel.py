@@ -273,6 +273,56 @@ class BackstitchOptionsPanel(QWidget):
         self._snap_enabled = enabled
         self.snap_enabled_changed.emit(enabled)
 
+    def sync_from_state(
+        self,
+        thickness: int,
+        line_style: Qt.PenStyle,
+        cap_style: Qt.PenCapStyle,
+        snap_enabled: bool,
+    ) -> None:
+        """Spiegelt einen vorgegebenen (Canvas-/Tool-)Zustand in die
+        Steuerelemente, OHNE die *_changed-Signale auszuloesen.
+
+        Aufgerufen beim Anwaehlen des Rueckstich-Werkzeugs (siehe
+        tool_handlers.py::_on_tool_changed()): der Canvas haelt zu diesem
+        Zeitpunkt bereits den korrekten, aus QSettings geladenen Zustand
+        (App-Start bzw. letztes Schliessen des Einstellungen-Dialogs) --
+        vorher lief die Synchronisation in die falsche Richtung (Panel ->
+        Canvas) und ueberschrieb diesen Zustand bei JEDEM Werkzeugwechsel
+        mit den hartcodierten Konstruktor-Defaults dieses Panels (Dicke 2,
+        Solid, Round, Snap an), weil das Panel selbst nie aus QSettings
+        initialisiert wurde. blockSignals() verhindert, dass dieses reine
+        Anzeige-Update seinerseits wieder in den Canvas zurückschreibt.
+        """
+        self._thickness_slider.blockSignals(True)
+        self._thickness_slider.setValue(thickness)
+        clamped_thickness = self._thickness_slider.value()
+        self._thickness_slider.blockSignals(False)
+        self._thickness = clamped_thickness
+        self._thickness_label.setText(f"{clamped_thickness}px")
+        self._preview.set_thickness(clamped_thickness)
+
+        self._line_style = line_style
+        self._style_combo.blockSignals(True)
+        idx = self._style_combo.findData(line_style)
+        if idx >= 0:
+            self._style_combo.setCurrentIndex(idx)
+        self._style_combo.blockSignals(False)
+        self._preview.set_line_style(line_style)
+
+        self._cap_style = cap_style
+        self._cap_combo.blockSignals(True)
+        idx = self._cap_combo.findData(cap_style)
+        if idx >= 0:
+            self._cap_combo.setCurrentIndex(idx)
+        self._cap_combo.blockSignals(False)
+        self._preview.set_cap_style(cap_style)
+
+        self._snap_enabled = snap_enabled
+        self._snap_check.blockSignals(True)
+        self._snap_check.setChecked(snap_enabled)
+        self._snap_check.blockSignals(False)
+
     @property
     def thickness(self) -> int:
         return self._thickness

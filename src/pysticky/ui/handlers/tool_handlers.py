@@ -68,16 +68,28 @@ class ToolHandlersMixin:
         elif tool == Tool.BACKSTITCH:
             if not self.canvas.show_backstitches:
                 self._on_toggle_backstitches(True)
-            # Panel-Werte auf den lebenden Canvas/Tool-Zustand anwenden --
-            # das Panel selbst haelt nur Session-Live-Werte (nicht
-            # persistiert, analog Text-/Gradient-Panel).
+            # Panel auf den lebenden Canvas/Tool-Zustand synchronisieren
+            # (Canvas -> Panel). Lief vorher umgekehrt (Panel -> Canvas)
+            # und ueberschrieb dabei bei JEDEM Werkzeugwechsel den bereits
+            # korrekten, aus QSettings geladenen Canvas-Zustand
+            # (backstitch_width/backstitch_snap, siehe
+            # _apply_settings_from_dialog() in misc_handlers.py) mit den
+            # hartcodierten Konstruktor-Defaults des Panels (Dicke 2,
+            # Solid, Round, Snap an) -- das Panel selbst wird nie aus
+            # QSettings initialisiert. Eine persistierte Einstellung ging
+            # dadurch beim naechsten Anwaehlen des Werkzeugs sofort wieder
+            # verloren. sync_from_state() aktualisiert nur die Anzeige
+            # (blockSignals), ohne selbst wieder in den Canvas zu
+            # schreiben.
             panel = self.backstitch_options_panel
-            self.canvas._backstitch_width_offset = panel.thickness
-            self.canvas._backstitch_line_style = panel.line_style
-            self.canvas._backstitch_cap_style = panel.cap_style
             backstitch_tool = self.canvas._tool_manager.get_backstitch_tool()
-            if backstitch_tool:
-                backstitch_tool.snap_to_grid = panel.snap_enabled
+            snap_enabled = backstitch_tool.snap_to_grid if backstitch_tool else panel.snap_enabled
+            panel.sync_from_state(
+                thickness=self.canvas._backstitch_width_offset,
+                line_style=self.canvas._backstitch_line_style,
+                cap_style=self.canvas._backstitch_cap_style,
+                snap_enabled=snap_enabled,
+            )
             entry = self.current_pattern.get_color_entry(self.canvas._current_color_index)
             if entry:
                 from ..color_utils import to_qcolor
