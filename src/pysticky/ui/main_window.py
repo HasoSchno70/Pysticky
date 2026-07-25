@@ -788,7 +788,16 @@ class MainWindow(
                 if existing.color == thread.color:
                     return i
             elif existing.catalog_number == thread.catalog_number:
-                return i
+                # Tweed-Blends codieren das Strang-Verhaeltnis NICHT in
+                # catalog_number (nur die Komponenten-Katalognummern werden
+                # verkettet, z.B. "310+745") -- zwei Blends aus denselben
+                # Komponenten, aber mit unterschiedlichem Verhaeltnis (und
+                # damit unterschiedlicher Mischfarbe) haben also dieselbe
+                # catalog_number. Ohne diesen Zusatz-Check wuerde der zweite
+                # Blend faelschlich auf den ersten kollabiert und der Nutzer
+                # bekaeme stumm die falsche Mischfarbe zurueck.
+                if existing.strand_ratios == thread.strand_ratios:
+                    return i
         # Prüfen ob Thread aus einer Bead- oder Diamond-Painting-Palette stammt
         from ..core.palette import get_palette_manager
 

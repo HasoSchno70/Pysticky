@@ -354,7 +354,12 @@ class EditHandlersMixin:
         dialog = BlendThreadsDialog(self)
         if dialog.exec() and dialog.result_thread is not None:
             blend = dialog.result_thread
-            self.current_pattern.add_color(blend)
+            # add_color_to_pattern() statt current_pattern.add_color() direkt --
+            # sonst wird kein Dedup gegen einen bereits vorhandenen, identischen
+            # Blend (gleiche Komponenten UND gleiches Strang-Verhaeltnis)
+            # durchgefuehrt und jeder erneute Mix legt einen redundanten
+            # Paletten-Eintrag an (Runde 79).
+            self.add_color_to_pattern(blend)
             self._notify_panels(NotifyScope.PALETTE)
             self._update_status()
             self._mark_unsaved()
