@@ -8,7 +8,7 @@ import unicodedata
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QDialog,
@@ -46,15 +46,23 @@ def load_symbols() -> list[str]:
 # Symbole aus Datei laden
 AVAILABLE_SYMBOLS = load_symbols()
 
+# Muss mit dem Default in colors_tab.py/misc_handlers.py (Settings-Key
+# "symbol_font") uebereinstimmen -- das ist der Fallback, falls der Nutzer
+# nie einen eigenen Symbol-Font eingestellt hat.
+DEFAULT_SYMBOL_FONT_FAMILY = "Segoe UI Symbol"
+
 
 class SymbolButton(QFrame):
     """Button für ein einzelnes Symbol - mit eigenem Paint."""
 
     clicked = Signal()
 
-    def __init__(self, symbol: str, parent=None) -> None:
+    def __init__(
+        self, symbol: str, font_family: str = DEFAULT_SYMBOL_FONT_FAMILY, parent=None
+    ) -> None:
         super().__init__(parent)
         self._symbol = symbol
+        self._font_family = font_family
         self._selected = False
         self._hovered = False
 
@@ -113,8 +121,11 @@ class SymbolButton(QFrame):
         else:
             painter.setPen(QColor(THEME.text_primary))
 
-        # Font für Symbole
-        font = QFont("Segoe UI Symbol", 18)
+        # Font für Symbole -- muss der real konfigurierte Symbol-Font sein
+        # (nicht hartkodiert), sonst zeigt die Vorschau ein Symbol als
+        # darstellbar, das im tatsaechlich fuer Canvas/Export genutzten Font
+        # als Tofu-Box erscheint (oder umgekehrt).
+        font = QFont(self._font_family, 18)
         painter.setFont(font)
         painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, self._symbol)
 
@@ -122,10 +133,11 @@ class SymbolButton(QFrame):
 class ColorPreview(QFrame):
     """Vorschau der Farbe mit Symbol."""
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, font_family: str = DEFAULT_SYMBOL_FONT_FAMILY, parent=None) -> None:
         super().__init__(parent)
         self._color = QColor(200, 200, 200)
         self._symbol = "●"
+        self._font_family = font_family
         self.setFixedSize(90, 90)
 
     def set_color(self, color: QColor) -> None:
@@ -152,7 +164,7 @@ class ColorPreview(QFrame):
         else:
             painter.setPen(QColor(255, 255, 255))
 
-        font = QFont("Segoe UI Symbol", 36)
+        font = QFont(self._font_family, 36)
         painter.setFont(font)
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self._symbol)
 
@@ -169,6 +181,14 @@ class SymbolEditorDialog(QDialog):
         self._entry = pattern.color_entries[color_index]
         self._selected_symbol = self._entry.symbol
         self._symbol_buttons: list[SymbolButton] = []
+        # Denselben Font verwenden, den Canvas/Export tatsaechlich zum
+        # Zeichnen der Symbole benutzen (Settings -> Farben -> Symbol-Font),
+        # statt hartkodiert "Segoe UI Symbol" -- sonst kann die Vorschau hier
+        # von der spaeteren Darstellung abweichen (siehe misc_handlers.py /
+        # colors_tab.py, Settings-Key "symbol_font").
+        self._symbol_font_family: str = str(
+            QSettings().value("symbol_font", DEFAULT_SYMBOL_FONT_FAMILY, type=str)
+        )
 
         self.setWindowTitle(t("Symbol bearbeiten - {name}").format(name=self._entry.thread.name))
         self.setMinimumSize(580, 520)
@@ -185,7 +205,7 @@ class SymbolEditorDialog(QDialog):
         header.setSpacing(15)
 
         # Farbvorschau
-        self._preview = ColorPreview()
+        self._preview = ColorPreview(font_family=self._symbol_font_family)
         color = self._entry.thread.color
         self._preview.set_color(to_qcolor(color))
         self._preview.set_symbol(self._selected_symbol)
@@ -280,7 +300,7 @@ class SymbolEditorDialog(QDialog):
         self._grid_cols = 12
         self._row_layouts: list[QHBoxLayout] = []
         for symbol in AVAILABLE_SYMBOLS:
-            btn = SymbolButton(symbol)
+            btn = SymbolButton(symbol, font_family=self._symbol_font_family)
             btn.clicked.connect(lambda s=symbol: self._on_symbol_selected(s))
             if symbol == self._selected_symbol:
                 btn.selected = True
@@ -309,9 +329,11 @@ class SymbolEditorDialog(QDialog):
         layout.addLayout(btn_layout)
 
         # Spezifisches Symbol-Font für das Custom-Symbol-Feld — alles andere
-        # übernimmt das globale Theme.
+        # übernimmt das globale Theme. Muss mit self._symbol_font_family
+        # uebereinstimmen (siehe oben), sonst zeigt gerade das Feld fuer
+        # frei eingegebene Symbole eine andere Darstellung als Vorschau/Grid.
         self._custom_input.setStyleSheet(
-            "QLineEdit { font-size: 20px; font-family: 'Segoe UI Symbol'; }"
+            f"QLineEdit {{ font-size: 20px; font-family: '{self._symbol_font_family}'; }}"
         )
 
     def _repack_grid(self, buttons: list["SymbolButton"]) -> None:
