@@ -310,6 +310,39 @@ class TestClearLayerCommand:
         assert pattern.active_layer.get_stitch(5, 5) == 0
         assert pattern.color_entries[0].stitch_count == 1
 
+    def test_undo_respects_lock_applied_after_execute(self):
+        """Regression (Runde 84): execute() lief bei UNgesperrtem Layer
+        durch (layer.clear() prueft den Lock und _applied wird True), der
+        Layer wird aber DANACH -- vor dem Undo -- gesperrt. undo()
+        schrieb Grid/Completion/Stitch-Type-Grid bisher per direkter
+        Attribut-Zuweisung zurueck (`layer.grid = ...`), OHNE den
+        aktuellen `layer.locked`-Zustand erneut zu pruefen -- anders als
+        PlaceStitchCommand/RemoveStitchCommand, deren undo() ueber
+        layer.set_stitch()/remove_stitch() laeuft und den Lock daher
+        selbst zur Undo-Zeit respektiert. Ein Rueckgaengig auf einer
+        zwischenzeitlich gesperrten Ebene durfte den (per Definition vor
+        Design-Aenderungen geschuetzten) Inhalt nicht wiederherstellen."""
+        from pysticky.core.stitch import StitchType
+
+        pattern = Pattern(width=10, height=10)
+        pattern.active_layer.set_stitch(1, 1, 0, stitch_type=StitchType.HALF_TL_BR.value)
+        pattern.color_entries[0].stitch_count = 1
+
+        cmd = ClearLayerCommand(pattern, 0)
+        cmd.execute()
+        assert pattern.active_layer.get_stitch(1, 1) is None
+
+        # Layer erst NACH dem execute() sperren, damit undo() auf den
+        # bereits ausgefuehrten Command trifft (analog zum bereits
+        # existierenden Test fuer PlaceStitchCommand weiter oben).
+        pattern.active_layer.locked = True
+        cmd.undo()
+
+        assert pattern.active_layer.get_stitch(1, 1) is None, (
+            "Regression: undo() stellte Design-Inhalt auf einer gesperrten Ebene wieder her"
+        )
+        assert pattern.color_entries[0].stitch_count == 0
+
 
 class TestBatchCommand:
     """Tests für Batch-Operationen."""
