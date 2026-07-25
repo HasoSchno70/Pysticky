@@ -751,8 +751,13 @@ class PatternLibraryDialog(QDialog):
 
     def _add_pattern_file(self, filepath: Path) -> bool:
         """Fügt eine Muster-Datei zur Bibliothek hinzu."""
-        # Prüfen ob bereits vorhanden
-        str_path = str(filepath)
+        # Prüfen ob bereits vorhanden -- Pfad per resolve() normalisieren wie
+        # im etablierten Muster project_list.py::add() / misc_handlers.py::
+        # _add_recent_file(): ein roher String-Vergleich uebersieht, dass
+        # dieselbe Datei ueber einen relativen Pfad, mit "../"-Segmenten oder
+        # (z.B. bei %TEMP%) ueber eine 8.3-Kurzform vs. Langform erreicht
+        # wurde, und legt dann faelschlich einen zweiten, doppelten Eintrag an.
+        str_path = str(filepath.resolve())
         for entry in self._library.entries:
             if entry.filepath == str_path:
                 return False

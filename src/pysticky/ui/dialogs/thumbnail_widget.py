@@ -113,24 +113,41 @@ class ThumbnailWidget(QFrame):
 
     def _load_thumbnail(self) -> None:
         """Lädt oder generiert das Thumbnail."""
-        # Versuche gespeichertes Thumbnail zu laden
+        # Versuche gespeichertes Thumbnail zu laden -- aber nur, wenn es
+        # nicht AELTER ist als die zugrundeliegende Pattern-Datei. Ohne
+        # diesen mtime-Vergleich wurde ein einmal generiertes Thumbnail bei
+        # jedem weiteren Anzeigen (Bibliothek neu geoeffnet, Kategorie/Suche
+        # gewechselt) einfach unveraendert vom Cache uebernommen, selbst wenn
+        # der Nutzer das Muster in der Zwischenzeit bearbeitet und unter
+        # demselben Pfad neu gespeichert hat -- der stale Cache wurde nie
+        # invalidiert.
+        pattern_path = Path(self.entry.filepath)
         if self.entry.thumbnail_path:
             thumb_path = Path(self.entry.thumbnail_path)
             if thumb_path.exists():
-                pixmap = QPixmap(str(thumb_path))
-                if not pixmap.isNull():
-                    self._thumb_label.setPixmap(
-                        pixmap.scaled(
-                            110,
-                            90,
-                            Qt.AspectRatioMode.KeepAspectRatio,
-                            Qt.TransformationMode.SmoothTransformation,
-                        )
-                    )
-                    return
+                cache_is_stale = False
+                try:
+                    if pattern_path.exists():
+                        cache_is_stale = pattern_path.stat().st_mtime > thumb_path.stat().st_mtime
+                except OSError:
+                    cache_is_stale = False
 
-        # Versuche aus Pattern zu generieren
-        pattern_path = Path(self.entry.filepath)
+                if not cache_is_stale:
+                    pixmap = QPixmap(str(thumb_path))
+                    if not pixmap.isNull():
+                        self._thumb_label.setPixmap(
+                            pixmap.scaled(
+                                110,
+                                90,
+                                Qt.AspectRatioMode.KeepAspectRatio,
+                                Qt.TransformationMode.SmoothTransformation,
+                            )
+                        )
+                        return
+
+        # Versuche aus Pattern zu generieren (auch bei stale Cache: dann
+        # zeigt das Thumbnail bis zum Fertigstellen kurz den Placeholder,
+        # statt weiter den veralteten Stand anzuzeigen)
         if pattern_path.exists():
             # Verzögert laden um UI nicht zu blockieren -- singleShot() plant
             # nur den Callback ein und wirft dabei nichts; ein etwaiger
