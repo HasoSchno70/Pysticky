@@ -68,6 +68,18 @@ class FileHandlersMixin:
         from ...core import Pattern
         from ..dialogs import NewProjectDialog
 
+        # Vor dem Dialog merken, ob ueberhaupt schon ein Muster geladen ist.
+        # Wird gebraucht, um nach einem Abbruch zu entscheiden, ob der
+        # Welcome-Screen wieder gezeigt werden muss (siehe unten) -- betrifft
+        # z.B. Start-Aktion "Neues Projekt-Dialog öffnen" oder den "Neues
+        # Muster"-Knopf im Welcome-Screen, der die Welcome-Ansicht schon vor
+        # diesem Aufruf ausblendet.
+        had_pattern_before = (
+            self.current_file is not None
+            or self._unsaved_changes
+            or getattr(self, "_pattern_explicitly_set", False)
+        )
+
         dialog = NewProjectDialog(self)
 
         if dialog.exec():
@@ -107,6 +119,13 @@ class FileHandlersMixin:
             if settings["template_name"]:
                 msg = f"Neues Muster: {settings['template_name']}"
             self.status_bar.showMessage(msg, self._status_timeout_ms)
+        elif not had_pattern_before and hasattr(self, "canvas_container"):
+            # Dialog abgebrochen und vorher war noch gar nichts geladen --
+            # ohne diesen Fallback blieb ein leeres, unbenutzbares Fenster
+            # ohne jeden Hinweis zurueck (gleiche Bug-Klasse wie Runde 71
+            # fuer die Start-Aktionen 0/2/3, hier fuer den Dialog-Abbruch
+            # bei Start-Aktion 1 bzw. beim Welcome-Screen-Knopf uebersehen).
+            self.canvas_container.show_welcome(True, recent_files=self._recent_files)
 
     def _seed_first_color(self: "MainWindow", pattern: "Pattern", is_dp: bool) -> None:
         """Legt die erste Farbe der konfigurierten Standard-Palette ins neue

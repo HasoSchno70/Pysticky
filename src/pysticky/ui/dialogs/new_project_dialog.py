@@ -801,6 +801,19 @@ class NewProjectDialog(QDialog):
         self._width_spin.setValue(template["width"])
         self._height_spin.setValue(template["height"])
 
+        # Eigene Templates tragen die zum Speicherzeitpunkt gewählte
+        # Stoffzählung mit sich (siehe user_template_dialog.py::UserTemplate
+        # .fabric_count) -- ohne das hier zu übernehmen blieb die
+        # Stoffart-Combo faelschlich auf ihrem vorherigen Wert stehen, und
+        # sowohl die angezeigte "Fertige Größe" als auch das an
+        # file_handlers.py zurückgegebene fabric_count passten nicht mehr
+        # zu der Stoffzählung, mit der das Template gespeichert wurde.
+        fabric_count = template.get("fabric_count")
+        if fabric_count is not None:
+            fabric_index = self._fabric_combo.findData(fabric_count)
+            if fabric_index >= 0:
+                self._fabric_combo.setCurrentIndex(fabric_index)
+
         self._update_preview()
 
     def _update_preview(self) -> None:
@@ -838,6 +851,16 @@ class NewProjectDialog(QDialog):
             # "Keine Auswahl" — Spinner-Werte unangetastet lassen
             self._dp_mode_selected = False
             return
+        # Ein zuvor gewaehltes Kreuzstich-Template gilt nicht mehr, sobald
+        # ein echtes DP-Preset gewaehlt wird -- sonst blieb get_settings()
+        # faelschlich beim alten template_name (samt Karten-Markierung)
+        # haengen, obwohl Breite/Hoehe/dp_mode laengst auf das DP-Preset
+        # zeigen. file_handlers.py uebernimmt template_name 1:1 als
+        # Pattern.name, das DP-Muster hiess dann wie das verlassene
+        # Kreuzstich-Template.
+        self._selected_template = None
+        for card in self._template_cards:
+            card.selected = False
         # Verhindere, dass valueChanged das Preset zurücksetzt während wir
         # setzen — kurz die Signale blockieren.
         self._width_spin.blockSignals(True)
