@@ -70,6 +70,7 @@ class XSDImporter:
         self.errors: list[str] = []
         self.warnings: list[str] = []
         self._invalid_color_index_warned = False
+        self._invalid_backstitch_coords_warned = False
 
     def can_import(self, filepath: Path | str) -> bool:
         """Prüft ob die Datei ein XSD-Format ist."""
@@ -107,6 +108,7 @@ class XSDImporter:
         self.errors.clear()
         self.warnings.clear()
         self._invalid_color_index_warned = False
+        self._invalid_backstitch_coords_warned = False
 
         if not filepath.exists():
             self.errors.append(f"Datei nicht gefunden: {filepath}")
@@ -428,6 +430,33 @@ class XSDImporter:
             "fehlen und werden als leer behandelt"
         )
 
+    def _validate_backstitch_coords(
+        self, x1: int, y1: int, x2: int, y2: int, width: int, height: int
+    ) -> bool:
+        """Prüft Rückstich-Koordinaten (in halben Stichen) gegen die
+        Mustergrenzen.
+
+        Eine beschädigte/manipulierte Datei kann Koordinaten weit
+        außerhalb des Grids enthalten (negativ oder > 2x Breite/Höhe) --
+        weder `Pattern.add_backstitch()` noch `BackstitchManager.add()`
+        prüfen das, die Werte würden also klaglos übernommen. Der Stich
+        wäre dann irgendwo unsichtbar weit außerhalb des Canvas
+        "verschwunden", ohne dass der Nutzer je erfährt, dass Daten
+        verworfen wurden. Gleiche Grenzen wie die Crop-Clip-Logik in
+        `Pattern.crop()` (0..2*width, 0..2*height), identisch zu
+        pat_import.py (Runde 78).
+        """
+        max_x, max_y = 2 * width, 2 * height
+        if 0 <= x1 <= max_x and 0 <= y1 <= max_y and 0 <= x2 <= max_x and 0 <= y2 <= max_y:
+            return True
+        if not self._invalid_backstitch_coords_warned:
+            self.warnings.append(
+                "Rückstich-Koordinaten außerhalb der Mustergrenzen "
+                "— betroffene Rückstiche werden verworfen"
+            )
+            self._invalid_backstitch_coords_warned = True
+        return False
+
     def _read_backstitches(self, f: BinaryIO, pattern: Pattern) -> None:
         """Liest Backstitch-Daten."""
 
@@ -463,6 +492,13 @@ class XSDImporter:
                 # nicht existierendem Farbindex im Pattern hinterlassen.
                 clamped = self._clamp_color_index(color_index, color_count)
                 if clamped is None:
+                    continue
+
+                # XSD liefert die Koordinaten bereits in halben Stichen --
+                # gegen die Mustergrenzen pruefen (Runde 78, analog PAT).
+                if not self._validate_backstitch_coords(
+                    x1, y1, x2, y2, pattern.width, pattern.height
+                ):
                     continue
 
                 # Backstitch hinzufügen
