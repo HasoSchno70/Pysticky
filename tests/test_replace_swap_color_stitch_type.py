@@ -141,3 +141,113 @@ def test_swap_color_pair_writes_to_actual_origin_layer_not_active(main_window):
 
     assert top_layer.get_stitch(5, 5) == 1
     assert active_layer.get_stitch(5, 5) is None
+
+
+# === Runde 74: geerbter Stichtyp vs. Bead-/Diamond-Eigenschaft der neuen Farbe ===
+#
+# _on_replace_color()/_swap_color_pair() geben absichtlich (seit Runde 30) den
+# STICHTYP DER ALTEN ZELLE mit, damit ein Halb-/Viertelstich beim Farbwechsel
+# nicht stillschweigend zum Vollstich wird. PlaceStitchCommand/
+# Pattern.set_stitch() erzwingen BEAD/DIAMOND aber nur, wenn der uebergebene
+# stitch_type bereits 0 (FULL) ist -- ein geerbter Halbstich-Typ blieb also an
+# einer frisch eingesetzten Bead-/Diamond-Farbe haengen, und umgekehrt blieb
+# ein geerbtes BEAD/DIAMOND an einer neu eingesetzten normalen Farbe haengen.
+# _apply_color_changes_per_origin_layer() gleicht das jetzt gegen die
+# Bead-/Diamond-Eigenschaft der NEUEN Farbe ab.
+
+
+def _pattern_with_half_stitch_and_bead_color():
+    from pysticky.core import Pattern, Thread
+    from pysticky.core.stitch import StitchType
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))  # 0: normal
+    pattern.add_color(Thread.from_hex("Perle", "#0000FF"))  # 1: bead
+    pattern.color_entries[1].is_bead = True
+    pattern.set_stitch(2, 2, 0, stitch_type=StitchType.HALF_TL_BR.value)
+    return pattern
+
+
+def _pattern_with_bead_stitch_and_normal_color():
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(name="Test", width=10, height=10)
+    pattern.color_entries.clear()
+    pattern.add_color(Thread.from_hex("Perle", "#FF0000"))  # 0: bead
+    pattern.color_entries[0].is_bead = True
+    pattern.add_color(Thread.from_hex("Normal", "#0000FF"))  # 1: normal
+    pattern.set_stitch(2, 2, 0)  # stitch_type=0 -> von set_stitch() zu BEAD erzwungen
+    return pattern
+
+
+def test_replace_color_into_bead_forces_bead_stitch_type(main_window, monkeypatch):
+    """Ersetzt man einen Halbstich durch eine Bead-Farbe, muss die Zelle
+    BEAD werden -- nicht der geerbte Halbstich-Typ."""
+    from pysticky.core.stitch import StitchType
+    from pysticky.ui import dialogs as dialogs_mod
+
+    w = main_window
+    pattern = _pattern_with_half_stitch_and_bead_color()
+    w.set_pattern(pattern)
+
+    monkeypatch.setattr(dialogs_mod.ReplaceColorDialog, "exec", lambda self: True)
+    monkeypatch.setattr(dialogs_mod.ReplaceColorDialog, "get_replacements", lambda self: [(0, 1)])
+
+    w._on_replace_color()
+
+    layer = pattern.active_layer
+    assert layer.get_stitch(2, 2) == 1
+    assert layer.get_stitch_type(2, 2) == StitchType.BEAD.value
+
+
+def test_replace_color_away_from_bead_resets_to_full_stitch_type(main_window, monkeypatch):
+    """Ersetzt man eine Bead-Farbe durch eine normale Farbe, darf der
+    BEAD-Stichtyp nicht an der neuen (nicht-Bead) Farbe haengen bleiben."""
+    from pysticky.core.stitch import StitchType
+    from pysticky.ui import dialogs as dialogs_mod
+
+    w = main_window
+    pattern = _pattern_with_bead_stitch_and_normal_color()
+    w.set_pattern(pattern)
+
+    monkeypatch.setattr(dialogs_mod.ReplaceColorDialog, "exec", lambda self: True)
+    monkeypatch.setattr(dialogs_mod.ReplaceColorDialog, "get_replacements", lambda self: [(0, 1)])
+
+    w._on_replace_color()
+
+    layer = pattern.active_layer
+    assert layer.get_stitch(2, 2) == 1
+    assert layer.get_stitch_type(2, 2) == StitchType.FULL.value
+
+
+def test_swap_color_pair_into_bead_forces_bead_stitch_type(main_window):
+    """Analog zu test_replace_color_into_bead_forces_bead_stitch_type, aber
+    fuer _swap_color_pair() (z.B. ueber den Tauschen-Dialog erreichbar)."""
+    from pysticky.core.stitch import StitchType
+
+    w = main_window
+    pattern = _pattern_with_half_stitch_and_bead_color()
+    w.set_pattern(pattern)
+
+    w._swap_color_pair(0, 1)
+
+    layer = pattern.active_layer
+    assert layer.get_stitch(2, 2) == 1
+    assert layer.get_stitch_type(2, 2) == StitchType.BEAD.value
+
+
+def test_swap_color_pair_away_from_bead_resets_to_full_stitch_type(main_window):
+    """Analog zu test_replace_color_away_from_bead_resets_to_full_stitch_type,
+    aber fuer _swap_color_pair()."""
+    from pysticky.core.stitch import StitchType
+
+    w = main_window
+    pattern = _pattern_with_bead_stitch_and_normal_color()
+    w.set_pattern(pattern)
+
+    w._swap_color_pair(0, 1)
+
+    layer = pattern.active_layer
+    assert layer.get_stitch(2, 2) == 1
+    assert layer.get_stitch_type(2, 2) == StitchType.FULL.value

@@ -60,8 +60,28 @@ class EditHandlersMixin:
         Zelle per _find_layer_with_stitch_at() -- dieselbe Ebenen-Ermittlung,
         die schon fuer Fortschritt-Markierungen genutzt wird -- die
         tatsaechliche Ursprungs-Ebene ermitteln.
+
+        Der mitgegebene Stichtyp stammt (siehe _on_replace_color()/
+        _swap_color_pair()) aus der ALTEN Zelle -- Runde 30 wollte damit
+        verhindern, dass ein Halb-/Viertelstich beim Farbwechsel
+        stillschweigend zum Vollstich wird. Wechselt die Zelle dabei aber
+        zwischen einer Bead-/Diamond-Farbe und einer normalen Farbe (oder
+        umgekehrt), passt dieser geerbte Stichtyp nicht mehr zur neuen
+        Farbe: PlaceStitchCommand/Pattern.set_stitch() erzwingen BEAD/
+        DIAMOND nur, wenn der uebergebene stitch_type bereits 0 (FULL)
+        ist -- ein geerbter Halbstich-Typ blieb also an einer frisch
+        eingesetzten Bead-Farbe haengen (Rendering/Statistik/Export sahen
+        weiterhin einen Halbstich statt einer Perle), und umgekehrt blieb
+        ein geerbtes BEAD/DIAMOND an einer neu eingesetzten normalen Farbe
+        haengen (dieselben Auswertungen hielten die Zelle faelschlich fuer
+        eine Perle/einen Drill). Deshalb hier den Stichtyp gegen die
+        Bead-/Diamond-Eigenschaft der NEUEN Farbe abgleichen, bevor der
+        Command gebaut wird.
         """
         from ...core import PlaceStitchCommand
+        from ...core.stitch import StitchType
+
+        entries = self.current_pattern.color_entries
 
         for x, y, new_color, stitch_type in changes:
             layer_index = self._find_layer_with_stitch_at(x, y)
@@ -72,6 +92,14 @@ class EditHandlersMixin:
                 # active_index zurueckzufallen (das waere wieder der alte
                 # Bug).
                 continue
+            if 0 <= new_color < len(entries):
+                entry = entries[new_color]
+                if entry.is_bead:
+                    stitch_type = StitchType.BEAD.value
+                elif entry.is_diamond:
+                    stitch_type = StitchType.DIAMOND.value
+                elif stitch_type in (StitchType.BEAD.value, StitchType.DIAMOND.value):
+                    stitch_type = StitchType.FULL.value
             # Chunk-Pixmap-Cache (OptimizedCrossStitchCanvas) muss die
             # betroffene Zelle als dirty kennen, sonst zeigt der naechste
             # paintEvent weiterhin den alten gecachten Chunk-Pixmap -- siehe
