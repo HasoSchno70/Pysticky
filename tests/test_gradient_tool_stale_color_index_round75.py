@@ -24,7 +24,7 @@ Siehe test_stale_gradient_indices_survive_color_shift_at_tool_level fuer
 den rohen Repro auf Tool-Ebene (ohne Fix), und die beiden Testklassen
 unten fuer den tatsaechlichen Fix ueber die MainWindow-Handler
 _on_manage_colors()/_on_merge_similar_colors()
-(tool_handlers.py::_resync_gradient_tool_after_palette_shift()).
+(tool_handlers.py::resync_gradient_tool_after_palette_shift()).
 """
 
 from __future__ import annotations

@@ -262,8 +262,10 @@ class EditHandlersMixin:
             # Farbverlauf-Panel/-Tool leiden an derselben Staleness-Klasse
             # wie die Zwischenablage zwei Zeilen darueber -- siehe
             # ausfuehrlichen Kommentar in
-            # tool_handlers.py::_resync_gradient_tool_after_palette_shift().
-            self._resync_gradient_tool_after_palette_shift()
+            # tool_handlers.py::resync_gradient_tool_after_palette_shift().
+            from .tool_handlers import resync_gradient_tool_after_palette_shift
+
+            resync_gradient_tool_after_palette_shift(self)
             self.status_bar.showMessage(
                 t("Ähnliche Farben zusammengeführt"), self._status_timeout_ms
             )
@@ -290,7 +292,9 @@ class EditHandlersMixin:
             SelectTool._clipboard = None
             SelectTool._clipboard_size = (0, 0)
             # Siehe identischer Kommentar in _on_merge_similar_colors() oben.
-            self._resync_gradient_tool_after_palette_shift()
+            from .tool_handlers import resync_gradient_tool_after_palette_shift
+
+            resync_gradient_tool_after_palette_shift(self)
             self.status_bar.showMessage(t("Farbpalette aktualisiert"), self._status_timeout_ms)
 
     def _on_screen_eyedropper(self: "MainWindow") -> None:

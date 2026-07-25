@@ -168,38 +168,6 @@ class ToolHandlersMixin:
         if gradient_tool:
             gradient_tool.set_end_color(color_index)
 
-    def _resync_gradient_tool_after_palette_shift(self: "MainWindow") -> None:
-        """Aktualisiert Farbverlauf-Panel + -Tool nach einer Farbindex-
-        Verschiebung im AKTIVEN Pattern (Farbe loeschen/zusammenfuehren).
-
-        GradientTool._start_color_index/_end_color_index (gesetzt ueber die
-        Panel-Comboboxen) sind rohe Farb-INDIZES, exakt wie
-        SelectTool._clipboard -- siehe dessen Reset zwei Zeilen weiter oben
-        in edit_handlers.py::_on_manage_colors()/_on_merge_similar_colors().
-        ColorManagementDialog (Loeschen/"Ungenutzte entfernen"/
-        Zusammenfuehren) und SimilarColorsDialog verschieben nachfolgende
-        Farbindizes um -1 nach unten (Pattern.remove_color()); ohne diesen
-        Resync zeigte der eingefrorene Start-/End-Index nach so einem
-        Dialog lautlos auf eine andere Farbe -- oder, war der hoechste
-        Index betroffen, ins Leere (out of range). _calculate_gradient()
-        faengt den Out-of-Range-Fall zwar ab (get_color_entry() liefert
-        None), das Werkzeug wurde dadurch aber zu einem stillen No-Op:
-        Ziehen einer Linie erzeugte ueberhaupt keine Aenderungen, ohne
-        jede Fehlermeldung.
-
-        set_pattern() setzt die Panel-Comboboxen auf Index 0/1 zurueck
-        (wie beim erstmaligen Aktivieren des Werkzeugs, siehe
-        _on_tool_changed() oben) -- das Tool wird anschliessend explizit
-        auf diese neuen Panel-Werte resynchronisiert, da _update_combos()
-        die Comboboxen mit blockSignals(True) befuellt und start_color_
-        changed/end_color_changed deshalb NICHT feuert.
-        """
-        self.gradient_options_panel.set_pattern(self.current_pattern)
-        gradient_tool = self.canvas._tool_manager.get_gradient_tool()
-        if gradient_tool:
-            gradient_tool.set_start_color(self.gradient_options_panel.start_color_index)
-            gradient_tool.set_end_color(self.gradient_options_panel.end_color_index)
-
     # === Backstitch-Tool Handler ===
 
     def _on_backstitch_thickness_changed(self: "MainWindow", value: int) -> None:
@@ -222,3 +190,43 @@ class ToolHandlersMixin:
         backstitch_tool = self.canvas._tool_manager.get_backstitch_tool()
         if backstitch_tool:
             backstitch_tool.snap_to_grid = enabled
+
+
+def resync_gradient_tool_after_palette_shift(window: "MainWindow") -> None:
+    """Aktualisiert Farbverlauf-Panel + -Tool nach einer Farbindex-
+    Verschiebung im AKTIVEN Pattern (Farbe loeschen/zusammenfuehren).
+
+    GradientTool._start_color_index/_end_color_index (gesetzt ueber die
+    Panel-Comboboxen) sind rohe Farb-INDIZES, exakt wie
+    SelectTool._clipboard -- siehe dessen Reset zwei Zeilen weiter oben
+    in edit_handlers.py::_on_manage_colors()/_on_merge_similar_colors().
+    ColorManagementDialog (Loeschen/"Ungenutzte entfernen"/
+    Zusammenfuehren) und SimilarColorsDialog verschieben nachfolgende
+    Farbindizes um -1 nach unten (Pattern.remove_color()); ohne diesen
+    Resync zeigte der eingefrorene Start-/End-Index nach so einem
+    Dialog lautlos auf eine andere Farbe -- oder, war der hoechste
+    Index betroffen, ins Leere (out of range). _calculate_gradient()
+    faengt den Out-of-Range-Fall zwar ab (get_color_entry() liefert
+    None), das Werkzeug wurde dadurch aber zu einem stillen No-Op:
+    Ziehen einer Linie erzeugte ueberhaupt keine Aenderungen, ohne
+    jede Fehlermeldung.
+
+    Modulfunktion statt Methode auf ToolHandlersMixin, damit hier kein
+    weiteres self:"MainWindow"-Mixin-Methodensignatur-Muster entsteht
+    (jede solche Methode erzeugt einen zusaetzlichen mypy-"erased type
+    of self"-Fehler -- bekanntes, akzeptiertes Rauschen in diesem
+    Projekt, siehe Runde 71/_offer_single_autosave_recovery() fuer
+    dasselbe Muster).
+
+    set_pattern() setzt die Panel-Comboboxen auf Index 0/1 zurueck (wie
+    beim erstmaligen Aktivieren des Werkzeugs, siehe _on_tool_changed())
+    -- das Tool wird anschliessend explizit auf diese neuen Panel-Werte
+    resynchronisiert, da _update_combos() die Comboboxen mit
+    blockSignals(True) befuellt und start_color_changed/end_color_
+    changed deshalb NICHT feuert.
+    """
+    window.gradient_options_panel.set_pattern(window.current_pattern)
+    gradient_tool = window.canvas._tool_manager.get_gradient_tool()
+    if gradient_tool:
+        gradient_tool.set_start_color(window.gradient_options_panel.start_color_index)
+        gradient_tool.set_end_color(window.gradient_options_panel.end_color_index)
