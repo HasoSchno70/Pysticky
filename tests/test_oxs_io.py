@@ -512,6 +512,130 @@ def test_import_rejects_xxe_external_entity(tmp_path):
     assert errors
 
 
+# --- Fremdformat-Toleranz / kaputte Referenzen (Audit Runde 77) ---
+
+
+def test_import_warns_on_stitch_with_unknown_palindex(tmp_path):
+    """Regression: ein <stitch> mit palindex, der auf GAR KEIN
+    <palette_item> zeigt (kaputte/unvollstaendige Fremd-Datei), wurde
+    bisher komplett stillschweigend verschluckt -- kein Fehler, keine
+    Warnung, der Stich verschwand spurlos. Jetzt gibt es eine Warnung,
+    und andere, gueltige Stiche in derselben Datei bleiben unbeeinflusst."""
+    from pysticky.io.formats import import_oxs
+
+    oxs = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="0" name="cloth" color="FFFFFF" />
+    <palette_item index="1" number="310" name="DMC 310" symbol="X" color="000000" />
+  </palette>
+  <fullstitches>
+    <stitch x="1" y="1" palindex="1" />
+    <stitch x="2" y="2" palindex="99" />
+  </fullstitches>
+</chart>
+"""
+    f = tmp_path / "unknown_palindex.oxs"
+    f.write_text(oxs, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert errors == []
+    assert pattern is not None
+    # Gueltiger Stich (palindex=1) bleibt erhalten
+    assert pattern.get_stitch(0, 0) is not None
+    # Kaputte Referenz (palindex=99) wurde uebersprungen
+    assert pattern.get_stitch(1, 1) is None
+    # ...aber NICHT stillschweigend -- eine Warnung muss auf das Problem hinweisen
+    assert any("99" in w for w in warnings)
+
+
+def test_import_stitch_referencing_cloth_index_produces_no_warning(tmp_path):
+    """Ein <stitch palindex="0"> zeigt per Konvention auf das cloth-Item
+    (index=0) und bedeutet 'kein Stich' -- das ist ein bekannter, gueltiger
+    Zustand und darf NICHT die neue Unbekannt-palindex-Warnung ausloesen."""
+    from pysticky.io.formats import import_oxs
+
+    oxs = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="0" name="cloth" color="FFFFFF" />
+    <palette_item index="1" number="310" name="DMC 310" symbol="X" color="000000" />
+  </palette>
+  <fullstitches>
+    <stitch x="1" y="1" palindex="0" />
+    <stitch x="2" y="2" palindex="1" />
+  </fullstitches>
+</chart>
+"""
+    f = tmp_path / "cloth_ref.oxs"
+    f.write_text(oxs, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert errors == []
+    assert warnings == []
+    assert pattern.get_stitch(0, 0) is None  # cloth -> kein Stich
+    assert pattern.get_stitch(1, 1) is not None
+
+
+def test_import_tolerates_float_formatted_stitch_coordinates(tmp_path):
+    """Regression: manche Fremd-Tools/Konverter schreiben Koordinaten
+    einheitlich als Float ('1.0' statt '1') auch fuer Vollstiche.
+    int('1.0') wirft ValueError, wodurch der Stich zuvor still verschluckt
+    wurde -- die Koordinaten-Parser tolerieren jetzt Float-Strings."""
+    from pysticky.io.formats import import_oxs
+
+    oxs = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="1" number="310" name="DMC 310" symbol="X" color="000000" />
+  </palette>
+  <fullstitches>
+    <stitch x="1.0" y="1.0" palindex="1" />
+  </fullstitches>
+</chart>
+"""
+    f = tmp_path / "float_coords.oxs"
+    f.write_text(oxs, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert errors == []
+    assert pattern is not None
+    assert pattern.get_stitch(0, 0) is not None
+
+
+def test_import_warns_on_duplicate_palette_index(tmp_path):
+    """Zwei <palette_item>-Elemente mit demselben index sind eine kaputte
+    Datei -- der letzte Eintrag gewinnt (bisheriges Verhalten bleibt
+    erhalten), aber es muss jetzt eine Warnung geben statt den Konflikt
+    stillschweigend zu ignorieren."""
+    from pysticky.io.formats import import_oxs
+
+    oxs = """<?xml version="1.0"?>
+<chart>
+  <chart_info><chartwidth value="5" /><chartheight value="5" /></chart_info>
+  <palette>
+    <palette_item index="1" number="310" name="DMC 310" symbol="X" color="000000" />
+    <palette_item index="1" number="311" name="DMC 311" symbol="Y" color="FFFFFF" />
+  </palette>
+  <fullstitches>
+    <stitch x="1" y="1" palindex="1" />
+  </fullstitches>
+</chart>
+"""
+    f = tmp_path / "dup_index.oxs"
+    f.write_text(oxs, encoding="utf-8")
+
+    pattern, errors, warnings = import_oxs(f)
+    assert errors == []
+    assert any("Doppelter" in w or "doppelt" in w.lower() for w in warnings)
+    # Letzter Eintrag (311) gewinnt im Mapping
+    color_index = pattern.get_stitch(0, 0)
+    assert pattern.color_entries[color_index].thread.catalog_number == "311"
+
+
 def test_can_import_returns_false_for_malicious_xml(tmp_path):
     """can_import lehnt bösartiges XML ab statt zu werfen."""
     from pysticky.io.formats.oxs_io import OXSImporter

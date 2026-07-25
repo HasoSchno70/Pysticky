@@ -101,6 +101,13 @@ class OXSImporter:
 
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    # Alle palindex-Werte, die in <palette> tatsaechlich als palette_item
+    # aufgetaucht sind (auch der uebersprungene cloth-Eintrag mit index=0) --
+    # damit _resolve_palindex() zwischen "absichtlich kein Stich" (cloth)
+    # und "kaputte Datei referenziert ein gar nicht existierendes
+    # palette_item" unterscheiden kann.
+    known_palindices: set[int] = field(default_factory=set)
+    _unknown_palindex_warned: set[int] = field(default_factory=set)
 
     def can_import(self, filepath: Path | str) -> bool:
         filepath = Path(filepath)
@@ -118,6 +125,8 @@ class OXSImporter:
         filepath = Path(filepath)
         self.errors.clear()
         self.warnings.clear()
+        self.known_palindices.clear()
+        self._unknown_palindex_warned.clear()
 
         if not filepath.exists():
             self.errors.append(f"Datei nicht gefunden: {filepath}")
@@ -242,6 +251,12 @@ class OXSImporter:
                 self.warnings.append(f"Palette-Item ohne gueltigen Index: {index_str}")
                 continue
 
+            if palindex in self.known_palindices:
+                self.warnings.append(
+                    f"Doppelter Palette-Index {palindex} in <palette> — letzter Eintrag gewinnt"
+                )
+            self.known_palindices.add(palindex)
+
             number = item.get("number", "").strip()
             name = item.get("name", "").strip()
             symbol = item.get("symbol", "").strip()
@@ -330,6 +345,33 @@ class OXSImporter:
 
         return palindex_map
 
+    def _resolve_palindex(
+        self,
+        palindex: int,
+        palindex_map: dict[int, int],
+    ) -> int | None:
+        """Loest einen OXS-palindex zu einem Pattern-Farbindex auf.
+
+        Gibt None zurück, wenn der Aufrufer den Stich überspringen soll --
+        aber nur bei einer *unbekannten* Referenz (palindex zeigt auf gar
+        kein <palette_item>, z.B. kaputte/unvollständige Datei) wird eine
+        Warnung erzeugt. Zeigt palindex auf ein bekanntes, aber absichtlich
+        übersprungenes Item (Konvention: index=0 == "cloth", kein echter
+        Stich), ist das erwartetes Verhalten und bleibt still -- sonst gäbe
+        es für jede regulär als "cloth" gekennzeichnete Referenz eine
+        irreführende Warnung.
+        """
+        color_index = palindex_map.get(palindex)
+        if color_index is not None:
+            return color_index
+        if palindex not in self.known_palindices and palindex not in self._unknown_palindex_warned:
+            self._unknown_palindex_warned.add(palindex)
+            self.warnings.append(
+                f"Stich(e) mit unbekanntem palindex={palindex} (kein passendes "
+                "palette_item gefunden) übersprungen"
+            )
+        return None
+
     def _read_full_stitches(
         self,
         root: ET.Element,
@@ -343,7 +385,7 @@ class OXSImporter:
             x, y, palindex = _parse_stitch_xy_palindex(el)
             if x is None or y is None or palindex is None:
                 continue
-            color_index = palindex_map.get(palindex)
+            color_index = self._resolve_palindex(palindex, palindex_map)
             if color_index is None:
                 continue
             self._place_stitch(pattern, x - 1, y - 1, color_index, StitchType.FULL.value)
@@ -361,7 +403,7 @@ class OXSImporter:
             x, y, palindex = _parse_stitch_xy_palindex(el)
             if x is None or y is None or palindex is None:
                 continue
-            color_index = palindex_map.get(palindex)
+            color_index = self._resolve_palindex(palindex, palindex_map)
             if color_index is None:
                 continue
             direction = el.get("direction", "1")
@@ -383,7 +425,7 @@ class OXSImporter:
             x, y, palindex = _parse_stitch_xy_palindex(el)
             if x is None or y is None or palindex is None:
                 continue
-            color_index = palindex_map.get(palindex)
+            color_index = self._resolve_palindex(palindex, palindex_map)
             if color_index is None:
                 continue
             position = el.get("position", "TL").upper()
@@ -403,7 +445,7 @@ class OXSImporter:
             x, y, palindex = _parse_stitch_xy_palindex(el)
             if x is None or y is None or palindex is None:
                 continue
-            color_index = palindex_map.get(palindex)
+            color_index = self._resolve_palindex(palindex, palindex_map)
             if color_index is None:
                 continue
             self._place_stitch(pattern, x - 1, y - 1, color_index, StitchType.THREE_QUARTER.value)
@@ -426,7 +468,7 @@ class OXSImporter:
                 palindex = int(el.get("palindex", ""))
             except (ValueError, TypeError):
                 continue
-            color_index = palindex_map.get(palindex)
+            color_index = self._resolve_palindex(palindex, palindex_map)
             if color_index is None:
                 continue
             # OXS-Koord 1-basiert (Ecke der ersten Zelle = 1,1; Mitte = 1.5,1.5)
@@ -458,7 +500,7 @@ class OXSImporter:
                 palindex = int(el.get("palindex", ""))
             except (ValueError, TypeError):
                 continue
-            color_index = palindex_map.get(palindex)
+            color_index = self._resolve_palindex(palindex, palindex_map)
             if color_index is None:
                 continue
 
@@ -737,10 +779,19 @@ def _attr_int(parent: ET.Element, tag: str, default: int = 0) -> int:
 def _parse_stitch_xy_palindex(
     el: ET.Element,
 ) -> tuple[int | None, int | None, int | None]:
-    """Liest x, y, palindex aus einem <stitch>-ähnlichen Element."""
+    """Liest x, y, palindex aus einem <stitch>-ähnlichen Element.
+
+    x/y werden ueber float() statt int() geparst und dann gerundet: manche
+    Fremd-Tools (z.B. Konverter, die alle Koordinaten einheitlich als Float
+    ausgeben) schreiben "1.0" statt "1" fuer Voll-/Halb-/Viertelstiche.
+    int("1.0") wirft ValueError, wodurch der Stich sonst still verschluckt
+    wurde -- float()-Toleranz bringt das in Einklang mit den Backstitch-
+    und Ornament-Readern in dieser Datei, die x1/y1 ohnehin schon als
+    float lesen.
+    """
     try:
-        x = int(el.get("x", ""))
-        y = int(el.get("y", ""))
+        x = int(round(float(el.get("x", ""))))
+        y = int(round(float(el.get("y", ""))))
         palindex = int(el.get("palindex", ""))
         return x, y, palindex
     except (ValueError, TypeError):
