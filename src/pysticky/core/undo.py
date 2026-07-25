@@ -698,6 +698,22 @@ class ClearLayerCommand(Command):
 
         layer = self._pattern.layer_stack[self._layer_index]
 
+        # Layer koennte NACH execute() (und vor diesem undo()) gesperrt
+        # worden sein. Anders als PlaceStitchCommand/RemoveStitchCommand,
+        # deren undo() ueber layer.set_stitch()/remove_stitch() laeuft
+        # (die den Lock selbst zur Undo-Zeit pruefen), schreibt dieser
+        # Command Grid/Completion/Stitch-Type-Grid per direkter Attribut-
+        # Zuweisung zurueck -- ohne diesen Guard wuerde ein Undo den Lock
+        # umgehen und Design-Inhalt (Farbe/Stichtyp) einer mittlerweile
+        # gesperrten Ebene trotzdem veraendern (gleiche Bug-Klasse wie
+        # Runde 13, hier aber fuer den Undo- statt den Execute-Pfad).
+        # Fortschritts-Markierung (completion_grid) ist bewusst vom Lock
+        # ausgenommen (siehe Layer.mark_completed()) -- Grid und Stich-
+        # Typ sind es nicht, daher wird hier komplett abgebrochen statt
+        # nur den Grid-Teil zu ueberspringen.
+        if layer.locked:
+            return
+
         if self._old_grid is not None:
             # Grid wiederherstellen (numpy-effizient)
             layer.grid = self._old_grid.copy()
