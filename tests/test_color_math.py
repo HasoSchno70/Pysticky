@@ -10,6 +10,7 @@ CIEDE2000-Implementierungen — deckt bewusst kniffelige Sonderfälle ab
 (a*=b*=0, Hue-Wraparound um 360°, nahe beieinanderliegende Chroma-Werte).
 """
 
+import numpy as np
 import pytest
 
 from pysticky.core.color_math import delta_e2000, lab_to_rgb, rgb_to_lab
@@ -78,3 +79,44 @@ def test_nearest_index_by_lab_picks_perceptually_closest():
         (0, 0, 255),  # Blau -- weit weg
     ]
     assert nearest_index_by_lab(target, candidates) == 1
+
+
+def test_delta_e2000_matrix_matches_scalar_formula_for_all_pairs():
+    """delta_e2000_matrix(N,3 / M,3) muss Zelle für Zelle exakt der
+    Skalar-Formel delta_e2000() entsprechen -- eingeführt für die
+    batch-vektorisierte Bildimport-Quantisierung (image_import.py), die
+    tausende Pixel gegen die Palette gleichzeitig vergleicht."""
+    from pysticky.core.color_math import delta_e2000_matrix, rgb_to_lab_array
+
+    rgb_a = [(255, 0, 0), (0, 128, 0), (12, 200, 77), (64, 65, 243)]
+    rgb_b = [(200, 20, 20), (0, 0, 255), (108, 102, 159)]
+
+    lab_a = rgb_to_lab_array(np.array(rgb_a, dtype=np.float64))
+    lab_b = rgb_to_lab_array(np.array(rgb_b, dtype=np.float64))
+
+    matrix = delta_e2000_matrix(lab_a, lab_b)
+    assert matrix.shape == (len(rgb_a), len(rgb_b))
+
+    for i, a in enumerate(rgb_a):
+        for j, b in enumerate(rgb_b):
+            expected = delta_e2000(rgb_to_lab(*a), rgb_to_lab(*b))
+            assert matrix[i, j] == pytest.approx(expected, abs=1e-6)
+
+
+def test_delta_e2000_matrix_matches_delta_e2000_array_for_single_target():
+    """1-gegen-N-Sonderfall der Matrix-Variante muss mit der etablierten
+    nearest_index_by_lab()-Pipeline übereinstimmen (Regressionsschutz für
+    den gemeinsam genutzten `_delta_e2000_broadcast()`-Kern)."""
+    from pysticky.core.color_math import delta_e2000_matrix, nearest_index_by_lab, rgb_to_lab_array
+
+    target = (64, 65, 243)
+    candidates = [(84, 135, 216), (108, 102, 159), (0, 0, 0), (255, 255, 255)]
+
+    target_lab = rgb_to_lab_array(np.array([target], dtype=np.float64))
+    cand_lab = rgb_to_lab_array(np.array(candidates, dtype=np.float64))
+
+    matrix_result = delta_e2000_matrix(target_lab, cand_lab)[0]
+    best_via_matrix = int(np.argmin(matrix_result))
+    best_via_nearest = nearest_index_by_lab(target, candidates)
+
+    assert best_via_matrix == best_via_nearest
