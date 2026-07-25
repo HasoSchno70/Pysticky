@@ -203,3 +203,54 @@ def test_load_image_handles_decompression_bomb_error(qtbot, tmp_path, monkeypatc
     assert dlg._image_width == 0
     assert dlg._image_height == 0
     assert len(warnings_shown) == 1
+
+
+class _StubProgressDialog:
+    def close(self) -> None:
+        pass
+
+
+def test_reimport_carries_over_property_dialog_metadata(qtbot, seeded_pattern):
+    """Runde 82: "Bildimport wiederholen" (Wizard Recall) baute ueber
+    import_image() immer ein komplett frisches metadata-Dict (siehe
+    core/image_import.py) -- Autor/Copyright/Notizen/Stickdatum, die der
+    Nutzer im Eigenschaften-Dialog (pattern_properties_dialog.py) gepflegt
+    hat, gingen dabei stillschweigend verloren, obwohl der Wizard-Recall
+    laut Docstring den Import nur "mit angepassten Einstellungen"
+    wiederholen soll, nicht bei Null anfangen."""
+    seeded_pattern.metadata["author"] = "Anna Schmidt"
+    seeded_pattern.metadata["copyright"] = "© 2026 Anna Schmidt"
+    seeded_pattern.metadata["notes"] = "Geschenk fuer Mama"
+    seeded_pattern.metadata["started_date"] = "2026-01-15"
+
+    dlg = ImageImportDialog(seed_pattern=seeded_pattern)
+    qtbot.addWidget(dlg)
+    dlg._import_progress = _StubProgressDialog()
+
+    # Simuliert, was der Hintergrund-Worker liefert: ein voellig frisches
+    # Pattern ohne die alten Properties-Dialog-Metadaten.
+    fresh_settings = dlg._get_settings()
+    fresh_pattern = import_image(dlg._image_path, fresh_settings, crop=dlg._crop)
+    assert "author" not in fresh_pattern.metadata  # Sanity: wirklich frisch
+
+    dlg._on_import_finished(fresh_pattern)
+
+    assert dlg.get_pattern().metadata["author"] == "Anna Schmidt"
+    assert dlg.get_pattern().metadata["copyright"] == "© 2026 Anna Schmidt"
+    assert dlg.get_pattern().metadata["notes"] == "Geschenk fuer Mama"
+    assert dlg.get_pattern().metadata["started_date"] == "2026-01-15"
+
+
+def test_reimport_without_seed_pattern_does_not_crash(qtbot, source_image_path):
+    """Regulaerer (nicht wiederholter) Bildimport hat keinen seed_pattern --
+    _carry_over_property_metadata() darf dabei nicht crashen."""
+    dlg = ImageImportDialog()
+    qtbot.addWidget(dlg)
+    dlg._import_progress = _StubProgressDialog()
+
+    settings = ImportSettings(width=8, height=6, max_colors=8)
+    pattern = import_image(source_image_path, settings, crop=(0, 0, 1, 1))
+
+    dlg._on_import_finished(pattern)
+
+    assert dlg.get_pattern() is pattern

@@ -38,6 +38,13 @@ if TYPE_CHECKING:
     from ...core import Pattern
 
 
+# Metadata-Keys, die dieser Dialog pflegt -- ueber diese Konstante greifen
+# auch andere Stellen zu (z.B. der Bildimport-Wizard-Recall), die diese
+# Nutzer-Angaben beim Neu-Erzeugen eines Pattern erhalten muessen, statt sie
+# stillschweigend zu verlieren.
+PROPERTY_METADATA_KEYS = ("author", "copyright", "notes", "started_date")
+
+
 class PatternPropertiesDialog(QDialog):
     """Dialog zum Bearbeiten der Pattern-Metadata."""
 

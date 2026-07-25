@@ -53,6 +53,7 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self._updating_size: bool = False
         self._crop: tuple[float, float, float, float] = (0, 0, 1, 1)
         self._prefer_diamond = prefer_diamond
+        self._seed_pattern = seed_pattern
         self._setup_ui()
         self._apply_default_settings()
         self._connect_signals()
@@ -400,9 +401,27 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
     def _on_import_finished(self, pattern: Pattern) -> None:
         """Callback wenn Import erfolgreich."""
         self._import_progress.close()
+        self._carry_over_property_metadata(pattern)
         self._imported_pattern = pattern
         self.pattern_created.emit(pattern)
         self.accept()
+
+    def _carry_over_property_metadata(self, pattern: Pattern) -> None:
+        """Uebernimmt Autor/Copyright/Notizen/Stickdatum vom Seed-Pattern
+        ("Bildimport wiederholen"/Wizard Recall) in das neu erzeugte Pattern.
+
+        import_image() baut immer ein komplett frisches metadata-Dict --
+        ohne diese Uebernahme wuerden per Eigenschaften-Dialog gepflegte
+        Angaben beim Wiederholen des Imports (z.B. nur um die Farbanzahl
+        anzupassen) stillschweigend verloren gehen."""
+        if self._seed_pattern is None:
+            return
+        from ..pattern_properties_dialog import PROPERTY_METADATA_KEYS
+
+        for key in PROPERTY_METADATA_KEYS:
+            value = self._seed_pattern.metadata.get(key)
+            if value:
+                pattern.metadata[key] = value
 
     def _on_import_error(self, error_msg: str) -> None:
         """Callback wenn Import fehlschlägt."""

@@ -130,6 +130,46 @@ def test_pdf_cover_title_matches_pattern_mode():
     assert "KREUZSTICH" not in title_dp
 
 
+def test_pdf_cover_shows_started_date_from_properties_dialog():
+    """Runde 82: pattern_properties_dialog.py pflegt metadata['started_date']
+    und wirbt in der UI damit, dass es "auch im HTML/PDF-Export auf dem
+    Deckblatt angezeigt" wird -- html_export_sections.py::
+    _render_started_date_row() tut das auch, aber pdf_export_sections.py::
+    _create_cover() hatte dafuer nie eine aequivalente Zeile: das Stickdatum
+    wurde im PDF-Deckblatt komplett verschluckt."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    pattern.metadata["started_date"] = "2026-01-15"
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    elements = exp._create_cover("Titel", "2026-07-19", 10.0, 10.0, 1)
+
+    info_table = next(el for el in elements if hasattr(el, "_cellvalues"))
+    labels = [row[0] for row in info_table._cellvalues]
+    values = [row[1] for row in info_table._cellvalues]
+    assert "Begonnen am" in labels
+    assert "15.01.2026" in values
+
+
+def test_pdf_cover_omits_started_date_row_when_not_set():
+    """Kein started_date gepflegt -- keine leere/verwaiste Zeile im PDF."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    elements = exp._create_cover("Titel", "2026-07-19", 10.0, 10.0, 1)
+
+    info_table = next(el for el in elements if hasattr(el, "_cellvalues"))
+    labels = [row[0] for row in info_table._cellvalues]
+    assert "Begonnen am" not in labels
+
+
 def test_pdf_mystery_mode_hides_backstitch_count(tmp_path):
     """Regression: Mystery-Modus zeigte im PDF (anders als im HTML-Export)
     weiterhin die exakte Rueckstich-Anzahl auf Deckblatt + Vorschau-Seite --

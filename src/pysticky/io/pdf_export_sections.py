@@ -134,6 +134,13 @@ class PDFSectionsMixin(_Base):
         if backstitch_count > 0:
             info_data.insert(5, [t("Rückstiche"), t("{n} Linien").format(n=backstitch_count)])
 
+        # Stickdatum (optional) -- wie im HTML-Export (html_export_sections.py
+        # ::_render_started_date_row) auf dem Deckblatt zeigen, statt es nur
+        # dort zu pflegen und im PDF stillschweigend zu verschlucken.
+        started_label = self._format_started_date()
+        if started_label:
+            info_data.append([t("Begonnen am"), started_label])
+
         table = Table(info_data, colWidths=[60 * mm, 80 * mm])
         table.setStyle(
             TableStyle(
@@ -154,6 +161,21 @@ class PDFSectionsMixin(_Base):
         elements.append(table)
 
         return elements
+
+    def _format_started_date(self) -> str:
+        """Formatiert pattern.metadata['started_date'] (ISO-String aus dem
+        Eigenschaften-Dialog) fuer die Deckblatt-Tabelle, analog zu
+        html_export_sections.py::_render_started_date_row(). Liefert einen
+        leeren String, wenn kein Stickdatum gepflegt ist."""
+        started = (self.pattern.metadata.get("started_date") or "").strip()
+        if not started:
+            return ""
+        from datetime import date
+
+        try:
+            return date.fromisoformat(started).strftime("%d.%m.%Y")
+        except ValueError:
+            return started
 
     def _create_preview(self, title: str, phys_width: float, phys_height: float) -> list:
         """Erstellt die Vorschau-Seite."""
