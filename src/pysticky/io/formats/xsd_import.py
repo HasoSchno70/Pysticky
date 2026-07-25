@@ -351,6 +351,13 @@ class XSDImporter:
         while y < height:
             byte = f.read(1)
             if not byte:
+                # Datei endet, bevor alle Zeilen gefuellt wurden -- eine
+                # abgeschnittene/beschaedigte Datei, keine regulaere
+                # Terminierung (die Schleife laeuft explizit nur bis
+                # y < height). Ohne Warnung wuerde der Rest des Musters
+                # klaglos als leer erscheinen (analog zum OXS-Bug aus
+                # Runde 77: stiller Datenverlust beim Import).
+                self._warn_truncated_grid(x, y, width, height)
                 break
 
             value = struct.unpack("B", byte)[0]
@@ -395,6 +402,11 @@ class XSDImporter:
             for x in range(width):
                 byte = f.read(1)
                 if not byte:
+                    # Datei zu kurz fuer die im Header angegebenen
+                    # Dimensionen -- ohne Warnung wuerden die restlichen
+                    # Zellen klaglos als leer erscheinen (stiller
+                    # Datenverlust, analog zum OXS-Bug aus Runde 77).
+                    self._warn_truncated_grid(x, y, width, height)
                     return
 
                 value = struct.unpack("B", byte)[0]
@@ -405,6 +417,16 @@ class XSDImporter:
                     color_index = self._clamp_color_index(value, color_count)
 
                 layer.set_stitch(x, y, color_index)
+
+    def _warn_truncated_grid(self, x: int, y: int, width: int, height: int) -> None:
+        """Meldet, dass die Grid-Daten vor dem Ende des Musters abbrachen."""
+        total = width * height
+        filled = y * width + x
+        self.warnings.append(
+            f"Grid-Daten unvollständig: Datei endete bei Zeile {y + 1}/{height} "
+            f"(Spalte {x + 1}/{width}) — {total - filled} von {total} Stichen "
+            "fehlen und werden als leer behandelt"
+        )
 
     def _read_backstitches(self, f: BinaryIO, pattern: Pattern) -> None:
         """Liest Backstitch-Daten."""
