@@ -23,6 +23,8 @@ from pysticky.core.image_import import (
     get_image_info,
     import_image,
 )
+from pysticky.core.palette import ThreadPalette, get_palette_manager
+from pysticky.core.thread import Thread, ThreadColor
 
 # ============================================================================
 # Hilfsfunktionen: synthetische Test-Bilder
@@ -335,6 +337,48 @@ def test_import_crop_uses_subregion(tmp_path):
     assert len(used) == 1, "Crop nur auf blaue Haelfte -> eine Farbe"
 
 
+@pytest.mark.parametrize(
+    "crop",
+    [
+        (1.0, 1.0, 1.0, 1.0),  # einzelner Punkt an der unteren rechten Ecke
+        (1.2, 1.2, 1.5, 1.5),  # komplett ausserhalb (zu weit rechts/unten)
+        (-0.5, -0.5, 0.2, 0.2),  # komplett ausserhalb (zu weit links/oben)
+        (-1.0, -1.0, 2.0, 2.0),  # umschliesst das Bild, aber weit ausserhalb
+    ],
+)
+def test_import_crop_outside_image_bounds_does_not_leak_black(tmp_path, crop):
+    """Regression: `crop` (x1,y1,x2,y2) wird nicht auf [0,1] geklemmt, bevor
+    daraus Pixel-Koordinaten berechnet werden. PIL's Image.crop() füllt
+    einen Bereich, der über die tatsächliche Bildgröße hinausragt, mit
+    SCHWARZ auf (nicht mit einem Fehler oder Clamping) -- ohne Klemmung
+    landen diese fabrizierten schwarzen Pixel unbemerkt in der
+    Farbquantisierung und können eine im Originalbild nie vorhandene
+    (fast) schwarze Garnfarbe in die Palette schmuggeln.
+
+    Out-of-range-Crops sind kein Theoriefall: `crop` kann aus
+    `pattern.source_image_crop` stammen (Palettenwechsel, "Bildimport
+    wiederholen"-Wizard-Recall) -- wird das Bild am selben Pfad durch eine
+    ANDERS grosse Datei ersetzt, ist der gegen die alte Grösse berechnete
+    Ausschnitt gegen die neue Grösse nicht mehr zwingend in [0, 1]."""
+    # Helles, eindeutig NICHT-schwarzes einfarbiges Bild -- jede
+    # (fast) schwarze Farbe im Ergebnis kann nur aus der Schwarz-
+    # Auffuellung von out-of-bounds crop() stammen.
+    path = _make_solid_rgb(tmp_path, (100, 150, 200))
+    settings = ImportSettings(width=10, height=10, max_colors=3)
+    pattern = import_image(path, settings, crop=crop)
+
+    for entry in pattern.color_entries:
+        if entry.stitch_count == 0:
+            continue
+        c = entry.thread.color
+        assert (c.r, c.g, c.b) != (0, 0, 0) and max(c.r, c.g, c.b) > 30, (
+            f"Out-of-bounds-Crop {crop} hat eine (fast) schwarze Farbe "
+            f"{(c.r, c.g, c.b)} in die Palette geschmuggelt -- vermutlich "
+            "Schwarz-Auffuellung durch PIL's Image.crop() bei einer nicht "
+            "auf [0,1] geklemmten Crop-Box."
+        )
+
+
 def test_import_remembers_source_image_path(tmp_path):
     """Pattern speichert source_image_path fuer spaeteren Palettenwechsel."""
     path = _make_solid_rgb(tmp_path, (50, 100, 150))
@@ -469,3 +513,128 @@ def test_change_palette_preserves_image_adjustments(tmp_path):
     assert new_pattern.metadata["brightness"] == pytest.approx(1.4)
     assert new_pattern.metadata["contrast"] == pytest.approx(0.6)
     assert new_pattern.metadata["saturation"] == pytest.approx(0.2)
+
+
+# ============================================================================
+# Farbquantisierung — CIEDE2000 statt RGB-Euklid (Runde 80)
+# ============================================================================
+#
+# Der Rest des Projekts (ThreadPalette.find_similar_color, color_reduce.py,
+# thread_cross_ref.find_equivalent, Fuell-/Ersetzen-Toleranz, Farbharmonie-
+# und Paletten-Konvertierungs-Dialoge, Bildschirm-Pipette) nutzt seit dem
+# CIEDE2000-Upgrade (Commit "Farbabstand-Metrik von CIE76 auf CIEDE2000
+# upgegradet") ausschliesslich delta_e()/CIEDE2000 fuer Farbabstaende. Der
+# Bildimport-Quantisierer (_quantize_simple/_quantize_with_dithering/
+# _quantize_with_ordered_dithering/_select_colors_median_cut) blieb bei
+# diesem Umbau aussen vor und nutzte weiterhin rohe quadrierte RGB-Distanz
+# -- perzeptuell inkonsistent zum Rest der Anwendung: Faelle mit RGB-nahen
+# aber perzeptuell entfernten Farben (typisch im Blau/Violett-Bereich, wo
+# CIEDE2000 seine Rotationsterm-Korrektur hat) wurden dem falschen Garn
+# zugeordnet.
+
+# Ein Pixel + zwei Kandidatenfarben, bei denen RGB-Euklid und CIEDE2000
+# unterschiedliche "naechste Farbe" waehlen (verifiziert per Sharma-
+# validierter delta_e()-Implementierung, siehe Kommentar):
+#   Ziel:        (64, 65, 243)
+#   RGB-naeher:   (84, 135, 216)  -- RGB-Distanz 77.6, CIEDE2000 22.2
+#   perzeptuell:  (108, 102, 159) -- RGB-Distanz 101.8, CIEDE2000 17.0
+_TARGET_RGB = (64, 65, 243)
+
+
+@pytest.fixture
+def perceptual_divergence_palette():
+    """Registriert eine 2-Garn-Testpalette mit einem RGB-vs-CIEDE2000-
+    Widerspruchsfall im echten Palette-Manager-Singleton (den import_image()
+    tatsaechlich benutzt), und entfernt sie nach dem Test wieder."""
+    pm = get_palette_manager()
+    rgb_nearest = Thread(
+        name="RGB-naeher",
+        color=ThreadColor(84, 135, 216),
+        manufacturer="Test",
+        catalog_number="RGB1",
+    )
+    perceptually_nearest = Thread(
+        name="Perzeptuell-naeher",
+        color=ThreadColor(108, 102, 159),
+        manufacturer="Test",
+        catalog_number="LAB1",
+    )
+    test_palette = ThreadPalette(
+        name="__TestPerceptualDivergence__",
+        manufacturer="Test",
+        threads=[rgb_nearest, perceptually_nearest],
+    )
+    pm._palettes[test_palette.name] = test_palette
+    try:
+        yield test_palette.name
+    finally:
+        pm._palettes.pop(test_palette.name, None)
+
+
+def test_quantize_simple_uses_ciede2000_not_rgb_euclidean(tmp_path, perceptual_divergence_palette):
+    """Regression: Standard-Quantisierungspfad (kein Dithering, kein
+    Median-Cut) muss die perzeptuell naechste Palettenfarbe waehlen, nicht
+    die RGB-euklidisch naechste -- sonst weicht der Bildimport systematisch
+    vom Rest des Projekts ab (das ueberall delta_e()/CIEDE2000 nutzt)."""
+    path = _make_solid_rgb(tmp_path, _TARGET_RGB)
+    settings = ImportSettings(
+        width=5,
+        height=5,
+        max_colors=2,
+        palette_name=perceptual_divergence_palette,
+        dithering_mode="none",
+        quantization_method="nearest",
+    )
+    pattern = import_image(path, settings)
+
+    used_catalog_numbers = {e.thread.catalog_number for e in pattern.color_entries}
+    assert used_catalog_numbers == {"LAB1"}, (
+        "Erwartet: die perzeptuell (CIEDE2000) naechste Farbe LAB1 wird "
+        f"gewaehlt, tatsaechlich verwendete Garne: {used_catalog_numbers}"
+    )
+
+
+def test_quantize_with_dithering_uses_ciede2000_not_rgb_euclidean(
+    tmp_path, perceptual_divergence_palette
+):
+    """Gleiche Regression wie oben, aber fuer den Floyd-Steinberg-Dithering-
+    Pfad (_quantize_with_dithering hat eine eigene, separate
+    Distanzberechnung)."""
+    path = _make_solid_rgb(tmp_path, _TARGET_RGB)
+    settings = ImportSettings(
+        width=5,
+        height=5,
+        max_colors=2,
+        palette_name=perceptual_divergence_palette,
+        dithering_mode="floyd_steinberg",
+    )
+    pattern = import_image(path, settings)
+
+    used_catalog_numbers = {e.thread.catalog_number for e in pattern.color_entries}
+    assert used_catalog_numbers == {"LAB1"}, (
+        "Floyd-Steinberg-Pfad muss ebenfalls die perzeptuell naechste Farbe "
+        f"waehlen, tatsaechlich verwendete Garne: {used_catalog_numbers}"
+    )
+
+
+def test_quantize_ordered_dithering_uses_ciede2000_not_rgb_euclidean(
+    tmp_path, perceptual_divergence_palette
+):
+    """Gleiche Regression wie oben, aber fuer den Ordered/Bayer-Dithering-
+    Pfad (_quantize_with_ordered_dithering hat ebenfalls eine eigene,
+    separate Distanzberechnung)."""
+    path = _make_solid_rgb(tmp_path, _TARGET_RGB)
+    settings = ImportSettings(
+        width=5,
+        height=5,
+        max_colors=2,
+        palette_name=perceptual_divergence_palette,
+        dithering_mode="ordered",
+    )
+    pattern = import_image(path, settings)
+
+    used_catalog_numbers = {e.thread.catalog_number for e in pattern.color_entries}
+    assert used_catalog_numbers == {"LAB1"}, (
+        "Ordered-Dithering-Pfad muss ebenfalls die perzeptuell naechste "
+        f"Farbe waehlen, tatsaechlich verwendete Garne: {used_catalog_numbers}"
+    )

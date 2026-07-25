@@ -15,6 +15,7 @@ try:
 except ImportError:
     HAS_PILLOW = False
 
+from .color_math import delta_e2000_matrix, rgb_to_lab, rgb_to_lab_array
 from .palette import get_palette_manager
 from .pattern import SYMBOLS, ColorEntry, Pattern
 from .thread import Thread
@@ -115,17 +116,42 @@ def import_image(
     elif image.mode != "RGB":
         image = image.convert("RGB")
 
-    # Ausschnitt anwenden
+    # Ausschnitt anwenden.
+    #
+    # x1..y2 werden vor der Pixel-Umrechnung auf [0, 1] geklemmt. Ohne das
+    # liefert PIL's Image.crop() für eine Box, die (teilweise) ausserhalb
+    # der tatsächlichen Bildgrösse liegt, den überstehenden Bereich mit
+    # SCHWARZ aufgefüllt zurück statt zu clampen oder zu fehlern -- diese
+    # fabrizierten schwarzen Pixel gehen dann unbemerkt in die
+    # Farbquantisierung ein und können eine im Originalbild nie
+    # vorhandene (fast) schwarze Garnfarbe in die Palette schmuggeln.
+    # Out-of-range-Werte sind kein reiner Theoriefall: `crop` kann aus
+    # `pattern.source_image_crop` stammen (Palettenwechsel, "Bildimport
+    # wiederholen" per Wizard-Recall) -- wurde das Bild am selben Pfad
+    # zwischenzeitlich durch eine ANDERS grosse Datei ersetzt, ist der
+    # gespeicherte, gegen die alte Grösse berechnete Ausschnitt gegen die
+    # neue Grösse nicht mehr zwingend innerhalb [0, 1].
     x1, y1, x2, y2 = crop
+    x1 = max(0.0, min(1.0, x1))
+    y1 = max(0.0, min(1.0, y1))
+    x2 = max(0.0, min(1.0, x2))
+    y2 = max(0.0, min(1.0, y2))
     if x1 > 0 or y1 > 0 or x2 < 1 or y2 < 1:
         left = int(x1 * image.width)
         top = int(y1 * image.height)
         right = int(x2 * image.width)
         bottom = int(y2 * image.height)
 
-        # Mindestgröße sicherstellen
-        right = max(right, left + 1)
-        bottom = max(bottom, top + 1)
+        # In gültige Bildgrenzen zwingen, BEVOR die Mindestgröße erzwungen
+        # wird -- sonst kann das +1 unten (z.B. bei x1==x2==1.0, also
+        # left==right==image.width) die rechte/untere Kante um 1px über
+        # die tatsächliche Bildgröße hinausschieben, und PIL's crop()
+        # würde genau diesen 1px-Streifen wieder mit Schwarz auffüllen
+        # (siehe Kommentar oben).
+        left = max(0, min(left, image.width - 1))
+        top = max(0, min(top, image.height - 1))
+        right = max(left + 1, min(right, image.width))
+        bottom = max(top + 1, min(bottom, image.height))
 
         image = image.crop((left, top, right, bottom))
 
@@ -341,6 +367,14 @@ def _quantize_simple(
     zu vermeiden. Vorher: O(N_pixels * N_colors) RAM auf einmal.
     Jetzt: O(BATCH_SIZE * N_colors) RAM pro Batch.
 
+    Distanzmetrik: CIEDE2000 in CIE-Lab (via `color_math.delta_e2000_matrix`),
+    konsistent mit dem Rest des Projekts (Fuell-/Ersetzen-Toleranz, Farb-
+    harmonie/-Konvertierung, Paletten-Cross-Reference, Bildschirm-Pipette --
+    siehe Commit "Farbabstand-Metrik von CIE76 auf CIEDE2000 upgegradet").
+    Vorher nutzte diese Funktion rohe quadrierte sRGB-Distanz, obwohl sRGB
+    perzeptuell nicht gleichabständig ist (v.a. im Blau/Violett-Bereich) --
+    das ordnete Bildpixel systematisch der falschen Garnfarbe zu.
+
     Args:
         preselected_threads: Vorab gewählte Farben (z.B. per Median-Cut).
             Wenn gesetzt, werden nur diese Farben verwendet.
@@ -353,17 +387,18 @@ def _quantize_simple(
         work_colors = np.array(
             [[t.color.r, t.color.g, t.color.b] for t in work_threads], dtype=np.float64
         )
+        work_colors_lab = rgb_to_lab_array(work_colors)
         pixels_flat = pixels.reshape(-1, 3).astype(np.float64)
+        pixels_lab = rgb_to_lab_array(pixels_flat)
         n_pixels = pixels_flat.shape[0]
 
         BATCH_SIZE = 10000
         nearest_indices = np.empty(n_pixels, dtype=np.int32)
         for start in range(0, n_pixels, BATCH_SIZE):
             end = min(start + BATCH_SIZE, n_pixels)
-            batch = pixels_flat[start:end]
-            diff = batch[:, np.newaxis, :] - work_colors[np.newaxis, :, :]
-            distances_sq = np.sum(diff**2, axis=2)
-            nearest_indices[start:end] = np.argmin(distances_sq, axis=1)
+            batch_lab = pixels_lab[start:end]
+            distances = delta_e2000_matrix(batch_lab, work_colors_lab)
+            nearest_indices[start:end] = np.argmin(distances, axis=1)
 
         nearest_indices = nearest_indices.reshape(height, width)  # type: ignore[assignment]
         final_result: list[list[Thread | None]] = []
@@ -378,8 +413,10 @@ def _quantize_simple(
     palette_colors = np.array(
         [[t.color.r, t.color.g, t.color.b] for t in thread_list], dtype=np.float64
     )
+    palette_colors_lab = rgb_to_lab_array(palette_colors)
 
     pixels_flat = pixels.reshape(-1, 3).astype(np.float64)
+    pixels_lab = rgb_to_lab_array(pixels_flat)
     n_pixels = pixels_flat.shape[0]
 
     # Batch-weise nächste Farbe berechnen um RAM zu schonen
@@ -390,12 +427,10 @@ def _quantize_simple(
 
     for start in range(0, n_pixels, BATCH_SIZE):
         end = min(start + BATCH_SIZE, n_pixels)
-        batch = pixels_flat[start:end]
+        batch_lab = pixels_lab[start:end]
 
-        # Squared distances (sqrt nicht nötig für argmin)
-        diff = batch[:, np.newaxis, :] - palette_colors[np.newaxis, :, :]
-        distances_sq = np.sum(diff**2, axis=2)
-        nearest_indices[start:end] = np.argmin(distances_sq, axis=1)
+        distances = delta_e2000_matrix(batch_lab, palette_colors_lab)
+        nearest_indices[start:end] = np.argmin(distances, axis=1)
 
     nearest_indices = nearest_indices.reshape(height, width)  # type: ignore[assignment]
 
@@ -409,7 +444,7 @@ def _quantize_simple(
 
     # Mapping: nicht-top Farben → nächste top Farbe (vorab berechnen statt pro Pixel)
     top_list = list(top_indices)
-    top_colors = palette_colors[top_list]
+    top_colors_lab = palette_colors_lab[top_list]
 
     remap = {}
     all_used_indices = set(int(idx) for idx in unique)
@@ -417,8 +452,8 @@ def _quantize_simple(
         if idx in top_indices:
             remap[idx] = idx
         else:
-            target = palette_colors[idx]
-            dists = np.sum((top_colors - target) ** 2, axis=1)
+            target_lab = palette_colors_lab[idx : idx + 1]
+            dists = delta_e2000_matrix(target_lab, top_colors_lab)[0]
             remap[idx] = top_list[int(np.argmin(dists))]
 
     # Vektorisiertes Remapping mit numpy (statt Python-Loop pro Pixel)
@@ -447,7 +482,23 @@ def _quantize_with_dithering(
     max_colors: int,
     preselected_threads: list[Thread] | None = None,
 ) -> tuple[list[list[Thread | None]], list[Thread]]:
-    """Floyd-Steinberg Dithering."""
+    """Floyd-Steinberg Dithering.
+
+    Distanzmetrik: CIEDE2000 in CIE-Lab, konsistent mit `_quantize_simple`
+    und dem Rest des Projekts (siehe dortiger Kommentar). Diese Funktion
+    ist wegen der Fehlerdiffusion strikt sequentiell (jeder Pixel hängt
+    vom bereits verteilten Fehler der vorherigen Pixel ab) -- die batch-
+    vektorisierte Matrix-Variante aus `_quantize_simple` kann hier NICHT
+    genutzt werden, nur eine Pro-Pixel-Distanzberechnung (1 Pixel gegen
+    max_colors Kandidaten). Das kostet spürbar mehr Zeit als die vorherige
+    rohe sRGB-Distanz (gemessen am Worst-Case laut MAX_IMPORT_DIMENSION/
+    MAX_COLORS -- 500x500 Pixel, 100 Farben: vorher ~1.1s, jetzt ~20-25s;
+    bei praxisnäheren Werten, z.B. 200x200/20 Farben: ~2.8s). Läuft im
+    Bildimport-Worker-Thread (nicht im UI-Thread), daher hier bewusst für
+    Korrektheit/Konsistenz mit dem Rest des Projekts optimiert statt für
+    Tempo. Die eigentliche Fehlerdiffusion bleibt in sRGB -- nur die
+    "welche Palettenfarbe ist am nächsten"-Entscheidung nutzt CIEDE2000.
+    """
     height, width = pixels.shape[:2]
 
     if preselected_threads:
@@ -457,6 +508,7 @@ def _quantize_with_dithering(
     top_colors = np.array(
         [[t.color.r, t.color.g, t.color.b] for t in top_threads], dtype=np.float64
     )
+    top_colors_lab = rgb_to_lab_array(top_colors)
 
     working = pixels.astype(np.float64)
     result: list[list[Thread | None]] = []
@@ -466,7 +518,8 @@ def _quantize_with_dithering(
         for x in range(width):
             old_pixel = working[y, x].copy()
 
-            distances = np.sqrt(np.sum((top_colors - old_pixel) ** 2, axis=1))
+            old_pixel_lab = np.array(rgb_to_lab(old_pixel[0], old_pixel[1], old_pixel[2]))
+            distances = delta_e2000_matrix(old_pixel_lab.reshape(1, 3), top_colors_lab)[0]
             nearest_idx = int(np.argmin(distances))
             new_pixel = top_colors[nearest_idx]
 
@@ -499,6 +552,12 @@ def _quantize_with_ordered_dithering(
 
     Verwendet eine 4×4 Bayer-Matrix als Schwellwert-Map.
     Erzeugt ein gleichmäßiges Raster-Muster statt organischer Streuung.
+
+    Distanzmetrik: CIEDE2000 (siehe `_quantize_simple`) -- im Gegensatz zu
+    Floyd-Steinberg hat diese Funktion KEINE Fehlerdiffusions-Abhängigkeit
+    zwischen Pixeln (der Bayer-Schwellwert wird auf das gesamte Bild auf
+    einmal angewendet), daher ist die volle batch-vektorisierte
+    CIEDE2000-Matrix hier ohne Performance-Kompromiss nutzbar.
     """
     height, width = pixels.shape[:2]
 
@@ -509,6 +568,7 @@ def _quantize_with_ordered_dithering(
     top_colors = np.array(
         [[t.color.r, t.color.g, t.color.b] for t in top_threads], dtype=np.float64
     )
+    top_colors_lab = rgb_to_lab_array(top_colors)
 
     # 4×4 Bayer-Matrix (normalisiert auf [-0.5, 0.5] Bereich, dann skaliert)
     bayer_4x4 = np.array(
@@ -535,16 +595,16 @@ def _quantize_with_ordered_dithering(
 
     # Jetzt einfache Quantisierung auf den adjustierten Pixeln
     pixels_flat = working.reshape(-1, 3)
+    pixels_lab = rgb_to_lab_array(pixels_flat)
     n_pixels = pixels_flat.shape[0]
 
     BATCH_SIZE = 10000
     nearest_indices = np.empty(n_pixels, dtype=np.int32)
     for start in range(0, n_pixels, BATCH_SIZE):
         end = min(start + BATCH_SIZE, n_pixels)
-        batch = pixels_flat[start:end]
-        diff = batch[:, np.newaxis, :] - top_colors[np.newaxis, :, :]
-        distances_sq = np.sum(diff**2, axis=2)
-        nearest_indices[start:end] = np.argmin(distances_sq, axis=1)
+        batch_lab = pixels_lab[start:end]
+        distances = delta_e2000_matrix(batch_lab, top_colors_lab)
+        nearest_indices[start:end] = np.argmin(distances, axis=1)
 
     nearest_indices = nearest_indices.reshape(height, width)  # type: ignore[assignment]
 
@@ -623,17 +683,22 @@ def _select_colors_median_cut(
             # nie passieren, aber bewahrt uns vor Hang im Pathologie-Fall).
             break
 
-    # Durchschnittsfarbe jeder Box → nächsten Thread finden
+    # Durchschnittsfarbe jeder Box → nächsten Thread finden.
+    # CIEDE2000 statt roher RGB-Distanz (siehe `_quantize_simple`) -- die
+    # Boxen-Anzahl ist auf max_colors begrenzt (<=100), also unkritisch
+    # für die Performance, auch bei grossen Paletten (500+ Garne).
     palette_colors = np.array(
         [[t.color.r, t.color.g, t.color.b] for t in thread_list], dtype=np.float64
     )
+    palette_colors_lab = rgb_to_lab_array(palette_colors)
 
     selected_threads: list[Thread] = []
     used_indices: set[int] = set()
 
     for box in boxes:
         avg_color = np.mean(box, axis=0)
-        dists = np.sum((palette_colors - avg_color) ** 2, axis=1)
+        avg_color_lab = rgb_to_lab_array(avg_color.reshape(1, 3))
+        dists = delta_e2000_matrix(avg_color_lab, palette_colors_lab)[0]
         # Sortiere nach Distanz und nimm den nächsten noch nicht verwendeten
         sorted_indices = np.argsort(dists)
         for idx in sorted_indices:

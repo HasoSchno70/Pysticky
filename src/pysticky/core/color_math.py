@@ -242,17 +242,25 @@ def rgb_to_lab_array(rgb: "np.ndarray") -> "np.ndarray":
     return np.stack([L, a, b], axis=1)
 
 
-def _delta_e2000_array(target_lab: "np.ndarray", cand_lab: "np.ndarray") -> "np.ndarray":
-    """CIEDE2000 zwischen einer Ziel-Lab-Farbe (Shape (3,)) und N Kandidaten
-    (Shape (N, 3)). Vektorisierte Variante von `delta_e2000` — Ergebnisse
-    stimmen mit der Skalar-Funktion bis auf Fließkomma-Rundung überein.
+def _delta_e2000_broadcast(
+    L1: "np.ndarray",
+    a1: "np.ndarray",
+    b1: "np.ndarray",
+    L2: "np.ndarray",
+    a2: "np.ndarray",
+    b2: "np.ndarray",
+) -> "np.ndarray":
+    """CIEDE2000-Kern für beliebig broadcastbare L/a/b-Arrays.
+
+    Gemeinsame Implementierung für den 1-gegen-N-Fall (`_delta_e2000_array`)
+    und den N-gegen-M-Distanzmatrix-Fall (`delta_e2000_matrix`) — beide
+    unterscheiden sich nur in der Form der übergebenen Arrays, die Formel
+    selbst ist rein elementweise und broadcastet dadurch automatisch
+    korrekt (z.B. (N,1) gegen (1,M) -> (N,M)).
     """
     import numpy as np
 
-    L1, a1, b1 = target_lab[0], target_lab[1], target_lab[2]
-    L2, a2, b2 = cand_lab[:, 0], cand_lab[:, 1], cand_lab[:, 2]
-
-    c1 = math.hypot(a1, b1)
+    c1 = np.hypot(a1, b1)
     c2 = np.hypot(a2, b2)
     c_bar = (c1 + c2) / 2.0
 
@@ -270,8 +278,8 @@ def _delta_e2000_array(target_lab: "np.ndarray", cand_lab: "np.ndarray") -> "np.
         h = np.where(h < 0, h + 360.0, h)
         return np.where((ap == 0) & (b == 0), 0.0, h)
 
-    h1p = _hue(a1p, np.full_like(a2p, b1))
-    h2p = _hue(a2p, b2)
+    h1p = _hue(a1p, np.broadcast_to(b1, np.broadcast_shapes(a1p.shape, b1.shape)))
+    h2p = _hue(a2p, np.broadcast_to(b2, np.broadcast_shapes(a2p.shape, b2.shape)))
 
     dl_p = L2 - L1
     dc_p = c2p - c1p
@@ -312,6 +320,39 @@ def _delta_e2000_array(target_lab: "np.ndarray", cand_lab: "np.ndarray") -> "np.
     dh_final = dh_p / sh
 
     return np.sqrt(dl * dl + dc * dc + dh_final * dh_final + rt * dc * dh_final)
+
+
+def _delta_e2000_array(target_lab: "np.ndarray", cand_lab: "np.ndarray") -> "np.ndarray":
+    """CIEDE2000 zwischen einer Ziel-Lab-Farbe (Shape (3,)) und N Kandidaten
+    (Shape (N, 3)). Vektorisierte Variante von `delta_e2000` — Ergebnisse
+    stimmen mit der Skalar-Funktion bis auf Fließkomma-Rundung überein.
+    """
+    L1, a1, b1 = target_lab[0], target_lab[1], target_lab[2]
+    L2, a2, b2 = cand_lab[:, 0], cand_lab[:, 1], cand_lab[:, 2]
+    return _delta_e2000_broadcast(L1, a1, b1, L2, a2, b2)
+
+
+def delta_e2000_matrix(lab_a: "np.ndarray", lab_b: "np.ndarray") -> "np.ndarray":
+    """CIEDE2000-Distanzmatrix zwischen N Farben und M Farben.
+
+    Args:
+        lab_a: Lab-Farben, Shape (N, 3).
+        lab_b: Lab-Farben, Shape (M, 3).
+
+    Returns:
+        Distanzmatrix, Shape (N, M) — Zelle [i, j] ist ΔE00(lab_a[i], lab_b[j]).
+
+    Für Massen-Nächste-Farbe-Suche (z.B. Bildimport-Quantisierung: N Pixel
+    gegen M Palettenfarben), analog zu `nearest_index_by_lab`, aber für
+    viele Ziele gleichzeitig statt nur eine.
+    """
+    L1 = lab_a[:, 0][:, None]
+    a1 = lab_a[:, 1][:, None]
+    b1 = lab_a[:, 2][:, None]
+    L2 = lab_b[:, 0][None, :]
+    a2 = lab_b[:, 1][None, :]
+    b2 = lab_b[:, 2][None, :]
+    return _delta_e2000_broadcast(L1, a1, b1, L2, a2, b2)
 
 
 def nearest_index_by_lab(
