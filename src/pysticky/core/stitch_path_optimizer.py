@@ -36,7 +36,7 @@ class StitchStep:
         color_index: Farbindex
         step_number: Schrittnummer (1-basiert)
         distance_from_prev: Entfernung zum vorherigen Stich
-        is_jump: True wenn Sprung > 3 Stiche (Faden evtl. abschneiden)
+        is_jump: True wenn Sprung > JUMP_THRESHOLD (4) Stiche (Faden evtl. abschneiden)
     """
 
     x: int
@@ -213,19 +213,23 @@ class StitchPathOptimizer:
         """
         Gruppiert alle Stiche nach Farbindex.
 
+        Nutzt `Pattern.iterate_composite_stitches()` (oberster sichtbarer
+        Layer gewinnt pro Zelle) statt die sichtbaren Layer einzeln zu
+        durchlaufen: Ein naives Aufsummieren pro Layer würde an jeder Zelle,
+        die von mehreren sichtbaren Layern belegt ist, einen Phantom-Stich
+        für die verdeckte(n) Farbe(n) erzeugen -- der Stickplan würde dann
+        an dieser Zelle eine Farbe zum Sticken vorschlagen, die dort gar
+        nicht sichtbar ist, weil ein darüberliegender Layer sie überdeckt.
+
         Returns:
             Dict mit Farbindex -> Liste von (x, y) Positionen
         """
         color_stitches: dict[int, list[tuple[int, int]]] = {}
 
-        for layer in self._pattern.layer_stack:
-            if not layer.visible:
-                continue
-
-            for x, y, color_idx in layer.iterate_stitches():
-                if color_idx not in color_stitches:
-                    color_stitches[color_idx] = []
-                color_stitches[color_idx].append((x, y))
+        for x, y, color_idx in self._pattern.iterate_composite_stitches():
+            if color_idx not in color_stitches:
+                color_stitches[color_idx] = []
+            color_stitches[color_idx].append((x, y))
 
         return color_stitches
 
