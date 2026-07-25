@@ -535,3 +535,102 @@ def test_shopping_list_multi_splits_blend_into_real_components(tmp_path):
     entry_745 = next(it for it in items if it["thread"].catalog_number == "745")
     assert entry_310["on_hand"] == 5
     assert entry_745["on_hand"] == 0
+
+
+# === Zwei ColorEntries mit identischem Thread (Runde 76) ===
+#
+# palette_conversion_dialog.py::_on_apply() warnt zwar, wenn eine Paletten-
+# Konvertierung mehrere Quellfarben auf dasselbe Zielgarn abbildet, laesst
+# den Nutzer die Konvertierung nach Bestaetigung aber trotzdem durchfuehren.
+# Die betroffenen `color_entries` werden dabei NICHT gemergt/entfernt --
+# sie bleiben als separate Eintraege mit identischem `.thread` an
+# unterschiedlichen Indizes bestehen (bewusst akzeptiertes Verhalten des
+# Dialogs). compute_shopping_list() muss diesen Zustand korrekt handhaben:
+# vorher wurde pro betroffenem Eintrag der Vorrat unabhaengig UND
+# VOLLSTAENDIG gegengerechnet, was den tatsaechlichen Gesamtbedarf
+# unterschaetzte (jeder Eintrag "sah" den vollen on_hand-Bestand, als
+# haette ihn kein anderer Eintrag bereits mitgezaehlt).
+
+
+def test_shopping_list_aggregates_duplicate_thread_entries(tmp_path):
+    """Zwei ColorEntries mit identischem Thread (z.B. nach einer Paletten-
+    Konvertierungs-Kollision) duerfen den vorhandenen Lagerbestand nicht
+    unabhaengig voneinander gegenrechnen -- sonst wird der tatsaechliche
+    Gesamtbedarf unterschaetzt."""
+    from pysticky.core import Pattern, Thread
+
+    inv = Inventory(tmp_path / "inv.json")
+    inv.set("DMC", "310", 1)  # Nutzer hat 1 Strang vorraetig
+
+    pattern = Pattern(name="Test", width=100, height=100, fabric_count=14)
+    pattern.color_entries.clear()
+    pattern.add_color(
+        Thread.from_hex("Schwarz A", "#000000", manufacturer="DMC", catalog_number="310")
+    )
+    pattern.add_color(
+        Thread.from_hex("Schwarz B", "#010101", manufacturer="DMC", catalog_number="310")
+    )
+    pattern.color_entries[0].stitch_count = 300
+    pattern.color_entries[1].stitch_count = 300
+    # Simuliert die von palette_conversion_dialog.py akzeptierte Kollision:
+    # beide Eintraege tragen danach denselben Thread.
+    pattern.color_entries[1].thread = pattern.color_entries[0].thread
+
+    spk = {14: 500}
+    items = compute_shopping_list(pattern, inv, spk, waste_percent=20.0)
+
+    # Ein einziger, aggregierter Eintrag statt zweier unabhaengiger Zeilen,
+    # die denselben Vorrat je fuer sich beanspruchen wuerden.
+    assert len(items) == 1
+    # 300 Stiche => ceil(300/500*1.2) = 1 Strang, zweimal macht 2 (analog zur
+    # bereits etablierten "pro Eintrag runden, dann summieren"-Konvention
+    # aus compute_shopping_list_multi()).
+    assert items[0]["needed_skeins"] == 2
+    assert items[0]["on_hand"] == 1
+    assert items[0]["to_buy"] == 1
+    assert items[0]["stitch_count"] == 600
+
+
+def test_inventory_dialog_needed_by_key_not_corrupted_by_duplicate_thread(tmp_path):
+    """Der needed_by_key-Dict-Aufbau in inventory_dialog.py's
+    _populate_pattern_tab() baut aus compute_shopping_list()'s Ergebnis
+    einen Lookup-Dict, der pro Zeile (= pro ColorEntry-Index) nach dem
+    Thread-Schluessel nachschlaegt. Vor der Aggregation in
+    compute_shopping_list() hiess das: bei zwei ColorEntries mit
+    identischem Thread ueberschrieb der zweite Eintrag im Dict-Comprehension
+    den ersten -- eine der beiden echten Zeilen zeigte dadurch den falschen
+    (naemlich den ANDEREN Eintrags-) Bedarf. Jetzt zeigen beide Zeilen
+    konsistent denselben, korrekt aggregierten Gesamtbedarf."""
+    from pysticky.core import Pattern, Thread
+    from pysticky.ui.dialogs.statistics_tabs import STITCHES_PER_SKEIN
+
+    inv = Inventory(tmp_path / "inv.json")
+
+    pattern = Pattern(name="Test", width=100, height=100, fabric_count=14)
+    pattern.color_entries.clear()
+    pattern.add_color(
+        Thread.from_hex("Schwarz A", "#000000", manufacturer="DMC", catalog_number="310")
+    )
+    pattern.add_color(
+        Thread.from_hex("Schwarz B", "#010101", manufacturer="DMC", catalog_number="310")
+    )
+    pattern.color_entries[0].stitch_count = 100
+    pattern.color_entries[1].stitch_count = 5000
+    pattern.color_entries[1].thread = pattern.color_entries[0].thread
+
+    needed_by_key = {
+        (
+            item["thread"].manufacturer,
+            item["thread"].catalog_number,
+            item["thread"].name,
+        ): item["needed_skeins"]
+        for item in compute_shopping_list(pattern, inv, STITCHES_PER_SKEIN)
+    }
+
+    import math
+
+    expected_total = math.ceil((100 / 500) * 1.2) + math.ceil((5000 / 500) * 1.2)
+    for entry in pattern.color_entries:
+        thread = entry.thread
+        needed = needed_by_key.get((thread.manufacturer, thread.catalog_number, thread.name), 0)
+        assert needed == expected_total

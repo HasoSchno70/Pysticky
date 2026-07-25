@@ -218,6 +218,20 @@ def compute_shopping_list(
             Gilt fuer Diamond-Painting-Farben analog als Puffer fuer
             verlorene/beschaedigte Drills.
 
+    Zwei ColorEntries KOENNEN denselben Thread tragen -- z.B. nach einer
+    Paletten-Konvertierung (`palette_conversion_dialog.py::_on_apply()`) mit
+    bewusst akzeptierter Mehrfachzuordnung (der Dialog warnt davor, laesst
+    den Nutzer aber trotzdem fortfahren; die betroffenen `color_entries`
+    bleiben dabei als separate Eintraege mit identischem `.thread` bestehen).
+    Ergebnisse werden daher nach Thread-Schluessel aggregiert (Stichzahl und
+    gerundeter Bedarf summiert, `on_hand`/`to_buy` einmal insgesamt
+    berechnet) -- ohne diese Aggregation wuerde jeder betroffene Eintrag den
+    Vorrat unabhaengig UND VOLLSTAENDIG gegenrechnen und den tatsaechlichen
+    Gesamtbedarf unterschaetzen. Dieselbe Schluessel-Aggregation nutzt
+    `compute_shopping_list_multi()` bereits seit laengerem ueber mehrere
+    Patterns hinweg -- hier gilt sie jetzt auch innerhalb eines einzelnen
+    Patterns.
+
     Returns:
         Liste von Dicts pro Farbe: {
             "thread", "stitch_count", "needed_skeins", "on_hand", "to_buy",
@@ -233,7 +247,11 @@ def compute_shopping_list(
         else stitches_per_skein.get(pattern.fabric_count, DEFAULT_STITCHES_PER_SKEIN)
     )
     waste_factor = 1 + (waste_percent / 100)
-    out: list[dict] = []
+
+    stitch_count_by_key: dict[str, int] = {}
+    needed_by_key: dict[str, int] = {}
+    thread_by_key: dict[str, "Thread"] = {}
+
     for entry in pattern.color_entries:
         if entry.skip_stitching:
             continue
@@ -245,20 +263,27 @@ def compute_shopping_list(
         # Tweed-Blends: gegen die ECHTEN Komponenten-Garne abgleichen statt
         # gegen den synthetischen Blend-Thread (siehe Thread.real_components()).
         for real_thread in thread.real_components():
-            on_hand = inventory.get(
-                real_thread.manufacturer, real_thread.catalog_number, real_thread.name
-            )
-            to_buy = max(0, needed - on_hand)
-            out.append(
-                {
-                    "thread": real_thread,
-                    "stitch_count": count,
-                    "needed_skeins": needed,
-                    "on_hand": on_hand,
-                    "to_buy": to_buy,
-                    "is_diamond": is_diamond,
-                }
-            )
+            key = _key(real_thread.manufacturer, real_thread.catalog_number, real_thread.name)
+            stitch_count_by_key[key] = stitch_count_by_key.get(key, 0) + count
+            needed_by_key[key] = needed_by_key.get(key, 0) + needed
+            thread_by_key.setdefault(key, real_thread)
+
+    out: list[dict] = []
+    for key in sorted(needed_by_key):
+        thread = thread_by_key[key]
+        needed = needed_by_key[key]
+        on_hand = inventory.get(thread.manufacturer, thread.catalog_number, thread.name)
+        to_buy = max(0, needed - on_hand)
+        out.append(
+            {
+                "thread": thread,
+                "stitch_count": stitch_count_by_key[key],
+                "needed_skeins": needed,
+                "on_hand": on_hand,
+                "to_buy": to_buy,
+                "is_diamond": is_diamond,
+            }
+        )
     return out
 
 
