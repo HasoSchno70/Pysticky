@@ -24,6 +24,7 @@ def auto_size_dialog(
     content_widgets: list[QWidget],
     *,
     min_width: int = 0,
+    min_height: int = 0,
     chrome_w: int = 60,
     chrome_h: int = 150,
     max_width_frac: float = 0.9,
@@ -43,6 +44,17 @@ def auto_size_dialog(
         min_width: zusätzliche Mindestbreite, die unabhängig vom Inhalt
             erreicht werden soll (z.B. die Breite einer Tab-Leiste, die
             schmaler Inhalt sonst unterschreiten würde).
+        min_height: analog zu `min_width`, aber für die Höhe -- z.B. die
+            Summe der `minimumSizeHint()` aller untereinandergestapelten
+            Sektionen eines Dialogs ohne ScrollArea. Ohne einen harten
+            Floor kann die Bildschirm-Kappung (`max_height_frac`) den
+            Dialog unter den tatsächlichen Platzbedarf drücken -- ein
+            QVBoxLayout kann dann nicht mehr ausweichen und quetscht seine
+            Kind-Widgets (z.B. QSpinBox-Zeilen) auf wenige Pixel Hoehe
+            zusammen, weit unter deren eigene minimumSizeHint(). Das macht
+            sie de facto unbedienbar (Klick/Scroll auf die Spin-Pfeile
+            trifft dann Nachbar-Widgets statt der Spinbox selbst), obwohl
+            optisch noch ein Rahmen zu erkennen ist.
         chrome_w/chrome_h: Platz für Rahmen, Buttons, Abstände etc., der
             zum reinen Inhalts-sizeHint hinzukommt.
         max_width_frac/max_height_frac: Obergrenze als Anteil der
@@ -60,7 +72,7 @@ def auto_size_dialog(
         content_h = max((w.sizeHint().height() for w in content_widgets), default=0)
 
     target_w = max(content_w + chrome_w, min_width)
-    target_h = content_h + chrome_h
+    target_h = max(content_h + chrome_h, min_height)
 
     screen = dialog.screen() or QApplication.primaryScreen()
     avail = screen.availableGeometry() if screen else None
@@ -68,11 +80,13 @@ def auto_size_dialog(
         target_w = min(target_w, int(avail.width() * max_width_frac))
         target_h = min(target_h, int(avail.height() * max_height_frac))
 
-    # min_width ist eine harte Anforderung (z.B. "Tab-Leiste passt sonst
-    # nicht") -- die Bildschirm-Kappung oben darf sie nicht mehr unterbieten.
-    # Lieber etwas breiter als der empfohlene Bildschirmanteil als eine
-    # abgeschnittene Tab-Leiste.
+    # min_width/min_height sind harte Anforderungen (z.B. "Tab-Leiste passt
+    # sonst nicht" bzw. "Sektion wird sonst unbedienbar gequetscht") -- die
+    # Bildschirm-Kappung oben darf sie nicht mehr unterbieten. Lieber etwas
+    # groesser als der empfohlene Bildschirmanteil als eine abgeschnittene
+    # Tab-Leiste bzw. eine unbedienbare Eingabezeile.
     target_w = max(target_w, min_width)
+    target_h = max(target_h, min_height)
 
     final_w = max(target_w, dialog.minimumWidth())
     final_h = max(target_h, dialog.minimumHeight())
@@ -85,6 +99,7 @@ def auto_size_dialog(
             content_w,
             content_h,
             min_width,
+            min_height,
             target_w,
             target_h,
             final_w,
@@ -95,7 +110,17 @@ def auto_size_dialog(
 
 
 def _debug_print(
-    dialog, screen, avail, content_w, content_h, min_width, target_w, target_h, final_w, final_h
+    dialog,
+    screen,
+    avail,
+    content_w,
+    content_h,
+    min_width,
+    min_height,
+    target_w,
+    target_h,
+    final_w,
+    final_h,
 ):
     """Gibt jeden Zwischenschritt der Größenberechnung aus. Aktiviert per
     Umgebungsvariable PYSTICKY_DEBUG_DIALOG_SIZING=1 -- gedacht, um auf einer
@@ -103,7 +128,10 @@ def _debug_print(
     einmalig echte Bildschirm-/DPI-Werte aus einem realen (nicht-offscreen)
     Lauf einzusammeln (siehe open-items.md zum PatternStatisticsDialog)."""
     name = type(dialog).__name__
-    print(f"[dialog_sizing] {name}: content={content_w}x{content_h} min_width={min_width}")
+    print(
+        f"[dialog_sizing] {name}: content={content_w}x{content_h} "
+        f"min_width={min_width} min_height={min_height}"
+    )
     if screen is not None:
         geo = screen.geometry()
         print(

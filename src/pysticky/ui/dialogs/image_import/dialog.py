@@ -131,11 +131,32 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         lesbar/bedienbar, weil 6 Gruppen (Voreinstellung, Bilddatei,
         Mustergröße, Farben, Bild-Anpassung, Konturen) untereinander in
         die feste Höhe von 650px gequetscht wurden.
+
+        `min_height` verhindert, dass `auto_size_dialog()`s Bildschirm-
+        Kappung (`max_height_frac`) den Dialog unter den tatsächlichen
+        Platzbedarf drückt: `self._left_layout` ist ein reines QVBoxLayout
+        ohne ScrollArea-Fallback und ohne Stretch-Faktoren -- seine
+        `minimumSize()` ist deshalb exakt die Summe der `minimumSizeHint()`
+        aller sechs Gruppen und kann nicht weiter komprimiert werden. Ohne
+        diesen harten Floor quetschte eine Kappung (z.B. auf einem
+        niedrigeren/skalierten Bildschirm) `spin_colors`/`spin_confetti`
+        auf wenige Pixel Höhe zusammen, weit unter deren eigene
+        `minimumSizeHint()` -- optisch noch als Rahmen erkennbar, aber
+        Klicks auf die Spin-Pfeile trafen dann Nachbar-Widgets statt der
+        Spinbox selbst ("Felder nicht mehr auswählbar").
         """
         left_hint = self._left_layout.sizeHint()
+        left_min = self._left_layout.minimumSize()
         content_w = left_hint.width() + self._right_panel.minimumWidth() + 20
         content_h = left_hint.height()
-        auto_size_dialog(self, [], content_size=(content_w, content_h), chrome_w=40, chrome_h=40)
+        auto_size_dialog(
+            self,
+            [],
+            content_size=(content_w, content_h),
+            chrome_w=40,
+            chrome_h=40,
+            min_height=left_min.height() + 40,
+        )
 
     def _check_dependencies(self) -> None:
         """Prüft ob alle Abhängigkeiten installiert sind."""
