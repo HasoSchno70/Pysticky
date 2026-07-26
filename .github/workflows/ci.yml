@@ -122,3 +122,49 @@ jobs:
             --title "PySticky ${{ github.ref_name }}" `
             --generate-notes
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  # Benachrichtigt per GitHub-Issue (→ E-Mail ueber die eigenen GitHub-
+  # Notification-Settings), wenn main rot wird -- ohne SMTP-Secrets zu
+  # brauchen. Bleibt main ueber mehrere Laeufe rot, wird nur kommentiert
+  # statt pro Lauf ein neues Issue anzulegen; wird main wieder gruen,
+  # schliesst sich das Issue automatisch.
+  notify-main-status:
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ISSUE_TITLE: "🔴 CI ist rot auf main"
+      # Reiner Text ohne Emoji fuer die Suche -- vermeidet Unwaegbarkeiten
+      # von GitHubs Such-Tokenizer mit Emoji in Anfuehrungszeichen-Phrasen.
+      ISSUE_SEARCH: "CI ist rot auf main"
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Ermittle vorhandenes Rot-Issue
+        id: existing
+        run: |
+          number=$(gh issue list --repo "${{ github.repository }}" --state open \
+            --search "in:title \"${ISSUE_SEARCH}\"" --json number --jq '.[0].number // empty')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      - name: main rot -- Issue anlegen oder kommentieren
+        if: needs.test.result == 'failure' || needs.build.result == 'failure'
+        run: |
+          body="Commit ${{ github.sha }} auf main hat die CI gebrochen.
+
+          Lauf: ${RUN_URL}
+          test: ${{ needs.test.result }} | build: ${{ needs.build.result }}"
+          if [ -n "${{ steps.existing.outputs.number }}" ]; then
+            gh issue comment "${{ steps.existing.outputs.number }}" --repo "${{ github.repository }}" --body "Weiterhin rot: $body"
+          else
+            gh issue create --repo "${{ github.repository }}" --title "$ISSUE_TITLE" --body "$body"
+          fi
+
+      - name: main wieder gruen -- Issue schliessen
+        if: needs.test.result == 'success' && needs.build.result == 'success' && steps.existing.outputs.number != ''
+        run: |
+          gh issue comment "${{ steps.existing.outputs.number }}" --repo "${{ github.repository }}" \
+            --body "✅ main ist wieder gruen: ${RUN_URL}"
+          gh issue close "${{ steps.existing.outputs.number }}" --repo "${{ github.repository }}"
