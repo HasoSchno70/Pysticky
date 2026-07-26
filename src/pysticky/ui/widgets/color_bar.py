@@ -10,11 +10,13 @@ from PySide6.QtCore import (
     QPoint,
     QPropertyAnimation,
     Qt,
+    QTimer,
     Signal,
 )
 from PySide6.QtGui import (
     QBrush,
     QColor,
+    QCursor,
     QDrag,
     QDragEnterEvent,
     QDragMoveEvent,
@@ -453,6 +455,12 @@ class DropIndicator(QWidget):
 class ColorBar(QWidget):
     """Farbleiste für schnellen Farbzugriff mit Drag & Drop."""
 
+    # Identisch zu IconToolBar (widgets/icon_toolbar.py), fuer einheitliches
+    # Hover-Auto-Scroll-Gefuehl an beiden Stellen der App.
+    HOVER_ZONE_PX = 28
+    SCROLL_STEP_PX = 6
+    SCROLL_INTERVAL_MS = 16
+
     color_selected = Signal(int)
     color_double_clicked = Signal(int)  # For symbol editing
     color_right_clicked = Signal(int, object)  # For context menu (index, global_pos)
@@ -578,6 +586,72 @@ class ColorBar(QWidget):
         layout.addWidget(self._scroll)
 
         self.setFixedHeight(96)
+
+        # ◀/▶-Hover-Auto-Scroll wie bei der oberen IconToolBar (widgets/
+        # icon_toolbar.py): Maus an den Rand bewegen scrollt automatisch,
+        # statt den klassischen Scrollbalken bedienen zu muessen. Konstanten
+        # bewusst identisch zu IconToolBar fuer einheitliches Gefuehl.
+        self._scroll_hint_left = self._create_scroll_hint("◀")
+        self._scroll_hint_right = self._create_scroll_hint("▶")
+        bar = self._scroll.horizontalScrollBar()
+        bar.valueChanged.connect(self._update_scroll_hints)
+        bar.rangeChanged.connect(self._update_scroll_hints)
+
+        # Pollt die Cursor-Position statt auf Mouse-Move-Events zu warten --
+        # die Swatches fuellen fast den ganzen Viewport aus, Move-Events
+        # landen also auf den Swatches, nicht auf dem Viewport dahinter
+        # (gleiche Begruendung wie ToolBar._poll_auto_scroll/IconToolBar).
+        self._scroll_timer = QTimer(self)
+        self._scroll_timer.setInterval(self.SCROLL_INTERVAL_MS)
+        self._scroll_timer.timeout.connect(self._poll_auto_scroll)
+        self._scroll_timer.start()
+
+        self._position_scroll_hints()
+        QTimer.singleShot(0, self._update_scroll_hints)
+
+    def _create_scroll_hint(self, arrow: str) -> QLabel:
+        label = QLabel(arrow, self._scroll)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setFixedWidth(16)
+        label.setStyleSheet(
+            f"color: {THEME.accent_primary}; background: {THEME.bg_dark}; "
+            f"font-size: 11px; font-weight: bold;"
+        )
+        # Transparent fuer Maus-Events, damit die Hover-Auto-Scroll-Zone
+        # darunter (der Viewport) weiter Events empfaengt.
+        label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        label.hide()
+        return label
+
+    def _position_scroll_hints(self) -> None:
+        h = self._scroll.height()
+        self._scroll_hint_left.setGeometry(0, 0, 16, h)
+        self._scroll_hint_right.setGeometry(self._scroll.width() - 16, 0, 16, h)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._position_scroll_hints()
+
+    def _update_scroll_hints(self) -> None:
+        bar = self._scroll.horizontalScrollBar()
+        self._scroll_hint_left.setVisible(bar.value() > bar.minimum())
+        self._scroll_hint_right.setVisible(bar.value() < bar.maximum())
+
+    def _poll_auto_scroll(self) -> None:
+        bar = self._scroll.horizontalScrollBar()
+        if bar.maximum() == bar.minimum():
+            return
+
+        viewport = self._scroll.viewport()
+        local_pos = viewport.mapFromGlobal(QCursor.pos())
+        if not viewport.rect().contains(local_pos):
+            return
+
+        x = local_pos.x()
+        if x < self.HOVER_ZONE_PX:
+            bar.setValue(bar.value() - self.SCROLL_STEP_PX)
+        elif x > viewport.width() - self.HOVER_ZONE_PX:
+            bar.setValue(bar.value() + self.SCROLL_STEP_PX)
 
     def set_pattern(self, pattern: Pattern) -> None:
         self._pattern = pattern
@@ -748,6 +822,11 @@ class ColorBar(QWidget):
             elif child is self._drop_hint:
                 child.setStyleSheet(
                     f"font-size: 10px; color: {THEME.accent_primary}; font-style: italic;"
+                )
+            elif child in (self._scroll_hint_left, self._scroll_hint_right):
+                child.setStyleSheet(
+                    f"color: {THEME.accent_primary}; background: {THEME.bg_dark}; "
+                    f"font-size: 11px; font-weight: bold;"
                 )
         # Swatch-Tooltips aktualisieren
         for swatch in self._swatches:
