@@ -8,6 +8,7 @@ from PySide6.QtCore import QSettings, Qt
 from PySide6.QtGui import QMouseEvent
 
 from ...core.color_math import delta_e
+from ..qsettings_utils import typed_setting
 from .base_tool import BaseTool, ToolContext
 
 # Toleranz ist in den Settings 0-100% skaliert; 50 ΔE ist der praktische
@@ -38,7 +39,7 @@ class FillTool(BaseTool):
             return []
 
         settings = QSettings()
-        tolerance_pct = settings.value("fill_tolerance", 0, type=int)
+        tolerance_pct = typed_setting(settings, "fill_tolerance", 0, int)
         max_delta_e = _MAX_TOLERANCE_DELTA_E * (tolerance_pct / 100)
 
         # Einstellungen → Werkzeuge → Füllen → "Diagonal füllen": der
@@ -47,7 +48,7 @@ class FillTool(BaseTool):
         # Konnektivitaet (auch diagonale Nachbarn) eine separate, simplere
         # BFS-Variante, die den schnellen Scanline-Pfad im Default-Fall
         # (False) unangetastet laesst.
-        if settings.value("fill_diagonal", False, type=bool):
+        if typed_setting(settings, "fill_diagonal", False, bool):
             return self._diagonal_fill(
                 ctx, ctx.grid_x, ctx.grid_y, ctx.current_color_index, max_delta_e
             )

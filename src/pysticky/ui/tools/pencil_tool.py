@@ -9,6 +9,7 @@ förmig). Bei Maus-Eingabe (Pressure = 0) wird ein einzelner Stich gesetzt.
 from PySide6.QtCore import QSettings, Qt
 from PySide6.QtGui import QMouseEvent
 
+from ..qsettings_utils import typed_setting
 from .base_tool import BaseTool, ToolContext
 
 
@@ -35,9 +36,9 @@ class PencilTool(BaseTool):
     def _refresh_brush_settings(self) -> None:
         """Liest die Tablet-Brush-Settings einmal pro Press-Event."""
         s = QSettings()
-        self._pressure_enabled = s.value("tablet/pressure_enabled", True, type=bool)
+        self._pressure_enabled = typed_setting(s, "tablet/pressure_enabled", True, bool)
         # max_brush_size: 1 = aus (immer einzelner Stich)
-        self._brush_max_size = max(1, int(s.value("tablet/max_brush_size", 5, type=int)))
+        self._brush_max_size = max(1, int(typed_setting(s, "tablet/max_brush_size", 5, int)))
 
     def _brush_cells(self, ctx: ToolContext, cx: int, cy: int) -> list[tuple[int, int]]:
         """

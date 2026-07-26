@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 
 from ...core.i18n import t
 from ..color_utils import to_qcolor
+from ..qsettings_utils import typed_setting
 from ..styles import THEME
 
 if TYPE_CHECKING:
@@ -187,7 +188,7 @@ class SymbolEditorDialog(QDialog):
         # von der spaeteren Darstellung abweichen (siehe misc_handlers.py /
         # colors_tab.py, Settings-Key "symbol_font").
         self._symbol_font_family: str = str(
-            QSettings().value("symbol_font", DEFAULT_SYMBOL_FONT_FAMILY, type=str)
+            typed_setting(QSettings(), "symbol_font", DEFAULT_SYMBOL_FONT_FAMILY, str)
         )
 
         self.setWindowTitle(t("Symbol bearbeiten - {name}").format(name=self._entry.thread.name))

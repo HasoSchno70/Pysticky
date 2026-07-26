@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox, QProgressDialog
 
 from ...core.i18n import t
 from ...utils import get_logger
+from ..qsettings_utils import typed_setting
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -411,10 +412,10 @@ class ExportHandlersMixin:
         from PySide6.QtCore import QSettings
 
         s = QSettings()
-        cross_ref_csv = s.value("export/cross_ref_palettes", "", type=str)
+        cross_ref_csv = typed_setting(s, "export/cross_ref_palettes", "", str)
         cross_ref_palettes = [p.strip() for p in cross_ref_csv.split(",") if p.strip()]
-        page_overlap = s.value("export/page_overlap_stitches", 0, type=int)
-        mystery_mode = s.value("export/mystery_mode", False, type=bool)
+        page_overlap = typed_setting(s, "export/page_overlap_stitches", 0, int)
+        mystery_mode = typed_setting(s, "export/mystery_mode", False, bool)
 
         # pdf_cells_per_page (Einstellungen → Dateien → "Zellen/Seite"): nur
         # fuer A4/Letter anwenden, deren eingebauter Formatstandard (40)
@@ -424,7 +425,7 @@ class ExportHandlersMixin:
         # obwohl der User diese Einstellung nie angefasst hat.
         pdf_cells_per_page = None
         if page_format in ("A4", "Letter"):
-            pdf_cells_per_page = s.value("pdf_cells_per_page", 40, type=int)
+            pdf_cells_per_page = typed_setting(s, "pdf_cells_per_page", 40, int)
 
         # PDF-Schutz aus dem letzten _on_export_pdf-Aufruf (None wenn HTML/Bundle)
         pdf_protection = getattr(self, "_pending_pdf_protection", None) or {}

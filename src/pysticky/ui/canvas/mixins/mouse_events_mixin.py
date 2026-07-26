@@ -73,7 +73,7 @@ class MouseEventsMixin:
                 self._batch_active = True
                 self.batch_started.emit(t("Fortschritt markieren"))
             changes = self._tool_manager.on_mouse_press(ctx, event)
-            for x, y, marker in changes:
+            for x, y, marker, *_ in changes:
                 if marker == MARK_COMPLETED:
                     self.stitch_marked_completed.emit(x, y)
                 elif marker == UNMARK_COMPLETED:
@@ -183,7 +183,7 @@ class MouseEventsMixin:
 
             # Progress-Tool: Completion-Signals statt Stich-Signals
             if self._tool_manager.current_tool == Tool.PROGRESS:
-                for x, y, marker in changes:
+                for x, y, marker, *_ in changes:
                     if marker == MARK_COMPLETED:
                         self.stitch_marked_completed.emit(x, y)
                     elif marker == UNMARK_COMPLETED:

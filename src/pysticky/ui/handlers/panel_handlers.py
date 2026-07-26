@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 from ...core.i18n import t
 from ...utils import get_logger
 from ..notify_scope import NotifyScope
+from ..qsettings_utils import typed_setting
 
 logger = get_logger(__name__)
 
@@ -28,7 +29,7 @@ class PanelHandlersMixin:
         # Einstellungen → Farben → "Ausgewählte Farbe hervorheben": isoliert
         # automatisch jede neu zum Zeichnen gewaehlte Farbe (gleicher Effekt
         # wie Strg+H, nur automatisch statt manuell ausgeloest).
-        if self._settings.value("highlight_selected", True, type=bool):
+        if typed_setting(self._settings, "highlight_selected", True, bool):
             self._on_isolate_color(index)
         # Rueckstich-Vorschau im Options-Panel mitziehen, falls sichtbar.
         if self.backstitch_options_dock.isVisible():
@@ -298,7 +299,7 @@ class PanelHandlersMixin:
         if 0 <= color_index < len(self.current_pattern.color_entries):
             self.canvas.set_current_color(color_index)
             self.color_bar.select_color(color_index)
-            if self._settings.value("pipette_show_info", True, type=bool):
+            if typed_setting(self._settings, "pipette_show_info", True, bool):
                 entry = self.current_pattern.color_entries[color_index]
                 self.status_bar.showMessage(
                     f"Farbe aufgenommen: {entry.thread.name} ({entry.symbol})",
@@ -306,7 +307,7 @@ class PanelHandlersMixin:
                 )
             # Einstellungen → Werkzeuge → "Nach Aufnahme": 0=Stift (Default,
             # bisheriges Verhalten), 1=beim Werkzeug bleiben, 2=Auswahl.
-            behavior = self._settings.value("pipette_behavior", 0, type=int)
+            behavior = typed_setting(self._settings, "pipette_behavior", 0, int)
             if behavior == 1:
                 pass  # Pipette bleibt aktiv
             elif behavior == 2:

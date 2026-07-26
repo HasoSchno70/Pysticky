@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from ....core.i18n import t
+from ...qsettings_utils import typed_setting
 from ._helpers import make_section_form
 
 
@@ -170,30 +171,36 @@ class GeneralTab(QWidget):
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
-        self.chk_autosave.setChecked(settings.value("autosave_enabled", True, type=bool))
-        self.spin_autosave_interval.setValue(settings.value("autosave_interval", 5, type=int))
-        self.chk_autosave_backup.setChecked(settings.value("autosave_backup", True, type=bool))
+        self.chk_autosave.setChecked(typed_setting(settings, "autosave_enabled", True, bool))
+        self.spin_autosave_interval.setValue(typed_setting(settings, "autosave_interval", 5, int))
+        self.chk_autosave_backup.setChecked(typed_setting(settings, "autosave_backup", True, bool))
         self.spin_snapshot_interval.setValue(
-            settings.value("snapshot_interval_minutes", 30, type=int)
+            typed_setting(settings, "snapshot_interval_minutes", 30, int)
         )
-        self.chk_stitch_timer.setChecked(settings.value("stitch_timer_enabled", True, type=bool))
-        self.combo_start_action.setCurrentIndex(settings.value("start_action", 0, type=int))
-        self.spin_recent_files.setValue(settings.value("max_recent_files", 10, type=int))
-        self.chk_restore_window.setChecked(settings.value("restore_window", True, type=bool))
-        theme = settings.value("theme", "dark", type=str)
+        self.chk_stitch_timer.setChecked(
+            typed_setting(settings, "stitch_timer_enabled", True, bool)
+        )
+        self.combo_start_action.setCurrentIndex(typed_setting(settings, "start_action", 0, int))
+        self.spin_recent_files.setValue(typed_setting(settings, "max_recent_files", 10, int))
+        self.chk_restore_window.setChecked(typed_setting(settings, "restore_window", True, bool))
+        theme = typed_setting(settings, "theme", "dark", str)
         self.combo_theme.setCurrentIndex(0 if theme == "dark" else 1)
         # Sprache laden
-        lang = settings.value("ui_language", "auto", type=str)
+        lang = typed_setting(settings, "ui_language", "auto", str)
         for i in range(self.combo_language.count()):
             if self.combo_language.itemData(i) == lang:
                 self.combo_language.setCurrentIndex(i)
                 break
-        self.chk_confirm_exit.setChecked(settings.value("confirm_exit", False, type=bool))
-        self.chk_confirm_overwrite.setChecked(settings.value("confirm_overwrite", True, type=bool))
-        self.spin_status_timeout.setValue(settings.value("status_timeout", 3, type=int))
-        self.edit_default_author.setText(settings.value("default_author", "", type=str))
-        self.edit_default_copyright.setText(settings.value("default_copyright", "", type=str))
-        self.chk_file_logging.setChecked(settings.value("file_logging_enabled", False, type=bool))
+        self.chk_confirm_exit.setChecked(typed_setting(settings, "confirm_exit", False, bool))
+        self.chk_confirm_overwrite.setChecked(
+            typed_setting(settings, "confirm_overwrite", True, bool)
+        )
+        self.spin_status_timeout.setValue(typed_setting(settings, "status_timeout", 3, int))
+        self.edit_default_author.setText(typed_setting(settings, "default_author", "", str))
+        self.edit_default_copyright.setText(typed_setting(settings, "default_copyright", "", str))
+        self.chk_file_logging.setChecked(
+            typed_setting(settings, "file_logging_enabled", False, bool)
+        )
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""

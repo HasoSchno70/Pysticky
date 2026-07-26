@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from ...core.i18n import t
 from ...utils import get_logger
 from ..color_utils import to_qcolor
+from ..qsettings_utils import typed_setting
 
 if TYPE_CHECKING:
     from ...core import Pattern
@@ -29,7 +30,7 @@ class FileHandlersMixin:
         Standard-Ordner für Öffnen/Speichern-Dialoge. Leerer String (Qt-
         Default: aktuelles Arbeitsverzeichnis bzw. zuletzt genutzter Ordner)
         wenn nichts konfiguriert oder der Ordner nicht mehr existiert."""
-        configured = self._settings.value("default_path", "", type=str).strip()
+        configured = typed_setting(self._settings, "default_path", "", str).strip()
         if configured and Path(configured).is_dir():
             return configured
         return ""
@@ -148,7 +149,7 @@ class FileHandlersMixin:
                 None,
             )
         else:
-            palette_name = self._settings.value("default_palette", "Anchor", type=str)
+            palette_name = typed_setting(self._settings, "default_palette", "Anchor", str)
             if not pm.get_palette(palette_name):
                 palette_name = "Anchor"
 
@@ -318,7 +319,7 @@ class FileHandlersMixin:
                 # erstellen": .bak ist die vorherige Datei-Version, nicht
                 # das Autosave-Recovery (das ist ein separater Mechanismus).
                 if (
-                    self._settings.value("autosave_backup", True, type=bool)
+                    typed_setting(self._settings, "autosave_backup", True, bool)
                     and self.current_file.exists()
                 ):
                     import shutil
@@ -382,7 +383,9 @@ class FileHandlersMixin:
             # Einstellungen → Allgemein → "Vor Überschreiben warnen" --
             # zusaetzliche Sicherheitsabfrage ueber den nativen
             # Dateidialog-Schutz hinaus (der nicht auf jeder Plattform greift).
-            if Path(path).exists() and self._settings.value("confirm_overwrite", True, type=bool):
+            if Path(path).exists() and typed_setting(
+                self._settings, "confirm_overwrite", True, bool
+            ):
                 reply = QMessageBox.question(
                     self,
                     t("Überschreiben bestätigen"),
@@ -399,7 +402,10 @@ class FileHandlersMixin:
                 # bekommen (Confirm-Overwrite-Abfrage oben ist unabhaengig
                 # von der "Backup vor Ueberschreiben"-Einstellung und kann
                 # sogar deaktiviert sein).
-                if self._settings.value("autosave_backup", True, type=bool) and Path(path).exists():
+                if (
+                    typed_setting(self._settings, "autosave_backup", True, bool)
+                    and Path(path).exists()
+                ):
                     import shutil
 
                     backup_path = Path(path).with_suffix(Path(path).suffix + ".bak")

@@ -24,6 +24,7 @@ from ....core import (
     get_palette_manager,
 )
 from ....core.i18n import t
+from ...qsettings_utils import typed_setting
 from ...styles import THEME
 from ..dialog_sizing import auto_size_dialog
 from .build_mixin import BuildMixin
@@ -73,8 +74,8 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         from ....config import APP_NAME, ORG_NAME
 
         settings = QSettings(ORG_NAME, APP_NAME)
-        self.spin_colors.setValue(settings.value("import_max_colors", 20, type=int))
-        self.combo_dithering.setCurrentIndex(settings.value("dither_method", 0, type=int))
+        self.spin_colors.setValue(typed_setting(settings, "import_max_colors", 20, int))
+        self.combo_dithering.setCurrentIndex(typed_setting(settings, "dither_method", 0, int))
 
     def _seed_from_pattern(self, pattern: Pattern) -> None:
         """Befüllt den Dialog aus einem bereits importierten Muster

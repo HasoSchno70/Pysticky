@@ -27,6 +27,7 @@ from PySide6.QtWidgets import QWidget
 
 from ...config import CANVAS_CONFIG
 from ...core import Pattern
+from ..qsettings_utils import typed_setting
 from ..tools.base_tool import ToolContext
 from ..tools.select_tool import SelectTool
 from ..tools.tool_enum import Tool
@@ -281,7 +282,7 @@ class CrossStitchCanvas(
         from PySide6.QtCore import QSettings
 
         s = QSettings()
-        enabled = s.value("touch/gestures_enabled", False, type=bool)
+        enabled = typed_setting(s, "touch/gestures_enabled", False, bool)
         self.setAttribute(Qt.WidgetAttribute.WA_AcceptTouchEvents, enabled)
         if enabled:
             self.grabGesture(Qt.GestureType.PinchGesture)

@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from ....core.i18n import t
+from ...qsettings_utils import typed_setting
 from ...styles import THEME
 from ._helpers import make_section_form
 
@@ -120,20 +121,20 @@ class ColorsTab(QWidget):
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
-        palette_name = settings.value("default_palette", "Anchor", type=str)
+        palette_name = typed_setting(settings, "default_palette", "Anchor", str)
         index = self.combo_default_palette.findText(palette_name)
         if index >= 0:
             self.combo_default_palette.setCurrentIndex(index)
-        self.chk_show_catalog.setChecked(settings.value("show_catalog", True, type=bool))
-        font_family = settings.value("symbol_font", "Segoe UI Symbol", type=str)
+        self.chk_show_catalog.setChecked(typed_setting(settings, "show_catalog", True, bool))
+        font_family = typed_setting(settings, "symbol_font", "Segoe UI Symbol", str)
         self.combo_symbol_font.setCurrentFont(QFont(font_family))
-        self.spin_symbol_size.setValue(settings.value("symbol_size", 10, type=int))
-        self.chk_auto_symbols.setChecked(settings.value("auto_symbols", True, type=bool))
-        self.combo_color_display.setCurrentIndex(settings.value("color_display", 0, type=int))
+        self.spin_symbol_size.setValue(typed_setting(settings, "symbol_size", 10, int))
+        self.chk_auto_symbols.setChecked(typed_setting(settings, "auto_symbols", True, bool))
+        self.combo_color_display.setCurrentIndex(typed_setting(settings, "color_display", 0, int))
         self.chk_highlight_selected.setChecked(
-            settings.value("highlight_selected", True, type=bool)
+            typed_setting(settings, "highlight_selected", True, bool)
         )
-        self.spin_color_bar_size.setValue(settings.value("color_bar_size", 48, type=int))
+        self.spin_color_bar_size.setValue(typed_setting(settings, "color_bar_size", 48, int))
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""

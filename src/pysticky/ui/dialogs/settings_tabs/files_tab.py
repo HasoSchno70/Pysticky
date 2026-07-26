@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from ....core.constants import DEFAULT_MAX_IMPORT_COLORS, MAX_COLORS, MIN_COLORS
 from ....core.i18n import t
+from ...qsettings_utils import typed_setting
 from ._helpers import make_section_form
 
 
@@ -193,20 +194,26 @@ class FilesTab(QWidget):
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
         self.edit_default_path.setText(
-            settings.value("default_path", str(Path.home() / "Documents"), type=str)
+            typed_setting(settings, "default_path", str(Path.home() / "Documents"), str)
         )
-        self.edit_library_path.setText(settings.value("library_path", "", type=str))
-        self.edit_templates_path.setText(settings.value("templates_path", "", type=str))
-        self.spin_pdf_cells_per_page.setValue(settings.value("pdf_cells_per_page", 40, type=int))
+        self.edit_library_path.setText(typed_setting(settings, "library_path", "", str))
+        self.edit_templates_path.setText(typed_setting(settings, "templates_path", "", str))
+        self.spin_pdf_cells_per_page.setValue(
+            typed_setting(settings, "pdf_cells_per_page", 40, int)
+        )
         self.spin_import_max_colors.setValue(
-            settings.value("import_max_colors", DEFAULT_MAX_IMPORT_COLORS, type=int)
+            typed_setting(settings, "import_max_colors", DEFAULT_MAX_IMPORT_COLORS, int)
         )
-        self.combo_dither_method.setCurrentIndex(settings.value("dither_method", 0, type=int))
+        self.combo_dither_method.setCurrentIndex(typed_setting(settings, "dither_method", 0, int))
         # Cross-Reference: gespeichert als CSV-String
-        cross_ref_csv = settings.value("export/cross_ref_palettes", "", type=str)
+        cross_ref_csv = typed_setting(settings, "export/cross_ref_palettes", "", str)
         self._set_cross_ref_selection([p.strip() for p in cross_ref_csv.split(",") if p.strip()])
-        self.spin_page_overlap.setValue(settings.value("export/page_overlap_stitches", 0, type=int))
-        self.chk_mystery_mode.setChecked(settings.value("export/mystery_mode", False, type=bool))
+        self.spin_page_overlap.setValue(
+            typed_setting(settings, "export/page_overlap_stitches", 0, int)
+        )
+        self.chk_mystery_mode.setChecked(
+            typed_setting(settings, "export/mystery_mode", False, bool)
+        )
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""

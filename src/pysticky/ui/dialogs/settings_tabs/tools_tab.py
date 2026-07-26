@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from ....core.i18n import t
+from ...qsettings_utils import typed_setting
 from ...tools.tool_enum import Tool
 from ._helpers import make_section_form
 
@@ -151,25 +152,31 @@ class ToolsTab(QWidget):
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
-        tool_name = settings.value("default_tool", Tool.PENCIL.name, type=str)
+        tool_name = typed_setting(settings, "default_tool", Tool.PENCIL.name, str)
         for i in range(self.combo_default_tool.count()):
             if self.combo_default_tool.itemData(i).name == tool_name:
                 self.combo_default_tool.setCurrentIndex(i)
                 break
-        self.chk_remember_tool.setChecked(settings.value("remember_tool", False, type=bool))
-        self.combo_pipette_behavior.setCurrentIndex(settings.value("pipette_behavior", 0, type=int))
-        self.chk_pipette_show_info.setChecked(settings.value("pipette_show_info", True, type=bool))
-        self.chk_fill_diagonal.setChecked(settings.value("fill_diagonal", False, type=bool))
-        self.spin_fill_tolerance.setValue(settings.value("fill_tolerance", 0, type=int))
-        self.chk_marching_ants.setChecked(settings.value("marching_ants", True, type=bool))
-        self.spin_backstitch_width.setValue(settings.value("backstitch_width", 2, type=int))
-        self.chk_backstitch_snap.setChecked(settings.value("backstitch_snap", True, type=bool))
-        self.chk_tablet_pressure.setChecked(
-            settings.value("tablet/pressure_enabled", True, type=bool)
+        self.chk_remember_tool.setChecked(typed_setting(settings, "remember_tool", False, bool))
+        self.combo_pipette_behavior.setCurrentIndex(
+            typed_setting(settings, "pipette_behavior", 0, int)
         )
-        self.spin_tablet_max_brush.setValue(settings.value("tablet/max_brush_size", 5, type=int))
+        self.chk_pipette_show_info.setChecked(
+            typed_setting(settings, "pipette_show_info", True, bool)
+        )
+        self.chk_fill_diagonal.setChecked(typed_setting(settings, "fill_diagonal", False, bool))
+        self.spin_fill_tolerance.setValue(typed_setting(settings, "fill_tolerance", 0, int))
+        self.chk_marching_ants.setChecked(typed_setting(settings, "marching_ants", True, bool))
+        self.spin_backstitch_width.setValue(typed_setting(settings, "backstitch_width", 2, int))
+        self.chk_backstitch_snap.setChecked(typed_setting(settings, "backstitch_snap", True, bool))
+        self.chk_tablet_pressure.setChecked(
+            typed_setting(settings, "tablet/pressure_enabled", True, bool)
+        )
+        self.spin_tablet_max_brush.setValue(
+            typed_setting(settings, "tablet/max_brush_size", 5, int)
+        )
         self.chk_touch_gestures.setChecked(
-            settings.value("touch/gestures_enabled", False, type=bool)
+            typed_setting(settings, "touch/gestures_enabled", False, bool)
         )
 
     def save_settings(self, settings: QSettings) -> None:

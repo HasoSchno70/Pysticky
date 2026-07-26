@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 
 from ...core.i18n import t
 from ...utils.logging import get_logger
+from ..qsettings_utils import typed_setting
 from ..styles import THEME, Styles
 
 logger = get_logger(__name__)
@@ -57,7 +58,7 @@ def get_templates_path() -> Path:
 
     from ...config import APP_NAME, ORG_NAME
 
-    configured = QSettings(ORG_NAME, APP_NAME).value("templates_path", "", type=str).strip()
+    configured = typed_setting(QSettings(ORG_NAME, APP_NAME), "templates_path", "", str).strip()
     default_dir = Path.home() / ".pysticky" / "templates"
     templates_dir = Path(configured) if configured else default_dir
     try:

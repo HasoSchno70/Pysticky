@@ -68,6 +68,7 @@ from .handlers import (
     ViewHandlersMixin,
 )
 from .notify_scope import NotifyScope  # noqa: E302 – re-export for backwards compat
+from .qsettings_utils import typed_setting
 from .widgets.canvas_container import CanvasContainer
 from .widgets.color_bar import ColorBar
 from .widgets.tool_bar import ToolBar
@@ -138,12 +139,14 @@ class MainWindow(
         self._settings = QSettings(ORG_NAME, APP_NAME)
         # Vor _create_status_bar() gesetzt, da erste showMessage()-Aufrufe
         # schon waehrend des UI-Aufbaus laufen koennen.
-        self._status_timeout_ms: int = self._settings.value("status_timeout", 3, type=int) * 1000
-        self._recent_files: list[str] = self._load_recent_files()
-        self._autosave_interval: int = self._settings.value(
-            "autosave_interval", FILE_CONFIG.autosave_interval_minutes, type=int
+        self._status_timeout_ms: int = (
+            typed_setting(self._settings, "status_timeout", 3, int) * 1000
         )
-        self._autosave_enabled: bool = self._settings.value("autosave_enabled", True, type=bool)
+        self._recent_files: list[str] = self._load_recent_files()
+        self._autosave_interval: int = typed_setting(
+            self._settings, "autosave_interval", FILE_CONFIG.autosave_interval_minutes, int
+        )
+        self._autosave_enabled: bool = typed_setting(self._settings, "autosave_enabled", True, bool)
 
         # Autosave-Timer
         self._autosave_timer = QTimer(self)
@@ -158,7 +161,7 @@ class MainWindow(
         # Gespeichertes Theme laden (vor UI-Aufbau)
         from .styles import set_theme
 
-        saved_theme = self._settings.value("theme", "dark", type=str)
+        saved_theme = typed_setting(self._settings, "theme", "dark", str)
         set_theme(saved_theme)
 
         # UI Setup (Methoden aus Mixins)
@@ -221,7 +224,7 @@ class MainWindow(
 
         # Gespeicherte Fenstergeometrie wiederherstellen (Einstellungen →
         # Allgemein → "Fensterposition wiederherstellen").
-        restore_window = self._settings.value("restore_window", True, type=bool)
+        restore_window = typed_setting(self._settings, "restore_window", True, bool)
         saved_geometry = self._settings.value("window/geometry") if restore_window else None
         restored_ok = False
         if saved_geometry is not None:
@@ -809,7 +812,7 @@ class MainWindow(
             if palette is not None:
                 is_bead = palette.is_beads
                 is_diamond = palette.is_diamond
-        auto_symbol = self._settings.value("auto_symbols", True, type=bool)
+        auto_symbol = typed_setting(self._settings, "auto_symbols", True, bool)
         index = self.current_pattern.add_color(
             thread, is_bead=is_bead, is_diamond=is_diamond, auto_symbol=auto_symbol
         )
@@ -893,7 +896,7 @@ class MainWindow(
         # Einstellungen → Allgemein → "Vor Beenden bestätigen" -- zusaetzlich
         # zur ungespeicherte-Aenderungen-Abfrage oben, auch wenn nichts
         # Ungespeichertes vorliegt.
-        if self._settings.value("confirm_exit", False, type=bool):
+        if typed_setting(self._settings, "confirm_exit", False, bool):
             from ..core.i18n import t
 
             reply = QMessageBox.question(
@@ -923,7 +926,7 @@ class MainWindow(
         # wurde set_pattern() bereits aufgerufen (Welcome dadurch ausgeblendet).
         self._check_autosave_recovery()
 
-        start_action = self._settings.value("start_action", 0, type=int)
+        start_action = typed_setting(self._settings, "start_action", 0, int)
 
         # Helper: hat etwas im Pre-Start (Recovery, CLI, Demo) bereits ein
         # Pattern geladen? set_pattern() setzt _pattern_explicitly_set.

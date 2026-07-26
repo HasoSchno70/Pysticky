@@ -5,6 +5,7 @@ Ansicht-bezogene Handler für MainWindow.
 from typing import TYPE_CHECKING
 
 from ...core.i18n import t
+from ..qsettings_utils import typed_setting
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
@@ -30,7 +31,7 @@ class ViewHandlersMixin:
         from ...core import session_timer
         from ..tools.tool_enum import Tool
 
-        timer_enabled = QSettings().value("stitch_timer_enabled", True, type=bool)
+        timer_enabled = typed_setting(QSettings(), "stitch_timer_enabled", True, bool)
 
         if on:
             # 1. Aktuellen Zustand für spätere Wiederherstellung speichern
@@ -606,7 +607,7 @@ class ViewHandlersMixin:
         self.label_position.setText(f"X: {x}  Y: {y}")
 
         # Einstellungen → Werkzeuge → Pipette → "Farbinfo in Statusleiste"
-        if not self._settings.value("pipette_show_info", True, type=bool):
+        if not typed_setting(self._settings, "pipette_show_info", True, bool):
             self._clear_color_info()
             return
 

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from ...core.i18n import t
 from ...utils import get_logger
+from ..qsettings_utils import typed_setting
 
 if TYPE_CHECKING:
     from ..main_window import MainWindow
@@ -59,11 +60,11 @@ class MiscHandlersMixin:
         Allgemein → "Max. Recent Files")."""
         from ...config import FILE_CONFIG
 
-        return self._settings.value("max_recent_files", FILE_CONFIG.max_recent_files, type=int)
+        return typed_setting(self._settings, "max_recent_files", FILE_CONFIG.max_recent_files, int)
 
     def _load_recent_files(self: "MainWindow") -> list[str]:
         """Lädt die Liste der zuletzt geöffneten Dateien."""
-        files = self._settings.value("recent_files", [], type=list)
+        files = typed_setting(self._settings, "recent_files", [], list)
         return [f for f in files if Path(f).exists()][: self._max_recent_files()]
 
     def _save_recent_files(self: "MainWindow") -> None:
@@ -678,12 +679,12 @@ class MiscHandlersMixin:
         self._settings.sync()
 
         # Dauer von Statusmeldungen (Einstellungen → Allgemein → Benachrichtigungen)
-        self._status_timeout_ms = self._settings.value("status_timeout", 3, type=int) * 1000
+        self._status_timeout_ms = typed_setting(self._settings, "status_timeout", 3, int) * 1000
 
         # Theme-Wechsel (live, ohne Neustart)
         from ..styles import get_current_theme_name, reapply_theme, set_theme
 
-        new_theme = self._settings.value("theme", "dark", type=str)
+        new_theme = typed_setting(self._settings, "theme", "dark", str)
         if new_theme != get_current_theme_name():
             set_theme(new_theme)
             from PySide6.QtWidgets import QApplication
@@ -697,51 +698,53 @@ class MiscHandlersMixin:
         from ...utils.logging import PyStickLogger
 
         log_manager = PyStickLogger()
-        if self._settings.value("file_logging_enabled", False, type=bool):
+        if typed_setting(self._settings, "file_logging_enabled", False, bool):
             log_file = log_manager.enable_file_logging()
             logger.info("Datei-Logging aktiviert: %s", log_file)
         else:
             log_manager.disable_file_logging()
 
         # Autosave-Einstellungen
-        self._autosave_enabled = self._settings.value("autosave_enabled", True, type=bool)
-        self._autosave_interval = self._settings.value(
-            "autosave_interval", FILE_CONFIG.autosave_interval_minutes, type=int
+        self._autosave_enabled = typed_setting(self._settings, "autosave_enabled", True, bool)
+        self._autosave_interval = typed_setting(
+            self._settings, "autosave_interval", FILE_CONFIG.autosave_interval_minutes, int
         )
         self._autosave_timer.stop()
         if self._autosave_enabled and self._autosave_interval > 0:
             self._autosave_timer.start(self._autosave_interval * 60 * 1000)
 
         # Grid-Einstellungen
-        show_grid = self._settings.value("show_grid", True, type=bool)
+        show_grid = typed_setting(self._settings, "show_grid", True, bool)
         self.action_show_grid.setChecked(show_grid)
         self.canvas.show_grid = show_grid
 
         # Snap-Einstellungen
-        snap_enabled = self._settings.value("snap_enabled", False, type=bool)
+        snap_enabled = typed_setting(self._settings, "snap_enabled", False, bool)
         self.chk_snap_grid.setChecked(snap_enabled)
         self.canvas.snap_to_grid = snap_enabled
-        snap_interval = self._settings.value(
-            "snap_interval", CANVAS_CONFIG.default_snap_interval, type=int
+        snap_interval = typed_setting(
+            self._settings, "snap_interval", CANVAS_CONFIG.default_snap_interval, int
         )
         self.canvas.snap_interval = snap_interval
 
         # Stoff-Textur (Aida-Optik)
-        self.canvas.show_fabric_texture = self._settings.value("fabric_texture", True, type=bool)
+        self.canvas.show_fabric_texture = typed_setting(
+            self._settings, "fabric_texture", True, bool
+        )
 
         # Weitere Grid-Einstellungen (Intervalle + Farben) -- vorher totes UI,
         # das nur in QSettings schrieb, aber nie zurueckgelesen wurde.
-        self.canvas.major_grid_interval = self._settings.value(
-            "major_grid_interval", CANVAS_CONFIG.major_grid_interval, type=int
+        self.canvas.major_grid_interval = typed_setting(
+            self._settings, "major_grid_interval", CANVAS_CONFIG.major_grid_interval, int
         )
-        self.canvas.minor_grid_interval = self._settings.value(
-            "minor_grid_interval", CANVAS_CONFIG.minor_grid_interval, type=int
+        self.canvas.minor_grid_interval = typed_setting(
+            self._settings, "minor_grid_interval", CANVAS_CONFIG.minor_grid_interval, int
         )
         self.canvas.grid_major_color = QColor(
-            self._settings.value("grid_color_major", "#404060", type=str)
+            typed_setting(self._settings, "grid_color_major", "#404060", str)
         )
         self.canvas.grid_minor_color = QColor(
-            self._settings.value("grid_color_minor", "#303050", type=str)
+            typed_setting(self._settings, "grid_color_minor", "#303050", str)
         )
         # show_minor_grid + grid_color_normal (Raster-Optionen-Dialog, siehe
         # ui/dialogs/grid_options_dialog.py): hatten frueher gar keinen
@@ -750,23 +753,23 @@ class MiscHandlersMixin:
         # UND jedes Mal, wenn der allgemeine Einstellungen-Dialog geschlossen
         # wird) stillschweigend wieder auf den Canvas-Default zurueckgesetzt.
         self.canvas.show_minor_grid = bool(
-            self._settings.value("show_minor_grid", self.canvas.show_minor_grid, type=bool)
+            typed_setting(self._settings, "show_minor_grid", self.canvas.show_minor_grid, bool)
         )
         self.canvas.grid_color = QColor(
-            self._settings.value("grid_color_normal", self.canvas.grid_color.name(), type=str)
+            typed_setting(self._settings, "grid_color_normal", self.canvas.grid_color.name(), str)
         )
 
         # Zellgroessen-Grenzen (wirken erst beim naechsten Zoom-Reset bzw.
         # neuen Muster -- die aktuell offene Ansicht wird nicht rueckwirkend
         # umskaliert, genau wie bei einem Theme-Wechsel).
-        self.canvas.MIN_CELL_SIZE = self._settings.value(
-            "min_cell_size", CANVAS_CONFIG.min_cell_size, type=int
+        self.canvas.MIN_CELL_SIZE = typed_setting(
+            self._settings, "min_cell_size", CANVAS_CONFIG.min_cell_size, int
         )
-        self.canvas.MAX_CELL_SIZE = self._settings.value(
-            "max_cell_size", CANVAS_CONFIG.max_cell_size, type=int
+        self.canvas.MAX_CELL_SIZE = typed_setting(
+            self._settings, "max_cell_size", CANVAS_CONFIG.max_cell_size, int
         )
-        self.canvas.DEFAULT_CELL_SIZE = self._settings.value(
-            "default_cell_size", CANVAS_CONFIG.default_cell_size, type=int
+        self.canvas.DEFAULT_CELL_SIZE = typed_setting(
+            self._settings, "default_cell_size", CANVAS_CONFIG.default_cell_size, int
         )
 
         # Zoom-Slider-Bereich an eventuell individuelle Zellgroessen-Grenzen
@@ -786,47 +789,51 @@ class MiscHandlersMixin:
 
         # Zoom-Geschwindigkeit: Slider-Wert 10-50 zeigt "1.0x".."5.0x" an,
         # deckungsgleich mit dem multiplikativen ZOOM_STEP-Faktor.
-        zoom_speed = self._settings.value("zoom_speed", 12, type=int)
+        zoom_speed = typed_setting(self._settings, "zoom_speed", 12, int)
         self.canvas.ZOOM_STEP = max(1.01, zoom_speed / 10)
 
         # Canvas-Hintergrund / leere Zellen -- Default #fafaf5 (Cremeweiß)
         # bewusst, damit leere Zellen wie echter Aida-Stoff aussehen (nicht
         # das dunkle App-Theme) -- muss mit canvas_tab.py's Default gleich
         # bleiben, siehe grid-contrast-fix Folgebug in dieser Session.
-        self.canvas.bg_color = QColor(self._settings.value("canvas_bg", "#1a1a2e", type=str))
+        self.canvas.bg_color = QColor(typed_setting(self._settings, "canvas_bg", "#1a1a2e", str))
         self.canvas.empty_cell_color = QColor(
-            self._settings.value("empty_cell_color", "#fafaf5", type=str)
+            typed_setting(self._settings, "empty_cell_color", "#fafaf5", str)
         )
 
         # Farben-Tab -- ebenfalls vorher komplett totes UI (8 von 8 Einstellungen).
-        self.canvas.symbol_font_family = self._settings.value(
-            "symbol_font", "Segoe UI Symbol", type=str
+        self.canvas.symbol_font_family = typed_setting(
+            self._settings, "symbol_font", "Segoe UI Symbol", str
         )
-        symbol_size = self._settings.value("symbol_size", 10, type=int)
+        symbol_size = typed_setting(self._settings, "symbol_size", 10, int)
         self.canvas.symbol_size_offset = symbol_size - 10
 
         # Anzeige-Modus: 0=Nur Farbe, 1=Farbe+Symbol, 2=Nur Symbol,
         # 3=Farbe+Name (Name-Rendering existiert nicht -- faellt auf
         # Farbe+Symbol zurueck, das Symbol bleibt die kompakte Kennung).
-        color_display = self._settings.value("color_display", 0, type=int)
+        color_display = typed_setting(self._settings, "color_display", 0, int)
         self.canvas.show_colors = color_display in (0, 1, 3)
         self.canvas.show_symbols = color_display in (1, 2, 3)
 
-        self.palette_panel.show_catalog = self._settings.value("show_catalog", True, type=bool)
-        self.palette_panel.default_palette_name = self._settings.value(
-            "default_palette", "Anchor", type=str
+        self.palette_panel.show_catalog = typed_setting(self._settings, "show_catalog", True, bool)
+        self.palette_panel.default_palette_name = typed_setting(
+            self._settings, "default_palette", "Anchor", str
         )
-        self.color_bar.swatch_size = self._settings.value("color_bar_size", 48, type=int)
+        self.color_bar.swatch_size = typed_setting(self._settings, "color_bar_size", 48, int)
 
         # Werkzeuge-Tab: Laufende Ameisen (Timer laeuft nur, wenn aktiv)
-        self.canvas.marching_ants_enabled = self._settings.value("marching_ants", True, type=bool)
+        self.canvas.marching_ants_enabled = typed_setting(
+            self._settings, "marching_ants", True, bool
+        )
 
         # Werkzeuge-Tab: Rückstich-Linienbreite + Einrasten
-        backstitch_width = self._settings.value("backstitch_width", 2, type=int)
+        backstitch_width = typed_setting(self._settings, "backstitch_width", 2, int)
         self.canvas.backstitch_width_offset = backstitch_width - 2
         backstitch_tool = self.canvas._tool_manager.get_backstitch_tool()
         if backstitch_tool:
-            backstitch_tool.snap_to_grid = self._settings.value("backstitch_snap", True, type=bool)
+            backstitch_tool.snap_to_grid = typed_setting(
+                self._settings, "backstitch_snap", True, bool
+            )
 
         # Werkzeuge-Tab: Touch-Gesten (Pinch-Zoom) -- der Tooltip verspricht
         # "Aenderung wird sofort uebernommen", aber _apply_touch_setting()

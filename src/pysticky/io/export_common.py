@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..ui.qsettings_utils import typed_setting
 from ..utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -436,9 +437,9 @@ def get_watermark(pattern: "Pattern") -> tuple[str, str]:
 
             settings = QSettings()
             if not author:
-                author = settings.value("default_author", "", type=str)
+                author = typed_setting(settings, "default_author", "", str)
             if not copyright_:
-                copyright_ = settings.value("default_copyright", "", type=str)
+                copyright_ = typed_setting(settings, "default_copyright", "", str)
         except Exception:  # noqa: BLE001 - QSettings darf in Test-Env fehlen
             logger.debug("QSettings nicht verfügbar — Wasserzeichen-Defaults übersprungen")
 

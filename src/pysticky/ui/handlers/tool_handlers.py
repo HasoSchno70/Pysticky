@@ -4,6 +4,8 @@ Tool-bezogene Handler für MainWindow.
 
 from typing import TYPE_CHECKING
 
+from ..qsettings_utils import typed_setting
+
 if TYPE_CHECKING:
     from ..main_window import MainWindow
 
@@ -19,10 +21,10 @@ class ToolHandlersMixin:
         from ..tools.tool_enum import Tool
 
         tool_name = None
-        if self._settings.value("remember_tool", False, type=bool):
-            tool_name = self._settings.value("last_tool", None, type=str)
+        if typed_setting(self._settings, "remember_tool", False, bool):
+            tool_name = typed_setting(self._settings, "last_tool", None, str)
         if not tool_name:
-            tool_name = self._settings.value("default_tool", Tool.PENCIL.name, type=str)
+            tool_name = typed_setting(self._settings, "default_tool", Tool.PENCIL.name, str)
         try:
             tool = Tool[tool_name]
         except KeyError:
@@ -39,7 +41,7 @@ class ToolHandlersMixin:
         self.canvas.set_tool(tool)
 
         # Einstellungen → Werkzeuge → "Letztes Werkzeug merken"
-        if self._settings.value("remember_tool", False, type=bool):
+        if typed_setting(self._settings, "remember_tool", False, bool):
             self._settings.setValue("last_tool", tool.name)
 
         self.text_options_dock.setVisible(tool == Tool.TEXT)

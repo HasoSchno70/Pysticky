@@ -40,6 +40,7 @@ logger = get_logger(__name__)
 
 from ...core.file_io import load_pattern
 from ...core.i18n import format_number, t
+from ..qsettings_utils import typed_setting
 from ..styles import THEME, Styles
 from .pattern_library_data import LibraryData, LibraryEntry
 from .thumbnail_widget import ThumbnailWidget
@@ -96,7 +97,7 @@ class PatternLibraryDialog(QDialog):
 
         from ...config import APP_NAME, ORG_NAME
 
-        configured = QSettings(ORG_NAME, APP_NAME).value("library_path", "", type=str).strip()
+        configured = typed_setting(QSettings(ORG_NAME, APP_NAME), "library_path", "", str).strip()
         default_dir = Path(__file__).parent.parent.parent.parent.parent / "Muster"
         library_dir = Path(configured) if configured else default_dir
         try:

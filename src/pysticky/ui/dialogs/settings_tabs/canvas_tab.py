@@ -20,6 +20,7 @@ from ....core.constants import (
     MIN_CELL_SIZE,
 )
 from ....core.i18n import t
+from ...qsettings_utils import typed_setting
 from ._helpers import make_section_form
 from .color_button import ColorButton
 
@@ -143,24 +144,32 @@ class CanvasTab(QWidget):
 
     def load_settings(self, settings: QSettings) -> None:
         """Lädt Einstellungen."""
-        self.chk_show_grid.setChecked(settings.value("show_grid", True, type=bool))
+        self.chk_show_grid.setChecked(typed_setting(settings, "show_grid", True, bool))
         self.spin_major_grid.setValue(
-            settings.value("major_grid_interval", MAJOR_GRID_INTERVAL, type=int)
+            typed_setting(settings, "major_grid_interval", MAJOR_GRID_INTERVAL, int)
         )
-        self.spin_minor_grid.setValue(settings.value("minor_grid_interval", 5, type=int))
-        self.btn_grid_color_major.color = settings.value("grid_color_major", "#404060", type=str)
-        self.btn_grid_color_minor.color = settings.value("grid_color_minor", "#303050", type=str)
+        self.spin_minor_grid.setValue(typed_setting(settings, "minor_grid_interval", 5, int))
+        self.btn_grid_color_major.color = typed_setting(
+            settings, "grid_color_major", "#404060", str
+        )
+        self.btn_grid_color_minor.color = typed_setting(
+            settings, "grid_color_minor", "#303050", str
+        )
         self.spin_default_cell_size.setValue(
-            settings.value("default_cell_size", DEFAULT_CELL_SIZE, type=int)
+            typed_setting(settings, "default_cell_size", DEFAULT_CELL_SIZE, int)
         )
-        self.spin_min_cell_size.setValue(settings.value("min_cell_size", MIN_CELL_SIZE, type=int))
-        self.spin_max_cell_size.setValue(settings.value("max_cell_size", MAX_CELL_SIZE, type=int))
-        self.slider_zoom_speed.setValue(settings.value("zoom_speed", 12, type=int))
-        self.chk_snap_enabled.setChecked(settings.value("snap_enabled", False, type=bool))
-        self.spin_snap_interval.setValue(settings.value("snap_interval", 5, type=int))
-        self.btn_canvas_bg.color = settings.value("canvas_bg", "#1a1a2e", type=str)
-        self.btn_empty_cell.color = settings.value("empty_cell_color", "#fafaf5", type=str)
-        self.chk_fabric_texture.setChecked(settings.value("fabric_texture", True, type=bool))
+        self.spin_min_cell_size.setValue(
+            typed_setting(settings, "min_cell_size", MIN_CELL_SIZE, int)
+        )
+        self.spin_max_cell_size.setValue(
+            typed_setting(settings, "max_cell_size", MAX_CELL_SIZE, int)
+        )
+        self.slider_zoom_speed.setValue(typed_setting(settings, "zoom_speed", 12, int))
+        self.chk_snap_enabled.setChecked(typed_setting(settings, "snap_enabled", False, bool))
+        self.spin_snap_interval.setValue(typed_setting(settings, "snap_interval", 5, int))
+        self.btn_canvas_bg.color = typed_setting(settings, "canvas_bg", "#1a1a2e", str)
+        self.btn_empty_cell.color = typed_setting(settings, "empty_cell_color", "#fafaf5", str)
+        self.chk_fabric_texture.setChecked(typed_setting(settings, "fabric_texture", True, bool))
 
     def save_settings(self, settings: QSettings) -> None:
         """Speichert Einstellungen."""

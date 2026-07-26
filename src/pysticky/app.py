@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication
 
 from .config import APP_NAME, ORG_NAME
 from .ui import MainWindow
+from .ui.qsettings_utils import typed_setting
 from .ui.styles import apply_theme_to_app, set_theme
 from .ui.wheel_guard import install_wheel_guard
 from .ui.widgets.custom_tooltip import install_custom_tooltips
@@ -50,7 +51,7 @@ class PySticky:
         from PySide6.QtCore import QSettings
 
         settings = QSettings(self.ORG_NAME_CONST, self.APP_NAME_CONST)
-        file_logging = settings.value("file_logging_enabled", False, type=bool)
+        file_logging = typed_setting(settings, "file_logging_enabled", False, bool)
         setup_logging(file_logging=file_logging)
 
         self.app = QApplication(self.args)
@@ -85,7 +86,7 @@ class PySticky:
         from PySide6.QtCore import QSettings
 
         settings = QSettings(self.ORG_NAME_CONST, self.APP_NAME_CONST)
-        theme_name = settings.value("theme", "dark", type=str)
+        theme_name = typed_setting(settings, "theme", "dark", str)
         set_theme(theme_name)
 
         # Sprache initialisieren — VOR dem MainWindow-Build, damit
@@ -124,7 +125,7 @@ class PySticky:
             set_language,
         )
 
-        raw_lang = settings.value("ui_language", "auto", type=str)
+        raw_lang = typed_setting(settings, "ui_language", "auto", str)
         lang = raw_lang
         if lang == "auto":
             from PySide6.QtCore import QLocale
