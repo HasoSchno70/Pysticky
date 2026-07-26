@@ -21,6 +21,7 @@ from .export_cache import CompositeGridCache
 from .export_common import (
     count_page_colors,
     css_rgb,
+    get_page_backstitches,
     get_pixel_color,
     get_pixel_stitch_type,
     get_pixel_symbol,
@@ -462,28 +463,7 @@ class HTMLExporter(HTMLSectionsMixin, HTMLPagesMixin):
 
     def _get_page_backstitches(self, start_x: int, start_y: int, end_x: int, end_y: int) -> list:
         """Gibt alle Rückstiche zurück, die auf einer Seite sichtbar sind."""
-        if not self.pattern.backstitches:
-            return []
-
-        result = []
-        for bs in self.pattern.backstitches:
-            # Backstitch-Koordinaten sind in halben Stichen -- Clamp auf
-            # width-1/height-1 aus demselben Grund wie in
-            # _generate_backstitches_svg (Endpunkt exakt auf der
-            # rechten/unteren Musterkante gehoert noch zur letzten Zelle).
-            bs_stitch_x1 = min(bs.x1 // 2, self.pattern.width - 1)
-            bs_stitch_y1 = min(bs.y1 // 2, self.pattern.height - 1)
-            bs_stitch_x2 = min(bs.x2 // 2, self.pattern.width - 1)
-            bs_stitch_y2 = min(bs.y2 // 2, self.pattern.height - 1)
-
-            # Prüfen ob mindestens ein Endpunkt im Bereich liegt
-            in_range_1 = start_x <= bs_stitch_x1 <= end_x and start_y <= bs_stitch_y1 <= end_y
-            in_range_2 = start_x <= bs_stitch_x2 <= end_x and start_y <= bs_stitch_y2 <= end_y
-
-            if in_range_1 or in_range_2:
-                result.append(bs)
-
-        return result
+        return get_page_backstitches(self.pattern, start_x, start_y, end_x, end_y)
 
     def _get_pixel_color(self, x: int, y: int) -> tuple[int, int, int] | None:
         """Gibt die Farbe an einer Position zurück (oberstes sichtbares Layer)."""

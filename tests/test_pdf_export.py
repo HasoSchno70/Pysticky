@@ -424,3 +424,125 @@ def test_pdf_legend_all_colors_present_exactly_once_across_page_break(tmp_path):
     hash_symbols = set(re.findall(r"#\d+", text))
     assert "#1" in hash_symbols
     assert "#44" in hash_symbols  # 130 - 86 = 44 Fallback-Symbole erwartet
+
+
+def _red_lines(drawing) -> list:
+    """Filtert Linien nach der reinen Garnfarbe Rot (#FF0000) -- Gitter-
+    linien sind immer grau (#cccccc/#333333), Rueckstich-Linien tragen die
+    Farbe der zugehoerigen Thread. So lassen sich Rueckstich- von Gitter-
+    Linien unterscheiden, ohne von der (bildschirmgroessen-abhaengigen)
+    Anzahl der Gitterlinien abzuhaengen."""
+    from reportlab.graphics.shapes import Line
+    from reportlab.lib import colors
+
+    red = colors.Color(1.0, 0.0, 0.0)
+    return [
+        shape for shape in drawing.contents if isinstance(shape, Line) and shape.strokeColor == red
+    ]
+
+
+def test_pdf_pattern_page_draws_backstitches():
+    """Regression: _create_pattern_drawing_with_paths() (die eigentlichen
+    Musterseiten mit Pfadlinien) zeichnete bisher UEBERHAUPT KEINE
+    Rueckstiche -- nur _create_preview_drawing() (Deckblatt/Vorschau) tat
+    das, obwohl Legende und HTML-Export den Nutzer glauben lassen, sie
+    seien Teil des gedruckten Stickplans."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    idx = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+    pattern.add_backstitch(0, 0, 2, 2, idx)
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    drawing = exp._create_pattern_drawing_with_paths(0, 0, 4, 4, [])
+
+    assert drawing is not None
+    assert len(_red_lines(drawing)) == 1, "Rueckstich fehlt auf der Musterseite"
+
+
+def test_pdf_pattern_page_hides_backstitches_in_dp_mode():
+    """Wie test_pdf_preview_drawing_hides_backstitches_in_dp_mode, aber fuer
+    die Musterseiten-Funktion: DP-Muster mit (durch convert_to_mode()
+    zurueckgelassenen) alten Backstitch-Daten duerfen keine Rueckstich-
+    Linien auf der Musterseite zeigen."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=5, height=5)
+    pattern.mode = "diamond"
+    idx = pattern.add_color(
+        Thread.from_hex(
+            "Rot", "#FF0000", manufacturer="DMC Diamond Painting", catalog_number="321"
+        ),
+        is_diamond=True,
+    )
+    for x in range(5):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+    pattern.add_backstitch(0, 0, 4, 4, idx)
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    drawing = exp._create_pattern_drawing_with_paths(0, 0, 4, 4, [])
+
+    assert drawing is not None
+    assert _red_lines(drawing) == []
+
+
+def test_pdf_pattern_page_backstitch_only_on_matching_page():
+    """Ein Rueckstich, der komplett auf Seite 1 liegt, darf nicht auch auf
+    einer zweiten, disjunkten Seite auftauchen (Seiten-Zuordnung ueber
+    get_page_backstitches())."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=10, height=5)
+    idx = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    for x in range(10):
+        for y in range(5):
+            pattern.set_stitch(x, y, idx)
+    # Rueckstich komplett innerhalb Zelle (0,0)-(1,1) -- gehoert nur zur
+    # linken Seite (Spalten 0-4), nicht zur rechten (Spalten 5-9).
+    pattern.add_backstitch(0, 0, 2, 2, idx)
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+
+    left_page = exp._create_pattern_drawing_with_paths(0, 0, 4, 4, [])
+    right_page = exp._create_pattern_drawing_with_paths(5, 0, 9, 4, [])
+
+    assert len(_red_lines(left_page)) == 1
+    assert _red_lines(right_page) == []
+
+
+def test_pdf_pattern_page_backstitch_endpoint_matches_grid_edge():
+    """Koordinaten-Transformation: ein Rueckstich, der exakt eine Zellkante
+    entlanglaeuft, muss auf die entsprechende Gitterkante der Seiten-
+    Zeichnung treffen (Kreuzcheck gegen die bestehende Zellzentrum-Formel
+    dieser Funktion)."""
+    from pysticky.core import Pattern, Thread
+
+    pattern = Pattern(width=3, height=3)
+    idx = pattern.add_color(Thread.from_hex("Rot", "#FF0000"))
+    for x in range(3):
+        for y in range(3):
+            pattern.set_stitch(x, y, idx)
+    # Obere linke Ecke der Zelle (0,0) bis obere rechte Ecke der Zelle (0,0):
+    # halbe Stich-Koordinaten (0,0) -> (2,0), eine horizontale Linie am
+    # oberen Rand der ersten Zeile.
+    pattern.add_backstitch(0, 0, 2, 0, idx)
+
+    exp = PDFExporter(pattern, include_path_preview=False)
+    exp._calculate_statistics()
+    drawing = exp._create_pattern_drawing_with_paths(0, 0, 2, 2, [])
+
+    lines = _red_lines(drawing)
+    assert len(lines) == 1
+    line = lines[0]
+    # Erwartete Y-Koordinate: oberer Gitterrand = page_height * cell_size
+    # (grid_offset_y ist 0). X-Koordinate: von grid_offset_x bis
+    # grid_offset_x + cell_size (eine volle Zellbreite).
+    assert abs(line.y1 - line.y2) < 0.01, "Linie sollte horizontal sein"
+    assert line.x2 > line.x1, "Linie sollte von links nach rechts verlaufen"

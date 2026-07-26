@@ -703,6 +703,47 @@ class PDFDrawingsMixin(_Base):
                             )
                         )
 
+        # === 3b. Rückstiche ===
+        # Fehlten hier bisher komplett -- nur _create_preview_drawing()
+        # (Deckblatt/Vorschau) zeichnete sie, obwohl Legende/HTML-Export den
+        # Nutzer glauben lassen, sie seien Teil des Stickplans. Im DP-Modus
+        # weglassen (kein Rückstich-Konzept, siehe _create_preview_drawing()).
+        if not is_dp:
+            from .export_common import get_page_backstitches
+
+            half_cell = cell_size / 2
+            for bs in get_page_backstitches(self.pattern, start_x, start_y, end_x, end_y):
+                entry = self.pattern.get_color_entry(bs.color_index)
+                if entry:
+                    stroke_color = colors.Color(
+                        entry.thread.color.r / 255,
+                        entry.thread.color.g / 255,
+                        entry.thread.color.b / 255,
+                    )
+                else:
+                    stroke_color = colors.black
+
+                local_x1 = bs.x1 - start_x * 2
+                local_y1 = bs.y1 - start_y * 2
+                local_x2 = bs.x2 - start_x * 2
+                local_y2 = bs.y2 - start_y * 2
+
+                bx1 = grid_offset_x + local_x1 * half_cell
+                by1 = grid_offset_y + page_height * cell_size - local_y1 * half_cell
+                bx2 = grid_offset_x + local_x2 * half_cell
+                by2 = grid_offset_y + page_height * cell_size - local_y2 * half_cell
+
+                drawing.add(
+                    Line(
+                        bx1,
+                        by1,
+                        bx2,
+                        by2,
+                        strokeColor=stroke_color,
+                        strokeWidth=max(0.5, cell_size / 10),
+                    )
+                )
+
         # === 4. Zeilen- und Spaltennummern ===
 
         number_font_size = max(5, min(6, cell_size * 0.6))

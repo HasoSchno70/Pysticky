@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from ..utils.logging import get_logger
 
 if TYPE_CHECKING:
+    from ..core.backstitch_manager import Backstitch
     from ..core.pattern import ColorEntry, Pattern
 
 logger = get_logger(__name__)
@@ -226,6 +227,39 @@ _DRILL_INSET = 0.08
 def css_rgb(rgb: tuple[int, int, int]) -> str:
     """CSS-Farbstring "rgb(r,g,b)" für HTML/SVG-Export."""
     return f"rgb({rgb[0]},{rgb[1]},{rgb[2]})"
+
+
+def get_page_backstitches(
+    pattern: "Pattern", start_x: int, start_y: int, end_x: int, end_y: int
+) -> list["Backstitch"]:
+    """Gibt alle Rückstiche zurück, die auf einer Seite sichtbar sind.
+
+    Gemeinsame Logik für HTML- und PDF-Export (vorher in html_export.py
+    dupliziert). Bereich [start_x, end_x] x [start_y, end_y] ist inklusiv,
+    in Stich-Zellen-Koordinaten (nicht Halbzellen).
+    """
+    if not pattern.backstitches:
+        return []
+
+    result = []
+    for bs in pattern.backstitches:
+        # Backstitch-Koordinaten sind in halben Stichen -- Clamp auf
+        # width-1/height-1, weil ein Endpunkt exakt auf der rechten/unteren
+        # Musterkante noch zur letzten Zelle gehört (reines "// 2" würde
+        # dort einen nicht existierenden Index "width"/"height" ergeben).
+        bs_stitch_x1 = min(bs.x1 // 2, pattern.width - 1)
+        bs_stitch_y1 = min(bs.y1 // 2, pattern.height - 1)
+        bs_stitch_x2 = min(bs.x2 // 2, pattern.width - 1)
+        bs_stitch_y2 = min(bs.y2 // 2, pattern.height - 1)
+
+        # Mindestens ein Endpunkt muss im Bereich liegen
+        in_range_1 = start_x <= bs_stitch_x1 <= end_x and start_y <= bs_stitch_y1 <= end_y
+        in_range_2 = start_x <= bs_stitch_x2 <= end_x and start_y <= bs_stitch_y2 <= end_y
+
+        if in_range_1 or in_range_2:
+            result.append(bs)
+
+    return result
 
 
 def _shade_rgb(rgb: tuple[int, int, int], factor: int) -> tuple[int, int, int]:
