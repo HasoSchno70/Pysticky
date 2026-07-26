@@ -112,9 +112,10 @@ class ThreadTab(QWidget):
                 t("Kosten"),
             ]
         )
-        self._thread_table.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Stretch
-        )
+        thread_header = self._thread_table.horizontalHeader()
+        thread_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        for column in (0, 2, 3, 4, 5):
+            thread_header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         self._thread_table.setAlternatingRowColors(True)
         self._thread_table.setSortingEnabled(True)
 
