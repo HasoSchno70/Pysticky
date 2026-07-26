@@ -63,7 +63,7 @@ Koordinaten-Konventionen:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -327,16 +327,23 @@ class OXSImporter:
                             )
                         )
                 if len(components) >= 2:
-                    thread.blend_components = components
                     if ratios_csv:
                         try:
-                            thread.strand_ratios = [
+                            strand_ratios = tuple(
                                 int(r) for r in ratios_csv.split(",") if r.strip()
-                            ]
+                            )
                         except ValueError:
-                            thread.strand_ratios = [1] * len(components)
+                            strand_ratios = tuple([1] * len(components))
                     else:
-                        thread.strand_ratios = [1] * len(components)
+                        strand_ratios = tuple([1] * len(components))
+                    # Thread ist frozen -- statt zu mutieren (thread koennte
+                    # aus all_threads_by_key gecacht und geteilt sein) eine
+                    # neue Instanz mit den Blend-Feldern erzeugen.
+                    thread = replace(
+                        thread,
+                        blend_components=tuple(components),
+                        strand_ratios=strand_ratios,
+                    )
 
             # In Pattern einfügen
             pattern_index = pattern.add_color(thread, is_bead=is_bead, is_diamond=is_diamond)

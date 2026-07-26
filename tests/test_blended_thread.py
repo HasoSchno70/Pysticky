@@ -14,7 +14,7 @@ def test_blend_creates_thread_with_components():
 
     assert blend.is_blend is True
     assert len(blend.blend_components) == 2
-    assert blend.strand_ratios == [1, 1]
+    assert blend.strand_ratios == (1, 1)
 
 
 def test_blend_color_is_between_components_perceptually():
@@ -136,7 +136,7 @@ def test_file_io_preserves_blend(empty_pattern, tmp_path):
     assert len(blend_entries) == 1
     rec = blend_entries[0].thread
     assert len(rec.blend_components) == 2
-    assert rec.strand_ratios == [2, 1]
+    assert rec.strand_ratios == (2, 1)
     assert rec.blend_components[0].catalog_number == "310"
     assert rec.blend_components[1].catalog_number == "745"
 

@@ -75,6 +75,38 @@ class TestThread:
         assert thread.manufacturer == "DMC"
         assert thread.catalog_number == "321"
 
+    def test_thread_is_hashable(self):
+        """Thread ist frozen und damit hashbar -- war vorher inkonsistent
+        zu ThreadColor (schon immer frozen/hashbar), weil Thread als
+        @dataclass ohne frozen automatisch __hash__=None bekam."""
+        a = Thread.from_hex("Rot", "#FF0000", manufacturer="DMC", catalog_number="321")
+        b = Thread.from_hex("Rot", "#FF0000", manufacturer="DMC", catalog_number="321")
+        c = Thread.from_hex("Blau", "#0000FF", manufacturer="DMC", catalog_number="796")
+
+        assert hash(a) == hash(b), "Gleiche Werte muessen gleichen Hash ergeben"
+        assert {a, b, c} == {a, c}, "a und b sind gleich, Set dedupliziert"
+
+    def test_thread_is_immutable(self):
+        """frozen=True verbietet direkte Attribut-Zuweisung nach Konstruktion --
+        Aenderungen laufen ueber dataclasses.replace()."""
+        import dataclasses
+
+        thread = Thread.from_hex("Rot", "#FF0000")
+        with pytest.raises(dataclasses.FrozenInstanceError):
+            thread.name = "Neu"
+
+    def test_blend_thread_is_hashable(self):
+        """Auch ein Tweed-Blend (blend_components/strand_ratios gesetzt)
+        muss hashbar sein -- setzt tuple statt list voraus, sonst crasht
+        hash() trotz frozen=True mit 'unhashable type: list'."""
+        a = Thread.from_hex("Schwarz", "#000000", manufacturer="DMC", catalog_number="310")
+        b = Thread.from_hex("Weiss", "#FFFFFF", manufacturer="DMC", catalog_number="B5200")
+        blend = Thread.blend([a, b])
+
+        assert hash(blend) is not None
+        assert isinstance(blend.blend_components, tuple)
+        assert isinstance(blend.strand_ratios, tuple)
+
 
 class TestLayer:
     """Tests für Layer."""

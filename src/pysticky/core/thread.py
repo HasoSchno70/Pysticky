@@ -176,10 +176,17 @@ class ThreadColor:
         return self.luminance > 0.5
 
 
-@dataclass
+@dataclass(frozen=True)
 class Thread:
     """
     Repräsentiert ein Stickgarn mit Farbe und Metadaten.
+
+    Immutable dataclass (wie `ThreadColor`) — dadurch hashbar, z.B. um
+    Threads als Dict-Key oder in einem Set zu verwenden. `blend_components`/
+    `strand_ratios` sind deshalb Tupel statt Listen (eine Liste wäre trotz
+    `frozen=True` selbst unhashbar). Ändern der Blend-Daten eines bereits
+    konstruierten Threads geht über `dataclasses.replace(thread, ...)`
+    statt direkter Attribut-Zuweisung.
 
     Attributes:
         name: Anzeigename des Garns (z.B. "Weihnachtsrot")
@@ -207,8 +214,8 @@ class Thread:
     manufacturer: str | None = None
     catalog_number: str | None = None
     weight: int | None = 40  # Standard: 40 wt
-    blend_components: list["Thread"] | None = None
-    strand_ratios: list[int] | None = None
+    blend_components: tuple["Thread", ...] | None = None
+    strand_ratios: tuple[int, ...] | None = None
 
     @property
     def is_blend(self) -> bool:
@@ -287,8 +294,8 @@ class Thread:
             color=mixed_color,
             manufacturer=manufacturer,
             catalog_number=catalog,
-            blend_components=list(components),
-            strand_ratios=list(ratios),
+            blend_components=tuple(components),
+            strand_ratios=tuple(ratios),
         )
 
     @classmethod

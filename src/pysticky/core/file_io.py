@@ -28,6 +28,7 @@ Example:
 import json
 import math
 import os
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -404,8 +405,12 @@ def _dict_to_color_entry(data: dict[str, Any]) -> ColorEntry:
                     catalog_number=c.get("catalog_number", ""),
                 )
             )
-        thread.blend_components = components
-        thread.strand_ratios = list(data.get("strand_ratios", [1] * len(components)))
+        # Thread ist frozen -- neue Instanz statt Mutation.
+        thread = replace(
+            thread,
+            blend_components=tuple(components),
+            strand_ratios=tuple(data.get("strand_ratios", [1] * len(components))),
+        )
 
     entry = ColorEntry(
         thread=thread,

@@ -3,6 +3,7 @@
 Tests für Datei-Operationen.
 """
 
+import dataclasses
 import json
 
 import pytest
@@ -393,12 +394,14 @@ class TestFileIO:
         ueber einen Speichern/Laden-Zyklus funktionieren -- die neue
         Validierung darf wohlgeformte Daten nicht beeinflussen."""
         pattern = Pattern(name="Test", width=10, height=10)
-        blend_thread = Thread.from_hex(name="Blend", hex_color="#808080")
-        blend_thread.blend_components = [
-            Thread.from_hex(name="C1", hex_color="#ff0000"),
-            Thread.from_hex(name="C2", hex_color="#0000ff"),
-        ]
-        blend_thread.strand_ratios = [1, 1]
+        blend_thread = dataclasses.replace(
+            Thread.from_hex(name="Blend", hex_color="#808080"),
+            blend_components=(
+                Thread.from_hex(name="C1", hex_color="#ff0000"),
+                Thread.from_hex(name="C2", hex_color="#0000ff"),
+            ),
+            strand_ratios=(1, 1),
+        )
         pattern.color_entries[0].thread = blend_thread
 
         filepath = tmp_path / "valid_blend.pxs"
@@ -411,7 +414,7 @@ class TestFileIO:
         assert len(loaded_thread.blend_components) == 2
         assert loaded_thread.blend_components[0].name == "C1"
         assert loaded_thread.blend_components[1].name == "C2"
-        assert loaded_thread.strand_ratios == [1, 1]
+        assert loaded_thread.strand_ratios == (1, 1)
 
     def test_save_is_atomic_no_leftover_tmp_file(self, tmp_path):
         """Regression: save_pattern() schrieb frueher direkt in die
