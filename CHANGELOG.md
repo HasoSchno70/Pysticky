@@ -9,6 +9,184 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-07-26
+
+Ergebnis einer mehrtägigen, systematischen Clean-Code-Audit-Serie (über 80
+Runden) über die gesamte Codebasis — Modul für Modul auf Datenverlust-Risiken,
+Absturz-Kandidaten und stillschweigend falsches Verhalten geprüft. Kein
+einzelnes Highlight, sondern viele kleine bis mittlere Korrekturen, die in
+Summe Undo, Rückstiche, Diamond-Painting-Modus und den Im-/Export deutlich
+robuster machen.
+
+### Geändert
+
+- Farbe ersetzen: neuer Vorschlags-Dialog zeigt die ähnlichsten Farben der
+  Palette als Kacheln (mit Verwendungszahl) und bietet eine automatische
+  Reduzierung selten verwendeter Farben ("Konfetti") auf die jeweils
+  ähnlichste häufige Farbe
+- Zoom per Mausrad ankert jetzt auf der Cursor-Position statt auf der
+  Canvas-Mitte
+- Tweed-Blend-Farben werden in Garnverbrauch-Tab, Einkaufsliste und
+  CSV-Export jetzt korrekt auf ihre echten Garn-Komponenten aufgelöst statt
+  als ein Posten gezählt
+- CSV-Exporte (Garnliste, Statistik) schreiben jetzt ein UTF-8-BOM, damit
+  Excel Umlaute korrekt anzeigt
+
+### Behoben
+
+**Speichern, Undo & Autosave**
+
+- Speichern eines Musters mit nicht-serialisierbarem Zustand konnte die App
+  abstürzen lassen statt einen Fehlerdialog zu zeigen; Autosave- und
+  Snapshot-Fehler werden jetzt geloggt statt lautlos verschluckt
+- "Ebene leeren" umging komplett das Undo-System; mehrere Werkzeuge
+  (Auswahl-Verschieben, Farbverlauf, Select/Lasso) verloren den Stichtyp bei
+  Undo/Verschieben/Drehen/Spiegeln/Einfügen
+- Wechsel zwischen Kreuzstich- und Diamond-Painting-Modus leerte den
+  Undo-Verlauf nicht, was zu inkonsistenten Wiederherstellungen führen
+  konnte; Plugin-Undo (`LayerSnapshotCommand`) merkte sich nur den
+  Layer-Index statt einer echten Objektreferenz und konnte abstürzen, wenn
+  ein Plugin die Mustergröße änderte
+- Autosave-Kollision: mehrere gleichzeitig laufende Instanzen mit nie
+  gespeichertem Muster überschrieben sich gegenseitig über denselben
+  Temp-Pfad; vier weitere Autosave-/Snapshot-Recovery-Bugs behoben; eine
+  beschädigte Autosave-Datei ließ die App beim Start abstürzen statt eine
+  Fehlermeldung zu zeigen; die Datei-Autosave-Recovery war zeitweise
+  komplett wirkungslos
+- Massen-Operationen (Farbe ersetzen, Füllen, Spiegeln) auf großen Mustern
+  konnten die Oberfläche minutenlang einfrieren, weil Panel-Updates pro
+  Stich statt einmal pro Vorgang ausgelöst wurden
+
+**Ebenen-Sperre**
+
+- Mehrere Werkzeuge (Radierer, Zeichenwerkzeuge, Auswahl-Verschieben)
+  respektierten die Ebenen-Sperre nicht konsequent und erzeugten teils
+  wirkungslose Undo-Einträge; das Fortschritts-Werkzeug (Stiche als erledigt
+  markieren) wurde umgekehrt fälschlich durch die Sperre blockiert, obwohl
+  das Markieren auf gesperrten Ebenen weiter möglich sein soll
+
+**Rückstiche**
+
+- Rückstiche gingen beim Drehen, Spiegeln, Zuschneiden oder Ändern der
+  Mustergröße verloren; verschwanden exakt am Musterrand aus dem
+  HTML-Export; wurden von Pattern-Diff und der Vorschau-Linienstil-Anzeige
+  ignoriert; erschienen im Diamond-Painting-Modus fälschlich trotzdem
+- "Farbe ersetzen"/"Farbe tauschen" ließ den geerbten Halbstich-/
+  Bead-Stichtyp an der falschen Farbe hängen; "Farbe entfernen" ließ
+  Rückstiche verwaisen; Löschen traf bei mehreren nahen Linien immer die
+  älteste statt die tatsächlich angeklickte
+- XSD-, OXS- und PAT-Import ließen Rückstich-Koordinaten sowie
+  abgeschnittene oder unvollständige Grid-Daten ungeprüft durch; OXS-Import
+  verschluckte kaputte Referenzen und Float-Koordinaten stumm
+
+**Diamond-Painting-Modus**
+
+- Mehrere Stellen zeigten weiterhin Kreuzstich-Vokabular statt
+  Diamond-Painting-Begriffen (Zeitschätzung-Tab, Einkaufsliste,
+  Rahmenaufteilung-Dialog, Info-Panel-Tooltip); die Diamond-Farbliste zeigte
+  Garn-Meter statt Drill-Anzahl
+- Diamond-Drills fehlten im Chunk-Cache-Renderpfad und im Bild-Export
+  (wurden dort als flaches Quadrat statt als Drill gerendert); die
+  Drill-Rendering-Logik war an drei Stellen dupliziert und ist jetzt
+  konsolidiert
+
+**Theme-Wechsel**
+
+- Mehrere UI-Elemente behielten nach einem Live-Theme-Wechsel ihr altes
+  Aussehen: die Symbolleiste, StatCard-Icons, die Sticken-Modus-Anzeige, der
+  Diamond-Painting-Tooltip sowie Zeilen im Ebenen-Panel; die Statistik-
+  Tabellen zeigten Farb-Swatches in jeder zweiten Zeile gar nicht an
+
+**Import & Export**
+
+- Mystery-Modus verriet die Rückstich-Kontur weiterhin im HTML-Export und
+  wurde vom Bundle-Export komplett ignoriert
+- PDF-Export konnte durch bestimmten Nutzertext zum Absturz gebracht werden;
+  die Farb-Legende verlor bei vielen Farben die Spaltenkopfzeile auf
+  Folgeseiten; PDF-Schutz-Checkboxen ohne gesetztes Passwort waren
+  wirkungslos, das Passwort wurde nicht getrimmt; das Deckblatt zeigte kein
+  Stickdatum
+- Bild-Export ließ Rückstich-Konturlinien komplett weg
+- Drag & Drop lehnte die Bildformate WebP, TIFF und AVIF am Fenster ab
+- Muster-Bibliothek ließ veraltete Thumbnails und doppelte Pfade durch
+
+**Farbverwaltung**
+
+- Zusammenführen ähnlicher Farben verlor die Halb-/Viertelstich- sowie die
+  Bead-/Diamond-Stempelung der betroffenen Stiche
+- Bei mehr als 86 Farben vergab der Bildimport das Ersatzsymbol "?"
+  mehrfach statt eindeutig zu bleiben; der Import einer eigenen Palette
+  ließ Farben ohne Katalognummer auf einen einzigen Eintrag kollabieren;
+  der Tweed-Blend-Dialog erzeugte bei wiederholtem Mischen
+  Palette-Duplikate
+- Die Einkaufsliste rechnete den Vorrat bei doppelt vorhandenem Garn
+  mehrfach gegen
+
+**Werkzeuge & Canvas**
+
+- Das Farbverlauf-Werkzeug hatte eine wirkungslose Live-Vorschau, verwarf
+  die Panel-Startfarbe und blockierte komplett bei einer Ein-Farben-Palette
+- Die Pipette nahm bei mehreren Ebenen gelegentlich die falsche Farbe auf;
+  die Spiegel-Cursor-Vorschau konnte eine gespiegelte Zelle je nach
+  Reihenfolge überspringen; das Polygon-Füllwerkzeug lief bei Klicks
+  außerhalb des Musters unbegrenzt weiter
+- Zeichenwerkzeuge: die Ellipse kollabierte bei sehr kleinen Zügen, die
+  Linie war richtungsabhängig, das Rechteck erzeugte doppelte Randpunkte
+- Der Zoom-Regler hing bei individuell eingestellten Zellgrößen fest
+- Farb-Ersatz per Drag & Drop auf die Farbleiste war praktisch nie
+  auslösbar, weil das Farbfeld keine Drag-Bewegung akzeptierte
+
+**Dialoge & Oberfläche**
+
+- Das Raster-Optionen-Dialogfeld wirkte nur auf die laufende Sitzung, nie
+  auf die gespeicherten Einstellungen; die Dock-Layout-Persistenz war
+  komplett wirkungslos; gespeicherte Tastenkürzel-Overrides wurden ohne
+  Kollisionsprüfung angewendet
+- Der Neues-Projekt-Dialog ließ Diamond-Painting-Preset- und
+  Eigene-Vorlage-Zustand zwischen Aufrufen hängen; ein Abbruch zeigte
+  keinen Willkommensbildschirm mehr an
+- Der Bildimport-"Wizard Recall" (Import erneut mit anderen Einstellungen
+  öffnen) verlor dabei Muster-Eigenschaften
+- Der Symbol-Editor ignorierte den konfigurierten Symbol-Font
+- Vorlagen ließen sich beim Speichern/Umbenennen unter Duplikat-Namen
+  ablegen
+- Ein sehr breiter Custom-Tooltip-Text konnte komplett aus dem Bildschirm
+  rutschen
+- "Zuletzt geöffnet" stürzte bei einem inzwischen gelöschten Eintrag ab
+- Der Heatmap-Dialog ignorierte Größenänderungen, normalisierte
+  Randblöcke falsch und zählte übersprungene (skip_stitching) Farben in
+  die Auswertung mit ein; ein Rahmenaufteilung-Dialog mit winzigem Rahmen
+  und hoher Überlappung fror komplett ein
+- Die Farbliste im Info-Panel schnitt mehrzeichige Ersatzsymbole am
+  Zellrand ab und folgte nach Löschen/Umsortieren nicht mehr der
+  richtigen Farbe
+- Die Statistik-"Abdeckung"-Karte zeigte bei mehreren gefüllten Ebenen
+  über 100 % an
+- Das zuvor tote Rückstich-Optionen-Panel ist jetzt verdrahtet und
+  unterstützt auch den Spiegel-Modus
+
+**Internationalisierung, Bedienbarkeit & Plattform**
+
+- 52 fehlende Übersetzungen ergänzt, dazu mehrere einzelne Nachträge
+- Drei echte Bedienbarkeits-Bugs für Tastatur-/Screenreader-Nutzung
+  behoben
+- Zahlen-Eingabefelder zeigten ohne explizite Locale ein Komma statt
+  eines Punkts an; ein Tooltip in der Versionshistorie zeigte hartcodiert
+  englische Wochentagsnamen
+- Auf macOS schlug das Öffnen von Export-Ordnern lautlos fehl, weil
+  `xdg-open` dort nicht existiert
+- Ein von Hand editrierter Registrierungswert ohne korrekten Typ ließ die
+  Einstellungs-Tabs abstürzen
+
+**Robustheit gegen beschädigte Dateien**
+
+- Beschädigte JSON-/Metadaten-Werte konnten die Übersetzungs-Verwaltung,
+  den Garn-Vorrat und den Sitzungs-Timer zum Absturz bringen; ein
+  fehlerhaftes Plugin-Manifest mit falscher Zeichenkodierung ebenso
+- Nicht-Objekt-Einträge in Farben-, Ebenen- und Rückstich-Listen einer
+  Datei werden jetzt abgefangen statt die App abstürzen zu lassen
+- Zwei bislang lautlos verschluckte Speicherfehler sind jetzt sichtbar
+
 ## [1.0.1] — 2026-07-19
 
 ### Hinzugefügt

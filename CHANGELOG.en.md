@@ -9,6 +9,176 @@ versioning based on [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-07-26
+
+The result of a multi-day, systematic clean-code-audit series (80+ rounds)
+across the entire codebase — module by module, checked for data-loss risks,
+crash candidates, and silently wrong behavior. No single headline feature,
+but many small-to-medium fixes that together make undo, backstitches,
+Diamond Painting mode, and import/export noticeably more robust.
+
+### Changed
+
+- Replace Color: new suggestion dialog shows the palette's most similar
+  colors as tiles (with usage count) and offers automatic reduction of
+  rarely-used colors ("confetti") onto the closest frequently-used color
+- Mouse-wheel zoom now anchors on the cursor position instead of the
+  canvas center
+- Tweed-blend colors in the thread-usage tab, shopping list, and CSV
+  export are now correctly resolved to their actual thread components
+  instead of being counted as a single item
+- CSV exports (thread list, statistics) now write a UTF-8 BOM so Excel
+  displays special characters correctly
+
+### Fixed
+
+**Saving, Undo & Autosave**
+
+- Saving a pattern with non-serializable state could crash the app instead
+  of showing an error dialog; autosave and snapshot errors are now logged
+  instead of being silently swallowed
+- "Clear layer" completely bypassed the undo system; several tools
+  (move selection, gradient, select/lasso) lost the stitch type on
+  undo/move/rotate/mirror/paste
+- Switching between cross-stitch and Diamond Painting mode didn't clear
+  the undo history, which could lead to inconsistent restores; plugin undo
+  (`LayerSnapshotCommand`) only remembered the layer index instead of a
+  real object reference and could crash if a plugin changed the pattern
+  size
+- Autosave collision: multiple simultaneously running instances with a
+  never-saved pattern overwrote each other via the same temp path; four
+  further autosave/snapshot recovery bugs fixed; a corrupted autosave file
+  crashed the app on startup instead of showing an error message; file
+  autosave recovery was at times completely non-functional
+- Bulk operations (replace color, fill, mirror) on large patterns could
+  freeze the UI for minutes because panel updates fired per stitch instead
+  of once per operation
+
+**Layer Lock**
+
+- Several tools (eraser, drawing tools, move selection) didn't consistently
+  respect the layer lock and sometimes created no-op undo entries; the
+  progress tool (mark stitches as done) was conversely blocked incorrectly
+  by the lock, even though marking progress should remain possible on
+  locked layers
+
+**Backstitches**
+
+- Backstitches were lost on rotate, mirror, crop, or resize; disappeared
+  exactly at the pattern edge in the HTML export; were ignored by the
+  pattern diff and the preview line-style display; still appeared in
+  Diamond Painting mode where they don't belong
+- "Replace color"/"swap colors" left the inherited half-stitch/bead stitch
+  type attached to the wrong color; "remove color" orphaned backstitches;
+  deleting always hit the oldest of several nearby lines instead of the
+  one actually clicked
+- XSD, OXS, and PAT import let backstitch coordinates and truncated or
+  incomplete grid data through unchecked; OXS import silently swallowed
+  broken references and float coordinates
+
+**Diamond Painting mode**
+
+- Several places still showed cross-stitch wording instead of Diamond
+  Painting terms (time-estimate tab, shopping list, hoop-planner dialog,
+  info-panel tooltip); the Diamond color list showed thread meters instead
+  of drill counts
+- Diamond drills were missing from the chunk-cache render path and in
+  image export (rendered there as a flat square instead of a drill); the
+  drill-rendering logic was duplicated in three places and is now
+  consolidated
+
+**Theme switching**
+
+- Several UI elements kept their old look after a live theme switch: the
+  toolbar, StatCard icons, the stitch-mode indicator, the Diamond Painting
+  tooltip, and rows in the layer panel; the statistics tables didn't show
+  color swatches at all in every second row
+
+**Import & Export**
+
+- Mystery mode still leaked the backstitch outline in the HTML export and
+  was completely ignored by the bundle export
+- PDF export could be crashed by certain user text; the color legend lost
+  its column header row on subsequent pages with many colors; PDF
+  protection checkboxes with no password set were ineffective, and the
+  password wasn't trimmed; the cover page showed no stitching date
+- Image export dropped backstitch outline lines entirely
+- Drag & drop rejected the WebP, TIFF, and AVIF image formats at the
+  window
+- The pattern library let stale thumbnails and duplicate paths through
+
+**Color management**
+
+- Merging similar colors lost the half-/quarter-stitch and bead/diamond
+  stamping of the affected stitches
+- With more than 86 colors, image import assigned the "?" placeholder
+  symbol to multiple colors instead of staying unique; importing a custom
+  palette collapsed colors without a catalog number onto a single entry;
+  the tweed-blend dialog created palette duplicates on repeated blending
+- The shopping list counted stock against a duplicate thread multiple
+  times
+
+**Tools & Canvas**
+
+- The gradient tool had an ineffective live preview, discarded the panel's
+  starting color, and blocked entirely on a single-color palette
+- The eyedropper occasionally picked up the wrong color with multiple
+  layers; the mirror cursor preview could skip a mirrored cell depending
+  on processing order; the polygon fill tool ran unbounded on clicks
+  outside the pattern
+- Drawing tools: the ellipse collapsed on very small drags, the line was
+  direction-dependent, the rectangle produced duplicate edge points
+- The zoom slider got stuck with individually configured cell sizes
+- Drag-and-drop color swapping onto the color bar was practically never
+  triggerable because the color swatch didn't accept a drag motion
+
+**Dialogs & UI**
+
+- The grid options dialog only affected the running session, never the
+  saved settings; dock layout persistence was completely non-functional;
+  saved keyboard shortcut overrides were applied without a collision
+  check
+- The new-project dialog let Diamond Painting preset / custom-template
+  state linger between calls; cancelling no longer showed the welcome
+  screen
+- The image-import "Wizard Recall" (reopen import with different
+  settings) lost pattern properties in the process
+- The symbol editor ignored the configured symbol font
+- Templates could be saved/renamed under duplicate names
+- Very wide custom-tooltip text could slide completely off-screen
+- "Recently opened" crashed on an entry that had since been deleted
+- The heatmap dialog ignored resizing, normalized edge blocks incorrectly,
+  and counted skipped (skip_stitching) colors into the evaluation; a
+  hoop-planner dialog with a tiny hoop and high overlap froze completely
+- The color list in the info panel truncated multi-character placeholder
+  symbols at the cell edge and stopped following the correct color after
+  deleting/reordering
+- The statistics "coverage" card showed over 100% with multiple filled
+  layers
+- The previously dead backstitch options panel is now wired up and
+  supports mirror mode as well
+
+**Internationalization, accessibility & platform**
+
+- Added 52 missing translations, plus several individual follow-ups
+- Fixed three real accessibility bugs for keyboard/screen-reader use
+- Numeric input fields showed a comma instead of a period without an
+  explicit locale set; a tooltip in the version history showed hardcoded
+  English weekday names
+- On macOS, opening export folders silently failed because `xdg-open`
+  doesn't exist there
+- A hand-edited registry value with the wrong type crashed the settings
+  tabs
+
+**Robustness against corrupted files**
+
+- Corrupted JSON/metadata values could crash the translation manager, the
+  thread inventory, and the session timer; a malformed plugin manifest
+  with the wrong character encoding did too
+- Non-object entries in colors/layers/backstitches lists in a file are now
+  caught instead of crashing the app
+- Two previously silently swallowed save errors are now visible
+
 ## [1.0.1] — 2026-07-19
 
 ### Added
