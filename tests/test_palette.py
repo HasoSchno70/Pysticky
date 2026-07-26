@@ -74,6 +74,31 @@ class TestThreadPalette:
         # Rot sollte am ähnlichsten sein
         assert similar[0].name == "Rot"
 
+    def test_duplicate_catalog_numbers_none_when_all_unique(self):
+        palette = self._make_palette()
+        assert palette.duplicate_catalog_numbers() == {}
+
+    def test_duplicate_catalog_numbers_detects_and_counts(self):
+        threads = [
+            Thread.from_hex("Rot", "#FF0000", manufacturer="DMC", catalog_number="321"),
+            Thread.from_hex("Rot2", "#FF1111", manufacturer="DMC", catalog_number="321"),
+            Thread.from_hex("Rot3", "#FF2222", manufacturer="DMC", catalog_number="321"),
+            Thread.from_hex("Blau", "#0000FF", manufacturer="DMC", catalog_number="796"),
+        ]
+        palette = ThreadPalette(name="Test", manufacturer="DMC", threads=threads)
+        assert palette.duplicate_catalog_numbers() == {"321": 3}
+
+    def test_duplicate_catalog_numbers_ignores_missing_numbers(self):
+        """Mehrere Custom-Farben ohne Katalognummer (None) sind kein
+        Duplikat -- das waere sonst sofort ein Fehlalarm bei jeder Palette
+        mit mehr als einer nummernlosen Custom-Farbe."""
+        threads = [
+            Thread.from_hex("Custom1", "#FF0000", manufacturer=None, catalog_number=None),
+            Thread.from_hex("Custom2", "#00FF00", manufacturer=None, catalog_number=None),
+        ]
+        palette = ThreadPalette(name="Test", manufacturer="Custom", threads=threads)
+        assert palette.duplicate_catalog_numbers() == {}
+
 
 class TestAnchorPaletteData:
     """Regressionstests fuer die Anchor-Palette (2026-07): erst 76 fehlende
@@ -384,6 +409,69 @@ class TestPaletteManager:
         assert palette is not None
         names = {t.name for t in palette.threads}
         assert names == {"Rot", "Blau"}
+
+    def test_colliding_manufacturer_names_merge_instead_of_overwrite(self, tmp_path):
+        """Regression: zwei Palettendateien, deren Dateiname auf denselben
+        Herstellernamen abgebildet wird (Glob-Reihenfolge ist dateisystem-
+        abhaengig, nicht garantiert), ueberschrieben sich bisher komplett --
+        die zuerst geladene Datei (und all ihre Farben) verschwand
+        stillschweigend. "Foo_Farben.json" und "Foo_Stickgarn_Farben.json"
+        leiten beide "Foo" ab (siehe _load_palette_file()'s Filename-Regeln)."""
+        import json
+
+        (tmp_path / "Foo_Farben.json").write_text(
+            json.dumps(
+                [
+                    {"Name": "Eins", "Number": "1", "Color": {"R": 255, "G": 0, "B": 0}},
+                    {"Name": "Zwei", "Number": "2", "Color": {"R": 0, "G": 255, "B": 0}},
+                ]
+            ),
+            encoding="utf-8",
+        )
+        (tmp_path / "Foo_Stickgarn_Farben.json").write_text(
+            json.dumps(
+                [
+                    {"Name": "Drei", "Number": "3", "Color": {"R": 0, "G": 0, "B": 255}},
+                    {"Name": "Vier", "Number": "4", "Color": {"R": 255, "G": 255, "B": 0}},
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        manager = PaletteManager()
+        manager._palettes_dir = tmp_path
+        manager.load_all()
+
+        foo = manager.get_palette("Foo")
+        assert foo is not None
+        names = {t.name for t in foo.threads}
+        assert names == {"Eins", "Zwei", "Drei", "Vier"}, (
+            "Farben einer der beiden Dateien sind verschwunden statt zusammengeführt zu werden"
+        )
+
+    def test_colliding_manufacturer_merge_detects_duplicate_catalog_numbers(self, tmp_path):
+        """Nachtrag zum Merge-Test: eine Katalognummer, die in BEIDEN
+        kollidierenden Dateien vorkommt, muss nach dem Merge als Duplikat
+        erkennbar sein (auch wenn find_by_number() weiterhin nur den
+        ersten Treffer liefert)."""
+        import json
+
+        (tmp_path / "Foo_Farben.json").write_text(
+            json.dumps([{"Name": "Eins", "Number": "1", "Color": {"R": 255, "G": 0, "B": 0}}]),
+            encoding="utf-8",
+        )
+        (tmp_path / "Foo_Stickgarn_Farben.json").write_text(
+            json.dumps([{"Name": "Anders", "Number": "1", "Color": {"R": 0, "G": 0, "B": 255}}]),
+            encoding="utf-8",
+        )
+
+        manager = PaletteManager()
+        manager._palettes_dir = tmp_path
+        manager.load_all()
+
+        foo = manager.get_palette("Foo")
+        assert foo is not None
+        assert foo.duplicate_catalog_numbers() == {"1": 2}
 
 
 class TestPaletteManagerSingleton:

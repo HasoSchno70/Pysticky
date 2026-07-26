@@ -51,11 +51,22 @@ class ThreadPalette:
         return self.threads[index]
 
     def find_by_number(self, number: str) -> Thread | None:
-        """Findet ein Garn nach Katalognummer."""
+        """Findet ein Garn nach Katalognummer (erster Treffer bei Duplikaten,
+        siehe `_load_palette_file()`'s Duplikat-Warnung beim Laden)."""
         for thread in self.threads:
             if thread.catalog_number == number:
                 return thread
         return None
+
+    def duplicate_catalog_numbers(self) -> dict[str, int]:
+        """Katalognummern, die mehr als einmal in dieser Palette vorkommen,
+        mit ihrer jeweiligen Häufigkeit. Leere/None-Nummern zählen nicht als
+        Duplikat (viele Custom-Einträge haben absichtlich keine)."""
+        counts: dict[str, int] = {}
+        for thread in self.threads:
+            if thread.catalog_number:
+                counts[thread.catalog_number] = counts.get(thread.catalog_number, 0) + 1
+        return {number: count for number, count in counts.items() if count > 1}
 
     def find_by_name(self, name: str) -> list[Thread]:
         """Findet Garne nach Name (Teilstring-Suche)."""
@@ -209,15 +220,40 @@ class PaletteManager:
                 continue
             threads.append(thread)
 
-        # Palette erstellen und speichern
-        palette = ThreadPalette(
-            name=manufacturer,
-            manufacturer=manufacturer,
-            threads=threads,
-            is_beads=is_beads,
-            is_diamond=is_diamond,
-        )
-        self._palettes[manufacturer] = palette
+        # Kollision: eine andere Datei hat denselben Herstellernamen bereits
+        # als Palette angelegt (Dateisystem-Glob-Reihenfolge ist nicht
+        # garantiert). is_beads/is_diamond werden rein aus `manufacturer`
+        # abgeleitet (siehe oben) und sind bei identischem Namen also
+        # zwangsläufig identisch -- kein Konflikt dort möglich. Statt die
+        # bereits geladene Palette (und all ihre Farben) stillschweigend zu
+        # ersetzen, werden die Farben zusammengeführt.
+        existing = self._palettes.get(manufacturer)
+        if existing is not None:
+            logger.warning(
+                f"Palette '{manufacturer}' aus {file_path.name} zusammengeführt mit "
+                f"bereits geladener Palette gleichen Namens ({len(existing.threads)} + "
+                f"{len(threads)} Farben)"
+            )
+            existing.threads.extend(threads)
+            palette = existing
+        else:
+            palette = ThreadPalette(
+                name=manufacturer,
+                manufacturer=manufacturer,
+                threads=threads,
+                is_beads=is_beads,
+                is_diamond=is_diamond,
+            )
+            self._palettes[manufacturer] = palette
+
+        duplicates = palette.duplicate_catalog_numbers()
+        if duplicates:
+            logger.warning(
+                f"Palette '{manufacturer}': doppelte Katalognummern nach dem Laden "
+                f"von {file_path.name}: {duplicates} -- find_by_number() liefert "
+                f"jeweils den ersten Treffer"
+            )
+
         logger.debug(f"Palette geladen: {manufacturer} ({len(threads)} Farben)")
 
     def get_palette(self, name: str) -> ThreadPalette | None:
