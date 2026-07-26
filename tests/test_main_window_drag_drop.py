@@ -42,6 +42,15 @@ def _make_main_window(qtbot):
     return w
 
 
+def _expected_local_path(path: str) -> str:
+    """Wie `dropEvent` den Pfad tatsaechlich sieht: ueber denselben
+    QUrl.fromLocalFile()/toLocalFile()-Roundtrip. Auf Windows verlustfrei,
+    auf Linux/macOS wird ein Windows-Laufwerksbuchstabe ("C:/...") zu
+    "/C:/..." -- ein hartcodierter Windows-Pfad als erwarteter Wert waere
+    also nur auf Windows korrekt (siehe CI-Regression 2026-07-24)."""
+    return QUrl.fromLocalFile(path).toLocalFile()
+
+
 def _drag_enter_event(path: str) -> tuple[QDragEnterEvent, QMimeData]:
     md = QMimeData()
     md.setUrls([QUrl.fromLocalFile(path)])
@@ -117,7 +126,7 @@ def test_drop_new_image_format_routes_to_image_import(qtbot, monkeypatch):
     event, _md = _drop_event("C:/tmp/bild.webp")
     w.dropEvent(event)
 
-    assert calls == ["C:/tmp/bild.webp"]
+    assert calls == [_expected_local_path("C:/tmp/bild.webp")]
 
 
 def test_drop_pxs_checks_unsaved_changes_before_loading(qtbot, monkeypatch):
@@ -148,4 +157,4 @@ def test_drop_multiple_files_uses_first_matching_and_ignores_rest(qtbot, monkeyp
     event, _md = _drop_event("C:/tmp/erstes.pxs", "C:/tmp/zweites.pxs")
     w.dropEvent(event)
 
-    assert loaded == ["C:/tmp/erstes.pxs"]
+    assert loaded == [_expected_local_path("C:/tmp/erstes.pxs")]
