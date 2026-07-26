@@ -333,70 +333,70 @@ class MiscHandlersMixin:
 
         sections = [
             (
-                t("📝 Layer-Notizen"),
+                t('🎨 Überarbeiteter "Farbe ersetzen"-Dialog'),
                 [
                     t(
-                        "Pro Ebene kannst du jetzt eine freie Notiz hinterlegen "
-                        "(z.B. 'Vordergrund-Schatten', 'Backstitch-Linien'). "
-                        "Wird im .pxs-Format gespeichert."
+                        "Der Vorschlags-Dialog zeigt jetzt die ähnlichsten Paletten-Farben "
+                        "als Kacheln mit Verwendungszahl an und kann selten verwendete "
+                        'Farben ("Konfetti") automatisch auf die jeweils ähnlichste '
+                        "häufige Farbe reduzieren."
                     ),
                 ],
             ),
             (
-                t("⏱ Stick-Session-Timer"),
+                t("🖱 Zoom folgt dem Mauszeiger"),
                 [
                     t(
-                        "Beim Sticken-Modus läuft ein Timer im Hintergrund. Beim Beenden "
-                        "siehst du die Sitzungs- und Gesamtzeit. Toggle in Einstellungen → "
-                        "Allgemein → 'Sticken & Snapshots'."
+                        "Der Mausrad-Zoom ankert jetzt auf der Cursor-Position statt auf "
+                        "der Canvas-Mitte."
                     ),
                 ],
             ),
             (
-                t("⚙ Snapshot-Intervall einstellbar"),
+                t("⚡ Deutlich schnellere Massen-Operationen"),
                 [
                     t(
-                        "Versionierte Snapshots werden jetzt im konfigurierbaren Intervall "
-                        "(5–240 min) angelegt. Default 30 min."
+                        "Farbe ersetzen, Füllen und Spiegeln auf großen Mustern liefen "
+                        "bisher minutenlang und ließen die Oberfläche einfrieren. "
+                        "Panel-Updates laufen jetzt einmal pro Vorgang statt einmal pro "
+                        "Stich."
                     ),
                 ],
             ),
             (
-                t("🔍 Farb-Hervorhebung"),
+                t("🪡 Rückstich-Optionen-Panel reaktiviert"),
                 [
                     t(
-                        "Eine Farbe isolieren — andere werden im Canvas stark gedimmt. "
-                        "Über Rechtsklick auf einen Farb-Swatch oder Strg+H auf die "
-                        "aktive Farbe."
+                        "Das zuvor tote Panel für Rückstich-Optionen ist jetzt verdrahtet "
+                        "und unterstützt auch den Spiegel-Modus."
                     ),
                 ],
             ),
             (
-                t("⌨ Pfeiltasten-Navigation im Sticken-Modus"),
+                t("📄 Saubere CSV-Exporte"),
                 [
                     t(
-                        "Pfeiltasten springen zur nächsten/vorherigen ungehakten Zelle "
-                        "der aktiven Farbe. Enter/Space hakt ab und springt direkt weiter."
+                        "Garnliste und Statistik-Export schreiben jetzt ein UTF-8-BOM, "
+                        "damit Excel Umlaute korrekt anzeigt."
                     ),
                 ],
             ),
             (
-                t("🎯 Schwierigkeits-Anzeige"),
+                t("🛡 Rundum robuster"),
                 [
                     t(
-                        "Heuristik aus Farbanzahl, Größe, Sonderstichen und Backstitches → "
-                        "Anfänger / Mittel / Fortgeschritten / Profi. Sichtbar im Info-"
-                        "Panel und im Statistik-Dialog."
+                        "Über 80 Runden Clean-Code-Audit haben Dutzende Absturz- und "
+                        "Datenverlust-Risiken beseitigt — u.a. bei Undo, Rückstichen, "
+                        "Autosave, Diamond-Painting-Modus sowie PDF-/HTML-Export."
                     ),
                 ],
             ),
             (
-                t("📦 Bundle-Export (ZIP)"),
+                t("💿 Windows-Installer"),
                 [
                     t(
-                        "Datei → 'Als Bundle (ZIP) exportieren…' packt .pxs, HTML, PNG, "
-                        "PDF (wenn reportlab installiert), Garnliste und Originalbild "
-                        "in eine ZIP — ideal zum Teilen."
+                        'Neben der portablen .exe gibt es jetzt "PySticky-Setup.exe" mit '
+                        "Start-Menü-Eintrag, optionalem Desktop-Icon und Deinstaller."
                     ),
                 ],
             ),
