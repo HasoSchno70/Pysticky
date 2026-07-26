@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..ui.qsettings_utils import typed_setting
 from ..utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -434,6 +433,8 @@ def get_watermark(pattern: "Pattern") -> tuple[str, str]:
     if not author or not copyright_:
         try:
             from PySide6.QtCore import QSettings
+
+            from ..ui.qsettings_utils import typed_setting
 
             settings = QSettings()
             if not author:

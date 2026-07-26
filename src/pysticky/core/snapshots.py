@@ -14,9 +14,8 @@ from __future__ import annotations
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
-from ..ui.qsettings_utils import typed_setting
 from ..utils.logging import get_logger
 
 if TYPE_CHECKING:
@@ -40,8 +39,10 @@ def get_configured_interval_seconds() -> int:
     try:
         from PySide6.QtCore import QSettings
 
+        from ..ui.qsettings_utils import typed_setting
+
         settings = QSettings()
-        minutes = cast(int, typed_setting(settings, "snapshot_interval_minutes", 30, int))
+        minutes = typed_setting(settings, "snapshot_interval_minutes", 30, int)
         if minutes <= 0:
             return SNAPSHOT_INTERVAL_SECONDS
         return minutes * 60
