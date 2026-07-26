@@ -7,7 +7,7 @@ konfigurierbaren Schwellwert an.
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -92,8 +92,6 @@ class _ColorPairRow(QFrame):
 
 class SimilarColorsDialog(QDialog):
     """Dialog zum Zusammenführen ähnlicher Farben."""
-
-    colors_merged = Signal()
 
     def __init__(self, pattern: "Pattern", parent=None) -> None:
         super().__init__(parent)
@@ -292,5 +290,4 @@ class SimilarColorsDialog(QDialog):
             # Target-Index anpassen falls nötig
             # (nicht nötig da wir absteigend verarbeiten)
 
-        self.colors_merged.emit()
         self.accept()

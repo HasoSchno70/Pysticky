@@ -37,7 +37,6 @@ from ..styles import THEME, Styles
 class PalettePanel(QWidget):
     """Panel zur Auswahl von Garnfarben aus Herstellerpaletten."""
 
-    color_selected = Signal(object)  # Thread
     color_added = Signal(object)  # Thread
     palette_change_requested = Signal(str)  # Neuer Palettenname
 
@@ -175,7 +174,6 @@ class PalettePanel(QWidget):
         self.list_colors.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.list_colors.setDragEnabled(True)
         self.list_colors.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-        self.list_colors.itemClicked.connect(self._on_item_clicked)
         # itemActivated statt itemDoubleClicked: itemActivated feuert bei
         # Enter/Return auf dem aktuellen Eintrag UND bei Maus-Doppelklick
         # (Qt-Doku: "activated by the user... e.g. by double-clicking, or
@@ -546,12 +544,6 @@ class PalettePanel(QWidget):
             )
         else:
             self.label_info.setText(f"📋 {count} {t('Farben')} ({used_count} {t('im Muster')})")
-
-    def _on_item_clicked(self, item: QListWidgetItem) -> None:
-        idx = item.data(Qt.ItemDataRole.UserRole)
-        if idx is not None and 0 <= idx < len(self._current_palette_threads):
-            thread = self._current_palette_threads[idx]
-            self.color_selected.emit(thread)
 
     def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
         idx = item.data(Qt.ItemDataRole.UserRole)

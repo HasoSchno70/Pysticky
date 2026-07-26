@@ -129,8 +129,6 @@ class ColorListWidget(QListWidget):
 class ColorManagementDialog(QDialog):
     """Dialog zur Verwaltung der Farbpalette."""
 
-    colors_changed = Signal()
-
     def __init__(self, pattern: "Pattern", parent=None) -> None:
         super().__init__(parent)
         self._pattern = pattern

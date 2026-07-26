@@ -178,8 +178,6 @@ class ToolButton(BaseToolButton):
 class ToggleToolButton(ToolButton):
     """Werkzeug-Button der zwischen zwei Zuständen wechselt."""
 
-    toggled_state = Signal(bool)
-
     def __init__(
         self,
         tool_outline: Tool,
@@ -229,7 +227,6 @@ class ToggleToolButton(ToolButton):
             self._label = self._label_outline
 
         self.setAccessibleName(self._label)
-        self.toggled_state.emit(self._is_filled)
         self.update()
 
     def set_filled(self, filled: bool) -> None:

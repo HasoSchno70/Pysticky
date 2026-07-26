@@ -173,8 +173,6 @@ class ColorPreview(QFrame):
 class SymbolEditorDialog(QDialog):
     """Dialog zum Bearbeiten des Symbols einer Farbe."""
 
-    symbol_changed = Signal(int, str)  # color_index, new_symbol
-
     def __init__(self, pattern: "Pattern", color_index: int, parent=None) -> None:
         super().__init__(parent)
         self._pattern = pattern
@@ -452,7 +450,6 @@ class SymbolEditorDialog(QDialog):
                 return
             # Symbol im Pattern ändern
             self._entry.symbol = self._selected_symbol
-            self.symbol_changed.emit(self._color_index, self._selected_symbol)
         self.accept()
 
     @property

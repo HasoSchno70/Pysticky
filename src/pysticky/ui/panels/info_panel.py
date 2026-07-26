@@ -27,7 +27,6 @@ __all__ = ["InfoPanel", "StatCard", "SectionHeader", "_ColorListItem"]
 class InfoPanel(QWidget):
     """Panel zur Anzeige von Muster-Statistiken - Dunkles Design."""
 
-    fabric_count_changed = Signal(int)
     color_clicked = Signal(int)  # Farb-Index in der Pattern-Palette
     FABRIC_COUNTS = COMMON_FABRIC_COUNTS
 
@@ -653,7 +652,6 @@ class InfoPanel(QWidget):
         if self._pattern:
             self._pattern.fabric_count = count
             self.update_info(self._pattern)
-        self.fabric_count_changed.emit(count)
 
     def clear_info(self) -> None:
         self.card_stitches.set_value("0")

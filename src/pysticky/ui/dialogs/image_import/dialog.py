@@ -8,7 +8,7 @@ Crop-Logik, Vorschau und Presets stecken in den Mixins dieses Packages.
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread, QTimer, Signal
+from PySide6.QtCore import Qt, QThread, QTimer
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -36,8 +36,6 @@ from .worker import _ImageImportWorker
 
 class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDialog):
     """Dialog für den Bildimport mit Vorschau und Ausschnitt-Auswahl."""
-
-    pattern_created = Signal(object)  # Pattern
 
     def __init__(
         self,
@@ -425,7 +423,6 @@ class ImageImportDialog(BuildMixin, SizeMixin, PreviewMixin, PresetsMixin, QDial
         self._import_progress.close()
         self._carry_over_property_metadata(pattern)
         self._imported_pattern = pattern
-        self.pattern_created.emit(pattern)
         self.accept()
 
     def _carry_over_property_metadata(self, pattern: Pattern) -> None:

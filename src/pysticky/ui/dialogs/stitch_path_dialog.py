@@ -5,7 +5,7 @@ Ermöglicht die Auswahl der Optimierungsstrategie und zeigt
 das Ergebnis mit Statistiken und Visualisierung an.
 """
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -44,8 +44,6 @@ from ..workers import OptimizationWorker
 
 class StitchPathDialog(QDialog):
     """Dialog für Stickpfad-Optimierung mit Threading."""
-
-    show_path_on_canvas = Signal(object)
 
     def __init__(self, pattern: Pattern, parent: QWidget | None = None) -> None:
         super().__init__(parent)
