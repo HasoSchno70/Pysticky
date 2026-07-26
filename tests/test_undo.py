@@ -625,7 +625,7 @@ class TestLayerSnapshotCommand:
         background.set_stitch(0, 0, 0)
 
         target = pattern.layer_stack.add_layer("Ziel-Ebene")
-        target_index = pattern.layer_stack.get_layer_index(target)
+        target_index = pattern.layer_stack.layers.index(target)
         assert target_index == 1
 
         def action():
@@ -642,8 +642,8 @@ class TestLayerSnapshotCommand:
         # verschiebt "Ziel-Ebene" von Index 1 auf Index 2, waehrend Index 1
         # jetzt die alte Hintergrund-Ebene ist.
         pattern.layer_stack.add_layer("Neu eingefuegt", index=0)
-        assert pattern.layer_stack.get_layer_index(target) == 2
-        assert pattern.layer_stack.get_layer_index(background) == 1
+        assert pattern.layer_stack.layers.index(target) == 2
+        assert pattern.layer_stack.layers.index(background) == 1
 
         cmd.undo()
 

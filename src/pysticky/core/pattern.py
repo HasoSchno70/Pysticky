@@ -1062,19 +1062,6 @@ class Pattern:
         wieder hinzu, ohne ein neues Objekt zu konstruieren (Undo)."""
         self.backstitch_manager.restore(backstitch)
 
-    def remove_backstitch_at(self, x: int, y: int, tolerance: int = 1) -> Backstitch | None:
-        """
-        Entfernt einen Rückstich an einer Position.
-
-        Args:
-            x, y: Position in halben Stichen
-            tolerance: Toleranz in halben Stichen
-
-        Returns:
-            Der entfernte Backstitch oder None
-        """
-        return self.backstitch_manager.remove_at(x, y, tolerance)
-
     def _point_on_line(
         self, px: int, py: int, x1: int, y1: int, x2: int, y2: int, tol: int
     ) -> bool:

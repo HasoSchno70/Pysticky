@@ -215,37 +215,6 @@ class BackstitchManager:
                 return True
         return False
 
-    def remove_at(self, x: int, y: int, tolerance: int = 1) -> Backstitch | None:
-        """
-        Entfernt einen Rückstich an einer bestimmten Position.
-
-        Findet den ersten Rückstich, der durch den Punkt (x, y) verläuft
-        (mit Toleranz), und entfernt ihn.
-
-        Args:
-            x: X-Koordinate (in halben Stichen)
-            y: Y-Koordinate (in halben Stichen)
-            tolerance: Maximaler Abstand zur Linie (Standard: 1)
-
-        Returns:
-            Der entfernte Backstitch oder None wenn keiner gefunden
-
-        Note:
-            Loescht per Index aus derselben Iteration, NICHT per
-            self._backstitches.remove(bs) (das waere ein erneuter, wert-
-            basierter Scan von vorn -- bei zwei Rueckstichen mit
-            identischen Koordinaten+Farbe koennte das eine ANDERE, aber
-            wertgleiche Instanz treffen als die hier tatsaechlich
-            gefundene). Gleiche Identitaets-Semantik wie remove() oben
-            (Runde 8), hier aber nie mitgefixt, weil remove_at() aktuell
-            keinen echten Aufrufer im Programm hat.
-        """
-        for i, bs in enumerate(self._backstitches):
-            if self._point_on_line(x, y, bs.x1, bs.y1, bs.x2, bs.y2, tolerance):
-                del self._backstitches[i]
-                return bs
-        return None
-
     def find_at(self, x: int, y: int, tolerance: int = 2) -> Backstitch | None:
         """
         Findet einen Rückstich an einer Position ohne ihn zu entfernen.
@@ -410,28 +379,6 @@ class BackstitchManager:
 
         # Euklidischer Abstand
         return ((px - proj_x) ** 2 + (py - proj_y) ** 2) ** 0.5
-
-    def to_list(self) -> list[dict]:
-        """
-        Konvertiert alle Backstitches zu einer Liste von Dictionaries.
-
-        Für Serialisierung/Export.
-
-        Returns:
-            Liste von Dictionaries, jedes mit x1, y1, x2, y2, color_index
-        """
-        return [bs.to_dict() for bs in self._backstitches]
-
-    def from_list(self, data: list[dict]) -> None:
-        """
-        Lädt Backstitches aus einer Liste von Dictionaries.
-
-        Ersetzt alle vorhandenen Backstitches.
-
-        Args:
-            data: Liste von Dictionaries aus to_list()
-        """
-        self._backstitches = [Backstitch.from_dict(d) for d in data]
 
     def __len__(self) -> int:
         """

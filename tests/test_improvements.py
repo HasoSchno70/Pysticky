@@ -4,7 +4,6 @@ Tests für die Code-Verbesserungen.
 
 Deckt die neuen/geänderten Funktionalitäten ab:
 - LayerStack.replace_all_layers()
-- LayerStack.append_layer_object()
 - Pattern.iterate_composite_stitches() (numpy-optimiert)
 - Pattern.fill_rectangle() (numpy-optimiert)
 - Pattern.flatten_layers() (über öffentliche API)
@@ -31,7 +30,7 @@ from pysticky.core import (
 
 
 class TestLayerStackNewAPI:
-    """Tests für replace_all_layers und append_layer_object."""
+    """Tests für replace_all_layers."""
 
     def test_replace_all_layers(self):
         """Test: Alle Layer ersetzen."""
@@ -65,18 +64,6 @@ class TestLayerStackNewAPI:
 
         with pytest.raises(ValueError):
             stack.replace_all_layers([])
-
-    def test_append_layer_object(self):
-        """Test: Existierendes Layer-Objekt hinzufügen."""
-        stack = LayerStack(width=10, height=10)
-        layer = Layer(name="Extern", width=10, height=10)
-        layer.set_stitch(3, 3, 5)
-
-        stack.append_layer_object(layer)
-
-        assert len(stack) == 2  # "Hintergrund" + "Extern"
-        assert stack[1].name == "Extern"
-        assert stack[1].get_stitch(3, 3) == 5
 
 
 # =========================================================================

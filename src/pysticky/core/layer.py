@@ -760,20 +760,6 @@ class LayerStack:
         for layer in self._layers:
             layer.resize(new_width, new_height)
 
-    def get_layer_by_id(self, layer_id: str) -> Layer | None:
-        """Findet ein Layer nach ID."""
-        for layer in self._layers:
-            if layer.id == layer_id:
-                return layer
-        return None
-
-    def get_layer_index(self, layer: Layer) -> int:
-        """Gibt den Index eines Layers zurück."""
-        try:
-            return self._layers.index(layer)
-        except ValueError:
-            return -1
-
     def replace_all_layers(self, layers: list[Layer], active_index: int = 0) -> None:
         """
         Ersetzt alle Layer durch eine neue Liste.
@@ -789,17 +775,3 @@ class LayerStack:
             raise ValueError("LayerStack benötigt mindestens ein Layer")
         self._layers = list(layers)
         self._active_index = max(0, min(active_index, len(self._layers) - 1))
-
-    def append_layer_object(self, layer: Layer) -> None:
-        """
-        Fügt ein existierendes Layer-Objekt zum Stack hinzu.
-
-        Öffentliche API für file_io zum Laden von Layern,
-        im Unterschied zu add_layer() das ein neues Layer erstellt.
-
-        Args:
-            layer: Das hinzuzufügende Layer
-        """
-        self._layers.append(layer)
-        if self._active_index < 0:
-            self._active_index = 0
